@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "원랜디 2.305 악몽 실전 판단 코치 v16.0.0",
+  "version": "16.0.0",
+  "description": "현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.305 악몽 코치입니다.",
+  "permissions": ["storage", "tabs", "scripting"],
+  "host_permissions": [
+    "https://tmo.gg/build-helper/32172*",
+    "https://tmo.gg/*/build-helper/32172*",
+    "https://www.tmo.gg/build-helper/32172*",
+    "https://www.tmo.gg/*/build-helper/32172*",
+    "https://tmo.gg/build-helper/34366*",
+    "https://tmo.gg/*/build-helper/34366*",
+    "https://www.tmo.gg/build-helper/34366*",
+    "https://www.tmo.gg/*/build-helper/34366*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "ORD 악몽 실전 판단 코치 v16.0.0"
+  },
+  "background": {"service_worker": "background.js"},
+  "content_scripts": [{
+    "matches": [
+      "https://tmo.gg/build-helper/32172*",
+      "https://tmo.gg/*/build-helper/32172*",
+      "https://www.tmo.gg/build-helper/32172*",
+      "https://www.tmo.gg/*/build-helper/32172*",
+      "https://tmo.gg/build-helper/34366*",
+      "https://tmo.gg/*/build-helper/34366*",
+      "https://www.tmo.gg/build-helper/34366*",
+      "https://www.tmo.gg/*/build-helper/34366*"
+    ],
+    "js": ["content-tmo.js"],
+    "run_at": "document_idle"
+  }]
+}

@@ -1,0 +1,71 @@
+(function(root,factory){
+'use strict';
+const api=factory(root&&root.ORDCore,root&&root.ORDV15Model);
+if(typeof module==='object'&&module.exports)module.exports=api;
+if(root)root.ORDV15Policy=api;
+})(typeof window!=='undefined'?window:globalThis,function(C,M){
+'use strict';
+
+const VERSION='16.0.0';
+const ROUTES=Object.freeze({
+  physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
+  dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
+  singleEnd:Object.freeze({key:'singleEnd',mode:'magic',label:'마딜 1상위·단끝',groups:[['main'],['bossFrenzy','stunBase'],['slow'],['stunFull'],['singleEndExpected']],priority:'상위 → 광보잡·최소 0.5스턴 → 이감 → 1.5스턴 → 안정 단·끝'})
+});
+
+function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
+function round(value,digits=3){const p=Math.pow(10,digits);return Math.round(num(value)*p)/p;}
+function resolveRoute(intent,settings){const mode=intent&&intent.damageMode||settings&&settings.mode;if(mode==='physical')return ROUTES.physical;if(mode!=='magic')return null;const requested=intent&&intent.magicRoute||settings&&settings.magicRoute;if(requested==='dual')return ROUTES.dual;if(requested==='singleEnd')return ROUTES.singleEnd;return null;}
+function checkpointFor(roundNow){
+  const round=Math.max(1,Math.round(num(roundNow)||1));
+  if(round<=7)return{key:'rare7',label:'첫 희귀 마감',dueRound:7,rareMinimum:1,equivalent:0,upper:0,nonUpper:0,rareMaximum:Infinity,activeGroups:0};
+  if(round<=20)return{key:'first-final20',label:'첫 전설·히든 마감',dueRound:20,rareMinimum:0,equivalent:1,upper:0,nonUpper:1,rareMaximum:Infinity,activeGroups:0};
+  if(round<=30)return{key:'line30',label:'상위+전설 라인 유지',dueRound:30,rareMinimum:0,equivalent:4,upper:1,nonUpper:1,rareMaximum:6,activeGroups:0};
+  if(round<=40)return{key:'build40',label:'중간 전력 마감',dueRound:40,rareMinimum:0,equivalent:6,upper:1,nonUpper:1,rareMaximum:3,activeGroups:2};
+  if(round<=45)return{key:'build45',label:'50라 전 구조 마감',dueRound:45,rareMinimum:0,equivalent:8,upper:1,nonUpper:1,rareMaximum:1,activeGroups:3};
+  if(round<=50)return{key:'boss50',label:'50라 보스 구조 마감',dueRound:50,rareMinimum:0,equivalent:9,upper:1,nonUpper:1,rareMaximum:0,activeGroups:99};
+  // v16: 51~65 is no longer one flat 15-round window.  The recorded loss sat
+  // in an urgency-free late65 for 12 rounds; intermediate deadlines restore a
+  // gradient for coverage quotes and for the UI countdown.
+  if(round<=55)return{key:'late55',label:'55라 생존 보강 마감',dueRound:55,rareMinimum:0,equivalent:9,upper:1,nonUpper:1,rareMaximum:0,activeGroups:99};
+  if(round<=60)return{key:'late60',label:'60라 생존 보강 마감',dueRound:60,rareMinimum:0,equivalent:9,upper:1,nonUpper:1,rareMaximum:0,activeGroups:99};
+  return{key:'late65',label:'65라 최종 마감',dueRound:65,rareMinimum:0,equivalent:9,upper:1,nonUpper:1,rareMaximum:0,activeGroups:99};
+}
+function requirementMap(role){return new Map((role&&role.deficits&&role.deficits.requirements||[]).map(row=>[row.key,row]));}
+function fallbackRequirement(key){const labels={main:'상위 딜러',armor:'상시 풀방깎',stunBase:'최소 0.5스턴',slow:'안전 이감',bossFrenzy:'광보잡',stunFull:'충분한 1.5스턴',toki:'토키',singleEndExpected:'검증된 단일·끝딜'};return{key,label:labels[key]||key,current:0,target:1,gap:1,required:true,status:'bad'};}
+function groupRows(route,role){
+  const map=requirementMap(role),covered=new Set(route.groups.flat());
+  const groups=route.groups.map(keys=>keys.map(key=>map.get(key)||fallbackRequirement(key)));
+  // v16: main-upper strategic requirements (e.g. Dragon's 단일 2 / 끝딜 1) come
+  // from the core deficit table with route-agnostic keys.  They were invisible
+  // to structuralPass and to the action search because the static route groups
+  // never referenced them — the recorded '단일 1/2' deficit could not be acted
+  // on.  Append every uncovered required row as a trailing group.
+  const extras=[...map.values()].filter(row=>row&&row.required!==false&&!covered.has(row.key));
+  if(extras.length)groups.push(extras);
+  return groups.map((rows,index)=>{const keys=rows.map(row=>row.key),missed=rows.filter(row=>num(row.gap)>1e-9),debt=rows.reduce((total,row)=>total+Math.max(0,num(row.gap))/Math.max(.01,num(row.target)),0);return{index,keys,rows,missed:missed.length,debt:round(debt,6),pass:missed.length===0,label:rows.map(row=>row.label).join(' · ')};});
+}
+function groupVector(groups,count){const limit=Math.min(groups.length,Math.max(0,num(count)));const vector=[];for(const group of groups.slice(0,limit))vector.push(group.missed,group.debt);return vector;}
+function rareCount(model,counts){let total=0;for(const unit of model.knowledge.db.rares)total+=Math.max(0,num(counts[unit.id]));return total;}
+function evaluate(model,counts,routeInput,options){
+  const route=typeof routeInput==='string'?ROUTES[routeInput]:routeInput,checkpoint=checkpointFor(options&&options.round||model.round.value),stock=counts||model.effective.counts,summary=M.finalSummary(model,stock),rare=rareCount(model,stock),mode=route&&route.mode||model.intent.damageMode;
+  if(!route)return{version:VERSION,status:'unknown',label:'경로 선택 필요',route:null,checkpoint,actual:summary,rareRemaining:rare,requirements:[],groups:[],activeGroups:[],checkpointVector:[1],fullVector:[1],blockers:['물딜 또는 마딜 세부 경로를 먼저 선택해야 합니다.'],unknowns:['보스 DPS','라인 처리력'],evidence:{kind:'observed-plus-exact-ledger',combat:'unmeasured'}};
+  // v16: requirement currents use the live owned board (Rare/Special direct
+  // combat roles included), matching the documented survival role table.
+  // Durability is enforced by the regression guards instead: any craft that
+  // consumes a combat Rare visibly reopens the gap it was covering.
+  const role=M.roleState(model,stock,mode,Object.assign({},model.settings,{magicRoute:route.key,_resolvedMagicRoute:route.key}),options&&options.locks||[],false),groups=groupRows(route,role),activeCount=Math.min(groups.length,checkpoint.activeGroups),active=groups.slice(0,activeCount),structureRows=[
+    {key:'equivalent',label:'전설 환산',current:summary.legendEquivalent,target:checkpoint.equivalent,gap:Math.max(0,checkpoint.equivalent-summary.legendEquivalent)},
+    {key:'upperCount',label:'상위',current:summary.upperCount,target:checkpoint.upper,gap:Math.max(0,checkpoint.upper-summary.upperCount)},
+    {key:'nonUpperFinal',label:'비상위 전설급',current:summary.nonUpperFinalCount,target:checkpoint.nonUpper,gap:Math.max(0,checkpoint.nonUpper-summary.nonUpperFinalCount)}
+  ],rareMinimumGap=Math.max(0,num(checkpoint.rareMinimum)-rare),rareExcess=Number.isFinite(checkpoint.rareMaximum)?Math.max(0,rare-num(checkpoint.rareMaximum)):0,structureMisses=structureRows.filter(row=>row.gap>0).length+(rareMinimumGap>0?1:0),activeMisses=active.reduce((total,group)=>total+group.missed,0),checkpointVector=[structureMisses,round(structureRows[0].gap),round(structureRows[1].gap),round(structureRows[2].gap),rareMinimumGap].concat(groupVector(groups,activeCount),[rareExcess]),fullVector=groupVector(groups,groups.length),blockers=structureRows.filter(row=>row.gap>0).map(row=>`${row.label} +${round(row.gap)}`).concat(rareMinimumGap>0?[`희귀 +${rareMinimumGap}`]:[],active.flatMap(group=>group.rows.filter(row=>num(row.gap)>0).map(row=>`${row.label} +${round(row.gap)}`)),rareExcess>0?[`미사용 희귀 ${rareExcess}장`]:[]),structuralPass=structureMisses===0&&rareMinimumGap<=0&&activeMisses===0&&rareExcess<=0;
+  let status,label;if(structuralPass){status='structural';label='구조 조건 충족 · 화력 미검증';}else if(summary.legendEquivalent<checkpoint.equivalent||summary.upperCount<checkpoint.upper||summary.nonUpperFinalCount<checkpoint.nonUpper){status='developing';label='완성 전력 마감 미달';}else{status='unsafe';label='필수 역할 또는 희귀 정리 미달';}
+  const unknowns=['50~65라 실제 보스 DPS','라인 처리 속도'];if(route.key==='singleEnd')unknowns.push('단일·끝딜 컨트롤 수행');
+  const requirements=groups.flatMap(group=>group.rows.map(row=>Object.assign({},row,{group:group.index,priority:group.index+1,active:group.index<activeCount})));
+  return{version:VERSION,status,label,route,checkpoint,actual:summary,rareRemaining:rare,rareExcess,role,requirements,groups,activeGroups:active,structureRows,structureMisses,activeMisses,checkpointVector,fullVector,structuralPass,blockers,unknowns,evidence:{kind:'observed-plus-exact-ledger',inventory:'current-stock-only',roles:'live-owned-with-regression-guards',combat:'unmeasured',triggerPolicy:'core-safe-envelope'}};
+}
+function compareVector(left,right){const length=Math.max((left||[]).length,(right||[]).length);for(let index=0;index<length;index++){const a=num(left&&left[index]),b=num(right&&right[index]);if(Math.abs(a-b)>1e-9)return a-b;}return 0;}
+function improved(before,after){return compareVector(after&&after.checkpointVector,before&&before.checkpointVector)<0||compareVector(after&&after.fullVector,before&&before.fullVector)<0;}
+
+return{VERSION,ROUTES,resolveRoute,checkpointFor,evaluate,compareVector,improved,_test:{groupRows,groupVector,rareCount,requirementMap,fallbackRequirement}};
+});

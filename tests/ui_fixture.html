@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>ORD v16 UI smoke fixture</title>
+  <link rel="stylesheet" href="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_app.css">
+  <link rel="stylesheet" href="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_cockpit_v15.css">
+</head>
+<body>
+  <div id="ord-root"></div>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_units_data.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_upper_memo.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_synergy_memo.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_data_patch.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_story_nonupper_data.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_story_upper_data.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_core.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_squad_planner.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_v15_model.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_v15_ledger.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_v15_policy.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_v15_engine.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_run_log_compactor.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_run_log.js"></script>
+  <script src="../ord_tmo_auto_extension_v15_0_0_rebuild/ord_app.js"></script>
+  <script>
+  (function(){
+    // Round-50 magic singleEnd state reconstructed from the 2026-07-20 run
+    // log: open 이감/단일 deficits, four wisps, the Dragon upper on board.
+    const counts={
+      '100h':5,'200h':1,'300h':2,'310h':1,'400h':7,'500h':2,'600h':3,'700h':2,'720h':1,'780h':1,
+      '800h':1,'810e':4,'900h':5,'910h':1,D10h:2,D40h:1,G00h:1,J30h:1,K00h:1,Q20h:1,U10h:1,X20h:1,
+      Z30h:1,unit_1767884925665_1037:1
+    };
+    const catalog=window.ORD_TMO_UNITS;
+    const app=window.ORDApp.create(document.getElementById('ord-root'),catalog,{source:'ui-smoke-fixture'});
+    const now=Date.now();
+    app.updateSnapshot({
+      source:'tmo',parser:'ord-tmo-parser-v13-adapter',adapterId:'tmo-32172-main',
+      at:now,scanAt:now,bridgeAt:now,dataChangedAt:now,
+      url:'https://tmo.gg/ko/build-helper/32172',helperId:'32172',connected:true,
+      sessionId:'ui-smoke-v16',seq:2,dataHash:'ui-smoke-r50',unitCount:catalog.length,
+      collection:{found:true,confidence:.98,errors:[]},
+      countDiscovery:{found:true,parsed:catalog.length,missing:0,ambiguous:0,confidence:1,errors:[]},
+      wispCount:4,wispCountFound:true,nonzero:Object.values(counts).filter(Boolean).length,
+      currentAbilities:{},currentAbilityRows:[],currentAbilitiesFound:false,abilityCount:0,
+      units:[],counts
+    });
+    Object.assign(app.state,{
+      mode:'magic',magicRoute:'singleEnd',gorosei:'saturn',postLegendRoute:'upper',
+      currentRound:50,roundStartedAt:0,
+      directionKey:'singleEnd',directionStatus:'selected',directionUpperId:'D40h',
+      locks:[{stage:'upper',id:'D40h',source:'v15-exact-route'}]
+    });
+    app._squadCacheKey='';
+    app._v15CacheKey='';
+    app.persist();
+    app.render();
+    window.TEST_APP=app;
+  })();
+  </script>
+</body>
+</html>
