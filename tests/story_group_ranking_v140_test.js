@@ -20,7 +20,7 @@ function digest(value){return crypto.createHash('sha256').update(JSON.stringify(
 
 test('league metadata and catalog membership are independent and exhaustive',()=>{
   assert.deepStrictEqual(Object.keys(C.STORY_LEAGUES).sort(),['legend','rare','upper']);
-  assert.deepStrictEqual(Array.from(C.STORY_GRADE_TIERS),['SSS','SS','S','A','B','C','D','E','F']);
+  assert.deepStrictEqual(Array.from(C.STORY_GRADE_TIERS),['S','A','B','C','D','E','F']);
   assert(Object.isFrozen(C.STORY_GRADE_TIERS));
   assert.deepStrictEqual(
     Object.fromEntries(Object.entries(C.STORY_LEAGUES).map(([key,row])=>[key,[row.label,row.size]])),
@@ -40,16 +40,16 @@ test('league metadata and catalog membership are independent and exhaustive',()=
   assert.strictEqual([...members.upper].filter(id=>members.legend.has(id)).length,0);
 });
 
-test('rare benchmark has a complete independent 1-16 ranking and nine grade bands',()=>{
+test('rare benchmark has a complete independent 1-16 ranking and seven grade bands',()=>{
   const expectedOrder=['X90h','Q10h','Y10h','H40h','920h','220h','L50h','L10h','C20h','O10h','B20h','720h','N10h','V10h','K50h','420h'];
   assert.deepStrictEqual(expectedOrder.map(id=>C.STORY_RARE_RANKS[id]),Array.from({length:16},(_,index)=>index+1));
   assert.deepStrictEqual(
     ['X90h','Y10h','920h','L50h','C20h','O10h','720h','V10h','420h'].map(id=>{const grade=leagueGrade(id);return[id,grade.leagueRank,grade.leagueTier];}),
-    [['X90h',1,'SSS'],['Y10h',3,'SS'],['920h',5,'S'],['L50h',7,'A'],['C20h',9,'B'],['O10h',10,'C'],['720h',12,'D'],['V10h',14,'E'],['420h',16,'F']]
+    [['X90h',1,'S'],['Y10h',3,'S'],['920h',5,'A'],['L50h',7,'B'],['C20h',9,'C'],['O10h',10,'C'],['720h',12,'D'],['V10h',14,'E'],['420h',16,'F']]
   );
   assert.deepStrictEqual(
     Array.from({length:16},(_,index)=>C.storyLeagueTier(index+1,16)),
-    ['SSS','SSS','SS','SS','S','S','A','A','B','C','C','D','D','E','E','F']
+    ['S','S','S','A','A','B','B','C','C','C','D','D','E','E','F','F']
   );
   const first=leagueGrade('X90h'),last=leagueGrade('420h');
   assert.deepStrictEqual([first.leagueScore,last.leagueScore],[100,0]);
@@ -57,7 +57,7 @@ test('rare benchmark has a complete independent 1-16 ranking and nine grade band
 });
 
 test('legend-grade ranks are re-banded only inside the 76-row league',()=>{
-  const boundaries=[[1,'SSS'],[9,'SSS'],[10,'SS'],[17,'SS'],[18,'S'],[26,'S'],[27,'A'],[34,'A'],[35,'B'],[43,'B'],[44,'C'],[51,'C'],[52,'D'],[60,'D'],[61,'E'],[68,'E'],[69,'F'],[76,'F']];
+  const boundaries=[[1,'S'],[11,'S'],[12,'A'],[22,'A'],[23,'B'],[33,'B'],[34,'C'],[44,'C'],[45,'D'],[55,'D'],[56,'E'],[66,'E'],[67,'F'],[76,'F']];
   const rowByRank=new Map(Object.values(nonupper).map(row=>[row.rank,row]));
   for(const [rank,tier] of boundaries){
     const row=rowByRank.get(rank);assert(row,`legend source rank ${rank} missing`);
@@ -73,7 +73,7 @@ test('upper source states keep 1-80 ranks while 78 ranked catalog cards stay exp
   assert.strictEqual(sourceRows.length,80);
   assert.deepStrictEqual(sourceRows.map(row=>row.rank),Array.from({length:80},(_,index)=>index+1));
 
-  const boundaries=[[1,'SSS'],[9,'SSS'],[10,'SS'],[18,'SS'],[19,'S'],[27,'S'],[28,'A'],[36,'A'],[37,'B'],[45,'B'],[46,'C'],[54,'C'],[55,'D'],[63,'D'],[64,'E'],[72,'E'],[73,'F'],[80,'F']];
+  const boundaries=[[1,'S'],[12,'S'],[13,'A'],[23,'A'],[24,'B'],[35,'B'],[36,'C'],[46,'C'],[47,'D'],[58,'D'],[59,'E'],[69,'E'],[70,'F'],[80,'F']];
   const sourceByRank=new Map(sourceRows.map(row=>[row.rank,row]));
   for(const [rank,tier] of boundaries){
     const row=sourceByRank.get(rank),grade=leagueGrade(row.id);
@@ -125,10 +125,10 @@ test('league derivation leaves raw storyGrade results and measured source data u
   assert.deepStrictEqual([rareLeague.sourceTier,rareLeague.sourceScore,rareLeague.leagueTier,rareLeague.leagueRank],['C',38,'E',14]);
   const legendSource=C.storyGrade(unit('S30h')),legendLeague=leagueGrade('S30h');
   assert.deepStrictEqual([legendSource.scope,legendSource.storyRank,legendSource.tier],['nonupper',16,'A']);
-  assert.deepStrictEqual([legendLeague.sourceTier,legendLeague.leagueTier],['A','SS']);
+  assert.deepStrictEqual([legendLeague.sourceTier,legendLeague.leagueTier],['A','A']);
   const upperSource=C.storyGrade(unit('G50h')),upperLeague=leagueGrade('G50h');
   assert.deepStrictEqual([upperSource.scope,upperSource.storyRank,upperSource.tier],['upper',16,'A']);
-  assert.deepStrictEqual([upperLeague.sourceTier,upperLeague.leagueTier],['A','SS']);
+  assert.deepStrictEqual([upperLeague.sourceTier,upperLeague.leagueTier],['A','A']);
 
   const rareTuples=Object.entries(C.STORY_RARE_BENCHMARKS).sort((a,b)=>a[0].localeCompare(b[0])).map(([id,value])=>[id,value]);
   const legendTuples=Object.values(nonupper).sort((a,b)=>a.rank-b.rank).map(row=>[row.id,row.rank,row.tableTier,row.imageTier,row.displayName,row.metricType,row.value,row.approximate,row.note]);

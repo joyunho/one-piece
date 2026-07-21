@@ -1206,7 +1206,9 @@ const STORY_LEAGUES=Object.freeze({
 // Each measured league is divided independently by its original source rank.
 // Keep this order in one exported constant so data, UI filters and tests cannot
 // silently disagree about the nine story grades.
-const STORY_GRADE_TIERS=Object.freeze(['SSS','SS','S','A','B','C','D','E','F']);
+// v16.1: the destruction-speed grade runs S~F (seven equal-quantile bands)
+// inside each independent league (상위 / 전설급 / 희귀).
+const STORY_GRADE_TIERS=Object.freeze(['S','A','B','C','D','E','F']);
 
 function storyMeasuredLookup(id){
   for(const source of STORY_MEASURED_SOURCES){
@@ -1449,7 +1451,7 @@ function storyLeagueTier(rank,size){
   const r=Math.max(0,num(rank)),n=Math.max(0,num(size));if(!r||!n||r>n)return'—';
   // Preserve the former equal-quantile policy, now with nine bands.  Using
   // cumulative ceil boundaries assigns every source rank exactly once while
-  // keeping the best rank in SSS and the last rank in F for every league size.
+  // keeping the best rank in S and the last rank in F for every league size.
   const index=STORY_GRADE_TIERS.findIndex((tier,offset)=>r<=Math.ceil(n*(offset+1)/STORY_GRADE_TIERS.length));
   return STORY_GRADE_TIERS[index<0?STORY_GRADE_TIERS.length-1:index];
 }
@@ -4609,7 +4611,15 @@ class App{
   rollbackTransaction(tx){const normalized=normalizeTransaction(tx||this.state.pendingTransaction);this.restoreTransaction(normalized);this.state.pendingTransaction=null;this._squadCacheKey='';if(normalized)this.recordAuditAction({actor:'program',action:'build-rolled-back',status:normalized.status,steps:normalized.steps.map(step=>({id:String(step.id||''),name:String(step.name||'')}))});}
   prunePending(snapshot,now){const tx=normalizeTransaction(this.state.pendingTransaction);if(!tx)return false;if(!transactionSourceMatches(snapshot,tx)){this.rollbackTransaction(tx);this.setMessage('TMO 원본 세션이 바뀌어 확인 전 제작 거래를 되돌렸습니다.');return true;}const changedData=fingerprint(snapshot)!==tx.baseFingerprint||C.num(snapshot&&snapshot.dataChangedAt)>tx.baseDataChangedAt;if(changedData&&transactionMatches(snapshot,tx)){this.commitTransaction(tx);return true;}const time=now||Date.now();if(time-tx.lastAt>20000&&tx.status!=='review'){tx.status='review';this.state.pendingTransaction=tx;this.recordAuditAction({actor:'program',action:'build-confirmation-delayed',steps:tx.steps.map(step=>({id:String(step.id||''),name:String(step.name||'')}))});return true;}return false;}
   settings(){const tx=normalizeTransaction(this.state.pendingTransaction),transactionWisp=tx&&Object.prototype.hasOwnProperty.call(tx.expected,C.WISP_ID)?String(tx.expected[C.WISP_ID]):null,blueprint=normalizeUpperBlueprint(this.state.upperBlueprint),postLegendRoute=['legend','upper'].includes(this.state.postLegendRoute)?this.state.postLegendRoute:'';return{mode:this.state.mode,magicRoute:this.state.magicRoute,targetSquadCount:9,purpose:this.state.upperPreviewId?'upper':'',postLegendRoute,gorosei:this.state.gorosei,superKumaOwned:this.state.superKumaOwned,virtualSpecialId:this.state.virtualSpecialId,wispOverride:transactionWisp!=null?transactionWisp:this.state.wispOverride,upperPreviewId:this.state.upperPreviewId,preferredLineupIds:blueprint?blueprint.lineupIds:[],currentRound:C.num(this.state.currentRound)||1,roundStartedAt:this.state.roundStartedAt,roundPrepSeconds:this.state.roundPrepSeconds,roundNormalSeconds:this.state.roundNormalSeconds,roundBossSeconds:this.state.roundBossSeconds,manualCounts:this.effectiveManualCounts(this.state.snapshot),allowWarped:true,recommendWarped:true,stunConditions:{},rerollsUsed:C.num(this.state.rerollsUsed),transcendUsed:C.num(this.state.transcendUsed),seraphUsed:C.num(this.state.seraphUsed),changedUsed:C.num(this.state.changedUsed)};}
-  normalized(){return C.normalizeState(this.catalog,this.state.snapshot||{},this.settings());}
+  catalogDb(){return this._catalogDb||(this._catalogDb=C.buildDb(this.catalog));}
+  // v16.1: normalizeState clones and re-indexes the full 307-unit catalog.
+  // During early-round kill churn TMO emits a snapshot every second or two,
+  // and every render re-ran this from scratch — measurable game-machine load.
+  normalized(){
+    const settings=this.settings(),key=`${fingerprint(this.state.snapshot)}|${JSON.stringify([settings.manualCounts,settings.virtualSpecialId,settings.superKumaOwned,settings.wispOverride])}`;
+    if(key!==this._normalizedCacheKey||!this._normalizedCache){this._normalizedCache=C.normalizeState(this.catalog,this.state.snapshot||{},settings);this._normalizedCacheKey=key;}
+    return this._normalizedCache;
+  }
   postLegendDecision(state){
     const legendCount=legendHiddenCount(state),upperFinalized=!!(this.upperLock()||ownedUpperCount(state)),active=legendCount>0&&!upperFinalized;
     return{active,awaiting:active&&!this.state.postLegendRoute,route:active?this.state.postLegendRoute:'',legendCount,upperDecided:upperFinalized,previewing:active&&!!this.state.upperPreviewId};
@@ -4718,7 +4728,7 @@ class App{
   health(){const base=C.snapshotHealth(this.state.snapshot,Date.now()),waiting=this.state.awaitingNewGameFingerprint;if(waiting&&fingerprint(this.state.snapshot)===waiting)return Object.assign({},base,{key:'waiting',label:'새 게임 패 확인 중',ready:false,note:'이전 게임 패로 추천하지 않도록 잠갔습니다. TMO에서 새 게임 패로 초기화한 뒤 지금 동기화를 누르세요.'});return base;}
   upperLock(){return(this.state.locks||[]).find(x=>x&&x.stage==='upper')||null;}
   syncUpperMode(id,db){
-    const unit=(db||C.buildDb(this.catalog)).byId.get(String(id||'')),family=unit&&C.familyOf(unit);if(!['physical','magic'].includes(family))return false;let changed=false;
+    const unit=(db||this.catalogDb()).byId.get(String(id||'')),family=unit&&C.familyOf(unit);if(!['physical','magic'].includes(family))return false;let changed=false;
     if(this.state.mode!==family){this.state.mode=family;changed=true;}
     const route=family==='physical'?'auto':['dual','singleEnd'].includes(this.state.directionKey)?this.state.directionKey:'auto';if(this.state.magicRoute!==route){this.state.magicRoute=route;changed=true;}
     if(changed){this._squadCacheKey='';this._directionRankCacheKey='';}
@@ -4735,7 +4745,7 @@ class App{
     const previous=normalizeUpperBlueprint(this.state.upperBlueprint);return normalizeUpperBlueprint({upperId:id,lineupIds:[id],buildOrderIds:[id],mode:mode==='magic'?'magic':'physical',magicRoute:mode==='magic'&&['dual','singleEnd'].includes(magicRoute)?magicRoute:'physical',revision:(previous?previous.revision:0)+1,capturedFingerprint:fingerprint(this.state.snapshot),capturedAt:Date.now(),fullPartyVerified:false,commitment:'upper-route',adaptiveSupports:true});
   }
   observeUpper(previous,next){
-    const db=C.buildDb(this.catalog),prevCounts=previous&&previous.counts||{},nextCounts=next&&next.counts||{},locked=this.upperLock(),modeChanged=locked?this.syncUpperMode(locked.id,db):false;let pending=normalizeUpperDetection(this.state.upperDetection);const now=Date.now(),snapshotKey=observationKey(next);if(pending.lastSeenAt&&now-pending.lastSeenAt>8000){this.state.upperDetection=emptyUpperDetection();pending=emptyUpperDetection();}
+    const db=this.catalogDb(),prevCounts=previous&&previous.counts||{},nextCounts=next&&next.counts||{},locked=this.upperLock(),modeChanged=locked?this.syncUpperMode(locked.id,db):false;let pending=normalizeUpperDetection(this.state.upperDetection);const now=Date.now(),snapshotKey=observationKey(next);if(pending.lastSeenAt&&now-pending.lastSeenAt>8000){this.state.upperDetection=emptyUpperDetection();pending=emptyUpperDetection();}
     if(locked){
       this.state.postLegendRoute='upper';
       const family=upperRouteFamily(locked.id),activeId=activeUpperVariant(family,nextCounts),currentIndex=family?family.indexOf(locked.id):-1,activeIndex=family?family.indexOf(activeId):-1;this.state.upperDetection=emptyUpperDetection();
@@ -4992,6 +5002,8 @@ class App{
 
   v151BuildableLegendRows(state,plan){
     if(!state||!state.db||!Array.isArray(state.db.legendish))return[];
+    const cacheKey=`${this._normalizedCacheKey||''}|${plan.mode||this.state.mode||''}|${this.actualRound()}`;
+    if(cacheKey===this._buildableCacheKey&&this._buildableCache)return this._buildableCache;
     // The legacy normalizeState fabricates one Super Kuma whenever transcend
     // is still available.  The exact v15 ledger refuses that fabrication, so
     // quote this live panel from observed stock only — otherwise it lists
@@ -4999,7 +5011,9 @@ class App{
     let stock=state.counts;
     if(C.SUPER_KUMA_ID&&C.num(state.rawCounts&&state.rawCounts[C.SUPER_KUMA_ID])<=0&&C.num(stock[C.SUPER_KUMA_ID])>0)stock=Object.assign({},stock,{[C.SUPER_KUMA_ID]:0});
     const settings=Object.assign({},plan.settings||{},{currentRound:this.actualRound(),allowWarped:true,recommendWarped:true}),ctx={mode:plan.mode||this.state.mode||'physical',purpose:'story',round:this.actualRound(),settings,stock,ruleCounts:stock,availableWisp:state.wisp,deficits:{rows:[]}};
-    return state.db.legendish.filter(unit=>C.num(state.counts[unit.id])<=0).map(unit=>C.candidateRow(state,unit,ctx)).filter(row=>row.feasible&&row.rareSpend&&C.num(row.rareSpend.total)>0).sort((a,b)=>C.num(b.progress)-C.num(a.progress)||C.num(b.rareSpend.total)-C.num(a.rareSpend.total)||C.num(a.solve.wispCost)-C.num(b.solve.wispCost)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko')).slice(0,6);
+    const rows=state.db.legendish.filter(unit=>C.num(state.counts[unit.id])<=0).map(unit=>C.candidateRow(state,unit,ctx)).filter(row=>row.feasible&&row.rareSpend&&C.num(row.rareSpend.total)>0).sort((a,b)=>C.num(b.progress)-C.num(a.progress)||C.num(b.rareSpend.total)-C.num(a.rareSpend.total)||C.num(a.solve.wispCost)-C.num(b.solve.wispCost)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko')).slice(0,6);
+    this._buildableCache=rows;this._buildableCacheKey=cacheKey;
+    return rows;
   }
 
   renderV151BuildableLegends(state,plan){

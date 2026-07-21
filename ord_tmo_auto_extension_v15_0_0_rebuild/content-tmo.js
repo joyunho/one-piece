@@ -762,7 +762,7 @@
       pendingSnapshot = snapshot;
       pendingProbeHash = lastProbeHash;
       clearTimeout(confirmTimer);
-      confirmTimer = setTimeout(confirmPending, 260);
+      confirmTimer = setTimeout(confirmPending, 400);
       updateBadge(snapshot);
       return;
     }
@@ -780,7 +780,9 @@
   function schedule(force, reason) {
     dirty = true;
     clearTimeout(timer);
-    const delay = force ? 90 : 420;
+    // v16.1: combat waves mutate the TMO DOM continuously; a 420ms debounce
+    // meant a full 300-card scan roughly twice a second on the game machine.
+    const delay = force ? 90 : 700;
     timer = setTimeout(() => {
       timer = null;
       publish(!!force, reason || (force ? 'forced' : 'mutation'));

@@ -200,7 +200,9 @@ const STORY_LEAGUES=Object.freeze({
 // Each measured league is divided independently by its original source rank.
 // Keep this order in one exported constant so data, UI filters and tests cannot
 // silently disagree about the nine story grades.
-const STORY_GRADE_TIERS=Object.freeze(['SSS','SS','S','A','B','C','D','E','F']);
+// v16.1: the destruction-speed grade runs S~F (seven equal-quantile bands)
+// inside each independent league (상위 / 전설급 / 희귀).
+const STORY_GRADE_TIERS=Object.freeze(['S','A','B','C','D','E','F']);
 
 function storyMeasuredLookup(id){
   for(const source of STORY_MEASURED_SOURCES){
@@ -443,7 +445,7 @@ function storyLeagueTier(rank,size){
   const r=Math.max(0,num(rank)),n=Math.max(0,num(size));if(!r||!n||r>n)return'—';
   // Preserve the former equal-quantile policy, now with nine bands.  Using
   // cumulative ceil boundaries assigns every source rank exactly once while
-  // keeping the best rank in SSS and the last rank in F for every league size.
+  // keeping the best rank in S and the last rank in F for every league size.
   const index=STORY_GRADE_TIERS.findIndex((tier,offset)=>r<=Math.ceil(n*(offset+1)/STORY_GRADE_TIERS.length));
   return STORY_GRADE_TIERS[index<0?STORY_GRADE_TIERS.length-1:index];
 }

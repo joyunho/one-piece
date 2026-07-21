@@ -176,7 +176,7 @@ function snapshot(helperId, overrides = {}) {
     assert(source.includes('setInterval(poll, POLL_INTERVAL_MS)'));
     assert(source.includes('const POLL_INTERVAL_MS = 2000'));
     assert(source.includes('const FULL_AUDIT_INTERVAL_MS = 30000'));
-    assert(source.includes('const delay = force ? 90 : 420'));
+    assert(source.includes('const delay = force ? 90 : 700'));
     assert(source.includes("type: 'ORD_HEARTBEAT'"));
     assert(source.includes('new MutationObserver'));
   });
