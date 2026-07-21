@@ -154,7 +154,7 @@ function snapshot(helperId, overrides = {}) {
     assert(!/idSetHash\s*={2,3}\s*['"]16e572cb/.test(sources));
     assert(sources.includes('collection.confidence'));
     assert(sources.includes('counts.parsed'));
-    assert(sources.includes('unitCount >= 300')&&sources.includes('unitCount <= 380'));
+    assert(sources.includes('unitCount >= 300')&&sources.includes('unitCount <= 520'));
     assert(sources.includes('parsedCoverage === 1'));
     assert(sources.includes('counts.missing')&&sources.includes('counts.ambiguous'));
     assert(sources.includes('wispCountFound'));

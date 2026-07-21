@@ -107,6 +107,10 @@ function tierInventory(model,counts){
   return tiers;
 }
 function roleState(model,counts,mode,settings,locks,durable){
+  // Both bases stay unit-derived: the engine compares hypothetical boards, and
+  // an observed board-level ability total cannot be transferred to a board the
+  // player does not have yet.  In-game purchased upgrades are therefore not
+  // credited here — a known limitation until a transition-aware spec exists.
   const source=durable?durableCounts(model,counts):clone(counts),state=withCounts(model,source),main=C.mainUpper(state,locks||[],settings||{}),evaluationSettings=Object.assign({},settings||{},main?{_upperUnit:main}:{}),spec=C.currentSpec(state,mode,evaluationSettings),deficits=C.deficits(spec,mode,evaluationSettings);
   return{basis:durable?'durable-final-only':'live-owned',state,mainUpper:main,spec,deficits};
 }

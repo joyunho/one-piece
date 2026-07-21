@@ -646,7 +646,14 @@ class App{
   }
 
   v151BuildableLegendRows(state,plan){
-    if(!state||!state.db||!Array.isArray(state.db.legendish))return[];const settings=Object.assign({},plan.settings||{},{currentRound:this.actualRound(),allowWarped:true,recommendWarped:true}),ctx={mode:plan.mode||this.state.mode||'physical',purpose:'story',round:this.actualRound(),settings,stock:state.counts,ruleCounts:state.counts,availableWisp:state.wisp,deficits:{rows:[]}};
+    if(!state||!state.db||!Array.isArray(state.db.legendish))return[];
+    // The legacy normalizeState fabricates one Super Kuma whenever transcend
+    // is still available.  The exact v15 ledger refuses that fabrication, so
+    // quote this live panel from observed stock only — otherwise it lists
+    // transcend legends the engine will never approve.
+    let stock=state.counts;
+    if(C.SUPER_KUMA_ID&&C.num(state.rawCounts&&state.rawCounts[C.SUPER_KUMA_ID])<=0&&C.num(stock[C.SUPER_KUMA_ID])>0)stock=Object.assign({},stock,{[C.SUPER_KUMA_ID]:0});
+    const settings=Object.assign({},plan.settings||{},{currentRound:this.actualRound(),allowWarped:true,recommendWarped:true}),ctx={mode:plan.mode||this.state.mode||'physical',purpose:'story',round:this.actualRound(),settings,stock,ruleCounts:stock,availableWisp:state.wisp,deficits:{rows:[]}};
     return state.db.legendish.filter(unit=>C.num(state.counts[unit.id])<=0).map(unit=>C.candidateRow(state,unit,ctx)).filter(row=>row.feasible&&row.rareSpend&&C.num(row.rareSpend.total)>0).sort((a,b)=>C.num(b.progress)-C.num(a.progress)||C.num(b.rareSpend.total)-C.num(a.rareSpend.total)||C.num(a.solve.wispCost)-C.num(b.solve.wispCost)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko')).slice(0,6);
   }
 

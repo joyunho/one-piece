@@ -40,7 +40,7 @@ function validSnapshot(snapshot) {
   const parsedCount = Number(counts.parsed) || 0;
   const confidence = Number(collection.confidence) || 0;
   const parsedCoverage = unitCount > 0 ? parsedCount / unitCount : 0;
-  return collection.found === true && counts.found === true && unitCount >= 300 && unitCount <= 380 &&
+  return collection.found === true && counts.found === true && unitCount >= 300 && unitCount <= 520 &&
     parsedCoverage === 1 && Number(counts.missing || 0) === 0 && Number(counts.ambiguous || 0) === 0 &&
     snapshot.wispCountFound === true && confidence >= 0.72;
 }

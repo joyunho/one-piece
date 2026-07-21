@@ -1958,7 +1958,7 @@ function snapshotHealth(snapshot,now){
   if(!supportedHelper||s.parser!=='ord-tmo-parser-v13-adapter')return result('error','지원하지 않는 TMO 도우미',false,'TMO 32172를 사용하세요. 기존 34366은 호환 모드로 지원합니다.');
   if(ageSec>12||scanAgeSec>12)return result('stale','TMO 새 스캔 없음',false,`브리지 ${ageSec}초·DOM 스캔 ${scanAgeSec}초 전입니다. TMO 탭과 확장 프로그램을 확인해 주세요. 오래된 추천은 숨겼습니다.`);
   const collection=s.collection||{},countDiscovery=s.countDiscovery||{},unitCount=num(s.unitCount),parsed=num(countDiscovery.parsed),coverage=unitCount?parsed/unitCount:0,confidence=num(collection.confidence);
-  if(collection.found!==true||countDiscovery.found!==true||unitCount<300||unitCount>380||coverage!==1||num(countDiscovery.missing)>0||num(countDiscovery.ambiguous)>0||confidence<.72)return result('error','유닛 수량 수집 불완전',false,`유닛 ${unitCount}개·수량 ${parsed}/${unitCount}개·누락 ${num(countDiscovery.missing)}개·모호 ${num(countDiscovery.ambiguous)}개·신뢰도 ${Math.round(confidence*100)}%입니다. 실패한 수량을 0으로 쓰지 않고 이전 정상 패를 보호합니다.`);
+  const catalogSize=typeof global!=='undefined'&&global.ORD_TMO_UNITS?global.ORD_TMO_UNITS.length:0,unitMin=catalogSize?Math.max(200,catalogSize-7):280,unitMax=catalogSize?catalogSize+73:520;if(collection.found!==true||countDiscovery.found!==true||unitCount<unitMin||unitCount>unitMax||coverage!==1||num(countDiscovery.missing)>0||num(countDiscovery.ambiguous)>0||confidence<.72)return result('error','유닛 수량 수집 불완전',false,`유닛 ${unitCount}개·수량 ${parsed}/${unitCount}개·누락 ${num(countDiscovery.missing)}개·모호 ${num(countDiscovery.ambiguous)}개·신뢰도 ${Math.round(confidence*100)}%입니다. 실패한 수량을 0으로 쓰지 않고 이전 정상 패를 보호합니다.`);
   if(s.wispCountFound!==true)return result('error','선택 위습 수량 미확인',false,'선택 위습은 제작 가능 여부를 바꾸므로 수량을 임의로 0 처리하지 않습니다. TMO 탭을 새로고침하거나 수동 보정하세요.');
   if(s.connected===false)return result('partial','패 수집 정상 · 데스크톱 미연동',true,'패 수량은 정상입니다. 자동 게임 연동까지 쓰려면 TMO.GG 데스크톱 프로그램을 실행하세요.');
   if(num(s.abilityCount)<3)return result('partial','패 정상 · 현재 능력치 보정 중',true,'보유 수량은 정상 수신했고 빠진 현재 능력치는 보유 유닛 역할값으로 보완합니다.');
@@ -3313,6 +3313,10 @@ function tierInventory(model,counts){
   return tiers;
 }
 function roleState(model,counts,mode,settings,locks,durable){
+  // Both bases stay unit-derived: the engine compares hypothetical boards, and
+  // an observed board-level ability total cannot be transferred to a board the
+  // player does not have yet.  In-game purchased upgrades are therefore not
+  // credited here — a known limitation until a transition-aware spec exists.
   const source=durable?durableCounts(model,counts):clone(counts),state=withCounts(model,source),main=C.mainUpper(state,locks||[],settings||{}),evaluationSettings=Object.assign({},settings||{},main?{_upperUnit:main}:{}),spec=C.currentSpec(state,mode,evaluationSettings),deficits=C.deficits(spec,mode,evaluationSettings);
   return{basis:durable?'durable-final-only':'live-owned',state,mainUpper:main,spec,deficits};
 }
@@ -3776,7 +3780,9 @@ const SNAPSHOT_SCHEMA='ord-snapshot-compact-v1';
 const DECISION_SCHEMA='ord-decision-compact-v3';
 const TIERS=Object.freeze(['rare','special','uncommon','common']);
 const LIMITS=Object.freeze({
-  counts:384,progress:256,abilities:64,
+  // v16: caps sit well above the 303-unit catalog so boundary keys cannot
+  // flap in and out of the sorted truncation window, forging false deltas.
+  counts:512,progress:512,abilities:128,
   actions:3,watch:6,directionLanes:3,directionRows:2,lineup:12,
   deficitRows:14,rareRows:48,rareDestinations:4,checkpoints:6,
   mapItems:32,string:220,id:72,maxSnapshotBytes:120000,maxDecisionBytes:90000
@@ -4985,7 +4991,14 @@ class App{
   }
 
   v151BuildableLegendRows(state,plan){
-    if(!state||!state.db||!Array.isArray(state.db.legendish))return[];const settings=Object.assign({},plan.settings||{},{currentRound:this.actualRound(),allowWarped:true,recommendWarped:true}),ctx={mode:plan.mode||this.state.mode||'physical',purpose:'story',round:this.actualRound(),settings,stock:state.counts,ruleCounts:state.counts,availableWisp:state.wisp,deficits:{rows:[]}};
+    if(!state||!state.db||!Array.isArray(state.db.legendish))return[];
+    // The legacy normalizeState fabricates one Super Kuma whenever transcend
+    // is still available.  The exact v15 ledger refuses that fabrication, so
+    // quote this live panel from observed stock only — otherwise it lists
+    // transcend legends the engine will never approve.
+    let stock=state.counts;
+    if(C.SUPER_KUMA_ID&&C.num(state.rawCounts&&state.rawCounts[C.SUPER_KUMA_ID])<=0&&C.num(stock[C.SUPER_KUMA_ID])>0)stock=Object.assign({},stock,{[C.SUPER_KUMA_ID]:0});
+    const settings=Object.assign({},plan.settings||{},{currentRound:this.actualRound(),allowWarped:true,recommendWarped:true}),ctx={mode:plan.mode||this.state.mode||'physical',purpose:'story',round:this.actualRound(),settings,stock,ruleCounts:stock,availableWisp:state.wisp,deficits:{rows:[]}};
     return state.db.legendish.filter(unit=>C.num(state.counts[unit.id])<=0).map(unit=>C.candidateRow(state,unit,ctx)).filter(row=>row.feasible&&row.rareSpend&&C.num(row.rareSpend.total)>0).sort((a,b)=>C.num(b.progress)-C.num(a.progress)||C.num(b.rareSpend.total)-C.num(a.rareSpend.total)||C.num(a.solve.wispCost)-C.num(b.solve.wispCost)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko')).slice(0,6);
   }
 

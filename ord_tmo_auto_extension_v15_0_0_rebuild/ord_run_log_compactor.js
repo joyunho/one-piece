@@ -14,7 +14,9 @@ const SNAPSHOT_SCHEMA='ord-snapshot-compact-v1';
 const DECISION_SCHEMA='ord-decision-compact-v3';
 const TIERS=Object.freeze(['rare','special','uncommon','common']);
 const LIMITS=Object.freeze({
-  counts:384,progress:256,abilities:64,
+  // v16: caps sit well above the 303-unit catalog so boundary keys cannot
+  // flap in and out of the sorted truncation window, forging false deltas.
+  counts:512,progress:512,abilities:128,
   actions:3,watch:6,directionLanes:3,directionRows:2,lineup:12,
   deficitRows:14,rareRows:48,rareDestinations:4,checkpoints:6,
   mapItems:32,string:220,id:72,maxSnapshotBytes:120000,maxDecisionBytes:90000

@@ -79,7 +79,7 @@ for(const source of [background,content,boot]){
 assert(!/unitCount\s*={2,3}\s*307/.test(background+boot),'connector still hard-codes a 307-row validity gate');
 assert(!/idSetHash\s*={2,3}\s*['\"]16e572cb/.test(background+boot),'connector still hard-codes an old fingerprint gate');
 for(const key of ['collection.confidence','countDiscovery','scanAt','dataChangedAt','bridgeAt'])assert((background+content+boot).includes(key),`connector contract missing ${key}`);
-assert(background.includes('unitCount >= 300')&&background.includes('unitCount <= 380'),'adapter row range guard missing');
+assert(background.includes('unitCount >= 300')&&background.includes('unitCount <= 520'),'adapter row range guard missing');
 assert(background.includes('parsedCoverage === 1')&&background.includes('counts.missing')&&background.includes('counts.ambiguous'),'full-count guard missing');
 assert(background.includes('wispCountFound === true'),'selection-wisp guard missing');
 assert(content.includes('setInterval(poll, POLL_INTERVAL_MS)')&&content.includes('const POLL_INTERVAL_MS = 2000'),'shallow fallback probe missing');

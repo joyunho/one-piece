@@ -95,7 +95,7 @@
     const unitCount = Number(snapshot && snapshot.unitCount) || 0;
     return !!(snapshot && supported(id) && helperId(snapshot.url) === id && snapshot.parser === PARSER &&
       snapshot.sessionId && Number(snapshot.seq) > 0 && snapshot.dataHash && collection.found === true &&
-      Number(collection.confidence) >= 0.72 && counts.found === true && unitCount >= 300 && unitCount <= 380 &&
+      Number(collection.confidence) >= 0.72 && counts.found === true && unitCount >= 300 && unitCount <= 520 &&
       Number(counts.parsed) === unitCount && Number(counts.missing || 0) === 0 && Number(counts.ambiguous || 0) === 0 &&
       snapshot.wispCountFound === true);
   }
