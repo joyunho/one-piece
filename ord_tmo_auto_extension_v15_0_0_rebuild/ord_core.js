@@ -170,10 +170,19 @@ const STUN_RESEARCH={
   'unit_1752903381904_1445':{displayStun:.748,capture:70},'IC0h':{displayStun:.427,capture:49.73},'unit_1779016778159_2512':{displayStun:.317,capture:40}
 };
 
+// 희귀 42종 전체 스토리 파괴 실측 (갤러리 250029 데미지% ×100).
+// 이전 16종 부분 표를 전면 대체한다 — 값 체계는 같은 스케일이지만 측정이
+// 새로 이루어져 일부 순위가 다르다(예: 샹크스 2260→1457).
 const STORY_RARE_BENCHMARKS={
-  '420h':729,'K50h':1150,'V10h':1280,'N10h':1460,'720h':1530,'B20h':1610,'O10h':1720,'C20h':1840,
-  'L10h':1930,'L50h':2050,'220h':2160,'920h':2260,'H40h':2390,'Y10h':2600,'Q10h':2870,'X90h':3173
+  Q10h:3173,Y10h:2860,E20h:2798,X90h:2797,I20h:2530,K20h:2449,X10h:2152,R10h:2016,
+  Z10h:2013,'620h':2005,V10h:1890,'020h':1812,L50h:1708,F20h:1682,'320h':1619,'220h':1580,
+  M10h:1574,M20h:1563,H40h:1542,L20h:1521,H20h:1489,P10h:1471,'520h':1470,'920h':1457,
+  G20h:1447,L10h:1380,J20h:1359,K50h:1147,S10h:1090,'120h':1081,T10h:1071,U10h:971,
+  W10h:925,D20h:919,A20h:904,'820h':899,B20h:874,'720h':851,N10h:829,C20h:803,
+  O10h:733,'420h':729
 };
+const STORY_RARE_VALUES=Object.values(STORY_RARE_BENCHMARKS).map(num);
+const STORY_RARE_MIN=Math.min(...STORY_RARE_VALUES),STORY_RARE_MAX=Math.max(...STORY_RARE_VALUES);
 const STORY_RARE_RANKS=Object.freeze(Object.fromEntries(Object.entries(STORY_RARE_BENCHMARKS)
   .sort((a,b)=>num(b[1])-num(a[1])||String(a[0]).localeCompare(String(b[0])))
   .map(([id],index)=>[id,index+1])));
@@ -424,7 +433,7 @@ function skillFacts(u){
 }
 
 function storyGrade(u){
-  if(!u)return{score:0,tier:'—',label:'스토리 —',note:'유닛 정보 없음',basis:'na',basisLabel:'해당 없음',measured:false};const measured=storyMeasuredLookup(u.id);if(measured){const row=measured.row,rank=num(row.rank),tier=storyMeasuredTier(row.tableTier),score=storyMeasuredScore(rank,measured.source.maxRank),metric=storyMeasuredMetric(row),variants=Array.isArray(row.variants)?row.variants.slice():[row],note=[`${measured.source.label} 실측 ${rank}위`,metric,row.note].filter(Boolean).join(' · ');return{score,tier,label:`스토리 ${tier} · ${rank}위`,note,basis:'measured',basisLabel:'실측',measured:true,rank,storyRank:rank,tableTier:num(row.tableTier),metricType:row.metricType,value:num(row.value),approximate:!!row.approximate,stateKey:row.stateKey||'',scope:measured.source.key,aliasOf:row.aliasOf||'',rankBasis:'measured-rank',measurement:row,variants,variantCount:variants.length};}const raw=STORY_RARE_BENCHMARKS[u.id];if(raw){const score=Math.round(20+80*(raw-729)/(3173-729)),tier=score>=85?'S':score>=70?'A':score>=52?'B':score>=35?'C':'D';return{score,tier,label:`스토리 ${tier}`,note:`희귀 스토리 실험값 ${raw}`,basis:'measured',basisLabel:'실측',measured:true};}
+  if(!u)return{score:0,tier:'—',label:'스토리 —',note:'유닛 정보 없음',basis:'na',basisLabel:'해당 없음',measured:false};const measured=storyMeasuredLookup(u.id);if(measured){const row=measured.row,rank=num(row.rank),tier=storyMeasuredTier(row.tableTier),score=storyMeasuredScore(rank,measured.source.maxRank),metric=storyMeasuredMetric(row),variants=Array.isArray(row.variants)?row.variants.slice():[row],note=[`${measured.source.label} 실측 ${rank}위`,metric,row.note].filter(Boolean).join(' · ');return{score,tier,label:`스토리 ${tier} · ${rank}위`,note,basis:'measured',basisLabel:'실측',measured:true,rank,storyRank:rank,tableTier:num(row.tableTier),metricType:row.metricType,value:num(row.value),approximate:!!row.approximate,stateKey:row.stateKey||'',scope:measured.source.key,aliasOf:row.aliasOf||'',rankBasis:'measured-rank',measurement:row,variants,variantCount:variants.length};}const raw=STORY_RARE_BENCHMARKS[u.id];if(raw){const score=Math.round(20+80*(raw-STORY_RARE_MIN)/Math.max(1,STORY_RARE_MAX-STORY_RARE_MIN)),tier=score>=85?'S':score>=70?'A':score>=52?'B':score>=35?'C':'D';return{score,tier,label:`스토리 ${tier}`,note:`희귀 스토리 데미지 ${(raw/100).toFixed(2)}%`,basis:'measured',basisLabel:'실측',measured:true};}
   const known=STORY_RESEARCHED[u.id];if(known)return{score:known.score,tier:known.tier,label:`스토리 ${known.tier}`,note:known.note,basis:'research',basisLabel:'자료',measured:false};
   if(isItem(u)||['unit_1746119237460_7641','RANDOM'].includes(u.id))return{score:0,tier:'—',label:'스토리 —',note:'아이템·기준 안내 행으로 스토리 전투 등급 없음',basis:'na',basisLabel:'해당 없음',measured:false};
   const r=roleProfile(u);let score=24+(r.supportDamage?16:0)+(r.percent?10:0)+(r.boss?8:0)+(r.frenzy?8:0)+Math.min(15,Math.max(0,r.armor+r.triggerArmor)*.25)+Math.min(12,(r.single+r.end)*6);score=clamp(Math.round(score),15,78);const tier=score>=70?'A':score>=52?'B':score>=35?'C':'D',materialTier=isCommon(u)||isUncommon(u)||isSpecialTier(u);return{score,tier,label:`스토리 ${tier}`,note:materialTier?'재료 단계 유닛 · 스킬 역할 기반 추정, DPS 실측 아님':'스킬 역할 기반 추정 · 스토리 DPS 실측 아님',basis:'estimated',basisLabel:'추정',measured:false};

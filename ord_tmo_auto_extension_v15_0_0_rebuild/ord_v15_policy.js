@@ -43,7 +43,19 @@ function groupRows(route,role){
   // on.  Append every uncovered required row as a trailing group.
   const extras=[...map.values()].filter(row=>row&&row.required!==false&&!covered.has(row.key));
   if(extras.length)groups.push(extras);
-  return groups.map((rows,index)=>{const keys=rows.map(row=>row.key),missed=rows.filter(row=>num(row.gap)>1e-9&&!row.waived),debt=rows.reduce((total,row)=>total+(row.waived?0:Math.max(0,num(row.gap))/Math.max(.01,num(row.target))),0);return{index,keys,rows,missed:missed.length,debt:round(debt,6),pass:missed.length===0,label:rows.map(row=>row.label).join(' · ')};});
+  // v16.4: two straight losses died at round 60 with 이감 starved while an
+  // almost-closed armor group kept outranking it in the static order.  When a
+  // non-main group is nearly done (worst relative gap <=10%) it sinks below
+  // any group still wide open (>=30%), so the search funds the real deadline.
+  const relativeGap=rows=>Math.max(0,...rows.map(row=>row.waived?0:Math.max(0,num(row.gap))/Math.max(.01,num(row.target))));
+  const head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows)}));
+  tail.sort((a,b)=>{
+    const aNearlyDone=a.rel<=.1,bNearlyDone=b.rel<=.1;
+    if(aNearlyDone!==bNearlyDone&&Math.max(a.rel,b.rel)>=.3)return aNearlyDone?1:-1;
+    return a.offset-b.offset;
+  });
+  const ordered=head.concat(tail.map(item=>item.rows));
+  return ordered.map((rows,index)=>{const keys=rows.map(row=>row.key),missed=rows.filter(row=>num(row.gap)>1e-9&&!row.waived),debt=rows.reduce((total,row)=>total+(row.waived?0:Math.max(0,num(row.gap))/Math.max(.01,num(row.target))),0);return{index,keys,rows,missed:missed.length,debt:round(debt,6),pass:missed.length===0,label:rows.map(row=>row.label).join(' · ')};});
 }
 function groupVector(groups,count){const limit=Math.min(groups.length,Math.max(0,num(count)));const vector=[];for(const group of groups.slice(0,limit))vector.push(group.missed,group.debt);return vector;}
 function rareCount(model,counts){let total=0;for(const unit of model.knowledge.db.rares)total+=Math.max(0,num(counts[unit.id]));return total;}

@@ -88,7 +88,7 @@ test('core catalog partitions the shipped units into 42 Rare, 89 Upper, and 81 L
   const rare=C.storyLeagueRows(catalog,'rare');
   const upper=C.storyLeagueRows(catalog,'upper');
   const legend=C.storyLeagueRows(catalog,'legend');
-  assert.deepStrictEqual([rare[0].unit.id,rare[0].grade.leagueRank],['X90h',1]);
+  assert.deepStrictEqual([rare[0].unit.id,rare[0].grade.leagueRank],['Q10h',1]);
   assert.deepStrictEqual([upper[0].unit.id,upper[0].grade.leagueRank],['unit_1761065051171_5253',1]);
   assert.deepStrictEqual([legend[0].unit.id,legend[0].grade.leagueRank],['J70h',1]);
   assert.strictEqual(C.storyLeagueKey(catalog.find(unit=>unit.id==='unit_1761122598665_345')),'upper','Mystery units from the upper table must remain Upper');
