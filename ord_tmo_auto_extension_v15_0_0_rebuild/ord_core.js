@@ -140,7 +140,7 @@ const UPPER_PAIR_SYNERGIES=[
 const UPPER_STRATEGY_OVERRIDES={
   'I70h':{key:'attack',label:'공증·체젠형 물딜',summary:'저렴한 메인 상위로 빠르게 스토리 보상을 회수하고 방깎·보잡을 이어 붙이는 경로입니다.',needs:[['attack','공증 버프',30],['regen','체젠',1]]},
   '890H':{key:'subdamage',label:'보조딜 필수 스킬딜형',summary:'자체 스턴·방깎·공증은 있지만 보조딜러가 없으면 라인딜이 빈니다.',needs:[['subdamage','보조·방무딜',1]]},
-  'Q80h':{key:'armorBreak',label:'암브·넉백형 물딜',summary:'풀이감에서 넉백으로 라인을 관리하며 암브 계열 딜러와 묶는 경로입니다.',needs:[['armorBreak','암브 연계',1]]},
+  'Q80h':{key:'armorBreak',label:'암브·넉백 무스턴 물딜',summary:'스턴을 짜지 않고 이감을 상한까지 채워 넉백으로 라인을 관리하는 경로입니다. 스턴 대신 암브·스펙으로 마감합니다.',needs:[['armorBreak','암브 연계',1]],waives:['stunBase','stunFull']},
   'IA0h':{key:'armorBreak',label:'암브형 물딜',summary:'암브가 있어야 제 성능을 내므로 암브 공급 유닛을 먼저 확인합니다.',needs:[['armorBreak','암브 연계',1]]},
   'A90H':{key:'armorBreak',label:'암브 비례 스킬형',summary:'암브 수에 따라 스킬이 강해지며 발동 이감은 상시 이감과 분리해 봐야 합니다.',needs:[['armorBreak','추가 암브',2]]},
   'F90H':{key:'skill',label:'스킬딜형 물딜',summary:'스킬 수치가 고정된 축이라 공속과 방깎을 우선 보강합니다.',needs:[['speed','공속 버프',20]]},
@@ -402,8 +402,8 @@ function strategyConditions(u,role){
 }
 
 function upperStrategy(u){
-  if(!u)return{key:'none',label:'상위 미확정',summary:'메인 상위를 먼저 확정하세요.',needs:[],partners:[],conditions:[]};
-  const canonical=canonicalUpperId(u.id),role=roleProfile(u),desc=cleanName(u.desc||''),override=UPPER_STRATEGY_OVERRIDES[canonical]||{},needs=(override.needs||[]).map(([key,label,target])=>({key,label,target,reason:`${override.label||'상위'} 핵심 시너지`}));let label=override.label,summary=override.summary;const addNeed=(key,needLabel,target,reason)=>{if(!needs.some(x=>x.key===key))needs.push({key,label:needLabel,target,reason});};
+  if(!u)return{key:'none',label:'상위 미확정',summary:'메인 상위를 먼저 확정하세요.',needs:[],waives:[],partners:[],conditions:[]};
+  const canonical=canonicalUpperId(u.id),role=roleProfile(u),desc=cleanName(u.desc||''),override=UPPER_STRATEGY_OVERRIDES[canonical]||{},needs=(override.needs||[]).map(([key,label,target])=>({key,label,target,reason:`${override.label||'상위'} 핵심 시너지`})),waives=(override.waives||[]).slice();let label=override.label,summary=override.summary;const addNeed=(key,needLabel,target,reason)=>{if(!needs.some(x=>x.key===key))needs.push({key,label:needLabel,target,reason});};
   if(/보조딜러\s*필수/.test(desc))addNeed('subdamage','보조·방무딜',1,'상위 스킬 설명의 보조딜러 필수 조건');if(/암브.*필수|필수.*암브/.test(desc))addNeed('armorBreak','암브 연계',1,'상위 스킬 설명의 암브 필수 조건');if(/공속.*(?:필수|챙)/.test(desc))addNeed('speed','공속 보강',20,'상위 스킬 설명의 공속 조건');if(/체젠.*필수/.test(desc))addNeed('regen','체젠 버프',2,'체젠 비례 스킬 조건');if(/공증이 있어야|공증.*필수/.test(desc))addNeed('attack','공증 버프',30,'공증 조건부 스킬');if(/보잡.*필수|보스.*필요/.test(desc))addNeed('boss','보잡',1,'상위 설명의 보잡 필수 조건');
   if(!label&&role.family==='physical'&&role.armorBreak){label='암브 연계형 물딜';summary='암브 수와 방깎을 함께 올릴 때 효율이 커집니다.';addNeed('armorBreak','암브 연계',1,'암브 계열 상위 조건');}
   if(!label&&role.family==='physical'&&(role.attack||role.speed)){label='버프·범위딜형 물딜';summary=`풀방깎을 먼저 맞추고 ${role.attack?`공증 ${round2(role.attack)}`:''}${role.attack&&role.speed?' · ':''}${role.speed?`공속 ${round2(role.speed)}`:''} 버프를 스플·스킬딜러에 연결합니다.`;}
@@ -413,7 +413,7 @@ function upperStrategy(u){
   if(!label&&role.family==='magic'){label='라인딜·방무딜형 마딜';summary='두 번째 상위, 마방깎·증폭, 광보잡을 실제 스킬에 맞춰 보강합니다.';}
   if(!label){label='복합 상위';summary='실제 상시·발동 스킬과 현재 결손의 순증으로 파트너를 고릅니다.';}
   const partners=UPPER_PAIR_SYNERGIES.filter(x=>canonicalUpperId(x.a)===canonical||canonicalUpperId(x.b)===canonical).map(x=>({unitId:canonicalUpperId(x.a)===canonical?x.b:x.a,label:x.label,reason:x.reason})),conditions=strategyConditions(u,role);
-  return{key:override.key||'generic',label,summary,needs,partners,conditions,description:desc,attackPenalty:role.attackPenalty};
+  return{key:override.key||'generic',label,summary,needs,waives,partners,conditions,description:desc,attackPenalty:role.attackPenalty};
 }
 
 function skillFacts(u){
@@ -700,6 +700,11 @@ function deficits(spec,mode,settings){
   if(mode==='physical'&&!profile.requirements.some(r=>r.key==='bossFrenzy')){add('bossFrenzy','보스·광폭 보조',Math.min(num(spec.boss),num(spec.frenzy)),1,95,true);}
   if(mode==='magic'){if(profile.key==='singleEnd')add('singleEndStable','한 기 누락 후 단일·끝딜 하한',num(spec.singleEndStable),3,34,false,{recommended:true,maximum:num(spec.singleEndMax)});add('magicSupport','마딜 증폭·마방깎',num(spec.magicDef)+num(spec.magicAmp)+num(spec.explosionAmp),1,32,false,{recommended:true});}
   for(const need of strategy.needs||[]){const current=num(spec[need.key]);if(req.some(x=>x.key===need.key))continue;add(need.key,need.label,current,need.target,60,true,{mechanic:true,reason:need.reason});}
+  // v16.3: some uppers legitimately play without a role the generic route
+  // demands (e.g. Alvida's stunless knockback line).  A waived row stays
+  // visible but no longer gates, scores, or attracts recovery targets.
+  const waivedKeys=new Set(strategy.waives||[]);
+  if(waivedKeys.size)for(const row of req)if(waivedKeys.has(row.key)){row.required=false;row.recommended=false;row.waived=true;if(row.gap>0)row.status='waived';row.label=`${row.label} · 면제(스펙 대체)`;}
   const clearRows=req.filter(x=>x.required&&x.gap>0).sort((a,b)=>b.weight-a.weight),buildRows=req.filter(x=>(x.required||x.recommended)&&x.gap>0).sort((a,b)=>b.weight-a.weight),required=req.filter(x=>x.required),denominator=required.reduce((s,x)=>s+x.weight,0)||1,readiness=Math.round(required.reduce((s,x)=>s+x.weight*clamp(x.current/Math.max(.01,x.target),0,1),0)/denominator*100);
   return{rows:buildRows,buildRows,clearRows,requirements:req,control:ctl,readiness,strategy,profile,route:profile.key};
 }

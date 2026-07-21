@@ -119,6 +119,42 @@ test('recovery plan names nearest closers with wisp distance when crafting is bl
   }
 });
 
+// Fourth log (ORD_2305_20260721_145141): Alvida auto-detected at round 20
+// pushed the spec search below round 25 for the first time, tripping a latent
+// `const hold` reassignment in rareDisposition — five rounds of '판단 엔진
+// 점검 필요' on the live screen.  Exact folded TMO state of the first crash.
+const ALVIDA_R20={
+  round:20,wisp:7,
+  counts:{'100h':1,'200h':3,'300h':1,'400h':2,'500h':3,'700h':5,'800h':4,'810e':7,'900h':3,C20h:1,E20h:1,F10h:1,I00h:1,I10h:1,J10h:1,L00h:1,L20h:1,M00h:1,O00h:1,Q80h:1,S00h:1,T30h:1,U00h:1,X00h:1}
+};
+function decideAlvida(){
+  return Engine.decide({
+    catalog:units,
+    snapshot:{source:'alvida-r20-replay',counts:ALVIDA_R20.counts,currentAbilities:{},wispCountFound:true,wispCount:ALVIDA_R20.wisp},
+    settings:{mode:'physical',magicRoute:'auto',currentRound:ALVIDA_R20.round,gorosei:'saturn',postLegendRoute:'upper',superKumaOwned:true},
+    locks:[{stage:'upper',id:'Q80h',source:'tmo'}]
+  });
+}
+
+test('pre-round-25 spec search with spare rares no longer crashes (const hold regression)',()=>{
+  const decision=decideAlvida();
+  assert.notStrictEqual(decision.state,'SYNC_BLOCKED',`engine returned its crash fallback: ${decision.reason}`);
+  assert(decision.state,'decision state missing');
+});
+
+test('Alvida waives stun requirements: stunless route is not gated or chased',()=>{
+  const decision=decideAlvida();
+  const stunBase=requirementByKey(decision,'stunBase'),stunFull=requirementByKey(decision,'stunFull');
+  assert(stunBase&&stunBase.waived===true,'Alvida stunBase must be waived');
+  assert(stunFull&&stunFull.waived===true,'Alvida stunFull must be waived');
+  const blockers=decision.assessment.blockers||[];
+  assert(!blockers.some(text=>/스턴/.test(text)),`stun still listed as a blocker: ${blockers.join(' | ')}`);
+  for(const target of decision.recovery&&decision.recovery.targets||[])
+    assert(!['stunBase','stunFull'].includes(target.roleKey),'recovery ladder chased a waived stun role');
+  const slow=requirementByKey(decision,'slow');
+  assert(slow&&slow.required!==false&&!slow.waived,'slow must stay a hard requirement for the stunless route');
+});
+
 let failures=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);}
