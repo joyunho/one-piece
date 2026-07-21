@@ -489,6 +489,16 @@
 .v151-runlog-bar{display:flex;flex-direction:row;align-items:center;gap:10px}
 .v151-runlog-bar>span{color:#8FA6C4;font-size:10px}
 
+/* Story destruction-speed league badge (S~F per tier league). */
+.v151-story{display:inline-block;margin-left:7px;border:1px solid #2C4666;border-radius:999px;padding:2px 7px;background:#0B1B30;color:#9DB2CB;font-size:9px;font-weight:900;vertical-align:2px;white-space:nowrap}
+.v151-story.tier-s{border-color:rgba(255,214,120,.55);background:rgba(255,199,88,.1);color:#FFD887}
+.v151-story.tier-a{border-color:rgba(110,220,243,.45);background:rgba(56,198,232,.08);color:#8AE4F5}
+.v151-story.tier-b{border-color:rgba(54,213,138,.4);background:rgba(54,213,138,.07);color:#7ADFAD}
+.v151-story.tier-c{border-color:#33517A;color:#A9BFDA}
+.v151-story.tier-d,.v151-story.tier-e{border-color:#2A4059;color:#8CA2BE}
+.v151-story.tier-f{border-color:rgba(239,107,107,.34);color:#E79C98}
+.v151-prep-list b .v151-story,.v151-alt-line b+.v151-story{vertical-align:1px}
+
 /* Inline alternatives under the hero action. */
 .v151-alt-line{display:grid;flex:0 0 auto;gap:4px;border-top:1px dashed #2A4059;padding-top:6px}
 .v151-alt-line>small{color:#8CA2BE;font-size:9.5px;font-weight:900;letter-spacing:.03em}
