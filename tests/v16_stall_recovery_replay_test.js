@@ -182,6 +182,60 @@ test('transcend uppers stay comparable: Super Kuma assumed until spent',()=>{
   assert(model.patch.assumptions.some(row=>row.kind==='transcend-available'),'assumption record missing');
 });
 
+// Seventh log (ORD_2305_20260722_051421, physical, locked transcend upper
+// (A)쵸파 몬스터포인트): from round 41 to the round-60 boss the engine sat in
+// full 재료 보호 — the locked upper's quote needed 54~78 selection wisp while
+// the player held 5~20 — and recommended nothing for 21 rounds.  이감 stayed
+// 0~60/102, 광보잡 stayed open, and the line died to Big Mom.  While the
+// upper is far from affordable, only its tree materials may stay locked; the
+// survival search must keep running on the remaining stock.  Exact folded
+// TMO states of rounds 45 and 58 from that log.
+const CHOPPER_UPPER='unit_1747756917990_920';
+const CHOPPER_R45={
+  round:45,wisp:20,
+  counts:{'100h':3,'200h':2,'400h':2,'600h':1,'610h':1,'700h':3,'800h':4,'810e':20,'900h':1,B00h:1,B10h:1,E00h:3,H40h:2,J00h:4,J20h:1,M00h:3,N10h:1,O20h:1,O30h:1,Q30h:1,S00h:1,U00h:3,Z20h:1,unit_1767884906256_4990:1,unit_1767884925665_1037:1,unit_1767884970331_9084:1},
+  abilities:{'공격속도 증가':10,'공중이동':1,'방어력 감소':59,'스턴':1.2,'이동속도 감소':40,'체력 재생':1.25}
+};
+const CHOPPER_R58={
+  round:58,wisp:5,
+  counts:{'300h':1,'500h':3,'600h':1,'700h':1,'810e':5,'910h':1,F30h:1,IC0h:1,L00h:1,O20h:1,O30h:1,P00h:1,Q30h:1,Z20h:1,unit_1779016886375_9574:1},
+  abilities:{'공중이동':3,'광폭화':1,'단일방어력 감소':20,'마나 재생':1,'발동방어력 감소':20,'발동이동속도 감소':11,'방어력 감소':111,'보스 잡기':1,'스턴':1.7,'아머브레이크':2,'이동속도 감소':40,'체력 재생':2.25}
+};
+function decideChopper(fixture,wispOverride){
+  const counts=Object.assign({},fixture.counts);
+  if(wispOverride!=null)counts['810e']=wispOverride;
+  return Engine.decide({
+    catalog:units,
+    snapshot:{source:'chopper-hold-replay',counts,currentAbilities:fixture.abilities,wispCountFound:true,wispCount:counts['810e']},
+    settings:{mode:'physical',magicRoute:'auto',currentRound:fixture.round,gorosei:'warcury',postLegendRoute:'upper',virtualSpecialId:'610h',superKumaOwned:true},
+    locks:[{stage:'upper',id:CHOPPER_UPPER,source:'v15-exact-route'}]
+  });
+}
+
+test('far-from-affordable upper lock no longer freezes the board (r45: 광보잡 closes)',()=>{
+  const decision=decideChopper(CHOPPER_R45);
+  assert.notStrictEqual(decision.state,'PREPARE',`21 recorded rounds of 재료 보호 must not recur: ${decision.state} ${decision.reason}`);
+  assert.strictEqual(decision.state,'ACT_NOW',`the r45 state has an affordable 광보잡 closer, got ${decision.state}`);
+  const repairs=(decision.action.deltas||[]).some(row=>['bossFrenzy','slow','armor','stunBase'].includes(row.key)&&(row.closed||row.gapGain>0));
+  assert(repairs,`the action must close an open survival deficit, got ${decision.action.name}`);
+  assert(decision.upperReserve&&decision.upperReserve.reservedUnits>0,'upper tree materials must stay reserved during the survival search');
+  assert(Number(decision.upperReserve.wispShort)>0,'the reservation note must expose the wisp shortfall');
+});
+
+test('r58 replay recommends the manual 변화 비비 line (이감+깍) the player had to find alone',()=>{
+  const decision=decideChopper(CHOPPER_R58);
+  assert.strictEqual(decision.state,'ACT_NOW',`expected the 이감 repair, got ${decision.state} ${decision.reason}`);
+  const repairsSlow=(decision.action.deltas||[]).some(row=>row.key==='slow'&&row.gapGain>0);
+  assert(repairsSlow,`the r58 action must reduce the open 이감 deficit, got ${decision.action.name}`);
+  assert(decision.upperReserve,'upper reservation info missing from the searched decision');
+});
+
+test('inside the near-completion wisp band the full 재료 보호 hold is preserved',()=>{
+  const decision=decideChopper(CHOPPER_R58,60);
+  assert.strictEqual(decision.state,'PREPARE',`wisp 60 of ~70 is inside the hold band, got ${decision.state}`);
+  assert.strictEqual(decision.label,'확정 상위 재료 보호',`unexpected label ${decision.label}`);
+});
+
 let failures=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);}

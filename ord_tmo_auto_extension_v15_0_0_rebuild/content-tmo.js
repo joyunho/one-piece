@@ -11,7 +11,7 @@
     return;
   }
 
-  const VERSION = '16.5.0';
+  const VERSION = '16.6.0';
   const PARSER = 'ord-tmo-parser-v13-adapter';
   const SESSION = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
   const HELPER_ADAPTERS = Object.freeze({
@@ -82,6 +82,10 @@
   const POLL_INTERVAL_MS = 2000;
   const HEARTBEAT_INTERVAL_MS = 7000;
   const FULL_AUDIT_INTERVAL_MS = 30000;
+  // Ceiling on how long continuous page churn may block both the mutation
+  // debounce and the 400ms stability confirm.  Past this window the freshest
+  // scan ships as 'unstable-forced' — see publish()/schedule().
+  const UNSTABLE_FORCE_MS = 4000;
   let disposed = false;
   let lastHash = '';
   let pendingHash = '';
@@ -96,6 +100,7 @@
   let probeBindings = [];
   let lastProbeHash = '';
   let dirty = true;
+  let dirtySince = 0;
   let pendingSnapshot = null;
   let pendingProbeHash = '';
   let lastFullScanAt = 0;
@@ -756,8 +761,18 @@
     let snapshot;
     try { snapshot = collect(); } catch (error) { console.warn('[ORD] collect failed', error); return; }
     dirty = false;
+    dirtySince = 0;
     const changed = snapshot.dataHash !== lastHash;
-    if (changed && pendingHash !== snapshot.dataHash) {
+    // v16.6: the 400ms stability confirm has no exit under continuous DOM
+    // churn — every rescan produced a fresh hash, the pending snapshot was
+    // discarded each time, and a recorded game got zero snapshots (and zero
+    // heartbeats, because those need an unchanged hash) from the transcend
+    // craft through the round-60 boss fight.  When changed data has been
+    // blocked past this window, ship the freshest scan even if the page is
+    // still moving: a possibly-torn snapshot self-corrects on the next
+    // stable pass, a frozen coach does not.
+    const starved = changed && lastPublishedAt > 0 && Date.now() - lastPublishedAt >= UNSTABLE_FORCE_MS;
+    if (changed && !starved && pendingHash !== snapshot.dataHash) {
       pendingHash = snapshot.dataHash;
       pendingSnapshot = snapshot;
       pendingProbeHash = lastProbeHash;
@@ -774,19 +789,29 @@
       updateBadge(snapshot);
       return;
     }
-    if (changed) dispatch(snapshot, reason || 'data-change');
+    if (changed) dispatch(snapshot, starved ? 'unstable-forced' : reason || 'data-change');
     else dispatchHeartbeat(reason || 'heartbeat');
   }
   function schedule(force, reason) {
     dirty = true;
+    const now = Date.now();
+    if (!dirtySince) dirtySince = now;
     clearTimeout(timer);
     // v16.1: combat waves mutate the TMO DOM continuously; a 420ms debounce
     // meant a full 300-card scan roughly twice a second on the game machine.
-    const delay = force ? 90 : 700;
+    // v16.6: but a pure trailing debounce never fires while mutations keep
+    // arriving faster than the delay — the scan itself starves (a recorded
+    // game got zero scans from the transcend craft through the round-60
+    // boss).  The deadline may therefore trail mutations only up to an
+    // absolute cap: once now+700ms would pass dirtySince+UNSTABLE_FORCE_MS,
+    // every reset re-arms toward that same fixed due time, so the scan fires
+    // no matter how fast the page keeps changing.
+    const dueAt = force ? now + 90 : Math.min(now + 700, Math.max(now, dirtySince + UNSTABLE_FORCE_MS));
+    const overdue = !force && dueAt - now < 700;
     timer = setTimeout(() => {
       timer = null;
-      publish(!!force, reason || (force ? 'forced' : 'mutation'));
-    }, delay);
+      publish(!!force, reason || (force ? 'forced' : overdue ? 'overdue-mutation' : 'mutation'));
+    }, Math.max(0, dueAt - now));
   }
 
   function poll() {
@@ -822,7 +847,7 @@
     style.textContent = ':host{all:initial;position:fixed;right:14px;bottom:14px;z-index:2147483647;font-family:system-ui,sans-serif}.card{width:310px;padding:11px;border:1px solid #33476a;border-radius:15px;background:rgba(5,10,23,.94);color:#eaf3ff;box-shadow:0 18px 55px rgba(0,0,0,.45)}.top{display:flex;justify-content:space-between;align-items:center}.title{font-size:13px;font-weight:900}.dot{width:9px;height:9px;border-radius:50%;background:#f3b84b}.dot.ok{background:#27d17f;box-shadow:0 0 12px #27d17f}.meta{margin-top:5px;color:#8fa2bd;font-size:10px;line-height:1.45}.btn{margin-top:8px;width:100%;border:0;border-radius:10px;padding:8px;background:linear-gradient(135deg,#7b5fff,#25bfe6);color:white;font-weight:900;cursor:pointer}';
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = '<div class="top"><span class="title">ORD 실전 판단 코치 v16.5.0</span><span class="dot"></span></div><div class="meta">수집 대기 중 · TMO.GG 데스크톱 프로그램을 먼저 실행하세요</div><button class="btn">실전 코치 열기</button>';
+    card.innerHTML = '<div class="top"><span class="title">ORD 실전 판단 코치 v16.6.0</span><span class="dot"></span></div><div class="meta">수집 대기 중 · TMO.GG 데스크톱 프로그램을 먼저 실행하세요</div><button class="btn">실전 코치 열기</button>';
     card.querySelector('.btn').onclick = () => send({type: 'ORD_OPEN_DASHBOARD'});
     shadow.append(style, card);
     document.documentElement.appendChild(host);

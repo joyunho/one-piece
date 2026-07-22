@@ -115,7 +115,7 @@ function snapshot(helperId, overrides = {}) {
 (async () => {
   await test('manifest limits hosts to the two supported build-helper pages', () => {
     const manifest = JSON.parse(read('manifest.json'));
-    assert.strictEqual(manifest.version, '16.5.0');
+    assert.strictEqual(manifest.version, '16.6.0');
     assert.deepStrictEqual(manifest.permissions.sort(), ['scripting', 'storage', 'tabs']);
     const helperPermissions=manifest.host_permissions.filter(pattern=>pattern.includes('/build-helper/'));
     assert.strictEqual(helperPermissions.length,8);
@@ -176,9 +176,23 @@ function snapshot(helperId, overrides = {}) {
     assert(source.includes('setInterval(poll, POLL_INTERVAL_MS)'));
     assert(source.includes('const POLL_INTERVAL_MS = 2000'));
     assert(source.includes('const FULL_AUDIT_INTERVAL_MS = 30000'));
-    assert(source.includes('const delay = force ? 90 : 700'));
     assert(source.includes("type: 'ORD_HEARTBEAT'"));
     assert(source.includes('new MutationObserver'));
+  });
+
+  await test('continuous DOM churn cannot starve the scan or the dispatch (v16.6 freeze fix)', () => {
+    const source = read('content-tmo.js');
+    // The mutation debounce must clamp to an absolute deadline instead of
+    // trailing forever, and the 400ms stability confirm must give up and
+    // ship the freshest scan once changed data has been blocked past the
+    // force window.  A recorded game froze from the transcend craft through
+    // the round-60 boss because both layers starved under battle churn.
+    assert(source.includes('const UNSTABLE_FORCE_MS = 4000'));
+    assert(source.includes('dirtySince + UNSTABLE_FORCE_MS'));
+    assert(/const dueAt = force \? now \+ 90 : Math\.min\(now \+ 700, Math\.max\(now, dirtySince \+ UNSTABLE_FORCE_MS\)\)/.test(source));
+    assert(source.includes("lastPublishedAt > 0 && Date.now() - lastPublishedAt >= UNSTABLE_FORCE_MS"));
+    assert(source.includes("dispatch(snapshot, starved ? 'unstable-forced' : reason || 'data-change')"));
+    assert(source.includes('if (changed && !starved && pendingHash !== snapshot.dataHash)'));
   });
 
   await test('background accepts both helpers and rejects unsupported helper', async () => {
