@@ -6,7 +6,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='16.7.0';
+const VERSION='16.8.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -33,7 +33,7 @@ function checkpointFor(roundNow){
 }
 function requirementMap(role){return new Map((role&&role.deficits&&role.deficits.requirements||[]).map(row=>[row.key,row]));}
 function fallbackRequirement(key){const labels={main:'상위 딜러',armor:'상시 풀방깎',stunBase:'최소 0.5스턴',slow:'안전 이감',bossFrenzy:'광보잡',stunFull:'충분한 1.5스턴',toki:'토키',singleEndExpected:'검증된 단일·끝딜'};return{key,label:labels[key]||key,current:0,target:1,gap:1,required:true,status:'bad'};}
-function groupRows(route,role){
+function groupRows(route,role,checkpoint){
   const map=requirementMap(role),covered=new Set(route.groups.flat());
   const groups=route.groups.map(keys=>keys.map(key=>map.get(key)||fallbackRequirement(key)));
   // v16: main-upper strategic requirements (e.g. Dragon's 단일 2 / 끝딜 1) come
@@ -48,8 +48,16 @@ function groupRows(route,role){
   // non-main group is nearly done (worst relative gap <=10%) it sinks below
   // any group still wide open (>=30%), so the search funds the real deadline.
   const relativeGap=rows=>Math.max(0,...rows.map(row=>row.waived?0:Math.max(0,num(row.gap))/Math.max(.01,num(row.target))));
-  const head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows)}));
+  // v16.8: a round-50 boss death shipped with 광보잡 0/1 open for the whole
+  // game while a 0~1-wisp closer existed — armor's partial progress always
+  // outranked it in the static order.  From the round-40 build window on, a
+  // completely untouched one-unit required role (target<=1, current 0 —
+  // 광보잡·보잡·암브·보조딜·토키) may not sit behind partial numeric pools.
+  const binaryOpen=rows=>rows.some(row=>row.required!==false&&!row.waived&&num(row.target)>0&&num(row.target)<=1&&num(row.current)<=0&&num(row.gap)>0);
+  const bossPhase=num(checkpoint&&checkpoint.dueRound)>=40;
+  const head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows),binary:binaryOpen(rows)}));
   tail.sort((a,b)=>{
+    if(bossPhase&&a.binary!==b.binary)return a.binary?-1:1;
     const aNearlyDone=a.rel<=.1,bNearlyDone=b.rel<=.1;
     if(aNearlyDone!==bNearlyDone&&Math.max(a.rel,b.rel)>=.3)return aNearlyDone?1:-1;
     return a.offset-b.offset;
@@ -66,7 +74,7 @@ function evaluate(model,counts,routeInput,options){
   // combat roles included), matching the documented survival role table.
   // Durability is enforced by the regression guards instead: any craft that
   // consumes a combat Rare visibly reopens the gap it was covering.
-  const role=M.roleState(model,stock,mode,Object.assign({},model.settings,{magicRoute:route.key,_resolvedMagicRoute:route.key}),options&&options.locks||[],false),groups=groupRows(route,role),activeCount=Math.min(groups.length,checkpoint.activeGroups),active=groups.slice(0,activeCount),structureRows=[
+  const role=M.roleState(model,stock,mode,Object.assign({},model.settings,{magicRoute:route.key,_resolvedMagicRoute:route.key}),options&&options.locks||[],false),groups=groupRows(route,role,checkpoint),activeCount=Math.min(groups.length,checkpoint.activeGroups),active=groups.slice(0,activeCount),structureRows=[
     {key:'equivalent',label:'전설 환산',current:summary.legendEquivalent,target:checkpoint.equivalent,gap:Math.max(0,checkpoint.equivalent-summary.legendEquivalent)},
     {key:'upperCount',label:'상위',current:summary.upperCount,target:checkpoint.upper,gap:Math.max(0,checkpoint.upper-summary.upperCount)},
     {key:'nonUpperFinal',label:'비상위 전설급',current:summary.nonUpperFinalCount,target:checkpoint.nonUpper,gap:Math.max(0,checkpoint.nonUpper-summary.nonUpperFinalCount)}

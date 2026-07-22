@@ -236,6 +236,51 @@ test('inside the near-completion wisp band the full 재료 보호 hold is preser
   assert.strictEqual(decision.label,'확정 상위 재료 보호',`unexpected label ${decision.label}`);
 });
 
+// Eighth log (ORD_2305_20260722_064137, physical, upper F50h 크로커다일):
+// died at the ROUND-50 boss with 광보잡 0/1 open for the entire game while a
+// 0~1-wisp closer (킬러) stayed feasible for eight straight rounds — armor's
+// partial progress (100/180) always outranked the untouched one-unit role in
+// the static group order.  Exact folded TMO state of round 44.  The v16.8
+// ordering rule must recommend the 광보잡 closer, and the low-line-damage
+// upper (desc: 약한 스킬딜러) must demand a 보조·방무딜 support unit.
+const CROC_R44={
+  round:44,wisp:14,
+  counts:{'100h':2,'200h':2,'300h':1,'400h':4,'500h':5,'510h':2,'520h':1,'600h':1,'700h':2,'800h':4,'810e':14,'900h':2,A00h:1,C00h:3,C10h:1,E00h:2,E20h:2,F50h:1,G10h:1,G30h:1,IC0h:1,K20h:1,K50h:1,M00h:1,M30h:1,N30h:1,O00h:1,Q30h:1,R10h:1,Y00h:2}
+};
+
+test('round-50 boss regression: untouched 광보잡 outranks partial armor from round 40',()=>{
+  const snap=CROC_R44;
+  const decision=Engine.decide({
+    catalog:units,
+    snapshot:{source:'croc-r44-replay',counts:snap.counts,currentAbilities:{},wispCountFound:true,wispCount:snap.wisp},
+    settings:{mode:'physical',magicRoute:'auto',currentRound:snap.round,gorosei:'saturn',postLegendRoute:'upper',virtualSpecialId:'210h',superKumaOwned:true},
+    locks:[{stage:'upper',id:'F50h',source:'tmo'}]
+  });
+  assert.strictEqual(decision.state,'ACT_NOW',`a cheap 광보잡 closer exists, got ${decision.state} ${decision.reason}`);
+  const closesBossFrenzy=(decision.action.deltas||[]).some(row=>row.key==='bossFrenzy'&&(row.closed||row.gapGain>0));
+  assert(closesBossFrenzy,`the recommendation must close 광보잡, got ${decision.action.name}`);
+});
+
+test('low-line-damage upper (크로커다일) requires a 보조·방무딜 support unit',()=>{
+  const strategy=global.ORDCore.upperStrategy(units.find(unit=>unit.id==='F50h'));
+  assert(strategy.needs.some(need=>need.key==='subdamage'),'F50h must demand subdamage support');
+  const decision=Engine.decide({
+    catalog:units,
+    snapshot:{source:'croc-subdamage-replay',counts:CROC_R44.counts,currentAbilities:{},wispCountFound:true,wispCount:CROC_R44.wisp},
+    settings:{mode:'physical',magicRoute:'auto',currentRound:CROC_R44.round,gorosei:'saturn',postLegendRoute:'upper',virtualSpecialId:'210h',superKumaOwned:true},
+    locks:[{stage:'upper',id:'F50h',source:'tmo'}]
+  });
+  const row=(decision.assessment&&decision.assessment.requirements||[]).find(item=>item.key==='subdamage');
+  assert(row,'subdamage requirement missing from the judged assessment');
+  assert(row.required!==false,'subdamage must be a hard requirement for the weak-line upper');
+});
+
+test('generic rule: any upper described as 약한 스킬딜러 demands support damage',()=>{
+  const fake={id:'ZZTESTUP',name:'테스트 상위',groupName:'초월 [물딜]',desc:'유틸은 좋지만 약한 스킬딜러',abilities:{'이동속도 감소':30},stuffs:[]};
+  const strategy=global.ORDCore.upperStrategy(fake);
+  assert(strategy.needs.some(need=>need.key==='subdamage'),'desc-driven weak-line rule missing');
+});
+
 let failures=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);}
