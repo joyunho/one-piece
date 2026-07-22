@@ -155,6 +155,33 @@ test('Alvida waives stun requirements: stunless route is not gated or chased',()
   assert(slow&&slow.required!==false&&!slow.waived,'slow must stay a hard requirement for the stunless route');
 });
 
+// Sixth log (ORD_2305_20260722_025701, magic singleEnd, upper 480h 시노부):
+// at round 53 the only open requirement (충분한 1.5스턴 +0.25) had no
+// affordable closer, yet a feasible zero-regression squeeze — 변화된
+// 도플라밍고 raising 단·끝 3→3.5 — sat in 보류 for three rounds.  The
+// surplus-upgrade rule must approve it immediately.
+const SHINOBU_R53={
+  round:53,wisp:4,upperId:'480h',
+  counts:{'100h':2,'130h':1,'140h':1,'400h':1,'480h':1,'500h':1,'600h':1,'700h':1,'810e':4,'900h':3,C30h:1,D10h:1,E00h:1,E30h:1,J30h:1,X30h:1,Y20h:1,unit_1779015610844_6407:1}
+};
+
+test('unclosable-gap surplus squeeze (변화 도플라밍고) is approved, not held',()=>{
+  const decision=Engine.decide({
+    catalog:units,
+    snapshot:{source:'shinobu-r53-replay',counts:SHINOBU_R53.counts,currentAbilities:{},wispCountFound:true,wispCount:SHINOBU_R53.wisp},
+    settings:{mode:'magic',magicRoute:'singleEnd',currentRound:SHINOBU_R53.round,gorosei:'wculee',postLegendRoute:'upper',superKumaOwned:true},
+    locks:[{stage:'upper',id:SHINOBU_R53.upperId,source:'tmo'}]
+  });
+  assert.strictEqual(decision.state,'ACT_NOW',`surplus squeeze must not be held: ${decision.state} ${decision.reason}`);
+  assert(decision.action&&decision.action.id==='S50h',`expected changed Doflamingo, got ${decision.action&&decision.action.name}`);
+});
+
+test('transcend uppers stay comparable: Super Kuma assumed until spent',()=>{
+  const model=decide(FIXTURES.r57).model;
+  assert.strictEqual(model.effective.counts[global.ORDCore.SUPER_KUMA_ID]||0,1,'Kuma must be assumed while transcend is available');
+  assert(model.patch.assumptions.some(row=>row.kind==='transcend-available'),'assumption record missing');
+});
+
 let failures=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);}

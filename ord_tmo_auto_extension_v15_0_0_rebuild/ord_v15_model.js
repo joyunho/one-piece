@@ -6,7 +6,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='16.4.0';
+const VERSION='16.5.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -59,11 +59,13 @@ function applyScenarioPatch(observed,settings){
   const virtualId=String(settings&&settings.virtualSpecialId||'');
   const alreadyObserved=!!virtualId&&num(observed.counts[virtualId])>0;let virtualApplied=false;
   if(virtualId&&!alreadyObserved&&num(counts[virtualId])<=0){counts[virtualId]=1;virtualApplied=true;assumptions.push({kind:'virtual-152-special',id:virtualId,before:0,after:1,evidence:'user'});}
-  // A route-availability switch is not inventory evidence.  In particular,
-  // do not conjure the Super Kuma prerequisite merely because transcend has
-  // not been spent yet: special prerequisites must be observed in the TMO
-  // hand (the sole recipe exception is handled explicitly for Absalom).
-  if(settings&&settings.superKumaOwned===false&&num(counts[C.SUPER_KUMA_ID])>0){const before=num(counts[C.SUPER_KUMA_ID]);counts[C.SUPER_KUMA_ID]=0;assumptions.push({kind:'transcend-unavailable',id:C.SUPER_KUMA_ID,before,after:0,evidence:'user-setting'});}
+  // v16.5: 초월쿠마 is obtainable at will until the one transcend is spent —
+  // that is the game rule the '초월 가능/소진' toggle expresses.  Assume one
+  // Kuma while transcend is available so transcend uppers stay comparable in
+  // the route choice; '소진' removes it.  Other special prerequisites
+  // (레일리·해적선 등) must still be observed in the TMO hand.
+  if(settings&&settings.superKumaOwned===false){if(num(counts[C.SUPER_KUMA_ID])>0){const before=num(counts[C.SUPER_KUMA_ID]);counts[C.SUPER_KUMA_ID]=0;assumptions.push({kind:'transcend-unavailable',id:C.SUPER_KUMA_ID,before,after:0,evidence:'user-setting'});}}
+  else if(num(counts[C.SUPER_KUMA_ID])<=0){counts[C.SUPER_KUMA_ID]=1;assumptions.push({kind:'transcend-available',id:C.SUPER_KUMA_ID,before:0,after:1,evidence:'game-rule-until-spent'});}
   if(settings&&settings.wispOverride!==''&&settings&&settings.wispOverride!=null){const before=num(counts[C.WISP_ID]),after=Math.max(0,num(settings.wispOverride));counts[C.WISP_ID]=after;if(before!==after)assumptions.push({kind:'wisp-override',id:C.WISP_ID,before,after,evidence:'user'});}
   return{counts,assumptions,virtualId,virtualApplied,alreadyObserved};
 }

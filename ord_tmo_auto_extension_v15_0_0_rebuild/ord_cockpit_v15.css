@@ -495,6 +495,16 @@
 
 .v151-empty{display:grid;flex:1 1 auto;align-content:center;justify-items:start;min-height:60px;border:1px dashed #2A4059;border-radius:9px;padding:9px 10px;background:rgba(5,13,25,.35)}.v151-empty b{font-size:10.5px}.v151-empty span{margin-top:3px;color:#8297AF;font-size:9.5px;line-height:1.4}
 
+/* Nearest not-yet-craftable targets shown when the buildable panel is empty. */
+.v151-nearest{display:grid;flex:1 1 auto;gap:4px;align-content:start;min-height:0;overflow-y:auto;scrollbar-width:thin}
+.v151-nearest>small{color:#8CA2BE;font-size:9.5px;font-weight:900;letter-spacing:.03em}
+.v151-nearest>button{display:grid;grid-template-columns:34px minmax(0,1fr) auto;gap:7px;align-items:center;min-height:44px;padding:5px 6px;border-style:dashed;text-align:left;opacity:.92}
+.v151-nearest img{width:34px;height:34px;border-radius:8px;object-fit:cover;filter:saturate(.7)}
+.v151-nearest span,.v151-nearest b,.v151-nearest small{display:block;min-width:0}
+.v151-nearest b{overflow:hidden;font-size:10.5px;text-overflow:ellipsis;white-space:nowrap}
+.v151-nearest button small{overflow:hidden;color:#8CA2BE;font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.v151-nearest em{color:#DFC47F;font-size:9.5px;font-style:normal;white-space:nowrap}
+
 /* Run-log inspector page (the one reachable auxiliary view). */
 .v151-runlog-page{display:grid;gap:8px;align-content:start}
 .v151-runlog-bar{display:flex;flex-direction:row;align-items:center;gap:10px}

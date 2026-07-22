@@ -33,9 +33,9 @@ function input({counts={},percent={},settings={},abilities={}}={}){
   return{catalog,snapshot:{source:'fixture',sessionId:'v15-test',seq:1,at:1000,dataChangedAt:1000,wispCountFound:true,wispCount:Number(counts[C.WISP_ID]||0),counts:Object.assign({},counts),currentAbilities:abilities,units:rows},settings:Object.assign({currentRound:25,mode:'physical',magicRoute:'physical',postLegendRoute:'',manualCounts:{},superKumaOwned:false,wispOverride:'',virtualSpecialId:'',gorosei:'none'},settings),locks:[]};
 }
 
-assert.strictEqual(M.VERSION,'16.4.0');
-assert.strictEqual(L.VERSION,'16.4.0');
-assert.strictEqual(P.VERSION,'16.4.0');
+assert.strictEqual(M.VERSION,'16.5.0');
+assert.strictEqual(L.VERSION,'16.5.0');
+assert.strictEqual(P.VERSION,'16.5.0');
 assert.strictEqual(E.AUTHORITY,'ord-v15-decision-engine');
 
 // Observed TMO counts remain immutable evidence; user corrections live only in
@@ -100,17 +100,20 @@ assert.strictEqual(E.AUTHORITY,'ord-v15-decision-engine');
   assert.strictEqual(L.apply(model,quote,model.effective.counts).ok,true);
 }
 
-// "Transcend available" is a usage rule, not proof that the prerequisite is
-// in hand.  Special material units stay blocked until TMO actually observes
-// them.
+// v16.5: 초월쿠마 is obtainable at will until the single transcend is spent —
+// the '초월 가능' toggle asserts that game rule, so one Kuma is assumed and
+// transcend uppers stay comparable in the route choice.  '소진' removes it.
+// Other special prerequisites (레일리 등) must still be observed.
 {
-  const absent=M.build(input({counts:{[C.WISP_ID]:0},settings:{superKumaOwned:true}}));
-  assert.strictEqual(absent.effective.counts[C.SUPER_KUMA_ID]||0,0,'route setting fabricated a special material');
-  const blocked=L.quote(absent,transcend,absent.effective.counts);
+  const assumed=M.build(input({counts:{[C.WISP_ID]:0},settings:{superKumaOwned:true}}));
+  assert.strictEqual(assumed.effective.counts[C.SUPER_KUMA_ID]||0,1,'transcend availability must assume one Kuma');
+  assert(assumed.patch.assumptions.some(row=>row.kind==='transcend-available'),'the assumed Kuma must be a recorded assumption');
+  assert.strictEqual(L.quote(assumed,transcend,assumed.effective.counts).prerequisite.allowed,true);
+  const spent=M.build(input({counts:{[C.SUPER_KUMA_ID]:1,[C.WISP_ID]:0},settings:{superKumaOwned:false}}));
+  assert.strictEqual(spent.effective.counts[C.SUPER_KUMA_ID]||0,0,'spent transcend must remove the Kuma');
+  const blocked=L.quote(spent,transcend,spent.effective.counts);
   assert.strictEqual(blocked.feasible,false);
   assert(blocked.blocked.some(reason=>/초월쿠마 필요/.test(reason)),blocked.blocked);
-  const held=M.build(input({counts:{[C.SUPER_KUMA_ID]:1,[C.WISP_ID]:0},settings:{superKumaOwned:true}}));
-  assert.strictEqual(L.quote(held,transcend,held.effective.counts).feasible,true);
 }
 
 // Policy never upgrades a structural role sheet into a measured clear claim.

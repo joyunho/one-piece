@@ -313,7 +313,7 @@ class App{
     },key=[fingerprint(this.state.snapshot),JSON.stringify(strategic)].join('|');
     if(key!==this._v15CacheKey){
       try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings,locks:this.state.locks||[]});}
-      catch(error){this._v15Cache={version:'16.4.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
+      catch(error){this._v15Cache={version:'16.5.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
     }
     const base=this._v15Cache;if(!base)return null;
@@ -684,20 +684,26 @@ class App{
     if(!state||!state.db||!Array.isArray(state.db.legendish))return[];
     const cacheKey=`${this._normalizedCacheKey||''}|${plan.mode||this.state.mode||''}|${this.actualRound()}`;
     if(cacheKey===this._buildableCacheKey&&this._buildableCache)return this._buildableCache;
-    // The legacy normalizeState fabricates one Super Kuma whenever transcend
-    // is still available.  The exact v15 ledger refuses that fabrication, so
-    // quote this live panel from observed stock only — otherwise it lists
-    // transcend legends the engine will never approve.
-    let stock=state.counts;
-    if(C.SUPER_KUMA_ID&&C.num(state.rawCounts&&state.rawCounts[C.SUPER_KUMA_ID])<=0&&C.num(stock[C.SUPER_KUMA_ID])>0)stock=Object.assign({},stock,{[C.SUPER_KUMA_ID]:0});
+    // v16.5: 초월쿠마 is assumed available until spent (model rule), so this
+    // panel quotes the same stock the engine sees.
+    const stock=state.counts;
     const settings=Object.assign({},plan.settings||{},{currentRound:this.actualRound(),allowWarped:true,recommendWarped:true}),ctx={mode:plan.mode||this.state.mode||'physical',purpose:'story',round:this.actualRound(),settings,stock,ruleCounts:stock,availableWisp:state.wisp,deficits:{rows:[]}};
-    const rows=state.db.legendish.filter(unit=>C.num(state.counts[unit.id])<=0).map(unit=>C.candidateRow(state,unit,ctx)).filter(row=>row.feasible&&row.rareSpend&&C.num(row.rareSpend.total)>0).sort((a,b)=>C.num(b.progress)-C.num(a.progress)||C.num(b.rareSpend.total)-C.num(a.rareSpend.total)||C.num(a.solve.wispCost)-C.num(b.solve.wispCost)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko')).slice(0,6);
+    const allRows=state.db.legendish.filter(unit=>C.num(state.counts[unit.id])<=0).map(unit=>C.candidateRow(state,unit,ctx));
+    const rows=allRows.filter(row=>row.feasible&&row.rareSpend&&C.num(row.rareSpend.total)>0).sort((a,b)=>C.num(b.progress)-C.num(a.progress)||C.num(b.rareSpend.total)-C.num(a.rareSpend.total)||C.num(a.solve.wispCost)-C.num(b.solve.wispCost)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko')).slice(0,6);
+    // When nothing is craftable, keep the panel useful: the nearest targets
+    // with their exact missing materials, instead of a bare empty state.
+    this._buildableNearest=rows.length?[]:allRows.filter(row=>!row.feasible&&row.solve&&!(row.blocked||[]).length).sort((a,b)=>C.num(b.progress)-C.num(a.progress)||C.num(a.solve.wispCost)-C.num(b.solve.wispCost)).slice(0,3).map(row=>({unit:row.unit,progress:row.progress,wispCost:C.num(row.solve.wispCost),missing:(row.commonTop||C.commonTop(state.db,row.solve.lowestMissing||{},3)||[]).slice(0,3)}));
     this._buildableCache=rows;this._buildableCacheKey=cacheKey;
     return rows;
   }
 
   renderV151BuildableLegends(state,plan){
-    const rows=this.v151BuildableLegendRows(state,plan);if(!rows.length)return`<div class="v151-empty"><b>지금 확정 제작 가능한 전설급 없음</b><span>특수 선행재료와 선택위습까지 실제 보유분만 계산했습니다.</span></div>`;
+    const rows=this.v151BuildableLegendRows(state,plan);
+    if(!rows.length){
+      const nearest=this._buildableNearest||[];
+      if(!nearest.length)return`<div class="v151-empty"><b>지금 확정 제작 가능한 전설급 없음</b><span>특수 선행재료와 선택위습까지 실제 보유분만 계산했습니다.</span></div>`;
+      return`<div class="v151-nearest"><small>지금은 못 만들지만 가장 가까운 목표</small>${nearest.map(item=>{const missing=(item.missing||[]).map(entry=>`${entry.name}${C.num(entry.count!=null?entry.count:entry.need)>1?`×${C.num(entry.count!=null?entry.count:entry.need)}`:''}`).join(' · ');return`<button data-act="detail" data-id="${C.esc(item.unit.id)}">${item.unit.image?`<img src="${C.esc(item.unit.image)}" alt="">`:''}<span><b>${C.esc(displayNameOf(item.unit))}${this.v151StoryTag(item.unit)}</b><small>${missing?`부족: ${C.esc(missing)}`:'재료 충족 · 선위 대기'}</small></span><em>선위 ${C.num(item.wispCost)}</em></button>`;}).join('')}</div>`;
+    }
     return`<div class="v151-build-list">${rows.map((row,index)=>{const rare=(row.rareSpend.byId||[]).slice(0,2).map(item=>`${item.name}×${C.num(item.use)}`).join(' · '),grade=C.storyLeagueGrade&&C.storyLeagueGrade(row.unit,row.story)||row.story;return`<button data-act="detail" data-id="${C.esc(row.unit.id)}"><span class="v151-rank">${index+1}</span>${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:''}<span><b>${C.esc(displayNameOf(row.unit))} <i>(${C.esc(tierLabel(row.unit))})</i></b><small>TMO ${fmt(row.progress)}% · ${C.esc(grade&&grade.label||'스토리 미분류')}</small><em>${C.esc(rare)} · 선위 ${C.num(row.solve.wispCost)}</em></span></button>`;}).join('')}</div>`;
   }
 
