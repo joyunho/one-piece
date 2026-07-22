@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='16.9.0';
+const VERSION='17.0.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 const MAX_WISP_COST=23;
@@ -119,6 +119,8 @@ const BOSS_META={
     60:{boss:'빅 맘',hp:121125000},
     65:{boss:'카이도',hp:129152500}
   },
+  // 보스 방어 (2.305 [C] 파싱 확정, 50라 이후만 확보).
+  bossArmor:{50:350,55:360,60:372,65:395},
   goroseiBossHpBonusNewWorld:{warcury:10000000,saturn:10000000,nasjuro:25000000},
   goroseiBossRegenNewWorld:{base:50000,warcury:350000,nasjuro:350000,saturn:725000},
   goroseiMobHpBonusNewWorld:{saturn:10000000,nasjuro:10000000,warcury:20000000},
@@ -152,7 +154,46 @@ function bossPreview(roundNow,goroseiKey){
     const mobBonus=lineBase.newWorld?num(BOSS_META.goroseiMobHpBonusNewWorld[g]||0):0;
     line={round:lineRound,name:lineBase.name,hp:num(lineBase.hp)+mobBonus,armor:num(lineBase.armor)+num(BOSS_META.goroseiMobArmorBonus[g]||0),count:BOSS_META.mobs.perRound,withBoss:!!lineBase.newWorld};
   }
-  return{round:next,boss:base.boss,hp,hpBonus,regen,time,dpsNeed,newWorld,line};
+  return{round:next,boss:base.boss,hp,hpBonus,regen,time,dpsNeed,newWorld,bossArmor:BOSS_META.bossArmor[next]!=null?num(BOSS_META.bossArmor[next]):null,line};
+}
+// v17: 2.305는 워크3 기본 방어계수 0.06을 0.02로 바꿨다(맵 상수 확정).
+// 방깎으로 방어가 음수까지 내려가며 실제로 피해가 증폭된다 —
+// 방깎을 211 등으로 clamp하면 안 된다.
+const DEFENSE_ARMOR=0.02;
+function armorMultiplier(effectiveArmor){
+  const armor=num(effectiveArmor);
+  return armor>=0?1/(1+DEFENSE_ARMOR*armor):2-Math.pow(1-DEFENSE_ARMOR,-armor);
+}
+// 보스 상성: 관통 1.25 · 일반 1 · 공성 0.75 · 패기(hero) 1.05.
+// DAMAGE_TYPE_UNIVERSAL 스킬은 수치 방어를 무시하므로 이 표는 평타 전용.
+const ATTACK_TYPE_VS_BOSS={pierce:1.25,normal:1,siege:.75,hero:1.05};
+function upperCombatFor(unit){
+  const table=(typeof window!=='undefined'?window:globalThis).ORD_UPPER_COMBAT;
+  if(!table||!table.rows||!unit)return null;
+  if(table.rows[unit.id])return table.rows[unit.id];
+  for(const code of unit.codes||[])if(table.rows[code])return table.rows[code];
+  return null;
+}
+// 평타 raw DPS (스킬 제외).  level은 해당 등급 공업 실제 연구 레벨(시작 1).
+function upperRawDps(unit,level,speedBuffPct){
+  const row=upperCombatFor(unit);if(!row)return null;
+  const n=Math.max(1,Math.round(num(level)||1));
+  const hit=num(row.avg)+num(row.r1dmg)+num(row.rndmg)*(n-1);
+  const speed=Math.min(1+(num(row.r1spd)+num(row.rnspd)*(n-1))/100+num(speedBuffPct)/100,5);
+  return{raw:hit*speed/Math.max(.01,num(row.bat)),hit,speedMultiplier:speed,atkType:row.atkType,row};
+}
+// 보스 평타 실효 DPS와, 특정 방깎에서 필요한 raw DPS.
+function upperBossDps(unit,level,options){
+  options=options||{};const rawInfo=upperRawDps(unit,level,options.speedBuffPct);
+  if(!rawInfo)return null;
+  const bossArmor=num(options.bossArmor),armorReduce=num(options.armorReduce);
+  const multiplier=armorMultiplier(bossArmor-armorReduce)*num(ATTACK_TYPE_VS_BOSS[rawInfo.atkType]!=null?ATTACK_TYPE_VS_BOSS[rawInfo.atkType]:1);
+  return Object.assign({},rawInfo,{effective:rawInfo.raw*multiplier,multiplier});
+}
+function bossRawDpsNeed(preview,armorReduce,atkType){
+  if(!preview||preview.bossArmor==null)return null;
+  const typeMod=num(ATTACK_TYPE_VS_BOSS[atkType]!=null?ATTACK_TYPE_VS_BOSS[atkType]:1);
+  return Math.round(num(preview.dpsNeed)/(armorMultiplier(num(preview.bossArmor)-num(armorReduce))*typeMod));
 }
 
 // 조합 후 ID가 바뀌는 상위는 한 경로로 취급합니다. 뒤쪽 ID일수록 실제 활성 형태입니다.
@@ -702,19 +743,18 @@ function currentSpec(state,mode,settings,projectedUpper){
   const rc=ownedRoleCounts(state,mode),rawRc=ownedRawRoleCounts(state),raw=Object.keys(state.currentAbilities).length>0,corrected=(key,fallback,rawBase,precision=2,signed=false)=>hasRawAbility(state,key)?(precision===6?round6:precision===3?round3:round2)(signed?rawAbility(state,key)+num(fallback)-num(rawBase):Math.max(0,rawAbility(state,key)+num(fallback)-num(rawBase))):fallback;
   const rawMagicKeys=['마법 대미지 증가','단일마법 대미지 증가','모든피해증가'].filter(k=>hasRawAbility(state,k)),magicAmp=rawMagicKeys.length?round2(Math.max(0,Math.max(...rawMagicKeys.map(k=>rawAbility(state,k)))+rc.magicAmp-rawRc.magicAmp)):rc.magicAmp;
   let spec={source:raw?'TMO 원문 + 역할 교정':'보유 유닛 추정',mode,main:rc.main,stun:corrected('스턴',rc.stun,rawRc.stun,6),slow:corrected('이동속도 감소',rc.slow,rawRc.slow,2,true),triggerSlow:corrected('발동이동속도 감소',rc.triggerSlow,rawRc.triggerSlow,2,true),triggerSlowSources:rc.triggerSlowSources,armor:corrected('방어력 감소',rc.armor,rawRc.armor,2,true),triggerArmor:corrected('발동방어력 감소',rc.triggerArmor,rawRc.triggerArmor,2,true),singleArmor:corrected('단일방어력 감소',rc.singleArmor,rawRc.singleArmor),stackArmor:corrected('중첩방어력 감소',rc.stackArmor,rawRc.stackArmor),armorBreak:corrected('아머브레이크',rc.armorBreak,rawRc.armorBreak),single:rc.single,end:rc.end,singleEnd:rc.singleEnd,singleEndUnits:rc.singleEndUnits,singleEndExpected:rc.singleEndExpected,singleEndMax:rc.singleEndMax,singleEndLargest:rc.singleEndLargest,singleEndStable:rc.singleEndStable,toki:rc.toki,boss:rc.boss,frenzy:rc.frenzy,bossFrenzy:rc.bossFrenzy,utility:rc.utility,subdamage:rc.subdamage,magicDef:corrected('마법 방어력 감소',rc.magicDef,rawRc.magicDef),magicAmp,explosionAmp:corrected('폭발형 대미지 증폭',rc.explosionAmp,rawRc.explosionAmp),attack:corrected('공격력 증가',rc.attack,rawRc.attack,2,true),triggerAttack:corrected('발동공격력 증가',rc.triggerAttack,rawRc.triggerAttack,2,true),speed:corrected('공격속도 증가',rc.speed,rawRc.speed),regen:corrected('체력 재생',rc.regen,rawRc.regen),mana:corrected('마나 재생',rc.mana,rawRc.mana),deletion:rc.deletion};
-  // v16.9: 인게임 구매 업그레이드(공업·이감업·체젠업·마젠업 등)는 TMO
-  // 애드온이 전송하지 않는 것으로 확정됐다.  사용자가 게임 표기 수치를
-  // 직접 입력한 필드만 가산하고, 미입력(null·'')은 0과 구분해 건드리지
-  // 않는다 — 기본 0 처리는 후반 실제 스펙 저평가로 이어진다.
-  const mu=settings&&settings.manualUpgrades||null,muSet=key=>mu&&mu[key]!=null&&mu[key]!=='';
-  if(mu&&['attack','slow','regen','mana','speed'].some(muSet)){
-    if(muSet('attack'))spec.attack=round2(num(spec.attack)+num(mu.attack));
-    if(muSet('slow'))spec.slow=round2(num(spec.slow)+num(mu.slow));
-    if(muSet('regen'))spec.regen=round2(num(spec.regen)+num(mu.regen));
-    if(muSet('mana'))spec.mana=round2(num(spec.mana)+num(mu.mana));
-    if(muSet('speed'))spec.speed=round2(num(spec.speed)+num(mu.speed));
-    spec.manualUpgrades=Object.assign({},mu);
-    spec.source=`${spec.source} + 수동 업그레이드`;
+  // v17: 연구소 4종은 다단계가 아니라 1회 구매 체크박스로 확정됐다
+  // (2.305 [C]/[R] 동일): 공업 +12% · 이감업 +10%p · 체젠 +0.45/s ·
+  // 마젠 +0.8/s.  TMO 애드온은 연구 상태를 전송하지 않으므로 사용자
+  // 체크 입력만이 근거이고, 미체크는 0 가산이다.
+  const lab=settings&&settings.labResearch||null;
+  if(lab&&(lab.attack||lab.slow||lab.hpRegen||lab.mpRegen)){
+    if(lab.attack)spec.attack=round2(num(spec.attack)+12);
+    if(lab.slow)spec.slow=round2(num(spec.slow)+10);
+    if(lab.hpRegen)spec.regen=round2(num(spec.regen)+.45);
+    if(lab.mpRegen)spec.mana=round2(num(spec.mana)+.8);
+    spec.labResearch=Object.assign({},lab);
+    spec.source=`${spec.source} + 연구소`;
   }
   if(projectedUpper&&num(state.counts[projectedUpper.id])<=0){const after=projectedCountsForTarget(state,projectedUpper,state.counts);spec=transitionSpec(spec,state,state.counts,after,mode,' + 확정 상위 예상');}return spec;
 }
@@ -1069,5 +1109,5 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,SPECIAL_IDS,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,SPECIAL_IDS,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);
