@@ -322,7 +322,7 @@ class App{
     },key=[fingerprint(this.state.snapshot),JSON.stringify(strategic)].join('|');
     if(key!==this._v15CacheKey){
       try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings,locks:this.state.locks||[]});}
-      catch(error){this._v15Cache={version:'17.1.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
+      catch(error){this._v15Cache={version:'17.2.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
     }
     const base=this._v15Cache;if(!base)return null;
@@ -793,9 +793,14 @@ class App{
       const result=C.upperBossDps(upper,level,{bossArmor:preview.bossArmor,armorReduce,speedBuffPct:speedBuff});
       if(!result)return'';
       const koNum=value=>{value=C.num(value);if(value>=1e8)return`${(Math.round(value/1e6)/100).toFixed(2).replace(/\.?0+$/,'')}억`;if(value>=1e4)return`${Math.round(value/1e4)}만`;return String(Math.round(value));};
-      const enough=result.effective>=preview.dpsNeed;
+      // v17.2: 액션 AST 정적 하한(자동공격 유발 스킬)을 평타에 합산해
+      // 보여준다.  FSM 트레인·수동 시전 미포함이므로 여전히 하한이며
+      // 킬 판정은 내리지 않는다.
+      const skillProc=C.upperSkillProcDps?C.upperSkillProcDps(upper,level,{bossArmor:preview.bossArmor,armorReduce,speedBuffPct:speedBuff}):null;
+      const combined=result.effective+(skillProc?skillProc.dps:0);
+      const enough=combined>=preview.dpsNeed;
       const skillProfile=C.upperSkillProfile?C.upperSkillProfile(upper):null;
-      return`<div class="v151-upper-dps ${enough?'ok':'gap'}"><small>평타 실효 DPS(연구 Lv${level} · 방깎 ${Math.round(armorReduce)} · 스킬 제외)</small><b>${koNum(result.effective)}/초</b><span>${preview.round}라 ${C.esc(preview.boss)} 필요 ${koNum(preview.dpsNeed)}/초 ${enough?'충족(평타만으로)':'· 스킬·보조딜로 보충 필요'}${skillProfile&&skillProfile.skills.length?` · 스킬 ${skillProfile.skills.length}종 프로필(상세)`:''}</span></div>`;
+      return`<div class="v151-upper-dps ${enough?'ok':'gap'}"><small>평타${skillProc&&skillProc.dps>0?'+스킬유발(AST 하한)':''} 실효 DPS · 연구 Lv${level} · 방깎 ${Math.round(armorReduce)}</small><b>${koNum(combined)}/초</b><span>${preview.round}라 ${C.esc(preview.boss)} 필요 ${koNum(preview.dpsNeed)}/초 ${enough?'충족(하한 기준)':'· 트레인·수동스킬·보조딜은 별도'}${skillProfile&&skillProfile.skills.length?` · 스킬 ${skillProfile.skills.length}종 프로필(상세)`:''}</span></div>`;
     })();
     const main=upper?`<div class="v151-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>메인 상위 · ${C.num(state.counts[upper.id])>0?'TMO 보유':'제작 준비'}</small><b>${C.esc(displayNameOf(upper))} <i>(${C.esc(tierLabel(upper))})</i>${lineBadge}</b><em>${modeLabel(C.familyOf(upper))} · TMO ${fmt(C.completionPercent(state,upper))}% · ${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="detail" data-id="${C.esc(upper.id)}">상세</button></div>`:`<div class="v151-upper-main empty"><i>?</i><span><small>메인 상위 미확정</small><b>현재 패 후보를 비교하세요</b><em>상위는 전설 3기분으로 계산합니다.</em></span></div>`;
     const cards=candidates.map((row,index)=>{const selected=this.state.directionKey===row.routeKey&&C.canonicalUpperId(this.state.directionUpperId)===C.canonicalUpperId(row.id),status=row.locked?'경로 선택':row.feasible?'지금 제작 가능':`선위 ${C.num(row.wispGap)} 부족`;return`<article class="${index===0?'best':''} ${selected?'selected':''}"><span><b>${index+1}. ${C.esc(row.name)}</b><small>${C.esc(row.routeLabel||'')} · TMO ${fmt(row.completion)}% · ${C.esc(status)}</small></span><button data-act="detail" data-id="${C.esc(row.id)}">재료</button><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${canConfirm?'':'disabled'}>${canConfirm?(selected?'유지':'확정'):'25라'}</button></article>`;}).join('');

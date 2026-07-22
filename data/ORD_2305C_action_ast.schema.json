@@ -1,0 +1,141 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://local.invalid/schemas/ord-2305c-action-ast-1.0.json",
+  "title": "ORD 2.305C all-upper profiles with verified JASS action AST",
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "map",
+    "profiles",
+    "actionAst",
+    "validation"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "ord-all-upper-skill-profile/2.0-action-ast"
+    },
+    "map": {
+      "type": "object",
+      "required": [
+        "version",
+        "scriptSha256"
+      ]
+    },
+    "profiles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "profileId",
+          "actionProgram",
+          "profileStatus",
+          "simulationPolicy"
+        ],
+        "properties": {
+          "profileStatus": {
+            "const": "verified_action_ast_ready"
+          },
+          "actionProgram": {
+            "type": "object",
+            "required": [
+              "astVersion",
+              "entryPoints",
+              "functionRefs",
+              "actionRefs",
+              "counts"
+            ]
+          }
+        }
+      }
+    },
+    "actionAst": {
+      "type": "object",
+      "required": [
+        "astVersion",
+        "numericAuthorityPolicy",
+        "runtimePrimitives",
+        "globalSymbols",
+        "dispatch",
+        "functions",
+        "actions"
+      ]
+    },
+    "validation": {
+      "type": "object"
+    }
+  },
+  "$defs": {
+    "expression": {
+      "type": "object",
+      "required": [
+        "node"
+      ],
+      "properties": {
+        "node": {
+          "enum": [
+            "literal",
+            "variable",
+            "array_ref",
+            "call",
+            "function_ref",
+            "binary",
+            "unary",
+            "group",
+            "raw_expression"
+          ]
+        }
+      }
+    },
+    "action": {
+      "type": "object",
+      "required": [
+        "actionId",
+        "function",
+        "line",
+        "kind",
+        "verification"
+      ],
+      "properties": {
+        "verification": {
+          "pattern": "^verified_jass"
+        },
+        "kind": {
+          "enum": [
+            "damage",
+            "state_write",
+            "hashtable_write",
+            "hashtable_remove",
+            "hashtable_flush_child",
+            "unit_resource_set",
+            "unit_resource_add",
+            "player_resource_set",
+            "player_resource_add",
+            "actor_spawn",
+            "actor_remove",
+            "actor_kill",
+            "actor_timed_life",
+            "ability_mutation",
+            "buff_mutation",
+            "unit_order",
+            "trigger_dispatch",
+            "schedule_timer",
+            "schedule_fsm_step",
+            "fsm_slot_write",
+            "for_each_unit",
+            "actor_property_set",
+            "actor_spatial_set",
+            "actor_combat_stat_set",
+            "fsm_start_or_set_state",
+            "fsm_terminate",
+            "await_unit_event",
+            "cancel_unit_event_wait",
+            "forced_movement",
+            "restore_attack_order",
+            "actor_pause_set",
+            "status_stack_add"
+          ]
+        }
+      }
+    }
+  }
+}

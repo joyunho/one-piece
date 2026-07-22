@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='17.1.0';
+const VERSION='17.2.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 const MAX_WISP_COST=23;
@@ -204,8 +204,27 @@ function upperSkillProfile(unit){
   for(const code of unit.codes||[])if(table.byTmo[code])return table.byTmo[code];
   return null;
 }
-// 평타 한정 보스 타임라인 참고치.  스킬 데미지 훅은 AST 정규화가 끝나면
-// 이 함수의 options.skillDps 자리로 들어온다 — 그 전에는 킬 판정 금지.
+// v17.2: 액션 AST 정적 도출 — 자동공격 유발 스킬의 기대 데미지 하한.
+// strict(미해석 조건 분기=0, 명시 확률 게이트만 통과)만 수치로 쓰고,
+// approx(조건 통과 상한)는 진단용이다.  수동 시전·FSM 트레인 미포함,
+// allowKillVerdict=false 유지.
+function upperSkillProcDps(unit,level,options){
+  options=options||{};
+  const table=(typeof window!=='undefined'?window:globalThis).ORD_UPPER_SKILL_DPS;
+  const rawInfo=upperRawDps(unit,level,options.speedBuffPct);
+  if(!table||!table.byProfile||!rawInfo)return null;
+  let profileId=null;
+  if(table.byTmo[unit.id])profileId=table.byTmo[unit.id];
+  else for(const code of unit.codes||[])if(table.byTmo[code]){profileId=table.byTmo[code];break;}
+  if(!profileId||!table.byProfile[profileId])return null;
+  const derived=table.byProfile[profileId],strict=derived.perAttack&&derived.perAttack.strict||{affected:0,universal:0};
+  const attacksPerSec=rawInfo.speedMultiplier/Math.max(.01,num(rawInfo.row.bat));
+  const armorMult=options.bossArmor!=null?armorMultiplier(num(options.bossArmor)-num(options.armorReduce)):1;
+  const dps=num(strict.universal)*attacksPerSec+num(strict.affected)*attacksPerSec*armorMult;
+  return{profileId,perAttackStrict:num(strict.affected)+num(strict.universal),dps,attacksPerSec,basis:'static-lower-bound-attack-proc-only',coverage:derived.coverage||null};
+}
+// 평타 한정 보스 타임라인 참고치.  options.skillDps에 upperSkillProcDps의
+// 하한을 넣을 수 있다 — 그래도 킬 판정은 내리지 않는다.
 function simulateBossFlat(unit,level,options){
   options=options||{};
   const preview=bossPreview(options.round||50,options.gorosei);
@@ -1129,5 +1148,5 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,SPECIAL_IDS,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,SPECIAL_IDS,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);
