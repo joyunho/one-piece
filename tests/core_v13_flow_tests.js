@@ -19,7 +19,7 @@ const tests=[];
 function test(name,fn){tests.push([name,fn]);}
 
 test('v13 exports state-aware flow and exact clear profiles',()=>{
-  assert.strictEqual(C.VERSION,'16.6.0');
+  assert.strictEqual(C.VERSION,'16.7.0');
   assert.strictEqual(typeof C.gameFlow,'function');
   assert.strictEqual(typeof C.clearProfileDetails,'function');
 });

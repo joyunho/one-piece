@@ -313,7 +313,7 @@ class App{
     },key=[fingerprint(this.state.snapshot),JSON.stringify(strategic)].join('|');
     if(key!==this._v15CacheKey){
       try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings,locks:this.state.locks||[]});}
-      catch(error){this._v15Cache={version:'16.6.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
+      catch(error){this._v15Cache={version:'16.7.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
     }
     const base=this._v15Cache;if(!base)return null;
@@ -671,7 +671,11 @@ class App{
     for(const row of decision.alternatives||[]){if(items.some(item=>item.id===row.id))continue;items.push({id:row.id,name:row.name,wispCost:row.wispCost,note:row.reason||'대체 경로'});if(items.length>=3)break;}
     if(!items.length&&decision.blockedAction){const blocked=decision.blockedAction,missing=(blocked.quote&&blocked.quote.blocked||blocked.row&&blocked.row.blocked||[]).slice(0,2).join(' · ');items.push({id:blocked.id,name:blocked.name,wispCost:blocked.wispCost,note:missing||'부족 재료를 보존'});}
     for(const target of decision.recovery&&decision.recovery.targets||[]){if(items.length>=5)break;if(items.some(item=>item.id===target.id))continue;items.push({id:target.id,name:target.name,wispCost:target.wispCost,note:`${target.roleLabel} 회복 목표${target.feasible?' · 지금 가능':''}`});}
-    return items.length?`<div class="v151-prep-list">${items.slice(0,5).map((item,index)=>{const unit=state.db&&state.db.byId.get(item.id);return`<button data-act="detail" data-id="${C.esc(item.id)}">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:`<i>${index+1}</i>`}<span><b>${C.esc(item.name)}${this.v151StoryTag(unit)}</b><small>${C.esc(item.note)}</small></span><em>선위 ${C.num(item.wispCost)}</em></button>`;}).join('')}<p>미리 준비만 하며, 실제 다음 행동은 TMO 패 변화 뒤 다시 확정합니다.</p></div>`:`<div class="v151-empty"><b>현재 행동만 확정</b><span>다음 행동은 지금 미리 고정하지 않고 TMO 변화 뒤 계산합니다.</span></div>`;
+    // v16.7: 확정 상위·검토된 보조 경로·현재 전투 역할 어디에도 쓰이지
+    // 않는 희귀는 다음 행동과 무관하게 리롤을 권장한다(한 번에 1장 원칙).
+    const rerollRows=decision.rare&&!decision.rare.conflict?(decision.rare.reroll||[]).filter(row=>C.num(row.reroll)>0).slice(0,2):[];
+    const rerollHint=rerollRows.length&&decision.state!=='REROLL_ONE'?`<div class="v151-reroll-hint"><small>리롤 권장</small>${rerollRows.map(row=>`<button data-act="detail" data-id="${C.esc(row.id)}"><b>${C.esc(row.name)}${C.num(row.reroll)>1?` ×${C.num(row.reroll)}`:''}</b><span>확정 상위·보조 경로에 사용처 없음 · 1장씩 리롤 후 다시 동기화</span></button>`).join('')}</div>`:'';
+    return items.length||rerollHint?`<div class="v151-prep-list">${items.slice(0,5).map((item,index)=>{const unit=state.db&&state.db.byId.get(item.id);return`<button data-act="detail" data-id="${C.esc(item.id)}">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:`<i>${index+1}</i>`}<span><b>${C.esc(item.name)}${this.v151StoryTag(unit)}</b><small>${C.esc(item.note)}</small></span><em>선위 ${C.num(item.wispCost)}</em></button>`;}).join('')}${rerollHint}<p>미리 준비만 하며, 실제 다음 행동은 TMO 패 변화 뒤 다시 확정합니다.</p></div>`:`<div class="v151-empty"><b>현재 행동만 확정</b><span>다음 행동은 지금 미리 고정하지 않고 TMO 변화 뒤 계산합니다.</span></div>`;
   }
 
   renderV151CurrentSpec(state,plan){
@@ -680,16 +684,37 @@ class App{
     return`<div class="v151-spec-head"><div class="damage-mode-switch" role="group" aria-label="딜 계통 선택"><button class="${!this.state.mode?'on':''}" data-act="mode" data-value="">자동</button><button class="${this.state.mode==='physical'?'on':''}" data-act="mode" data-value="physical">물딜</button><button class="${magic?'on':''}" data-act="mode" data-value="magic">마딜</button></div>${magic?`<select data-opt="magicRoute" aria-label="마딜 경로"><option value="auto" ${route==='auto'?'selected':''}>자동 경로</option><option value="dual" ${route==='dual'?'selected':''}>2상위·토키</option><option value="singleEnd" ${route==='singleEnd'?'selected':''}>1상위·단끝</option></select>`:''}<strong>선위 ${C.num(state.wisp)}</strong></div><div class="v151-spec-grid">${cards||'<div class="v151-empty"><b>스펙 계산 대기</b><span>첫 제작 뒤 역할 수치를 표시합니다.</span></div>'}</div>`;
   }
 
+  // v16.7: 자동 모드에서는 첫 전설(보유 비상위 전설·히든)의 계열이 이후
+  // 전설급 추천 방향을 정한다.  명시 선택(물딜/마딜)이 있으면 그것이 우선.
+  v151FamilyIntent(state){
+    const mode=this.state.mode;
+    if(mode==='physical'||mode==='magic')return mode;
+    if(!state||!state.db||!Array.isArray(state.db.legendish))return'';
+    let physical=0,magic=0;
+    for(const unit of state.db.legendish){
+      if(C.isUpper(unit)||C.isShip(unit)||!/전설|히든/.test(C.groupName(unit)))continue;
+      if(C.num(state.counts[unit.id])<=0)continue;
+      const family=C.familyOf(unit);
+      if(family==='physical')physical+=1;else if(family==='magic')magic+=1;
+    }
+    if(physical>0&&magic<=0)return'physical';
+    if(magic>0&&physical<=0)return'magic';
+    return'';
+  }
   v151BuildableLegendRows(state,plan){
     if(!state||!state.db||!Array.isArray(state.db.legendish))return[];
-    const cacheKey=`${this._normalizedCacheKey||''}|${plan.mode||this.state.mode||''}|${this.actualRound()}`;
+    const familyMode=this.v151FamilyIntent(state);
+    const cacheKey=`${this._normalizedCacheKey||''}|${plan.mode||this.state.mode||''}|${familyMode}|${this.actualRound()}`;
     if(cacheKey===this._buildableCacheKey&&this._buildableCache)return this._buildableCache;
     // v16.5: 초월쿠마 is assumed available until spent (model rule), so this
     // panel quotes the same stock the engine sees.
     const stock=state.counts;
     const settings=Object.assign({},plan.settings||{},{currentRound:this.actualRound(),allowWarped:true,recommendWarped:true}),ctx={mode:plan.mode||this.state.mode||'physical',purpose:'story',round:this.actualRound(),settings,stock,ruleCounts:stock,availableWisp:state.wisp,deficits:{rows:[]}};
-    const allRows=state.db.legendish.filter(unit=>C.num(state.counts[unit.id])<=0).map(unit=>C.candidateRow(state,unit,ctx));
-    const rows=allRows.filter(row=>row.feasible&&row.rareSpend&&C.num(row.rareSpend.total)>0).sort((a,b)=>C.num(b.progress)-C.num(a.progress)||C.num(b.rareSpend.total)-C.num(a.rareSpend.total)||C.num(a.solve.wispCost)-C.num(b.solve.wispCost)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko')).slice(0,6);
+    // v16.7: 계열 방향이 정해졌으면(선택 또는 첫 전설 추론) 반대 계열
+    // 전설급은 이 패널에서 제외하고, 동순위는 스토리 등급이 빠른 쪽 먼저.
+    const familyOk=unit=>familyMode!=='physical'&&familyMode!=='magic'||C.familyOf(unit)!==(familyMode==='physical'?'magic':'physical');
+    const allRows=state.db.legendish.filter(unit=>C.num(state.counts[unit.id])<=0&&familyOk(unit)).map(unit=>C.candidateRow(state,unit,ctx));
+    const rows=allRows.filter(row=>row.feasible&&row.rareSpend&&C.num(row.rareSpend.total)>0).sort((a,b)=>C.num(b.progress)-C.num(a.progress)||C.num(b.rareSpend.total)-C.num(a.rareSpend.total)||C.num(a.solve.wispCost)-C.num(b.solve.wispCost)||C.num(b.story&&b.story.score)-C.num(a.story&&a.story.score)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko')).slice(0,6);
     // When nothing is craftable, keep the panel useful: the nearest targets
     // with their exact missing materials, instead of a bare empty state.
     this._buildableNearest=rows.length?[]:allRows.filter(row=>!row.feasible&&row.solve&&!(row.blocked||[]).length).sort((a,b)=>C.num(b.progress)-C.num(a.progress)||C.num(a.solve.wispCost)-C.num(b.solve.wispCost)).slice(0,3).map(row=>({unit:row.unit,progress:row.progress,wispCost:C.num(row.solve.wispCost),missing:(row.commonTop||C.commonTop(state.db,row.solve.lowestMissing||{},3)||[]).slice(0,3)}));

@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='16.6.0';
+const VERSION='16.7.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 const MAX_WISP_COST=23;

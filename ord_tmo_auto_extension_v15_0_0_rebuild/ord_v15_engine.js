@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P){
 'use strict';
 
-const VERSION='16.6.0';
+const VERSION='16.7.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -38,8 +38,27 @@ function pseudoUnit(unit){const group=C.groupName(unit),name=nameOf(unit);return
 function finalUnit(unit){return!!unit&&(C.isLegendish(unit)||C.isUpper(unit));}
 // v16.1: a pre-game 물딜/마딜 choice restricts completion-phase candidates to
 // that family (neutral units always stay).  자동 keeps both families.
-function intentFamilyOk(model,unit){
+// v16.7: 계열 필터 재정의 — 희귀 이하 재료·희귀 후보는 계열을 구분하지
+// 않는다.  전설급·상위 후보만 필터를 받고, 자동 모드에서는 첫 전설(보유
+// 비상위 전설·히든)이 물딜/마딜 한쪽으로 수렴한 순간부터 그 계열을
+// 따른다(중립·혼합 보유면 필터 없음).
+function familyIntent(model){
   const mode=model.intent.damageMode;
+  if(mode==='physical'||mode==='magic')return mode;
+  let physical=0,magic=0;
+  for(const unit of model.knowledge.db.legendish){
+    if(C.isUpper(unit)||C.isShip(unit)||!/전설|히든/.test(C.groupName(unit)))continue;
+    if(num(model.effective.counts[unit.id])<=0)continue;
+    const family=C.familyOf(unit);
+    if(family==='physical')physical+=1;else if(family==='magic')magic+=1;
+  }
+  if(physical>0&&magic<=0)return'physical';
+  if(magic>0&&physical<=0)return'magic';
+  return'';
+}
+function intentFamilyOk(model,unit){
+  if(!unit||!C.isLegendish(unit)&&!C.isUpper(unit))return true;
+  const mode=familyIntent(model);
   if(mode!=='physical'&&mode!=='magic')return true;
   return C.familyOf(unit)!==(mode==='physical'?'magic':'physical');
 }
@@ -92,7 +111,9 @@ function makeRow(model,quote,assessment,reason){
   return{unit,solve:quote.solve,currentSolve:quote.solve,feasible:quote.feasible,blocked:[...new Set(blocked)],availableWisp:quote.wisp.before,wispGap:Math.max(0,quote.wisp.cost-quote.wisp.before),wispBreakdown:{current:quote.wisp.cost,planned:quote.wisp.cost,available:quote.wisp.before,gap:Math.max(0,quote.wisp.cost-quote.wisp.before),basis:'v15-exact-ledger'},progress,progressOriginal:completion?num(completion.originalTmoPercent):progress,progressPredicted:completion?num(completion.predictedTmoPercent):progress,completionProjection:completion,role,story,rareUse,rareSpend:{total:rareUse,byId:Object.entries(quote.rareUse||{}).map(([id,use])=>({id,name:C.materialName(model.knowledge.db,id),use,num:use}))},commonTop,why:{headline:reason||'현재 패의 정확한 순차 원장으로 계산했습니다.',approved:quote.feasible},v15Quote:quote,v15Assessment:assessment};
 }
 function completionDecision(model,units,label){
-  const quoted=units.map(unit=>{const completion=M.completionFor?M.completionFor(model,unit):null;return{unit,quote:L.quote(model,unit,model.effective.counts,{availableRound:model.round.value}),completion:completion?num(completion.rankingPercent):num(model.effective.percent[unit.id]),completionDetail:completion};}).filter(item=>num(model.effective.counts[item.unit.id])<=0&&item.quote.prerequisite.allowed&&!item.quote.blocked.some(reason=>/조합 근거 부족|레시피 순환/.test(reason))).sort((a,b)=>b.completion-a.completion||Number(b.quote.feasible)-Number(a.quote.feasible)||a.quote.wisp.cost-b.quote.wisp.cost||nameOf(a.unit).localeCompare(nameOf(b.unit),'ko')),best=quoted[0];
+  // v16.7: 같은 완성도·같은 선위 소모라면 스토리 파괴 속도(스토리 등급
+  // 점수)가 빠른 쪽을 먼저 설계한다 — 첫 희귀·첫 전설 공통.
+  const quoted=units.map(unit=>{const completion=M.completionFor?M.completionFor(model,unit):null;return{unit,quote:L.quote(model,unit,model.effective.counts,{availableRound:model.round.value}),completion:completion?num(completion.rankingPercent):num(model.effective.percent[unit.id]),completionDetail:completion,story:num(C.storyGrade(unit).score)};}).filter(item=>num(model.effective.counts[item.unit.id])<=0&&item.quote.prerequisite.allowed&&!item.quote.blocked.some(reason=>/조합 근거 부족|레시피 순환/.test(reason))).sort((a,b)=>b.completion-a.completion||Number(b.quote.feasible)-Number(a.quote.feasible)||a.quote.wisp.cost-b.quote.wisp.cost||b.story-a.story||nameOf(a.unit).localeCompare(nameOf(b.unit),'ko')),best=quoted[0];
   if(!best)return{version:VERSION,state:'HOLD',authority:true,label:`${label} 후보 없음`,reason:'특수 선행재료가 없거나 조합 데이터를 확인할 수 없습니다.',action:null,alternatives:[],unknowns:[]};
   const projected=!!(best.completionDetail&&best.completionDetail.isProjected),completionReason=projected?`${label} 후보는 152킬 특별함 포함 예상 TMO 완성도 ${round(best.completion,1)}%로 가장 가깝습니다. 원 TMO ${round(best.completionDetail.originalTmoPercent,1)}%에서 레시피 환산 +${round(best.completionDetail.delta,1)}%p입니다.`:`${label} 후보는 원 TMO 완성도 ${round(best.completion,1)}%로 가장 가깝습니다.`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible?'ACT_NOW':'PREPARE';
   const candidate={id:best.unit.id,name:nameOf(best.unit),unit:best.unit,row,quote:best.quote,completion:best.completionDetail,wispCost:best.quote.wisp.cost,wispAfter:best.quote.wisp.after,result:'completion-rule',stopCondition:`선택 위습이 ${best.quote.wisp.cost}개보다 적거나 패가 바뀌면 만들지 말고 다시 동기화`};
@@ -325,5 +346,5 @@ function buildDecision(input){
   return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,decide:buildDecision,_test:{allCandidates,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,routeCandidateCompare,routeOptions,expand}};
+return{VERSION,AUTHORITY,decide:buildDecision,_test:{allCandidates,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,routeCandidateCompare,routeOptions,expand}};
 });

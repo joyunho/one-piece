@@ -452,6 +452,12 @@
 .v151-deltas{display:flex;flex:0 0 auto;gap:4px;flex-wrap:wrap}.v151-deltas span{border:1px solid #274561;border-radius:999px;padding:3px 7px;background:#0A1A2E;color:#A7BBD0;font-size:9.5px}.v151-deltas b{color:#ECF8FF}
 .v151-action-foot{display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;gap:8px;margin-top:auto}.v151-action-foot>small{overflow:hidden;color:#EFAAA5;font-size:9.5px;text-overflow:ellipsis;white-space:nowrap}.v151-action-foot>div{display:flex;gap:5px;flex:0 0 auto}
 .v151-action.blocked,.v151-action.choice{justify-content:center}.v151-action-copy{display:flex;gap:9px;align-items:center}.v151-action-copy>i{display:grid;flex:0 0 auto;place-items:center;width:36px;height:36px;border-radius:10px;background:#56242B;color:#FFB0AA;font-style:normal;font-weight:950}.v151-action-copy p{white-space:normal}.v151-inline-actions{display:grid;flex:0 0 auto;grid-template-columns:1fr 1fr;gap:6px;margin-top:5px}.v151-jump-note{display:block;margin-top:7px;color:#F0C978;font-size:10px;font-weight:850}
+/* Reroll guidance: rares with no use in the committed upper/support paths. */
+.v151-reroll-hint{display:grid;flex:0 0 auto;gap:4px;border-top:1px dashed #4A2E3A;padding-top:6px}
+.v151-reroll-hint>small{color:#D89AA6;font-size:9.5px;font-weight:900;letter-spacing:.03em}
+.v151-reroll-hint>button{display:grid;gap:2px;border:1px solid #4A2534;border-radius:9px;padding:5px 8px;background:#1A0E16;text-align:left;cursor:pointer}
+.v151-reroll-hint>button b{color:#FFB9C5;font-size:10.5px}
+.v151-reroll-hint>button span{color:#B08894;font-size:9.5px}
 /* Upper reservation note: tree materials locked, survival search still live. */
 .v151-upper-guard{display:flex;flex:0 0 auto;gap:6px;align-items:center;border:1px solid rgba(240,185,78,.28);border-radius:9px;padding:5px 8px;background:rgba(240,185,78,.06);color:#CBB98A;font-size:9.5px}
 .v151-upper-guard>i{flex:0 0 auto;font-size:11px;font-style:normal}
