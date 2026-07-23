@@ -115,9 +115,11 @@ test('planner requirement order and weights are derived from core clear prioriti
 
   const single=P._test.requirementRows(spec,[],'magic','singleEnd',{gorosei:'none'},null).rows.filter(row=>row.required);
   const sw=Object.fromEntries(single.map(row=>[row.key,row.weight]));
-  assert.deepStrictEqual(single.map(row=>row.key),['main','bossFrenzy','stunBase','slow','stunFull','singleEndExpected']);
+  // v17.6(감사 P0-3): 단일·끝딜 독립 하드 컷 행이 추가됐다.
+  assert.deepStrictEqual(single.map(row=>row.key),['main','bossFrenzy','stunBase','slow','stunFull','singleEndExpected','single','end']);
   assert.strictEqual(sw.bossFrenzy,sw.stunBase);
   assert(sw.stunBase>sw.slow&&sw.slow>sw.stunFull&&sw.stunFull>sw.singleEndExpected);
+  assert(sw.singleEndExpected>sw.single&&sw.single>sw.end);
 });
 
 test('the bounded search is deterministic and keeps warmed p95 bounded',()=>{

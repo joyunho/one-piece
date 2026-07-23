@@ -42,7 +42,11 @@ function lateRole(){
     {key:'stunBase',label:'최소 0.5스턴',current:.9,target:.5,gap:0,required:true},
     {key:'slow',label:'이감 117%',current:110,target:117,gap:7,required:true},
     {key:'stunFull',label:'충분한 1.5스턴',current:1.1,target:1.5,gap:.4,required:true},
-    {key:'singleEndExpected',label:'검증된 단일·끝딜',current:2.5,target:3,gap:.5,required:true}
+    {key:'singleEndExpected',label:'검증된 단일·끝딜',current:2.5,target:3,gap:.5,required:true},
+    // v17.6: 단일·끝딜 분리 하드 컷이 기본 행이 됐다 — 픽스처에서는 닫힌
+    // 상태로 두어 v17.4 부양 시나리오(환산·1.5스턴만 열림)를 유지한다.
+    {key:'single',label:'단일딜 환산 2',current:2,target:2,gap:0,required:true},
+    {key:'end',label:'끝딜 환산 1',current:1,target:1,gap:0,required:true}
   ]}};
 }
 const groupIndexOf=(groups,key)=>groups.findIndex(group=>group.keys.includes(key));

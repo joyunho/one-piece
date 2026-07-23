@@ -6,7 +6,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='17.5.0';
+const VERSION='17.6.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -56,7 +56,12 @@ function applyScenarioPatch(observed,settings){
     const before=num(counts[id]),after=Math.max(0,num(value));counts[id]=after;
     if(before!==after)assumptions.push({kind:'manual-count',id,before,after,evidence:'user'});
   }
-  const virtualId=String(settings&&settings.virtualSpecialId||'');
+  // v17.6(감사 P0-2): 152킬 보상 자격 풀(특별함 33종 중 압살롬 제외
+  // 32종) 밖의 ID는 무시하고 가정 목록에 거부 사실을 남긴다.
+  const requestedVirtualId=String(settings&&settings.virtualSpecialId||'');
+  const virtualEligible=!requestedVirtualId||!C.eligible152SpecialId||C.eligible152SpecialId(observed.db,requestedVirtualId);
+  const virtualId=virtualEligible?requestedVirtualId:'';
+  if(requestedVirtualId&&!virtualEligible)assumptions.push({kind:'virtual-152-special-rejected',id:requestedVirtualId,before:0,after:0,evidence:'ineligible-pool'});
   const alreadyObserved=!!virtualId&&num(observed.counts[virtualId])>0;let virtualApplied=false;
   if(virtualId&&!alreadyObserved&&num(counts[virtualId])<=0){counts[virtualId]=1;virtualApplied=true;assumptions.push({kind:'virtual-152-special',id:virtualId,before:0,after:1,evidence:'user'});}
   // v16.5: 초월쿠마 is obtainable at will until the one transcend is spent —

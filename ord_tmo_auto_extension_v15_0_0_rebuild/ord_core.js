@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='17.5.0';
+const VERSION='17.6.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -463,6 +463,10 @@ function requiresWarpedCraft(db,target,counts){
   return need(target.id,1);
 }
 function isAbsalom(u){return /^압살롬(?:\s|\(|$)/.test(nameOf(u));}
+// v17.6(감사 P0-2): 152킬 보상 특별함은 33종 중 압살롬 제외 32종 균등
+// 추첨 — UI 목록과 모델 검증이 이 단일 권위 함수를 함께 쓴다.
+function eligible152Specials(db){return(db&&db.specials||[]).filter(u=>!isAbsalom(u));}
+function eligible152SpecialId(db,id){if(!id)return false;const u=db&&db.byId&&db.byId.get(id);return!!u&&isSpecialTier(u)&&!isAbsalom(u);}
 function canonicalUpperId(id){return UPPER_VARIANT_CANONICAL[id]||id||'';}
 function upperVariantPriority(id){return num(UPPER_VARIANT_PRIORITY[id]);}
 function activeUpperVariant(state,u){
@@ -623,7 +627,7 @@ function storyLeagueKey(u,grade){
 }
 function storyLeagueTier(rank,size){
   const r=Math.max(0,num(rank)),n=Math.max(0,num(size));if(!r||!n||r>n)return'—';
-  // Preserve the former equal-quantile policy, now with nine bands.  Using
+  // Preserve the former equal-quantile policy, now with seven bands.  Using
   // cumulative ceil boundaries assigns every source rank exactly once while
   // keeping the best rank in S and the last rank in F for every league size.
   const index=STORY_GRADE_TIERS.findIndex((tier,offset)=>r<=Math.ceil(n*(offset+1)/STORY_GRADE_TIERS.length));
@@ -668,7 +672,9 @@ function normalizeState(catalog,snapshot,settings){
   const merged=mergeLiveCatalog(catalog,snapshot||{}),db=buildDb(merged),rawCounts=Object.assign({},snapshot&&snapshot.counts||{});
   for(const u of merged){if(u.count!=null&&!Object.prototype.hasOwnProperty.call(rawCounts,u.id))rawCounts[u.id]=num(u.count);}const counts=Object.assign({},rawCounts),manual=settings&&settings.manualCounts||{};
   for(const [id,v] of Object.entries(manual)){if(v!==''&&v!=null)counts[id]=Math.max(0,num(v));}
-  let virtualResolved=false;const virtualId=settings&&settings.virtualSpecialId||'';if(virtualId){if(num(rawCounts[virtualId])>0)virtualResolved=true;else counts[virtualId]=Math.max(1,num(counts[virtualId]));}
+  // v17.6(감사 P0-2): 자격 없는 ID(압살롬·비특별·미존재)는 무시한다 —
+  // 규칙상 불가능한 가상 재료가 추천 계산에 섞이지 않게.
+  let virtualResolved=false;const requestedVirtualId=settings&&settings.virtualSpecialId||'',virtualId=eligible152SpecialId(db,requestedVirtualId)?requestedVirtualId:'';if(virtualId){if(num(rawCounts[virtualId])>0)virtualResolved=true;else counts[virtualId]=Math.max(1,num(counts[virtualId]));}
   if(settings&&settings.superKumaOwned===false)counts[SUPER_KUMA_ID]=0;else counts[SUPER_KUMA_ID]=Math.max(1,num(counts[SUPER_KUMA_ID]));
   const wispOverride=settings&&settings.wispOverride;if(wispOverride!==''&&wispOverride!=null)counts[WISP_ID]=Math.max(0,num(wispOverride));
   const currentAbilities={};for(const [k,v] of Object.entries(snapshot&&snapshot.currentAbilities||{}))currentAbilities[canonicalAbility(k)]=num(v);
@@ -882,7 +888,12 @@ function clearProfileDetails(spec,mode,settings){
     {key:'stunBase',label:'최소 0.5 스턴',current:stunBase,target:.5,weight:110},
     {key:'slow',label:`이감 ${slowTarget}%`,current:ctl.slow,target:slowTarget,weight:95},
     {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85},
-    {key:'singleEndExpected',label:'검증된 보조 단일·끝딜',current:singleEndExpected,target:3,weight:70,meta:{stable:round2(singleEndStable),maximum:round2(singleEndMaximum),verifiedUnits:num(spec.singleEndUnits)}}
+    {key:'singleEndExpected',label:'검증된 보조 단일·끝딜',current:singleEndExpected,target:3,weight:70,meta:{stable:round2(singleEndStable),maximum:round2(singleEndMaximum),verifiedUnits:num(spec.singleEndUnits)}},
+    // v17.6(감사 P0-3): 합산 환산만 검사하면 단일 전용 3기(끝딜 0)나
+    // 끝딜 전용 3기도 통과한다.  사용자 기준 악몽 스펙(단일 2~3 ·
+    // 끝딜 1~2)대로 두 축을 독립 필수로 하드 컷한다.
+    {key:'single',label:'단일딜 환산 2',current:num(spec.single),target:2,weight:68},
+    {key:'end',label:'끝딜 환산 1',current:num(spec.end),target:1,weight:66}
   ],dualDistance=routeDistance(dual),singleEndDistance=routeDistance(singleEnd),requested=normalizeMagicRoute(settings._resolvedMagicRoute||settings.magicRoute),selected=requested==='auto'?(dualDistance<=singleEndDistance?'dual':'singleEnd'):requested,requirements=selected==='dual'?dual:singleEnd;
   return{mode,key:selected,label:selected==='dual'?'마딜 2상위 + 토키':'마딜 1상위 + 단일·끝딜',requested,requirements,distance:selected==='dual'?dualDistance:singleEndDistance,slowTarget,stunTarget:1.5,singleEndFloor:3,singleEndStable:3,priority:selected==='dual'?['main','stunBase','slow','stunFull','bossFrenzy','toki']:['bossFrenzy','stunBase','slow','stunFull','singleEndExpected'],routes:{dual:{key:'dual',label:'2상위 + 토키',distance:dualDistance,requirements:dual},singleEnd:{key:'singleEnd',label:'1상위 + 단·끝 3~4',distance:singleEndDistance,requirements:singleEnd}},note:selected==='dual'?'두 번째 상위와 0.5스턴을 최우선으로 보고, 토키·광보잡을 마감합니다.':'광보잡과 0.5스턴을 먼저 지키고, 단·끝은 메인 상위를 제외한 직접 abilities 기여만 합산합니다.'};
 }
@@ -892,7 +903,11 @@ function deficits(spec,mode,settings){
   for(const r of profile.requirements)add(r.key,r.label,r.current,r.target,r.weight,r.required!==false,r.meta||{});
   if(mode==='physical'&&!profile.requirements.some(r=>r.key==='bossFrenzy')){add('bossFrenzy','보스·광폭 보조',Math.min(num(spec.boss),num(spec.frenzy)),1,95,true);}
   if(mode==='magic'){if(profile.key==='singleEnd')add('singleEndStable','한 기 누락 후 단일·끝딜 하한',num(spec.singleEndStable),3,34,false,{recommended:true,maximum:num(spec.singleEndMax)});add('magicSupport','마딜 증폭·마방깎',num(spec.magicDef)+num(spec.magicAmp)+num(spec.explosionAmp),1,32,false,{recommended:true});}
-  for(const need of strategy.needs||[]){const current=num(spec[need.key]);if(req.some(x=>x.key===need.key))continue;add(need.key,need.label,current,need.target,60,true,{mechanic:true,reason:need.reason});}
+  for(const need of strategy.needs||[]){const current=num(spec[need.key]),existing=req.find(x=>x.key===need.key);
+    // v17.6: 기본 경로 행이 이미 있으면 건너뛰지 말고 더 높은 목표로
+    // 승격한다 — 상위 전략 요구가 기본 하드 컷보다 셀 수 있다.
+    if(existing){if(num(need.target)>num(existing.target)){existing.target=round2(need.target);existing.gap=round2(Math.max(0,num(existing.target)-num(existing.current)));existing.label=need.label;existing.status=existing.current>=existing.target?'ok':existing.current>=existing.target*.7?'warn':'bad';existing.mechanic=true;existing.reason=need.reason;}continue;}
+    add(need.key,need.label,current,need.target,60,true,{mechanic:true,reason:need.reason});}
   // v16.3: some uppers legitimately play without a role the generic route
   // demands (e.g. Alvida's stunless knockback line).  A waived row stays
   // visible but no longer gates, scores, or attracts recovery targets.
@@ -1113,7 +1128,7 @@ function supportClearStage(row,plan){
   // The display must preserve the same equal-priority gates as the party
   // planner. In particular, physical armor and the minimum 0.5 stun are one
   // stage, as are safe slow and boss/frenzy coverage.
-  const mode=plan&&plan.mode,route=plan&&plan.resolvedMagicRoute||plan&&plan.deficits&&plan.deficits.route||plan&&plan.settings&&plan.settings._resolvedMagicRoute||'singleEnd',priority=mode==='physical'?[['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']]:[['main'],['bossFrenzy','stunBase'],['slow'],['stunFull'],['singleEndExpected']],missing=new Set(clearRows.map(item=>item.key)),grouped=new Set(),groups=[];
+  const mode=plan&&plan.mode,route=plan&&plan.resolvedMagicRoute||plan&&plan.deficits&&plan.deficits.route||plan&&plan.settings&&plan.settings._resolvedMagicRoute||'singleEnd',priority=mode==='physical'?[['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']]:[['main'],['bossFrenzy','stunBase'],['slow'],['stunFull'],['singleEndExpected','single','end']],missing=new Set(clearRows.map(item=>item.key)),grouped=new Set(),groups=[];
   for(const keys of priority){const active=keys.filter(key=>missing.has(key));if(active.length){groups.push(active);active.forEach(key=>grouped.add(key));}}
   for(const need of clearRows)if(!grouped.has(need.key))groups.push([need.key]);
   for(let index=0;index<groups.length;index++){
@@ -1161,5 +1176,5 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);

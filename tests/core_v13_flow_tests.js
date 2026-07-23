@@ -19,7 +19,7 @@ const tests=[];
 function test(name,fn){tests.push([name,fn]);}
 
 test('v13 exports state-aware flow and exact clear profiles',()=>{
-  assert.strictEqual(C.VERSION,'17.5.0');
+  assert.strictEqual(C.VERSION,'17.6.0');
   assert.strictEqual(typeof C.gameFlow,'function');
   assert.strictEqual(typeof C.clearProfileDetails,'function');
 });
@@ -145,10 +145,14 @@ test('magic dual route requires two uppers, Toki, 1.5 stun, 102 slow and boss/fr
 });
 
 test('magic single/end route requires three verified support credits and keeps the one-unit-drop floor optional',()=>{
-  const settings=baseSettings({mode:'magic',magicRoute:'singleEnd'}),two=C.deficits(magicSpec({main:1,toki:0,singleEndUnits:2,singleEnd:4,singleEndExpected:2,singleEndMax:2,singleEndLargest:1,singleEndStable:1}),'magic',settings),three=C.deficits(magicSpec({main:1,toki:0,singleEndUnits:3,singleEnd:3,singleEndExpected:3,singleEndMax:3,singleEndLargest:1,singleEndStable:2}),'magic',settings);
+  // v17.6(감사 P0-3): 단일·끝딜이 독립 필수 축이 됐다 — 합산 3만으로는
+  // 통과하지 못하고 single>=2, end>=1을 함께 채워야 한다.
+  const settings=baseSettings({mode:'magic',magicRoute:'singleEnd'}),two=C.deficits(magicSpec({main:1,toki:0,singleEndUnits:2,singleEnd:4,singleEndExpected:2,singleEndMax:2,singleEndLargest:1,singleEndStable:1}),'magic',settings),three=C.deficits(magicSpec({main:1,toki:0,single:2,end:1,singleEndUnits:3,singleEnd:3,singleEndExpected:3,singleEndMax:3,singleEndLargest:1,singleEndStable:2}),'magic',settings);
   assert.strictEqual(two.route,'singleEnd');
   assert(two.clearRows.some(x=>x.key==='singleEndExpected'&&x.target===3));
   assert.deepStrictEqual(three.clearRows,[]);
+  const singleOnly=C.deficits(magicSpec({main:1,toki:0,single:3,end:0,singleEndUnits:3,singleEnd:3,singleEndExpected:3,singleEndMax:3,singleEndLargest:1,singleEndStable:2}),'magic',settings);
+  assert(singleOnly.clearRows.some(x=>x.key==='end'),'단일 전용 3기가 끝딜 하드 컷을 통과하면 안 된다');
   assert(three.buildRows.some(x=>x.key==='singleEndStable'&&x.target===3&&x.recommended));
   assert.deepStrictEqual(three.profile.priority,['bossFrenzy','stunBase','slow','stunFull','singleEndExpected']);
 });
