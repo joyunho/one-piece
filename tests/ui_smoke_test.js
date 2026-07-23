@@ -12,14 +12,20 @@ process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
 const {chromium}=require('playwright');
 
 (async()=>{
+  // Resolution order: explicit override → Playwright's own registry (covers
+  // `npx playwright install chromium` on CI and standard installs) →
+  // known container fallbacks.
+  let registryPath='';
+  try{registryPath=chromium.executablePath()||'';}catch(_){registryPath='';}
   const candidates=[
     process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE,
+    registryPath,
     '/opt/pw-browsers/chromium',
     '/tmp/ord-chromium',
     '/root/.cache/ms-playwright/chromium-1228/chrome-linux64/chrome',
     '/root/.cache/ms-playwright/chromium_headless_shell-1228/chrome-headless-shell-linux64/chrome-headless-shell'
   ].filter(Boolean);
-  const executablePath=candidates.find(fs.existsSync);
+  const executablePath=candidates.find(candidate=>{try{return fs.existsSync(candidate);}catch(_){return false;}});
   if(!executablePath){console.log('SKIP  UI smoke: Playwright Chromium executable not installed');return;}
 
   const browser=await chromium.launch({headless:true,executablePath,args:['--no-sandbox','--single-process','--no-zygote','--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
