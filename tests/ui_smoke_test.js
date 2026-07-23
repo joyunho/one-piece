@@ -48,7 +48,7 @@ const {chromium}=require('playwright');
           hasRecovery:!!(decision.recovery&&decision.recovery.targets&&decision.recovery.targets.length),
           regions:[...document.querySelectorAll('[data-region]')].map(node=>node.dataset.region),
           panelCount:document.querySelectorAll('.v151-panel').length,
-          specCards:document.querySelectorAll('.v151-spec-card').length,
+          specCards:document.querySelectorAll('.v151-spec-row').length,
           specBars:document.querySelectorAll('.v151-spec-bar').length,
           scrollWidth:document.documentElement.scrollWidth,
           clientWidth:document.documentElement.clientWidth,
@@ -57,11 +57,11 @@ const {chromium}=require('playwright');
           legacyTabs:document.querySelectorAll('.ord-tabs').length
         };
       });
-      assert.strictEqual(metrics.version,'17.7.0');
+      assert.strictEqual(metrics.version,'17.8.0');
       assert.strictEqual(metrics.health.ready,true,`${cfg.name} fixture health blocked`);
       assert.deepStrictEqual(metrics.regions,REGIONS,`${cfg.name} region set/order changed`);
       assert.strictEqual(metrics.panelCount,8,`${cfg.name} expected exactly eight panels`);
-      assert(metrics.specCards>=4,`${cfg.name} spec cards missing`);
+      assert(metrics.specCards>=4,`${cfg.name} spec rows missing`);
       assert.strictEqual(metrics.specBars,metrics.specCards,`${cfg.name} spec progress bars missing`);
       assert(metrics.hasAction||metrics.hasRecovery,`${cfg.name} replay of the recorded stall must show an action or recovery ladder (state=${metrics.decisionState})`);
       assert.strictEqual(metrics.legacyTabs,0,`${cfg.name} legacy tab bar returned`);
