@@ -44,7 +44,18 @@ function arg(name, fallback) {
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 async function getJson(url, attempt = 0) {
-  const res = await fetch(url, { headers: { accept: 'application/json' } });
+  let res;
+  try {
+    res = await fetch(url, { headers: { accept: 'application/json' } });
+  } catch (error) {
+    // 일시적 네트워크 오류(ECONNRESET 등)도 재시도 — 한 번의 순단으로
+    // 유저 단위 표본이 통째로 탈락하지 않게 한다(v17.13 감사).
+    if (attempt < 4) {
+      await sleep(1000 * 2 ** attempt);
+      return getJson(url, attempt + 1);
+    }
+    throw error;
+  }
   if (!res.ok) {
     if (attempt < 4 && (res.status === 429 || res.status >= 500)) {
       await sleep(1000 * 2 ** attempt);
@@ -89,9 +100,18 @@ function compactRecord(r) {
 }
 
 async function userHistories(nickname, cutoffIso) {
+  // ISO 문자열 비교는 밀리초 유무가 섞이면 컷오프 초를 잘못 탈락시킨다
+  // ('...00.500Z' < '...00Z' — '.' < 'Z'). epoch 비교로 정규화(v17.13 감사).
+  const cutoffMs = Date.parse(cutoffIso);
+  if (!Number.isFinite(cutoffMs)) throw new Error(`잘못된 컷오프: ${cutoffIso}`);
   const recs = [];
   let cursor = null;
-  for (let page = 0; page < MAX_PAGES_PER_USER; page++) {
+  let truncated = false;
+  for (let page = 0; ; page++) {
+    if (page >= MAX_PAGES_PER_USER) {
+      truncated = true; // 침묵 절단 금지 — 호출부가 플래그를 payload에 남긴다
+      break;
+    }
     let url = `${BASE}/ranks/${RANK_ID}/users/${encodeURIComponent(nickname)}/histories`;
     if (cursor) url += `?next=${encodeURIComponent(cursor)}`;
     const d = await getJson(url);
@@ -99,10 +119,13 @@ async function userHistories(nickname, cutoffIso) {
     if (h.length === 0) break;
     recs.push(...h);
     cursor = d.nextCursor;
-    if (!cursor || h[h.length - 1].createdAt < cutoffIso) break;
+    if (!cursor || Date.parse(h[h.length - 1].createdAt) < cutoffMs) break;
     await sleep(REQUEST_GAP_MS);
   }
-  return recs.filter((r) => r.createdAt >= cutoffIso).map(compactRecord);
+  return {
+    truncated,
+    records: recs.filter((r) => Date.parse(r.createdAt) >= cutoffMs).map(compactRecord),
+  };
 }
 
 async function main() {
@@ -132,16 +155,22 @@ async function main() {
   let totalGames = 0;
   for (const [i, t] of targets.entries()) {
     try {
-      const records = await userHistories(t.nickname, cutoff);
+      const { records, truncated } = await userHistories(t.nickname, cutoff);
       totalGames += records.length;
-      players.push({ ...t, gameCount: records.length, records });
-      console.log(`  [${i + 1}/${targets.length}] ${t.nickname}: ${records.length}판 (누계 ${totalGames})`);
+      const entry = { ...t, gameCount: records.length, records };
+      if (truncated) {
+        entry.truncated = true;
+        console.warn(`  경고: ${t.nickname} 기록이 페이지 상한(${MAX_PAGES_PER_USER})에서 절단됨 — MAX_PAGES_PER_USER를 올려 재수집하세요`);
+      }
+      players.push(entry);
+      console.log(`  [${i + 1}/${targets.length}] ${t.nickname}: ${records.length}판${truncated ? ' (절단됨!)' : ''} (누계 ${totalGames})`);
     } catch (e) {
       players.push({ ...t, gameCount: 0, records: [], error: String(e.message || e) });
       console.log(`  [${i + 1}/${targets.length}] ${t.nickname}: 실패 — ${e.message}`);
     }
     await sleep(REQUEST_GAP_MS);
   }
+  const truncatedCount = players.filter((p) => p.truncated).length;
 
   const payload = {
     schema: 'tmo-api-histories-v1',
@@ -157,6 +186,7 @@ async function main() {
     ],
     playerCount: players.length,
     totalGames,
+    truncatedPlayerCount: truncatedCount,
     players,
   };
   fs.mkdirSync(path.dirname(out), { recursive: true });
