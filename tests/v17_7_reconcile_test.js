@@ -141,7 +141,7 @@ test('설정 마이그레이션: 구버전 암묵 물딜만 자동으로 돌아�
   const implicit=T.normalizeInitialState({mode:'physical'});
   assert.strictEqual(implicit.mode,'','구버전 암묵 물딜이 자동으로 돌아가지 않았다');
   assert.strictEqual(implicit.modeExplicit,false);
-  assert.strictEqual(implicit.settingsRevision,177);
+  assert.strictEqual(implicit.settingsRevision,178);
   // 구버전이라도 마딜은 반드시 사용자가 고른 값이므로 유지한다.
   assert.strictEqual(T.normalizeInitialState({mode:'magic'}).mode,'magic');
   // 방향 확정·상위 잠금 등 실사용 증거가 있으면 물딜도 유지한다.

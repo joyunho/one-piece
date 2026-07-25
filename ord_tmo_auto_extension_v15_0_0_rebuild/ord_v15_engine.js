@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P){
 'use strict';
 
-const VERSION='17.11.0';
+const VERSION='17.12.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -299,7 +299,9 @@ function supportUniverse(model,route,locks,counts,assessment){
   rows.sort((left,right)=>P.compareVector(left.after.fullVector,right.after.fullVector)||right.potential-left.potential||-num(left.tiers.rare)+num(right.tiers.rare)||-num(left.tiers.special)+num(right.tiers.special)||-num(left.tiers.uncommon)+num(right.tiers.uncommon)||-num(left.tiers.common)+num(right.tiers.common)||left.quote.wisp.cost-right.quote.wisp.cost||nameOf(left.unit).localeCompare(nameOf(right.unit),'ko'));return rows.slice(0,SUPPORT_CANDIDATE_CAP);
 }
 function projectSupportPrefix(model,row,route){
-  if(!row.quote||!row.quote.feasible)return{steps:[],supportSteps:[],assessment:null,tiers:{rare:0,special:0,uncommon:0,common:0},wispUsed:0,remainingWisp:num(row.quote&&row.quote.wisp&&row.quote.wisp.before),requiredUpperWisp:num(row.quote&&row.quote.wisp&&row.quote.wisp.cost),wispDebt:Math.max(0,num(row.quote&&row.quote.wisp&&row.quote.wisp.cost)-num(row.quote&&row.quote.wisp&&row.quote.wisp.before)),deadEnds:[],affordableCount:0,exactPrefix:false,basis:'upper-not-currently-craftable'};
+  // v17.12: 특수재료 게이트 상위의 quote는 크레딧 재시도 값이므로 정확
+  // 원장에서 재생 불가 — 확정 제작 경로(exactPrefix)로 승격하지 않는다.
+  if(!row.quote||!row.quote.feasible||row.specialGate)return{steps:[],supportSteps:[],assessment:null,tiers:{rare:0,special:0,uncommon:0,common:0},wispUsed:0,remainingWisp:num(row.quote&&row.quote.wisp&&row.quote.wisp.before),requiredUpperWisp:num(row.quote&&row.quote.wisp&&row.quote.wisp.cost),wispDebt:Math.max(0,num(row.quote&&row.quote.wisp&&row.quote.wisp.cost)-num(row.quote&&row.quote.wisp&&row.quote.wisp.before)),deadEnds:[],affordableCount:0,exactPrefix:false,basis:row.specialGate?'special-material-gated':'upper-not-currently-craftable'};
   const locks=[{stage:'upper',id:row.id,source:'v15-route-projection'}],initialAssessment=P.evaluate(model,row.quote.after,route,{round:model.round.value,locks}),initial=makeSupportNode(model,row.quote.after,initialAssessment,[],row.warped&&row.warped.required?1:0),universe=supportUniverse(model,route,locks,initial.counts,initial.assessment),candidateUnits=universe.map(item=>item.unit);let frontier=[],archive=[];
   for(const item of universe){const node=makeSupportNode(model,item.quote.after,item.after,[{quote:item.quote}],initial.warpedCount+(item.warpedRequired?1:0));frontier.push(node);}frontier.sort(compareSupportNodes);archive=frontier.slice();frontier=frontier.slice(0,SUPPORT_BEAM_WIDTH);
   for(const node of frontier){for(const item of universe){if(node.steps.some(step=>step.quote.targetId===item.unit.id))continue;const quote=L.quote(model,item.unit,node.counts,{availableRound:model.round.value});if(!quote.feasible||introducesLineageConflict(model,ownedFinals(model,node.counts),ownedFinals(model,quote.after)))continue;const after=P.evaluate(model,quote.after,route,{round:model.round.value,locks});if(!safeRoleImprovement(node.assessment,after))continue;archive.push(makeSupportNode(model,quote.after,after,node.steps.concat({quote}),node.warpedCount+(C.requiresWarpedCraft&&C.requiresWarpedCraft(model.knowledge.db,item.unit,node.counts)?1:0)));}}
@@ -324,13 +326,33 @@ function upperRouteRow(model,unit,route){
     const retry=L.quote(model,unit,credited,{availableRound:model.round.value});
     if(retry.prerequisite.allowed&&!retry.blocked.length){quote=retry;storyReward=true;}
   }
+  // v17.12(사용자 요청): 그린블러드처럼 레시피 없는 특수재료 하나에만
+  // 막힌 상위(베가펑크 4종)는 숨기지 않고 "그린블러드 필요" 게이트
+  // 배지와 함께 방향 후보에 남긴다. 제작 승인(ACT_NOW)은 실제 보유
+  // 전까지 불가 — 방향 비교·파티 계획에서만 보인다. 상위 방향 단계
+  // 전용이며 전설·희귀 완성 단계에는 적용하지 않는다.
+  let specialGate=null;
+  if(!storyReward&&!quote.prerequisite.allowed&&Array.isArray(quote.prerequisite.missing)&&quote.prerequisite.missing.length){
+    const missing=quote.prerequisite.missing;
+    const allZeroRecipeSpecials=missing.every(item=>{
+      if(item.kind!=='special')return false;
+      const material=model.knowledge.db.byId.get(item.id);
+      return material&&!(material.stuffs||[]).length;
+    });
+    if(allZeroRecipeSpecials){
+      const credited=Object.assign({},counts);
+      for(const item of missing)credited[item.id]=num(credited[item.id])+num(item.count||1);
+      const retry=L.quote(model,unit,credited,{availableRound:model.round.value});
+      if(retry.prerequisite.allowed&&!retry.blocked.length){quote=retry;specialGate={items:missing.map(item=>({id:String(item.id),name:String(item.name||item.id),count:num(item.count||1)}))};}
+    }
+  }
   // Missing special items, exhausted one-off resources, malformed recipes and
   // other hard rules are not a recommendation. A finite wisp shortage is the
   // only reason an unfinished upper may remain as a direction commitment.
   if(!quote.prerequisite.allowed||quote.blocked.length)return null;
   const beforeLineup=ownedFinals(model,counts),afterLineup=ownedFinals(model,quote.after);if(introducesLineageConflict(model,beforeLineup,afterLineup))return null;
   const temporaryLocks=[{stage:'upper',id:unit.id,source:'v15-route-projection'}],projected=quote.feasible?P.evaluate(model,quote.after,route,{round:model.round.value,locks:temporaryLocks}):null,tiers=Object.assign({rare:0,special:0,uncommon:0,common:0},quote.tiers&&quote.tiers.totals||{}),inventory=M.tierInventory(model,counts),warpedRequired=!!(C.requiresWarpedCraft&&C.requiresWarpedCraft(model.knowledge.db,unit,counts)),profile=recipeProfile(model,unit),overlap=remainingOverlap(model,unit,quote.after),completion=num(model.effective.percent[unit.id]),wispGap=Math.max(0,num(quote.wisp.cost)-num(quote.wisp.before)),potential=rolePotential(unit,route),projectedVector=projected?projected.fullVector:[99,99,99,99],rankVector=[quote.feasible?0:1].concat(projectedVector,[-num(tiers.rare),-num(tiers.special),-num(tiers.uncommon),-num(tiers.common),wispGap,num(quote.wisp.cost),warpedRequired?1:0,num(profile.warpedNodes.size),num(overlap.penalty),-potential,-completion]),uses=`희귀 ${num(tiers.rare)}/${num(inventory.rare&&inventory.rare.total)} · 특별 ${num(tiers.special)}/${num(inventory.special&&inventory.special.total)} · 안흔 ${num(tiers.uncommon)}/${num(inventory.uncommon&&inventory.uncommon.total)}`;
-  return{id:unit.id,name:nameOf(unit),unit,routeKey:route.key,routeLabel:route.label,mode:route.mode,locked:false,keepUpper:false,canCommit:true,feasible:quote.feasible&&!storyReward,storyReward,quote,completion:round(completion,1),wispCost:num(quote.wisp.cost),wispAfter:quote.feasible?num(quote.wisp.after):null,wispGap,tiers,upperTiers:Object.assign({},tiers),tierAvailable:{rare:num(inventory.rare&&inventory.rare.total),special:num(inventory.special&&inventory.special.total),uncommon:num(inventory.uncommon&&inventory.uncommon.total),common:num(inventory.common&&inventory.common.total)},warped:{required:warpedRequired,nodes:num(profile.warpedNodes.size),costReflectedInWisp:true},materialOverlap:overlap,rolePotential:potential,projectedAssessment:projected,rankVector,reason:`현재 패 정확 원장: ${uses} · 선택위습 ${num(quote.wisp.cost)}${wispGap?` (현재 ${wispGap} 부족)`:''}${warpedRequired?' · 왜곡 제작 비용 포함':''}${storyReward?` · 스토리 10 보상(레일리+해적선) 수령 전제 — ${C.STORY10_FORFEITS} 포기`:''}.`,evidence:{ledger:'exact-current-stock',specialPrerequisite:storyReward?'story10-reward-planned':'observed',upperEquivalent:3,fixedFinalParty:false,combat:'unmeasured'}};
+  return{id:unit.id,name:nameOf(unit),unit,routeKey:route.key,routeLabel:route.label,mode:route.mode,locked:false,keepUpper:false,canCommit:true,feasible:quote.feasible&&!storyReward&&!specialGate,storyReward,specialGate,quote,completion:round(completion,1),wispCost:num(quote.wisp.cost),wispAfter:quote.feasible?num(quote.wisp.after):null,wispGap,tiers,upperTiers:Object.assign({},tiers),tierAvailable:{rare:num(inventory.rare&&inventory.rare.total),special:num(inventory.special&&inventory.special.total),uncommon:num(inventory.uncommon&&inventory.uncommon.total),common:num(inventory.common&&inventory.common.total)},warped:{required:warpedRequired,nodes:num(profile.warpedNodes.size),costReflectedInWisp:true},materialOverlap:overlap,rolePotential:potential,projectedAssessment:projected,rankVector,reason:`현재 패 정확 원장: ${uses} · 선택위습 ${num(quote.wisp.cost)}${wispGap?` (현재 ${wispGap} 부족)`:''}${warpedRequired?' · 왜곡 제작 비용 포함':''}${storyReward?` · 스토리 10 보상(레일리+해적선) 수령 전제 — ${C.STORY10_FORFEITS} 포기`:''}${specialGate?` · ${specialGate.items.map(item=>item.name).join('·')} 확보 전제(미보유 특수재료)`:''}.`,evidence:{ledger:'exact-current-stock',specialPrerequisite:storyReward?'story10-reward-planned':'observed',upperEquivalent:3,fixedFinalParty:false,combat:'unmeasured'}};
 }
 function lockedMagicRouteRows(model,lock){
   const unit=model.knowledge.db.byId.get(lock&&lock.id);if(!unit||C.familyOf(unit)!=='magic')return[];
@@ -338,7 +360,7 @@ function lockedMagicRouteRows(model,lock){
 }
 function projectUpperRouteRow(model,row,route){
   const projection=projectSupportPrefix(model,row,route),exact=projection.exactPrefix===true,tiers=exact?Object.assign({rare:0,special:0,uncommon:0,common:0},projection.tiers):Object.assign({rare:0,special:0,uncommon:0,common:0},row.upperTiers||row.tiers),assessment=projection.assessment||row.projectedAssessment,roleVector=assessment?assessment.fullVector:[99,99,99,99],overlap=projection.materialOverlap||row.materialOverlap||{penalty:0,densePairs:0},warpedCount=num(projection.warpedCount)+(projection.warpedCount==null&&row.warped&&row.warped.required?1:0),support=exact?projection.supportSteps||[]:[],stepSummary=exact?[{order:1,kind:'upper',id:row.id,name:row.name,wispCost:num(row.quote&&row.quote.wisp.cost),wispAfter:num(row.quote&&row.quote.wisp.after),tiers:Object.assign({},row.upperTiers||row.tiers)}].concat(support.map((step,index)=>Object.assign({},step,{order:index+2,kind:'support'}))):[],wispUsed=exact?num(projection.wispUsed):num(row.quote&&row.quote.wisp&&row.quote.wisp.cost),rankVector=[row.feasible?0:1,num((projection.deadEnds||[]).length)].concat(roleVector,[-num(tiers.rare),-num(tiers.special),-num(tiers.uncommon),-num(tiers.common),num(row.wispGap),wispUsed,warpedCount,num(overlap.densePairs),num(overlap.penalty),-num(row.completion)]),supportNames=support.map(step=>step.name).join(' → '),reason=exact?`상위+현재 패 확정 경로: ${row.name}${supportNames?` → ${supportNames}`:''} · 희귀 ${num(tiers.rare)} · 특별 ${num(tiers.special)} · 안흔 ${num(tiers.uncommon)} · 누적 선위 ${wispUsed}${projection.deadEnds&&projection.deadEnds.length?` · 이후 막힌 역할 ${projection.deadEnds.map(item=>item.label).slice(0,2).join(' / ')}`:''}${row.warped&&row.warped.required?' · 왜곡 비용 포함':''}.`:`방향 후보: ${row.name} · 현재 제작 선위 ${num(projection.requiredUpperWisp)} 필요, ${num(projection.wispDebt)} 부족. 확정 제작 경로로 표시하지 않습니다.`,
-  reasonWithStory=row.storyReward?`${reason} · 스토리 10 보상(레일리+해적선) 수령 전제 — ${C.STORY10_FORFEITS} 포기.`:reason;
+  reasonWithStory=(row.storyReward?`${reason} · 스토리 10 보상(레일리+해적선) 수령 전제 — ${C.STORY10_FORFEITS} 포기.`:reason)+(row.specialGate?` · ${row.specialGate.items.map(item=>item.name).join('·')} 확보 전제(미보유 특수재료).`:'');
   return Object.assign({},row,{tiers,wispCost:wispUsed,wispAfter:exact?projection.remainingWisp:null,projectedAssessment:assessment,materialOverlap:overlap,rankVector,reason:reasonWithStory,projectedSupport:{basis:projection.basis,exactPrefix:exact,steps:stepSummary,supportSteps:support,tiers:exact?projection.tiers:{rare:0,special:0,uncommon:0,common:0},wispUsed:exact?num(projection.wispUsed):0,remainingWisp:projection.remainingWisp,requiredUpperWisp:num(projection.requiredUpperWisp),wispDebt:num(projection.wispDebt),deadEnds:projection.deadEnds||[],affordableCount:num(projection.affordableCount),futureDropsCredited:false,fixedFinalParty:false,combat:'unmeasured'}});
 }
 function upperProjectionShortlist(rows,route){const sorted=(rows||[]).slice().sort(routeCandidateCompare),picked=sorted.slice(0,UPPER_PROJECTION_SHORTLIST),seen=new Set(picked.map(row=>C.canonicalUpperId(row.id)));for(const key of [...new Set((route.groups||[]).flat())]){const best=sorted.filter(row=>num(C.roleContribution(row.unit,route.mode)[key])>0).sort((left,right)=>num(C.roleContribution(right.unit,route.mode)[key])-num(C.roleContribution(left.unit,route.mode)[key])||routeCandidateCompare(left,right))[0];if(best&&!seen.has(C.canonicalUpperId(best.id))){seen.add(C.canonicalUpperId(best.id));picked.push(best);}if(picked.length>=UPPER_PROJECTION_CAP)break;}return picked.slice(0,UPPER_PROJECTION_CAP);}
@@ -386,10 +408,17 @@ function upperRouteCandidates(model,locks){
   const options=routeOptions(model),byRoute=[];
   const gapOf=row=>row.feasible?0:num(row.wispGap);
   const nearestOf=list=>list.reduce((best,row)=>!best||gapOf(row)<gapOf(best)-1e-9||Math.abs(gapOf(row)-gapOf(best))<=1e-9&&clearValueCompare(row,best)<0?row:best,null);
-  for(const route of options){const canonical=new Map();for(const unit of model.knowledge.db.uppers){if(!routeFamilyOk(unit,route))continue;const row=upperRouteRow(model,unit,route);if(!row)continue;row.clearValue=clearValueScore(model,row);const key=C.canonicalUpperId(unit.id),prior=canonical.get(key);if(!prior||clearValueCompare(row,prior)<0)canonical.set(key,row);}
+  const gatedAll=new Map();
+  // v17.12: 같은 정규화 계보 안에서 게이트 변형(베가펑크(핸콕))이 비게이트
+  // 변형(핸콕 영원)을 밀어내면 안 된다 — 지금 만들 수 있는 쪽이 대표다.
+  const canonicalCompare=(left,right)=>(left.specialGate?1:0)-(right.specialGate?1:0)||clearValueCompare(left,right);
+  for(const route of options){const canonical=new Map();for(const unit of model.knowledge.db.uppers){if(!routeFamilyOk(unit,route))continue;const row=upperRouteRow(model,unit,route);if(!row)continue;row.clearValue=clearValueScore(model,row);if(row.specialGate){const gateKey=C.canonicalUpperId(unit.id);const priorGated=gatedAll.get(gateKey);if(!priorGated||clearValueCompare(row,priorGated)<0)gatedAll.set(gateKey,row);}const key=C.canonicalUpperId(unit.id),prior=canonical.get(key);if(!prior||canonicalCompare(row,prior)<0)canonical.set(key,row);}
     // 숏리스트도 클리어 가치 순으로 뽑는다 — 도달 거리 순 숏리스트는
     // 멀지만 좋은 상위(예: 핸콕 영원)를 투영 전에 잘라버린다.
-    const ranked=[...canonical.values()].sort(clearValueCompare);
+    // v17.12: 게이트 상위는 정규 카드 자리를 소비하지 않는다 — 별도 칩
+    // 목록(gatedUppers)으로만 내려가고, 특수재료를 실제로 얻는 순간
+    // 게이트가 풀려 정규 후보로 경쟁한다.
+    const ranked=[...canonical.values()].filter(row=>!row.specialGate).sort(clearValueCompare);
     const shortlist=ranked.slice(0,UPPER_PROJECTION_CAP);
     // 단, 지금 패에서 가장 빨리 완성되는 상위(현재주의 선택지)는 가치가
     // 낮아도 투영에 태운다 — 최종 화면에서 가치 비교의 기준점이 된다.
@@ -398,7 +427,7 @@ function upperRouteCandidates(model,locks){
     const rows=shortlist.map(row=>projectUpperRouteRow(model,row,route));
     for(const row of rows)if(!row.clearValue)row.clearValue=clearValueScore(model,row);
     rows.sort(clearValueCompare);byRoute.push({route,rows});}
-  const dedupe=list=>{const seenCanonical=new Map();const out=[];for(const row of list){const key=C.canonicalUpperId(row.id);const prior=seenCanonical.get(key);if(prior==null){seenCanonical.set(key,out.length);out.push(row);}else if(clearValueCompare(row,out[prior])<0)out[prior]=row;}return out;};
+  const dedupe=list=>{const seenCanonical=new Map();const out=[];for(const row of list){const key=C.canonicalUpperId(row.id);const prior=seenCanonical.get(key);if(prior==null){seenCanonical.set(key,out.length);out.push(row);}else if(canonicalCompare(row,out[prior])<0)out[prior]=row;}return out;};
   // 최종 목록: 클리어 가치 순 + "최단 완성" 앵커 보장.  친구 사례(흰수염
   // 불멸 vs 핸콕 영원)처럼 눈앞의 쉬운 선택이 목록에서 사라지면 사용자는
   // 가치 차이를 볼 수 없다 — 순위는 가치가 정하고, 자리는 하나 보장한다.
@@ -406,6 +435,11 @@ function upperRouteCandidates(model,locks){
   const picked=pool.slice(0,ROUTE_CANDIDATE_LIMIT);
   const nearest=nearestOf(pool);
   if(nearest){nearest.nearestBuild=true;if(!picked.includes(nearest)){if(picked.length>=ROUTE_CANDIDATE_LIMIT)picked[picked.length-1]=nearest;else picked.push(nearest);}}
+  // 카드 6개와 별개로, 게이트 상위 전체(베가펑크 4종 등 정규화 대표)를
+  // 칩 목록으로 내려 보낸다 — UI가 "그린블러드 확보 시 열리는 상위"를
+  // 한 줄로 보여줄 수 있게.  게이트 상위는 정규 카드 자리를 차지하지
+  // 않는다(위 shortlist 필터) — 재료 확보 시 자동으로 정규 후보가 된다.
+  picked.gatedUppers=[...gatedAll.values()].sort(clearValueCompare).slice(0,6).map(row=>({id:row.id,name:row.name,routeKey:row.routeKey,wispCost:num(row.wispCost),completion:num(row.completion),items:row.specialGate.items.map(item=>({id:item.id,name:item.name}))}));
   return picked;
 }
 function liveRareProtection(model,counts,route,locks,rareId){

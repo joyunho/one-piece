@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='17.11.0';
+const VERSION='17.12.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -350,7 +350,8 @@ function requirementRows(spec,lineup,mode,route,settings,mainUpper){
   if(mode==='physical'&&!rows.some(row=>row.key==='bossFrenzy'))add('bossFrenzy','광보잡',Math.min(num(spec.boss),num(spec.frenzy)),1,95,true);
   if(mode==='magic'&&route==='singleEnd')add('singleEndStable','한 기 누락 후 단일·끝딜 하한',num(spec.singleEndStable),3,34,false,{maximum:num(spec.singleEndMax)});
   if(mode==='magic')add('magicSupport','마딜 증폭·마방깎',num(spec.magicDef)+num(spec.magicAmp)+num(spec.explosionAmp),1,32,false);
-  if(mainUpper&&C.upperStrategy){for(const need of C.upperStrategy(mainUpper).needs||[]){if(rows.some(x=>x.key===need.key))continue;add(need.key,need.label,num(spec[need.key]),num(need.target)||1,60,true,{mechanic:true,reason:need.reason});}}
+  if(mainUpper&&C.upperStrategy){const strategy=C.upperStrategy(mainUpper);for(const need of strategy.needs||[]){if(rows.some(x=>x.key===need.key))continue;add(need.key,need.label,num(spec[need.key]),num(need.target)||1,60,true,{mechanic:true,reason:need.reason});}
+    if(strategy.lineSelf==='support'&&!rows.some(x=>x.key==='subdamage'))add('subdamage','보조·방무딜',num(spec.subdamage),1,60,true,{mechanic:true,reason:'라인딜이 부족한 상위라 보조딜이 필수입니다.'});}
   const required=rows.filter(x=>x.required),weight=required.reduce((s,x)=>s+x.weight,0)||1,readiness=Math.round(required.reduce((s,x)=>s+x.weight*Math.min(1,x.current/Math.max(.01,x.target)),0)/weight*100),complete=required.every(x=>x.gap<=0);
   return{rows,deficits:rows.filter(x=>x.gap>0),readiness,complete,control:ctl,route};
 }
