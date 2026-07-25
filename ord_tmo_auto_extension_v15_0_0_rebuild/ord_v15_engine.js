@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P){
 'use strict';
 
-const VERSION='17.13.0';
+const VERSION='17.14.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -47,6 +47,24 @@ function metaEvidence(unit){
   if(!best)return null;
   const games=num(best.games),total=Math.max(1,num(META_STATS.gameCount));
   return{games,share:round(games/total*100,1)};
+}
+// v17.14: 이 상위와 함께 쓰인 전설급 실측(upperPairs) — 미리 파티 모달의
+// 표시 전용 근거.  변신 상태 코드가 여럿이면 표본이 가장 큰 코드의 동반
+// 목록을 쓴다.  순위·게이트·파티 구성 계산에는 절대 쓰지 않는다.
+function metaPairEvidence(unit){
+  if(!META_STATS||!META_STATS.usage||META_STATS.usage.softTiebreak!==true)return null;
+  const byCode=META_STATS.byCode||{},pairsMap=META_STATS.upperPairs||{};
+  let bestKey=null,bestGames=-1;
+  for(const code of unit&&unit.codes||[]){
+    const key=String(code).toLowerCase();
+    if(!pairsMap[key])continue;
+    const games=byCode[key]?num(byCode[key].games):0;
+    if(games>bestGames){bestKey=key;bestGames=games;}
+  }
+  if(!bestKey)return null;
+  const total=Math.max(1,num(META_STATS.gameCount));
+  const pairs=pairsMap[bestKey].map(entry=>({code:String(entry[0]),games:num(entry[1]),name:byCode[entry[0]]?String(byCode[entry[0]].name):String(entry[0])}));
+  return{games:bestGames,share:round(bestGames/total*100,1),totalGames:total,pairs};
 }
 const RECIPE_PROFILE_CACHE=new WeakMap();
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -549,6 +567,6 @@ function buildDecision(input){
   return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,decide:buildDecision,_test:{allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
+return{VERSION,AUTHORITY,decide:buildDecision,metaPairs:metaPairEvidence,_test:{allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
 });
 

@@ -347,7 +347,7 @@ class App{
     },key=[fingerprint(this.state.snapshot),JSON.stringify(strategic)].join('|');
     if(key!==this._v15CacheKey){
       try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings,locks:this.state.locks||[]});}
-      catch(error){this._v15Cache={version:'17.13.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
+      catch(error){this._v15Cache={version:'17.14.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
     }
     const base=this._v15Cache;if(!base)return null;
@@ -1177,7 +1177,28 @@ class App{
     const squad=this.v151ComputeParty(state,plan,id);
     const party=squad?this.v151ClearParty(state,plan,squad,id):null;
     const body=party?this.renderV151ClearParty(party):`<div class="v151-empty"><b>파티 계산 불가</b><span>${C.esc(squad&&squad.error||'현재 패로는 이 상위 기준 파티를 아직 구성하지 못했습니다. 패가 늘면 다시 열어 보세요.')}</span></div>`;
-    return`<div class="modal-back" data-act="party-close"><article class="detail-modal party-modal" role="dialog" aria-modal="true" aria-label="${C.esc(displayNameOf(unit))} 클리어 파티 미리보기"><button class="modal-x" data-act="party-close" aria-label="닫기">×</button><header>${unit.image?`<img src="${C.esc(unit.image)}" alt="">`:''}<div><h2>${C.esc(displayNameOf(unit))} 기준 클리어 파티</h2><p>내 패 + 50라까지 위습 수입 전제 · 참고 계획(확정 게이트는 현재 패 검증만)</p></div></header>${body}</article></div>`;
+    // v17.14: 상위권 실측에서 이 상위와 함께 쓰인 전설급 — 표시 전용 근거.
+    // 파티 구성 계산에는 쓰지 않는다(원장·역할표가 결정).
+    const pairsHtml=this.renderV151MetaPairs(state,unit);
+    return`<div class="modal-back" data-act="party-close"><article class="detail-modal party-modal" role="dialog" aria-modal="true" aria-label="${C.esc(displayNameOf(unit))} 클리어 파티 미리보기"><button class="modal-x" data-act="party-close" aria-label="닫기">×</button><header>${unit.image?`<img src="${C.esc(unit.image)}" alt="">`:''}<div><h2>${C.esc(displayNameOf(unit))} 기준 클리어 파티</h2><p>내 패 + 50라까지 위습 수입 전제 · 참고 계획(확정 게이트는 현재 패 검증만)</p></div></header>${pairsHtml}${body}</article></div>`;
+  }
+  // v17.14: 상위권 실측(55인)에서 이 상위와 함께 쓰인 전설급 상위 5개.
+  // 내 패에 이미 있는 유닛은 '보유' 표시.  표시 전용 — 순위·게이트·파티
+  // 구성에는 관여하지 않는다.
+  renderV151MetaPairs(state,unit){
+    const engine=global.ORDV15Engine;
+    const evidence=engine&&engine.metaPairs?engine.metaPairs(unit):null;
+    if(!evidence||!evidence.pairs||!evidence.pairs.length)return'';
+    if(!this._metaCodeIndex){
+      this._metaCodeIndex=new Map();
+      for(const row of state.db.byId.values())for(const code of row.codes||[])this._metaCodeIndex.set(String(code).toLowerCase(),row.id);
+    }
+    const chips=evidence.pairs.slice(0,5).map(pair=>{
+      const ownedId=this._metaCodeIndex.get(String(pair.code).toLowerCase());
+      const owned=ownedId&&C.num(state.counts[ownedId])>0;
+      return`<span class="${owned?'owned':''}"><b>${C.esc(pair.name)}</b><i>${C.num(pair.games)}판${owned?' · 보유':''}</i></span>`;
+    }).join('');
+    return`<div class="v151-meta-pairs"><small>상위권 실측 ${C.num(evidence.games)}판에서 함께 쓴 전설급 — 표시 전용, 파티 계산은 원장 기준</small><div>${chips}</div></div>`;
   }
   // v17.12(사용자 요청 2): 해적선 사용처 전체 비교 모달 — 2번 패널에는
   // 추천 한 줄만 남는다.

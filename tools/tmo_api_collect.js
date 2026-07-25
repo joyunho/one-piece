@@ -31,8 +31,22 @@ const CATEGORY = 'nightmare-clear';
 // 2.305 출시 경계: 문서 기준 6/5, 사용자 기준 6/6(KST). KST 6/5 00:00(UTC 6/4 15:00)
 // 까지 내려 받아 두고 분석 단계에서 컷을 고른다.
 const DEFAULT_CUTOFF = '2026-06-04T15:00:00Z';
-const SEASONS = ['2026-06', '2026-07'];
 const TOP_N_PER_SEASON = 30;
+// 월간 랭킹 풀은 컷오프가 속한 달부터 실행 시점의 달까지 자동 산출 —
+// 하드코딩 목록은 시즌이 바뀌면 조용히 낡는다(v17.14).
+function seasonsSince(cutoffIso, nowMs) {
+  const start = new Date(Date.parse(cutoffIso));
+  const now = new Date(nowMs);
+  if (!Number.isFinite(start.getTime()) || !Number.isFinite(now.getTime())) throw new Error(`시즌 범위 계산 불가: ${cutoffIso}`);
+  const out = [];
+  let year = start.getUTCFullYear(), month = start.getUTCMonth();
+  while (year < now.getUTCFullYear() || (year === now.getUTCFullYear() && month <= now.getUTCMonth())) {
+    out.push(`${year}-${String(month + 1).padStart(2, '0')}`);
+    month += 1;
+    if (month > 11) { month = 0; year += 1; }
+  }
+  return out;
+}
 const REQUEST_GAP_MS = 250;
 const MAX_PAGES_PER_USER = 80; // 20판/페이지 × 80 = 1,600판 상한(폭주 방지)
 
@@ -133,10 +147,11 @@ async function main() {
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   const out = arg('--out', path.join(__dirname, '..', 'data', `tmo_api_histories_${stamp}.json`));
 
-  console.log(`수집 기준: ${CATEGORY}, 컷오프 ${cutoff}`);
+  const seasons = seasonsSince(cutoff, Date.now());
+  console.log(`수집 기준: ${CATEGORY}, 컷오프 ${cutoff}, 월간 풀 ${seasons.join('/')}`);
 
   const pools = [await cumulativeTopUsers()];
-  for (const s of SEASONS) {
+  for (const s of seasons) {
     pools.push(await seasonTopUsers(s, TOP_N_PER_SEASON));
     await sleep(REQUEST_GAP_MS);
   }
@@ -149,7 +164,7 @@ async function main() {
     byName.set(u.nickname, e);
   }
   const targets = [...byName.values()];
-  console.log(`대상 플레이어 합집합: ${targets.length}명 (누적 top20 ∪ ${SEASONS.join('/')} 월간 top${TOP_N_PER_SEASON})`);
+  console.log(`대상 플레이어 합집합: ${targets.length}명 (누적 top20 ∪ ${seasons.join('/')} 월간 top${TOP_N_PER_SEASON})`);
 
   const players = [];
   let totalGames = 0;
@@ -178,7 +193,7 @@ async function main() {
     rankId: RANK_ID,
     categoryId: CATEGORY,
     cutoff,
-    pools: { cumulative: 20, seasons: SEASONS, topNPerSeason: TOP_N_PER_SEASON },
+    pools: { cumulative: 20, seasons, topNPerSeason: TOP_N_PER_SEASON },
     caveats: [
       '클리어된 판만 기록됨(실패 판 없음) — 생존 편향',
       'unitCount = 클리어 후 남은 유닛 수(사용자 확인 정의)',
@@ -195,7 +210,10 @@ async function main() {
   console.log(`저장: ${out} (${mb}MB, ${players.length}명 ${totalGames}판)`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+if (require.main === module) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}
+module.exports = { seasonsSince, compactRecord };
