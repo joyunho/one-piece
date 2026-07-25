@@ -30,6 +30,7 @@ check('live coach exposes exactly the requested seven regions in one screen',()=
   app.renderV151Preparation=()=>'<i data-test="prep"></i>';
   app.renderV151CurrentSpec=()=>'<i data-test="spec"></i>';
   app.renderV151BuildableLegends=()=>'<i data-test="build"></i>';
+  app.renderV152RarePlan=()=>'<i data-test="rare"></i>';
   app.renderV151RewardForecast=()=>'<i data-test="reward"></i>';
   app.renderV151Gorosei=()=>'<i data-test="gorosei"></i>';
   app.renderV151UpperInfo=()=>'<i data-test="upper"></i>';
@@ -37,11 +38,13 @@ check('live coach exposes exactly the requested seven regions in one screen',()=
   const plan={v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:false}};
   const html=app.renderCoach({},plan,{}, {},{ready:true,key:'ok'});
   const regions=[...html.matchAll(/data-region="([^"]+)"/g)].map(match=>match[1]);
-  assert.deepStrictEqual(regions,['next-action','next-preparation','current-spec','buildable-legends','gorosei','upper-info','game-recording']);
-  assert.strictEqual(new Set(regions).size,7);
-  for(const key of ['next','prep','spec','build','gorosei','upper','run'])assert.strictEqual((html.match(new RegExp(`data-test="${key}"`,'g'))||[]).length,1,key);
+  // v17.15: 6영역 재구성 — 라운드·녹화 스트립이 최상단, 준비 목록은
+  // 다음 행동에, 제작 가능 전설급은 희귀 활용 방안에 흡수됐다.
+  assert.deepStrictEqual(regions,['game-recording','next-action','current-spec','rare-plan','upper-info','gorosei']);
+  assert.strictEqual(new Set(regions).size,6);
+  for(const key of ['next','prep','spec','gorosei','upper','run'])assert.strictEqual((html.match(new RegExp(`data-test="${key}"`,'g'))||[]).length,1,key);
   for(const removed of ['ord-tabs','v15-rare-board','coach-details','v15-outcome-dock'])assert(!html.includes(removed),removed);
-  assert(html.includes('class="v151-screen"'));
+  assert(html.includes('v151-screen'));
 });
 
 check('route and post-Legend states keep all seven regions visible',()=>{
@@ -51,8 +54,8 @@ check('route and post-Legend states keep all seven regions visible',()=>{
   for(const name of ['NextAction','Preparation','CurrentSpec','BuildableLegends','RewardForecast','Gorosei','UpperInfo','RunHeader'])app[`renderV151${name}`]=()=>'<i></i>';
   const route=app.renderCoach({}, {v15Decision:{state:'ROUTE_CHOICE'},postLegendDecision:{awaiting:false}}, {}, {}, {ready:true,key:'ok'});
   const postLegend=app.renderCoach({}, {v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:true}}, {}, {}, {ready:true,key:'ok'});
-  assert.strictEqual((route.match(/data-region=/g)||[]).length,7);
-  assert.strictEqual((postLegend.match(/data-region=/g)||[]).length,7);
+  assert.strictEqual((route.match(/data-region=/g)||[]).length,6);
+  assert.strictEqual((postLegend.match(/data-region=/g)||[]).length,6);
 });
 
 check('the primary card exposes one action, reason, after-state, stop condition and uncertainty',()=>{
@@ -148,11 +151,13 @@ check('upper choice consumes only v15 route candidates, caps them at six and hid
 
 check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   const coachSource=between('  renderCoach(state,plan,phase,clock,health){','  renderCoachDetails(state,plan,open=false){');
-  for(const method of ['renderV151NextAction','renderV151Preparation','renderV151CurrentSpec','renderV151BuildableLegends','renderV151Gorosei','renderV151UpperInfo','renderV151RunHeader'])assert(coachSource.includes(method),method);
+  // v17.15: 제작 가능 전설급은 renderV152RarePlan 내부에서 호출된다.
+  for(const method of ['renderV151NextAction','renderV151Preparation','renderV151CurrentSpec','renderV152RarePlan','renderV151Gorosei','renderV151UpperInfo','renderV151RunHeader'])assert(coachSource.includes(method),method);
+  assert(fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8').includes('renderV151BuildableLegends(state,plan)'),'buildable legends must stay reachable from the rare plan panel');
   assert(fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8').includes('renderV151RewardForecast(state,plan)'),'152 forecast must stay reachable from the gorosei panel');
   assert(!coachSource.includes('renderActions('));
   assert(!coachSource.includes('renderSquadPlan('));
-  assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,7);
+  assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,6);
   for(const selector of ['.v151-screen{','.v151-grid{','.v151-next{','.v151-build{','.v151-run{'])assert(css.includes(selector),selector);
   assert(css.includes('grid-template-columns:repeat(12,minmax(0,1fr))'));
 });

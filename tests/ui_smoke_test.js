@@ -32,14 +32,14 @@ const {chromium}=require('playwright');
   try{
     const context=await browser.newContext({viewport:{width:1920,height:1080}}),page=await context.newPage();
     await page.route('http*://**',route=>route.abort());
-    const REGIONS=['next-action','next-preparation','current-spec','buildable-legends','gorosei','upper-info','game-recording'];
+    const REGIONS=['game-recording','next-action','current-spec','rare-plan','upper-info','gorosei'];
     for(const cfg of [{name:'desktop',width:1920,height:1080},{name:'laptop',width:1440,height:900},{name:'mobile',width:430,height:900}]){
       await page.setViewportSize({width:cfg.width,height:cfg.height});
       await page.goto('file://'+path.resolve(__dirname,'ui_fixture.html'),{waitUntil:'domcontentloaded'});
-      await page.waitForSelector('.v151-grid');
+      await page.waitForSelector('.v152-grid');
       const metrics=await page.evaluate(()=>{
         const app=window.TEST_APP,decision=app.plan().plan.v15Decision||{};
-        const grid=document.querySelector('.v151-grid'),gridRect=grid.getBoundingClientRect();
+        const grid=document.querySelector('.v152-grid'),gridRect=grid.getBoundingClientRect();
         return{
           version:window.ORDCore.VERSION,
           health:app.health(),
@@ -58,10 +58,10 @@ const {chromium}=require('playwright');
           legacyTabs:document.querySelectorAll('.ord-tabs').length
         };
       });
-      assert.strictEqual(metrics.version,'17.14.0');
+      assert.strictEqual(metrics.version,'17.15.0');
       assert.strictEqual(metrics.health.ready,true,`${cfg.name} fixture health blocked`);
       assert.deepStrictEqual(metrics.regions,REGIONS,`${cfg.name} region set/order changed`);
-      assert.strictEqual(metrics.panelCount,7,`${cfg.name} expected exactly seven panels`);
+      assert.strictEqual(metrics.panelCount,6,`${cfg.name} expected exactly six panels`);
       assert(metrics.specTiles+metrics.specChips>=4,`${cfg.name} spec tiles/chips missing`);
       assert.strictEqual(metrics.specBars,metrics.specTiles,`${cfg.name} deficit tiles must each carry a progress bar`);
       assert(metrics.hasAction||metrics.hasRecovery,`${cfg.name} replay of the recorded stall must show an action or recovery ladder (state=${metrics.decisionState})`);
