@@ -64,11 +64,10 @@ test('리롤 목표: 캐시된 미리 파티(플래너 직접 계산)의 희귀 
   const app=Object.create(App.prototype);
   app.state={rerollsUsed:0,upperPreviewId:'F50h',directionUpperId:'',mode:'',snapshot:null};
   app.upperLock=()=>null;
-  // "미리 파티" 버튼이 계산해 둔 캐시를 흉내낸다.
-  app._partyCacheUpperId='F50h';
-  app._partyCache={handFit:{futurePending:[{id:'K20h',name:'쵸파 혼포인트',tier:'rare',count:1,unitId:'x',unitName:'x'}]}};
+  // "미리 파티"가 계산해 둔 캐시를 흉내낸다 — v17.15.1부터 LRU Map
+  // (인라인 파티·모달 공존을 위해 단일 슬롯에서 전환).
   // fingerprint(null)==='' 이므로 캐시 키 접두는 '|F50h|'.
-  app._partyCacheKey='|F50h|physical|auto|30|{}';
+  app._partyCacheMap=new Map([['|F50h|physical|auto|30|{}',{handFit:{futurePending:[{id:'K20h',name:'쵸파 혼포인트',tier:'rare',count:1,unitId:'x',unitName:'x'}]}}]]);
   const db=C.buildDb(units);
   const state={db,counts:{}};
   const result=app.v151RerollTargets(state,{},{rare:{reroll:[],conflict:false}});

@@ -22,7 +22,7 @@ const between=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end
 let checks=0;
 function check(name,fn){fn();checks++;console.log(`PASS  ${name}`);}
 
-check('live coach exposes exactly the requested seven regions in one screen',()=>{
+check('live coach exposes exactly the requested six regions in one screen',()=>{
   const app=Object.create(App.prototype);
   app.state={mode:'physical',magicRoute:'auto',virtualSpecialId:'',locks:[]};
   app.upperLock=()=>null;
@@ -47,7 +47,7 @@ check('live coach exposes exactly the requested seven regions in one screen',()=
   assert(html.includes('v151-screen'));
 });
 
-check('route and post-Legend states keep all seven regions visible',()=>{
+check('route and post-Legend states keep all six regions visible',()=>{
   const app=Object.create(App.prototype);
   app.state={mode:'physical',magicRoute:'auto',virtualSpecialId:'',locks:[]};
   app.upperLock=()=>null;

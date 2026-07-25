@@ -845,3 +845,8 @@
 .v152-upper-guide ul{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px}
 .v152-upper-guide li{font-size:13px;line-height:1.5;color:#dde4f8}
 .v152-upper-guide li b{color:#fff}
+
+/* v17.15.1(감사): 구 레이아웃의 패널 높이 캡(1360px 이하 520px)이 새
+   rare-plan 패널 하단(제작 가능 전설급)을 어떤 스크롤로도 접근 불가하게
+   잘랐다 — v152 그리드는 페이지 스크롤 설계라 캡을 전 구간 해제한다. */
+.v152-grid>.v151-panel{max-height:none}

@@ -34,7 +34,24 @@ test('파티 스펙: 히어로 타일(전설급 환산·선위·최우선 결손
   for (const marker of ['v152-hero-row', '전설급 환산', '목표 9~11', '최우선 결손']) {
     assert(app.includes(marker), `히어로 타일 마커가 사라짐: ${marker}`);
   }
-  assert(app.includes('C.isUpper(unit)?3:1'), '전설급 환산 규칙(상위×3)이 사라짐');
+  // v17.15.1(감사): 문자열 단언은 상위 미포함 버그를 통과시켰다 — 모델과
+  // 같은 단일 원천(progressionCounts)을 쓰는지와 그 함수의 행동을 함께 고정.
+  assert(app.includes('C.progressionCounts(state)'), '환산이 progressionCounts 단일 원천을 쓰지 않음');
+  global.window = global;
+  const p = (name) => path.join(ext, name);
+  require(p('ord_units_data.js')); require(p('ord_data_patch.js'));
+  require(p('ord_upper_memo.js')); require(p('ord_synergy_memo.js'));
+  require(p('ord_story_nonupper_data.js')); require(p('ord_story_upper_data.js'));
+  require(p('ord_upper_combat_data.js')); require(p('ord_upper_skill_digest.js')); require(p('ord_upper_skill_dps.js'));
+  require(p('ord_meta_stats.js')); require(p('ord_core.js'));
+  const C = global.ORDCore;
+  assert.strictEqual(typeof C.progressionCounts, 'function', 'progressionCounts가 공개되지 않음');
+  const state = C.normalizeState(global.ORD_TMO_UNITS, {}, {});
+  const upper = state.db.uppers.find(unit => C.num(state.counts[unit.id]) === 0);
+  const legend = state.db.legendish.find(unit => !C.isUpper(unit) && C.num(state.counts[unit.id]) === 0);
+  state.counts[upper.id] = 1; state.counts[legend.id] = 2;
+  const counts = C.progressionCounts(state);
+  assert.strictEqual(counts.squad, 5, `상위 1(×3)+전설 2 = 5환산이어야 함: ${counts.squad}`);
   assert(css.includes('.v152-hero b{font-size:30px'), '히어로 수치 대형 타이포가 사라짐');
 });
 
