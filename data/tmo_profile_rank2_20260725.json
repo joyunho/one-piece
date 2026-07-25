@@ -1,0 +1,2057 @@
+{
+ "player": "오석균",
+ "tag": "#ORDR2",
+ "summary": {},
+ "records": [
+  {
+   "diff": "악몽",
+   "unitCount": 7,
+   "clearUnits": 6,
+   "date": "14시간 전",
+   "units": [
+    {
+     "name": "센고쿠(불멸 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "코비(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "겟코모리아(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "블랙마리아(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "로브 루치(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "네코마무시(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "스튜시(히든 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "아카이누(히든 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "압살롬(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "S-스네이크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 36,
+   "clearUnits": 9,
+   "date": "15시간 전",
+   "units": [
+    {
+     "name": "바질호킨스(초월 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "에이스(영원 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "에이스(왜곡됨)",
+     "qty": 1
+    },
+    {
+     "name": "카르가라(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "드래곤(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "센고쿠(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "마르코(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "킬러(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "료쿠규(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "스모커(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 두뇌강화(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "미니스트로맨(기타)",
+     "qty": 1
+    },
+    {
+     "name": "S-호크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 7,
+   "clearUnits": 9,
+   "date": "16시간 전",
+   "units": [
+    {
+     "name": "시키(불멸 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "에이스(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "히바리(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "센고쿠(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "흰수염(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "봉쿠레(히든 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "사보(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "비비(변화된)",
+     "qty": 1
+    },
+    {
+     "name": "트라팔가 로우(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "스모커(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 두뇌강화(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "바질 호킨스(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "S-호크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 5,
+   "clearUnits": 6,
+   "date": "16시간 전",
+   "units": [
+    {
+     "name": "코비(전설 [마딜])",
+     "qty": 2
+    },
+    {
+     "name": "아오키지(초월 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "네즈코(신비함)",
+     "qty": 1
+    },
+    {
+     "name": "코즈키 토키(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "루피 나이트메어(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "스튜시(히든 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "엘리자베스(전투펭귄)(랜덤유닛)",
+     "qty": 1
+    },
+    {
+     "name": "압살롬(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "토큰(기타)",
+     "qty": 1
+    },
+    {
+     "name": "S-스네이크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 24,
+   "clearUnits": 9,
+   "date": "17시간 전",
+   "units": [
+    {
+     "name": "슈가(희귀함)",
+     "qty": 2
+    },
+    {
+     "name": "레일리(불멸 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "징베(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "스모커(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "흰수염(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "바르톨로메오(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "킬러(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "봉쿠레(히든 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "사보(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "료쿠규(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 두뇌강화(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "아오키지(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "레드포스호(해적선)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 0,
+   "clearUnits": 7,
+   "date": "18시간 전",
+   "units": [
+    {
+     "name": "료쿠규(초월 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "버기(영원 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "레베카(제한됨)",
+     "qty": 1
+    },
+    {
+     "name": "퀸(왜곡됨)",
+     "qty": 1
+    },
+    {
+     "name": "킬러(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "스모커(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "크로커다일(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 두뇌강화(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "반 더 데켄(해적선)",
+     "qty": 1
+    },
+    {
+     "name": "토큰(기타)",
+     "qty": 1
+    },
+    {
+     "name": "S-호크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 2,
+   "clearUnits": 6,
+   "date": "19시간 전",
+   "units": [
+    {
+     "name": "징베(초월 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "로져(불멸 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "시키(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "봉쿠레(히든 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "료쿠규(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "오타마(특수함)",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 혼 포인트(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "페로나(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "써니호(해적선)",
+     "qty": 1
+    },
+    {
+     "name": "S-호크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 16,
+   "clearUnits": 8,
+   "date": "19시간 전",
+   "units": [
+    {
+     "name": "보니(초월 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "퀸(왜곡됨)",
+     "qty": 1
+    },
+    {
+     "name": "카르가라(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "징베(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "스모커(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "흰수염(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "킬러(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "비비(변화된)",
+     "qty": 1
+    },
+    {
+     "name": "크로커다일(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "압살롬(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "슈가(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "S-호크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 19,
+   "clearUnits": 8,
+   "date": "20시간 전",
+   "units": [
+    {
+     "name": "코비(초월 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "후지토라(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "드래곤(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "겟코모리아(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "블랙마리아(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "네코마무시(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "킬러(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "로빈 오하라(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 혼 포인트(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "페로나(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "브룩(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "발라티에(해적선)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 23,
+   "clearUnits": 5,
+   "date": "21시간 전",
+   "units": [
+    {
+     "name": "토큰(기타)",
+     "qty": 3
+    },
+    {
+     "name": "상디(초월 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "시노부(제한됨)",
+     "qty": 1
+    },
+    {
+     "name": "겟코모리아(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "시류(히든 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "아오키지(히든 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "브룩(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "써니호(해적선)",
+     "qty": 1
+    },
+    {
+     "name": "S-스네이크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 5,
+   "clearUnits": 7,
+   "date": null,
+   "units": [
+    {
+     "name": "류마(영원 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "상디(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "겟코모리아(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "바르톨로메오(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "네코마무시(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "스튜시(히든 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "시류(히든 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "아오키지(히든 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "발라티에(해적선)",
+     "qty": 1
+    },
+    {
+     "name": "좀비(기타)",
+     "qty": 1
+    },
+    {
+     "name": "S-스네이크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 0,
+   "clearUnits": 7,
+   "date": null,
+   "units": [
+    {
+     "name": "루치(초월 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "바제스(왜곡됨)",
+     "qty": 1
+    },
+    {
+     "name": "코즈키 토키(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "후지토라(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "코비(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "핸콕(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "겟코모리아(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "네코마무시(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "아카이누(히든 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "카쿠(변화된)",
+     "qty": 1
+    },
+    {
+     "name": "S-스네이크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 17,
+   "clearUnits": 5,
+   "date": null,
+   "units": [
+    {
+     "name": "검은수염(초월 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "시노부(제한됨)",
+     "qty": 1
+    },
+    {
+     "name": "코즈키 토키(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "드래곤(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "쿠마(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "로브 루치(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "네코마무시(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "스튜시(히든 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "파이러츠 도킹 5(특별함)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 27,
+   "clearUnits": 7,
+   "date": null,
+   "units": [
+    {
+     "name": "시키(불멸 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "킬러(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "사보(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "블고리(특수함)",
+     "qty": 1
+    },
+    {
+     "name": "스모커(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "버기 마기탄(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 두뇌강화(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "바질 호킨스(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "페로나(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "레드포스호(해적선)",
+     "qty": 1
+    },
+    {
+     "name": "S-호크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 20,
+   "clearUnits": 7,
+   "date": null,
+   "units": [
+    {
+     "name": "우솝(초월 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "레일리(불멸 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "버기(영원 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "드래곤(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "사보(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "료쿠규(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "바질 호킨스(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "이나즈마 혁명군(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "킨에몬(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "슈가(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "모비딕호(해적선)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 23,
+   "clearUnits": 5,
+   "date": null,
+   "units": [
+    {
+     "name": "센고쿠(불멸 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "류마(영원 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "코즈키 토키(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "네코마무시(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "크로커다일(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 가드 포인트(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "슈가(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "모비딕호(해적선)",
+     "qty": 1
+    },
+    {
+     "name": "반 더 데켄(해적선)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 22,
+   "clearUnits": 1,
+   "date": null,
+   "units": [
+    {
+     "name": "스코퍼가반(불멸 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "비비(영원 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "코즈키 토키(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "후지토라(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "모비딕호(해적선)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 7,
+   "clearUnits": 13,
+   "date": null,
+   "units": [
+    {
+     "name": "토큰(기타)",
+     "qty": 2
+    },
+    {
+     "name": "카타쿠리(제한됨)",
+     "qty": 1
+    },
+    {
+     "name": "퀸(왜곡됨)",
+     "qty": 1
+    },
+    {
+     "name": "카르가라(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "드래곤(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "히바리(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "센고쿠(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "흰수염(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "미호크(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "킬러(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "스모커(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 두뇌강화(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "사보(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 혼 포인트(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "페로나(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "아오키지(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "S-샤크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 13,
+   "clearUnits": 14,
+   "date": null,
+   "units": [
+    {
+     "name": "바질호킨스(초월 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "퀸(왜곡됨)",
+     "qty": 1
+    },
+    {
+     "name": "드래곤(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "쵸파 유력강화(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "흰수염(전설 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "로브 루치(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "킬러(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "베르고(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "사보(히든 [물딜])",
+     "qty": 1
+    },
+    {
+     "name": "오타마(특수함)",
+     "qty": 1
+    },
+    {
+     "name": "스모커(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "크로커다일(특별함)",
+     "qty": 1
+    },
+    {
+     "name": "X-드레이크(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "아오키지(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "캡틴 키드(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "좀비(기타)",
+     "qty": 1
+    },
+    {
+     "name": "미니스트로맨(기타)",
+     "qty": 1
+    },
+    {
+     "name": "S-호크(세라핌)",
+     "qty": 1
+    }
+   ]
+  },
+  {
+   "diff": "악몽",
+   "unitCount": 23,
+   "clearUnits": 7,
+   "date": null,
+   "units": [
+    {
+     "name": "코즈키 토키(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "후지토라(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "시노부(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "쿠마(전설 [스턴])",
+     "qty": 1
+    },
+    {
+     "name": "겟코모리아(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "네코마무시(전설 [마딜])",
+     "qty": 1
+    },
+    {
+     "name": "쿠로사키 이치고(랜덤유닛)",
+     "qty": 1
+    },
+    {
+     "name": "아이스버그(특수함)",
+     "qty": 1
+    },
+    {
+     "name": "아오키지(희귀함)",
+     "qty": 1
+    },
+    {
+     "name": "발라티에(해적선)",
+     "qty": 1
+    },
+    {
+     "name": "토큰(기타)",
+     "qty": 1
+    }
+   ]
+  }
+ ],
+ "unitStats": [
+  {
+   "name": "바질호킨스",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 54,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "상디",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 37,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "검은수염",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 35,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "징베",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 31,
+   "avgCount": 5,
+   "minCount": 0
+  },
+  {
+   "name": "우솝",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 27,
+   "avgCount": 7,
+   "minCount": 0
+  },
+  {
+   "name": "샹크스",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 25,
+   "avgCount": 12,
+   "minCount": 4
+  },
+  {
+   "name": "로우",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 22,
+   "avgCount": 19,
+   "minCount": 7
+  },
+  {
+   "name": "타시기",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 21,
+   "avgCount": 18,
+   "minCount": 3
+  },
+  {
+   "name": "후지토라",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 21,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "루치",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 20,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "아오키지",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 18,
+   "avgCount": 15,
+   "minCount": 4
+  },
+  {
+   "name": "루피",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 17,
+   "avgCount": 7,
+   "minCount": 0
+  },
+  {
+   "name": "베가펑크",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 17,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "시라호시",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 17,
+   "avgCount": 17,
+   "minCount": 5
+  },
+  {
+   "name": "브룩",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 16,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "쵸파",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 16,
+   "avgCount": 8,
+   "minCount": 0
+  },
+  {
+   "name": "코비",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 16,
+   "avgCount": 21,
+   "minCount": 7
+  },
+  {
+   "name": "야마토",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 15,
+   "avgCount": 8,
+   "minCount": 0
+  },
+  {
+   "name": "프랑키",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 15,
+   "avgCount": 12,
+   "minCount": 1
+  },
+  {
+   "name": "도플라밍고",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 12,
+   "avgCount": 18,
+   "minCount": 0
+  },
+  {
+   "name": "아카이누",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 12,
+   "avgCount": 19,
+   "minCount": 6
+  },
+  {
+   "name": "사보",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 11,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "키드",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 11,
+   "avgCount": 16,
+   "minCount": 5
+  },
+  {
+   "name": "료쿠규",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 10,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "조로",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 9,
+   "avgCount": 3,
+   "minCount": 0
+  },
+  {
+   "name": "료쿠규",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 8,
+   "avgCount": 10,
+   "minCount": 1
+  },
+  {
+   "name": "보니",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 8,
+   "avgCount": 19,
+   "minCount": 10
+  },
+  {
+   "name": "루피 기어포스",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 7,
+   "avgCount": 15,
+   "minCount": 2
+  },
+  {
+   "name": "쵸파",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 6,
+   "avgCount": 18,
+   "minCount": 0
+  },
+  {
+   "name": "조로",
+   "tier": "초월",
+   "type": "물딜",
+   "uses": 2,
+   "avgCount": 24,
+   "minCount": 22
+  },
+  {
+   "name": "키자루",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 2,
+   "avgCount": 19,
+   "minCount": 17
+  },
+  {
+   "name": "아오키지",
+   "tier": "초월",
+   "type": "마딜",
+   "uses": 1,
+   "avgCount": 27,
+   "minCount": 27
+  },
+  {
+   "name": "로져",
+   "tier": "불멸",
+   "type": "물딜",
+   "uses": 47,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "레일리",
+   "tier": "불멸",
+   "type": "물딜",
+   "uses": 42,
+   "avgCount": 14,
+   "minCount": 0
+  },
+  {
+   "name": "제트",
+   "tier": "불멸",
+   "type": "마딜",
+   "uses": 41,
+   "avgCount": 16,
+   "minCount": 4
+  },
+  {
+   "name": "불릿",
+   "tier": "불멸",
+   "type": "물딜",
+   "uses": 32,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "시키",
+   "tier": "불멸",
+   "type": "마딜",
+   "uses": 32,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "흰수염",
+   "tier": "불멸",
+   "type": "물딜",
+   "uses": 28,
+   "avgCount": 9,
+   "minCount": 0
+  },
+  {
+   "name": "드래곤",
+   "tier": "불멸",
+   "type": "마딜",
+   "uses": 24,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "거프",
+   "tier": "불멸",
+   "type": "물딜",
+   "uses": 18,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "센고쿠",
+   "tier": "불멸",
+   "type": "마딜",
+   "uses": 16,
+   "avgCount": 18,
+   "minCount": 7
+  },
+  {
+   "name": "빅맘",
+   "tier": "불멸",
+   "type": "마딜",
+   "uses": 15,
+   "avgCount": 20,
+   "minCount": 11
+  },
+  {
+   "name": "카이도",
+   "tier": "불멸",
+   "type": "물딜",
+   "uses": 11,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "스코퍼가반",
+   "tier": "불멸",
+   "type": "물딜",
+   "uses": 9,
+   "avgCount": 19,
+   "minCount": 3
+  },
+  {
+   "name": "카이도",
+   "tier": "불멸",
+   "type": "물딜",
+   "uses": 7,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "센고쿠",
+   "tier": "불멸",
+   "type": "마딜",
+   "uses": 5,
+   "avgCount": 19,
+   "minCount": 14
+  },
+  {
+   "name": "길드 테조로",
+   "tier": "영원",
+   "type": "마딜",
+   "uses": 51,
+   "avgCount": 8,
+   "minCount": 0
+  },
+  {
+   "name": "류마",
+   "tier": "영원",
+   "type": "마딜",
+   "uses": 45,
+   "avgCount": 15,
+   "minCount": 2
+  },
+  {
+   "name": "핸콕",
+   "tier": "영원",
+   "type": "마딜",
+   "uses": 38,
+   "avgCount": 15,
+   "minCount": 0
+  },
+  {
+   "name": "버기",
+   "tier": "영원",
+   "type": "물딜",
+   "uses": 29,
+   "avgCount": 9,
+   "minCount": 0
+  },
+  {
+   "name": "에이스",
+   "tier": "영원",
+   "type": "마딜",
+   "uses": 24,
+   "avgCount": 20,
+   "minCount": 4
+  },
+  {
+   "name": "오뎅",
+   "tier": "영원",
+   "type": "마딜",
+   "uses": 22,
+   "avgCount": 18,
+   "minCount": 7
+  },
+  {
+   "name": "우타",
+   "tier": "영원",
+   "type": "마딜",
+   "uses": 19,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "카벤딧슈",
+   "tier": "영원",
+   "type": "물딜",
+   "uses": 19,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "비비",
+   "tier": "영원",
+   "type": "마딜",
+   "uses": 16,
+   "avgCount": 7,
+   "minCount": 0
+  },
+  {
+   "name": "니카(루초)",
+   "tier": "영원",
+   "type": "물딜",
+   "uses": 13,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "미호크",
+   "tier": "영원",
+   "type": "마딜",
+   "uses": 9,
+   "avgCount": 19,
+   "minCount": 9
+  },
+  {
+   "name": "코알라",
+   "tier": "왜곡됨",
+   "type": null,
+   "uses": 203,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "퀸",
+   "tier": "왜곡됨",
+   "type": null,
+   "uses": 140,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "바제스",
+   "tier": "왜곡됨",
+   "type": null,
+   "uses": 61,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "블랙마리아",
+   "tier": "왜곡됨",
+   "type": null,
+   "uses": 27,
+   "avgCount": 9,
+   "minCount": 0
+  },
+  {
+   "name": "페로나",
+   "tier": "왜곡됨",
+   "type": null,
+   "uses": 2,
+   "avgCount": 18,
+   "minCount": 13
+  },
+  {
+   "name": "도플라밍고",
+   "tier": "변화된",
+   "type": null,
+   "uses": 212,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "비비",
+   "tier": "변화된",
+   "type": null,
+   "uses": 163,
+   "avgCount": 8,
+   "minCount": 0
+  },
+  {
+   "name": "캐럿",
+   "tier": "변화된",
+   "type": null,
+   "uses": 61,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "에이스",
+   "tier": "변화된",
+   "type": null,
+   "uses": 28,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "카쿠",
+   "tier": "변화된",
+   "type": null,
+   "uses": 28,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "베이비 5",
+   "tier": "변화된",
+   "type": null,
+   "uses": 20,
+   "avgCount": 14,
+   "minCount": 2
+  },
+  {
+   "name": "코비",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 355,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "코즈키 토키",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 334,
+   "avgCount": 13,
+   "minCount": 4
+  },
+  {
+   "name": "로브 루치",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 230,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "핸콕",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 208,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "바르톨로메오",
+   "tier": "전설",
+   "type": "스턴",
+   "uses": 167,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "상디",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 167,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "네코마무시",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 154,
+   "avgCount": 15,
+   "minCount": 0
+  },
+  {
+   "name": "드래곤",
+   "tier": "전설",
+   "type": "스턴",
+   "uses": 152,
+   "avgCount": 14,
+   "minCount": 0
+  },
+  {
+   "name": "히바리",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 143,
+   "avgCount": 9,
+   "minCount": 0
+  },
+  {
+   "name": "샬롯 크래커",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 130,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "나미",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 126,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "에이스",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 125,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "센고쿠",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 123,
+   "avgCount": 9,
+   "minCount": 0
+  },
+  {
+   "name": "울티",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 114,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "스모커",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 102,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "시저",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 94,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "후지토라",
+   "tier": "전설",
+   "type": "스턴",
+   "uses": 94,
+   "avgCount": 15,
+   "minCount": 0
+  },
+  {
+   "name": "쿠마",
+   "tier": "전설",
+   "type": "스턴",
+   "uses": 82,
+   "avgCount": 14,
+   "minCount": 0
+  },
+  {
+   "name": "시노부",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 80,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "겟코모리아",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 77,
+   "avgCount": 12,
+   "minCount": 4
+  },
+  {
+   "name": "흰수염",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 72,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "레이쥬",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 70,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "제파",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 68,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "레일리",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 62,
+   "avgCount": 5,
+   "minCount": 0
+  },
+  {
+   "name": "마샬.D.티치",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 62,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "징베",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 61,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "라분",
+   "tier": "전설",
+   "type": "스턴",
+   "uses": 56,
+   "avgCount": 15,
+   "minCount": 0
+  },
+  {
+   "name": "킹",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 55,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "블랙마리아",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 45,
+   "avgCount": 15,
+   "minCount": 7
+  },
+  {
+   "name": "쵸파 유력강화",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 43,
+   "avgCount": 9,
+   "minCount": 0
+  },
+  {
+   "name": "트라팔가 로우",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 40,
+   "avgCount": 15,
+   "minCount": 7
+  },
+  {
+   "name": "카르가라",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 33,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "루피 나이트메어",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 32,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "시키",
+   "tier": "전설",
+   "type": "스턴",
+   "uses": 23,
+   "avgCount": 14,
+   "minCount": 0
+  },
+  {
+   "name": "마르코",
+   "tier": "전설",
+   "type": "물딜",
+   "uses": 21,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "조로",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 21,
+   "avgCount": 21,
+   "minCount": 6
+  },
+  {
+   "name": "샹크스",
+   "tier": "전설",
+   "type": "스턴",
+   "uses": 13,
+   "avgCount": 22,
+   "minCount": 11
+  },
+  {
+   "name": "슈가",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 7,
+   "avgCount": 18,
+   "minCount": 6
+  },
+  {
+   "name": "샬롯 브륄레",
+   "tier": "전설",
+   "type": "마딜",
+   "uses": 1,
+   "avgCount": 12,
+   "minCount": 12
+  },
+  {
+   "name": "시류",
+   "tier": "히든",
+   "type": "마딜",
+   "uses": 294,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "스튜시",
+   "tier": "히든",
+   "type": "마딜",
+   "uses": 228,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "킬러",
+   "tier": "히든",
+   "type": "물딜",
+   "uses": 213,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "아오키지",
+   "tier": "히든",
+   "type": "스턴",
+   "uses": 187,
+   "avgCount": 14,
+   "minCount": 0
+  },
+  {
+   "name": "사보",
+   "tier": "히든",
+   "type": "물딜",
+   "uses": 174,
+   "avgCount": 9,
+   "minCount": 0
+  },
+  {
+   "name": "아카이누",
+   "tier": "히든",
+   "type": "마딜",
+   "uses": 135,
+   "avgCount": 12,
+   "minCount": 0
+  },
+  {
+   "name": "료쿠규",
+   "tier": "히든",
+   "type": "물딜",
+   "uses": 134,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "키쿠",
+   "tier": "히든",
+   "type": "마딜",
+   "uses": 125,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "레베카",
+   "tier": "히든",
+   "type": "물딜",
+   "uses": 113,
+   "avgCount": 9,
+   "minCount": 0
+  },
+  {
+   "name": "류마",
+   "tier": "히든",
+   "type": "마딜",
+   "uses": 105,
+   "avgCount": 13,
+   "minCount": 1
+  },
+  {
+   "name": "미호크",
+   "tier": "히든",
+   "type": "물딜",
+   "uses": 104,
+   "avgCount": 9,
+   "minCount": 0
+  },
+  {
+   "name": "봉쿠레",
+   "tier": "히든",
+   "type": "스턴",
+   "uses": 101,
+   "avgCount": 9,
+   "minCount": 0
+  },
+  {
+   "name": "이완코브",
+   "tier": "히든",
+   "type": "스턴",
+   "uses": 81,
+   "avgCount": 10,
+   "minCount": 0
+  },
+  {
+   "name": "베르고",
+   "tier": "히든",
+   "type": "물딜",
+   "uses": 60,
+   "avgCount": 11,
+   "minCount": 0
+  },
+  {
+   "name": "피셔타이거",
+   "tier": "히든",
+   "type": "스턴",
+   "uses": 50,
+   "avgCount": 13,
+   "minCount": 0
+  },
+  {
+   "name": "캐럿",
+   "tier": "히든",
+   "type": "마딜",
+   "uses": 18,
+   "avgCount": 12,
+   "minCount": 3
+  }
+ ]
+}
