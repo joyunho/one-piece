@@ -153,11 +153,17 @@ test('설정 마이그레이션: 구버전 암묵 물딜만 자동으로 돌아�
   assert.strictEqual(explicit.modeExplicit,true);
 });
 
-test('리롤 사후 확인: 해당 희귀 수량 감소로만 대기가 풀린다(소스 검증)',()=>{
+test('리롤 사후 확인: 수량 감소·타임아웃 안전장치로 대기가 풀린다(소스 검증)',()=>{
+  // v17.12.1: 20260725 교착 로그로 "대상 감소로만 해제" 계약을 폐기.
+  // 대상 감소(target) 외에 다른 유닛 감소(other)·2라운드/120초(timeout)
+  // 해제와 수동 해제 버튼을 요구한다.
   const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
-  assert(app.includes('if(nextPendingCount<pendingBefore)this.state.pendingReroll=null'),'수량 감소 해제 조건 누락');
+  assert(app.includes('pendingRerollRelease'),'해제 판정 메서드 누락');
+  assert(app.includes("return'target'"),'대상 감소 해제 누락');
+  assert(app.includes("return'other'"),'다른 유닛 감소 해제 누락');
+  assert(app.includes("return'timeout'"),'타임아웃 해제 누락');
   assert(app.includes('리롤 결과 확인 대기'),'리롤 대기 SYNC_BLOCKED 라벨 누락');
-  assert(app.includes('다른 패 변화만으로는 다음 리롤을 열지 않습니다'),'패 변화 오해제 금지 문구 누락');
+  assert(app.includes('data-act="cancel-reroll"'),'수동 해제 버튼 누락');
 });
 
 let passed=0;
