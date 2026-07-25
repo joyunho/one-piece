@@ -11,7 +11,7 @@ assert(fs.existsSync(path.join(ext,'manifest.json')),'v15 extension directory no
 
 const required=[
   'manifest.json','background.js','content-tmo.js','ord_helper.html','ord_units_data.js',
-  'ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_core.js',
+  'ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js',
   'ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_app.css','ord_cockpit_v15.css','ord_boot_extension.js',
   'popup.html','popup.js','popup.css','README.txt'
 ];
@@ -21,7 +21,7 @@ for(const removed of ['ord_ai_advisor.js'])assert(!fs.existsSync(path.join(ext,r
 const read=file=>fs.readFileSync(path.join(ext,file),'utf8');
 const manifest=JSON.parse(read('manifest.json'));
 assert.strictEqual(manifest.manifest_version,3);
-assert.strictEqual(manifest.version,'17.12.1');
+assert.strictEqual(manifest.version,'17.14.0');
 assert.deepStrictEqual(manifest.background,{service_worker:'background.js'});
 assert.deepStrictEqual(new Set(manifest.permissions),new Set(['storage','tabs','scripting']));
 assert(manifest.host_permissions.length>0,'build-helper permissions are missing');
@@ -40,10 +40,11 @@ for(const file of ['background.js','content-tmo.js','ord_story_nonupper_data.js'
 }
 const helper=read('ord_helper.html'),popup=read('popup.html');
 assert(!/\son\w+\s*=/.test(helper+popup),'inline event handler violates MV3 CSP');
-assert(/<meta name="ord-helper" content="v17\.12\.1-decision-engine">/.test(helper),'v17.12.1 helper marker missing');
+assert(/<meta name="ord-helper" content="v17\.14\.0-decision-engine">/.test(helper),'v17.14.0 helper marker missing');
 assert(helper.indexOf('ord_data_patch.js')<helper.indexOf('ord_story_nonupper_data.js'),'data patch must load before measured story data');
 assert(helper.indexOf('ord_story_nonupper_data.js')<helper.indexOf('ord_story_upper_data.js'),'non-upper story data must load before upper story data');
 assert(helper.indexOf('ord_story_upper_data.js')<helper.indexOf('ord_core.js'),'measured story data must load before core');
+assert(helper.indexOf('ord_meta_stats.js')<helper.indexOf('ord_core.js'),'meta stats digest must load before core');
 assert(helper.indexOf('ord_core.js')<helper.indexOf('ord_squad_planner.js'),'planner must load after core');
 assert(helper.indexOf('ord_squad_planner.js')<helper.indexOf('ord_v15_model.js'),'v15 model must load after legacy knowledge modules');
 assert(helper.indexOf('ord_v15_engine.js')<helper.indexOf('ord_run_log_compactor.js'),'run-log compactor must load after v15 engine');
@@ -52,14 +53,21 @@ assert(helper.indexOf('ord_run_log.js')<helper.indexOf('ord_app.js'),'run-log mo
 assert(!/ord_ai_advisor|openai|127\.0\.0\.1:38766/i.test(helper+popup+JSON.stringify(manifest)),'OpenAI UI or bridge surface remains');
 
 const context={console};context.window=context;vm.createContext(context);
-for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js']){
+for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js']){
   vm.runInContext(read(file),context,{filename:file});
 }
 const units=context.ORD_TMO_UNITS,C=context.ORDCore,planner=context.ORDSquadPlanner;
-assert.strictEqual(C.VERSION,'17.12.1');
-assert.strictEqual(planner.VERSION,'17.12.1');
+assert.strictEqual(C.VERSION,'17.14.0');
+assert.strictEqual(planner.VERSION,'17.14.0');
 assert.strictEqual(typeof planner.planFinalSquad,'function');
-assert.strictEqual(context.ORDV15Engine.VERSION,'17.12.1');
+assert.strictEqual(context.ORDV15Engine.VERSION,'17.14.0');
+const metaStats=context.ORD_META_STATS;
+assert(metaStats&&metaStats.schema==='ord-meta-stats-v1','meta stats digest missing');
+assert.strictEqual(metaStats.usage.gate,false,'meta stats must never gate');
+assert.strictEqual(metaStats.usage.allowKillVerdict,false,'meta stats must never allow kill verdicts');
+assert(Object.keys(metaStats.byCode||{}).length>=100,'meta stats byCode unexpectedly small');
+assert(metaStats.gameCount>=10000,'meta stats game count unexpectedly small');
+assert(!/nickname|닉네임/.test(JSON.stringify(metaStats)),'meta stats digest must not carry player identifiers');
 assert.strictEqual(typeof C.storyLeagueRows,'function','story league API missing');
 assert.strictEqual(context.OrdAiAdvisor,undefined,'OpenAI runtime remains globally exposed');
 assert(units.length>=300,'catalog unexpectedly incomplete');
@@ -107,11 +115,11 @@ const compactSnapshot={
 const payloadBytes=Buffer.byteLength(JSON.stringify(compactSnapshot));
 assert(payloadBytes<160000,`snapshot payload too large: ${payloadBytes}`);
 
-const manualPath=path.resolve(ext,'../ord_2305_nightmare_helper_v17_12_1_manual.html');
+const manualPath=path.resolve(ext,'../ord_2305_nightmare_helper_v17_14_0_manual.html');
 assert(fs.existsSync(manualPath),'standalone v15 manual bundle missing');
 assert(!fs.existsSync(path.resolve(ext,'../ord_2305_nightmare_helper_v14_2_0_manual.html')),'stale v14 manual remains in the v15 package');
 const manual=fs.readFileSync(manualPath,'utf8');
-assert(/<meta name="ord-helper" content="v17\.12\.1-decision-engine-manual">/.test(manual),'manual build marker missing');
+assert(/<meta name="ord-helper" content="v17\.14\.0-decision-engine-manual">/.test(manual),'manual build marker missing');
 assert(/source:\s*['\"]standalone-manual['\"]/.test(manual),'standalone manual boot missing');
 assert(!/openai|ord_ai_advisor|127\.0\.0\.1:38766/i.test(manual),'OpenAI surface remains in manual');
 let manualScripts=0;const embeddedScripts=new Map();
@@ -120,8 +128,8 @@ for(const match of manual.matchAll(/<script data-source="([^"]+)">([\s\S]*?)<\/s
   embeddedScripts.set(match[1],match[2].trim());
   manualScripts++;
 }
-assert.strictEqual(manualScripts,19,'manual inline script count changed');
-for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js']){
+assert.strictEqual(manualScripts,20,'manual inline script count changed');
+for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js']){
   assert.strictEqual(embeddedScripts.get(file),read(file).trim(),`manual bundle contains a stale ${file}`);
 }
 const embeddedCss=manual.match(/<style data-source="ord_app\.css">([\s\S]*?)<\/style>/);

@@ -115,7 +115,7 @@ function snapshot(helperId, overrides = {}) {
 (async () => {
   await test('manifest limits hosts to the two supported build-helper pages', () => {
     const manifest = JSON.parse(read('manifest.json'));
-    assert.strictEqual(manifest.version, '17.12.1');
+    assert.strictEqual(manifest.version, '17.14.0');
     assert.deepStrictEqual(manifest.permissions.sort(), ['scripting', 'storage', 'tabs']);
     const helperPermissions=manifest.host_permissions.filter(pattern=>pattern.includes('/build-helper/'));
     assert.strictEqual(helperPermissions.length,8);
@@ -154,7 +154,9 @@ function snapshot(helperId, overrides = {}) {
     assert(!/idSetHash\s*={2,3}\s*['"]16e572cb/.test(sources));
     assert(sources.includes('collection.confidence'));
     assert(sources.includes('counts.parsed'));
-    assert(sources.includes('unitCount >= 300')&&sources.includes('unitCount <= 520'));
+    // v17.13: boot도 background/popup/content와 같은 300~380 — 4파일 정합.
+    assert(sources.includes('unitCount >= 300')&&sources.includes('unitCount <= 380'));
+    assert(!sources.includes('unitCount <= 520'),'boot-only 520 upper bound must stay removed');
     assert(sources.includes('parsedCoverage === 1'));
     assert(sources.includes('counts.missing')&&sources.includes('counts.ambiguous'));
     assert(sources.includes('wispCountFound'));
