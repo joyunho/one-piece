@@ -1,10 +1,12 @@
 (function(global){
 'use strict';
+// v17.13: codes는 TMO API 실측 기록(data/tmo_api_histories_*)과의 조인 키 —
+// 실전 로그에서 H50h/O50h/P50h로 관측됨(누락 시 실측 픽률 조인 미스).
 const missingRows=[
-  {id:'unit_1767885034730_2200',name:'미니 라분',groupName:'기타',abilities:{},stuffs:[]},
-  {id:'unit_1767884457709_1523',name:'모건 🚩1 (탐색)',groupName:'특수함',abilities:{},stuffs:[]},
-  {id:'unit_1767884591387_9300',name:'아이스버그🚩2 (배2개제작)',groupName:'특수함',abilities:{},stuffs:[]},
-  {id:'unit_1767884614234_8036',name:'오타마 (희귀함이하구매)',groupName:'특수함',abilities:{},stuffs:[]}
+  {id:'unit_1767885034730_2200',name:'미니 라분',groupName:'기타',abilities:{},stuffs:[],codes:[]},
+  {id:'unit_1767884457709_1523',name:'모건 🚩1 (탐색)',groupName:'특수함',abilities:{},stuffs:[],codes:['H50h']},
+  {id:'unit_1767884591387_9300',name:'아이스버그🚩2 (배2개제작)',groupName:'특수함',abilities:{},stuffs:[],codes:['O50h']},
+  {id:'unit_1767884614234_8036',name:'오타마 (희귀함이하구매)',groupName:'특수함',abilities:{},stuffs:[],codes:['P50h']}
 ];
 const liveIdentity={
   'unit_1761061085749_3333':{name:'메구밍 (전퍼스킬)',groupName:'랜덤유닛',aliases:['메구밍','샌즈 전용 재료']},

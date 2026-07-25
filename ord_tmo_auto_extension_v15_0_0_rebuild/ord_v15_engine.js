@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P){
 'use strict';
 
-const VERSION='17.12.1';
+const VERSION='17.13.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -30,6 +30,24 @@ const COMPLETION_MILESTONES=Object.freeze({
 // are reserved and the survival search keeps running.
 const UPPER_HOLD_WISP_BAND=4;
 const UPPER_HOLD_WISP_RATIO=.15;
+// v17.13: 상위권 실측 다이제스트(ord_meta_stats.js, 55인·12,035판).  용도는
+// 캘리브레이션 원칙 그대로 — 근거 칩 표시 + clearValue 동률 근처 보조
+// 타이브레이크(로그 스케일, 상한 소폭)뿐.  게이트·킬 판정에는 절대 쓰지
+// 않으며, 모듈이 없으면(구버전 수동판·일부 테스트) 조용히 0으로 동작한다.
+const META_STATS=(typeof window!=='undefined'&&window.ORD_META_STATS)||(typeof globalThis!=='undefined'&&globalThis.ORD_META_STATS)||null;
+const META_TIEBREAK_CAP=.02;
+function metaEvidence(unit){
+  if(!META_STATS||!META_STATS.usage||META_STATS.usage.softTiebreak!==true)return null;
+  const byCode=META_STATS.byCode||{};
+  let best=null;
+  for(const code of unit&&unit.codes||[]){
+    const entry=byCode[String(code).toLowerCase()];
+    if(entry&&(!best||num(entry.games)>num(best.games)))best=entry;
+  }
+  if(!best)return null;
+  const games=num(best.games),total=Math.max(1,num(META_STATS.gameCount));
+  return{games,share:round(games/total*100,1)};
+}
 const RECIPE_PROFILE_CACHE=new WeakMap();
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function round(value,digits=3){const p=Math.pow(10,digits);return Math.round(num(value)*p)/p;}
@@ -395,8 +413,15 @@ function clearValueScore(model,row){
   const roundsToGo=row.feasible?0:Math.ceil(num(row.wispGap)/4);
   const eta=model.round.value+roundsToGo;
   const deadlineFactor=eta<=47?1:eta<=52?.6:eta<=58?.35:.15;
-  const value=(.3*story+.3*dpsCover+.15*line+.12*rareUtil+.13*utility)*deadlineFactor;
-  return{value:round(value,4),story:round(story,3),dpsCover:round(dpsCover,3),line:round(line,2),rareUtil:round(rareUtil,3),utility:round(utility,3),roundsToGo,deadlineFactor};
+  const base=(.3*story+.3*dpsCover+.15*line+.12*rareUtil+.13*utility)*deadlineFactor;
+  // v17.13: 실측 픽 판수의 로그 스케일 보조 타이브레이크.  상한 0.02에
+  // deadlineFactor를 곱해 할인 구간에서도 비중이 커지지 않게 한다 — 원장
+  // 기반 부분점수(story 0.3 등)의 1/15 수준이라 동률 근처에서만 순서를
+  // 바꿀 수 있다.  실측이 없거나 모듈이 없으면 0.
+  const meta=metaEvidence(unit);
+  const metaBonus=meta?Math.min(META_TIEBREAK_CAP,.004*Math.log10(1+meta.games))*deadlineFactor:0;
+  const value=base+metaBonus;
+  return{value:round(value,4),story:round(story,3),dpsCover:round(dpsCover,3),line:round(line,2),rareUtil:round(rareUtil,3),utility:round(utility,3),roundsToGo,deadlineFactor,metaGames:meta?meta.games:0,metaShare:meta?meta.share:0,metaBonus:round(metaBonus,4)};
 }
 function clearValueCompare(left,right){
   const delta=num(right.clearValue&&right.clearValue.value)-num(left.clearValue&&left.clearValue.value);
@@ -524,6 +549,6 @@ function buildDecision(input){
   return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,decide:buildDecision,_test:{allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand}};
+return{VERSION,AUTHORITY,decide:buildDecision,_test:{allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
 });
 

@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v17.12.1 live cockpit bridge; connector protocol stays v13.
+  // v17.13.0 live cockpit bridge; connector protocol stays v13.
   const PATTERNS = [
     'https://tmo.gg/*/build-helper/32172*',
     'https://www.tmo.gg/*/build-helper/32172*',
@@ -95,7 +95,10 @@
     const unitCount = Number(snapshot && snapshot.unitCount) || 0;
     return !!(snapshot && supported(id) && helperId(snapshot.url) === id && snapshot.parser === PARSER &&
       snapshot.sessionId && Number(snapshot.seq) > 0 && snapshot.dataHash && collection.found === true &&
-      Number(collection.confidence) >= 0.72 && counts.found === true && unitCount >= 300 && unitCount <= 520 &&
+      // v17.13: background/popup/content 어댑터와 같은 300~380으로 정합 —
+      // background가 저장 게이트라 380 초과는 어차피 도달하지 않지만, 카탈로그
+      // 확장 시 4파일이 함께 움직이도록 상한을 한 곳과 다르게 두지 않는다.
+      Number(collection.confidence) >= 0.72 && counts.found === true && unitCount >= 300 && unitCount <= 380 &&
       Number(counts.parsed) === unitCount && Number(counts.missing || 0) === 0 && Number(counts.ambiguous || 0) === 0 &&
       snapshot.wispCountFound === true);
   }
