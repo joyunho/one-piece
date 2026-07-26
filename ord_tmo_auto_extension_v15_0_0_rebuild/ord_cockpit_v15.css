@@ -791,3 +791,62 @@
 .party-modal .v151-meta-pairs span i{font-style:normal;color:#8fa3cc;font-size:11px}
 .party-modal .v151-meta-pairs span.owned{border-color:rgba(120,220,160,.45);background:rgba(28,62,44,.5)}
 .party-modal .v151-meta-pairs span.owned i{color:#9fe0b8}
+
+/* v17.15: 6영역 재구성 + 글자 크기 확대(사용자 요청 "글씨가 너무 작음").
+   기존 .v151-* 컴포넌트 스타일은 그대로 재사용하고, 배치와 타이포만
+   v152 계층이 덮는다. */
+.v152-screen{font-size:14px}
+.v152-screen .v151-panel>header h2{font-size:17px;letter-spacing:-.2px}
+.v152-screen .v151-panel>header small{font-size:12px;min-width:22px;height:22px;line-height:22px}
+.v152-screen .v151-panel>header span{font-size:11.5px}
+.v152-screen .v151-prep-list button b,.v152-screen .v151-upper-candidates b{font-size:14px}
+.v152-screen .v151-prep-list button small,.v152-screen .v151-clear-why{font-size:12.5px;line-height:1.5}
+.v152-screen .v151-spec-tile b{font-size:22px}
+.v152-screen .v151-spec-tile small{font-size:12px}
+.v152-grid{display:grid;gap:12px;grid-template-columns:repeat(12,minmax(0,1fr));grid-template-areas:
+ "run run run run run run run run run run run run"
+ "next next next next next spec spec spec spec spec spec spec"
+ "rare rare rare rare rare rare rare upper upper upper upper upper"
+ "set set set set set set set set set set set set"}
+.v152-run{grid-area:run}.v152-run>header{display:none}
+.v152-next{grid-area:next}.v152-spec{grid-area:spec}.v152-rare{grid-area:rare}
+.v152-upper{grid-area:upper}.v152-settings{grid-area:set}
+@media (max-width:1280px){.v152-grid{grid-template-areas:
+ "run run run run run run run run run run run run"
+ "next next next next next next spec spec spec spec spec spec"
+ "rare rare rare rare rare rare rare rare rare rare rare rare"
+ "upper upper upper upper upper upper upper upper upper upper upper upper"
+ "set set set set set set set set set set set set"}}
+@media (max-width:760px){.v152-grid{display:flex;flex-direction:column}}
+/* 스펙 히어로 타일 — 한눈에 보이는 큰 숫자 */
+.v152-hero-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:8px 0}
+.v152-hero{display:flex;flex-direction:column;gap:2px;padding:10px 12px;border-radius:12px;border:1px solid rgba(120,150,210,.25);background:rgba(30,44,74,.35)}
+.v152-hero small{font-size:12px;color:#9fb2d8}
+.v152-hero b{font-size:30px;line-height:1.1;color:#eaf1ff;font-variant-numeric:tabular-nums}
+.v152-hero i{font-style:normal;font-size:11.5px;color:#8fa3cc}
+.v152-hero.gap{border-color:rgba(240,150,110,.5);background:rgba(88,44,30,.22)}
+.v152-hero.gap b{color:#ffc8ae;font-size:20px;line-height:1.2}
+.v152-hero.ok{border-color:rgba(120,220,160,.4);background:rgba(28,62,44,.3)}
+.v152-hero.ok b{color:#9fe0b8}
+@media (max-width:760px){.v152-hero b{font-size:24px}}
+/* 희귀 활용 패널 */
+.v152-rare-party-head{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+.v152-rare-party-head small{color:#9fb2d8;font-size:12px}
+.v152-rare-party-head b{font-size:16px;color:#eaf1ff}
+.v152-rare-party-head em{font-style:normal;font-size:11px;padding:2px 8px;border-radius:999px;border:1px solid rgba(110,220,243,.45);color:#8AE4F5}
+.v152-rare-party-head button{margin-left:auto;font-size:12px;padding:4px 10px;border-radius:8px;border:1px solid rgba(130,160,220,.35);background:rgba(24,34,58,.6);color:#dbe6ff;cursor:pointer}
+.v152-rare-party .v151-meta-pairs{margin:6px 0}
+.v152-rare-buildable{margin-top:10px;padding-top:8px;border-top:1px dashed rgba(120,150,210,.25)}
+.v152-rare-buildable>small{display:block;margin-bottom:6px;color:#9fb2d8;font-size:12px}
+.v152-prep-title{display:block;margin:10px 0 4px;color:#9fb2d8;font-size:12px}
+/* 상위 운영 가이드 */
+.v152-upper-guide{margin:8px 0;padding:10px 12px;border-radius:12px;border:1px solid rgba(150,140,235,.3);background:rgba(46,40,86,.28)}
+.v152-upper-guide small{display:block;margin-bottom:5px;color:#b6aef2;font-size:12px}
+.v152-upper-guide ul{margin:0;padding-left:16px;display:flex;flex-direction:column;gap:4px}
+.v152-upper-guide li{font-size:13px;line-height:1.5;color:#dde4f8}
+.v152-upper-guide li b{color:#fff}
+
+/* v17.15.1(감사): 구 레이아웃의 패널 높이 캡(1360px 이하 520px)이 새
+   rare-plan 패널 하단(제작 가능 전설급)을 어떤 스크롤로도 접근 불가하게
+   잘랐다 — v152 그리드는 페이지 스크롤 설계라 캡을 전 구간 해제한다. */
+.v152-grid>.v151-panel{max-height:none}
