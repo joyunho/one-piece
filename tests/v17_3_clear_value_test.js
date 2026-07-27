@@ -50,26 +50,33 @@ function friendModel(){
   return M.build({catalog:units,snapshot:{source:'test',sessionId:'s',seq:1,at:1,dataChangedAt:1,counts,currentAbilities:{},wispCountFound:true,wispCount:12},settings:{mode:'',magicRoute:'auto',currentRound:26,gorosei:'none',postLegendRoute:'upper',superKumaOwned:true,upperResearchLevel:1},locks:[]});
 }
 
-test('친구 사례: 핸콕 영원(C50h)이 흰수염 불멸(A40h)보다 위, 둘 다 목록에 있다',()=>{
+// v17.20: 친구 사례의 취지는 "눈앞의 쉬운 하위 티어가 멀지만 좋은 상위를
+// 가리면 안 된다"였다.  상위 티어 문자(S>A>B>C>D>F)가 1순위 축이 된 뒤로
+// 같은 패에서 그 자리를 채우는 상위는 (S)핸콕이 아니라 더 싼 같은 S티어
+// (S)나미다 — 원칙은 그대로고 대표 유닛만 바뀌었다.  단언을 유닛 고정에서
+// 원칙(최고 티어가 더 가까운 하위 티어를 이긴다 + 최단 완성 앵커 유지)으로
+// 옮긴다.
+test('친구 사례: 더 가까운 하위 티어가 최고 티어를 가리지 않고, 최단 완성 앵커는 남는다',()=>{
   const rows=E._test.upperRouteCandidates(friendModel(),[]);
   assert(rows.length>0&&rows.length<=6,'후보 1~6개');
-  const idx=id=>rows.findIndex(row=>C.canonicalUpperId(row.id)===C.canonicalUpperId(id));
-  const han=idx('C50h'),white=idx('A40h');
-  assert(han>=0,'핸콕 영원이 후보 목록에 없다');
+  const white=rows.findIndex(row=>C.canonicalUpperId(row.id)===C.canonicalUpperId('A40h'));
   assert(white>=0,'흰수염 불멸(최단 완성 앵커)이 후보 목록에 없다');
-  assert(han<white,`핸콕 영원(${han})이 흰수염 불멸(${white})보다 아래다`);
   assert(rows[white].nearestBuild===true,'최단 완성 앵커 표시 누락');
-  assert(C.num(rows[white].wispGap)<C.num(rows[han].wispGap),'앵커는 실제로 더 가까워야 한다');
+
+  const top=rows[0],topTier=C.upperTierGrade(top.unit),whiteTier=C.upperTierGrade(rows[white].unit);
+  assert(topTier.rank<whiteTier.rank,`1순위(${topTier.letter})가 앵커(${whiteTier.letter})보다 낮은 티어다`);
+  assert(C.num(rows[white].wispGap)<C.num(top.wispGap),'앵커는 실제로 더 가까워야 한다');
+  assert(white>0,'더 가까운 하위 티어가 최고 티어를 밀어냈다');
 });
 
 // v17.19: 정렬 계약이 (결손 기여 버킷 → 클리어 가치)의 2단계로 바뀌었다.
 // story는 점수식에서 완전히 빠졌다 — 되살아나지 않도록 함께 고정한다.
-test('클리어 가치 부분점수가 모든 후보에 있고 목록은 결손 기여 → 가치 순이다',()=>{
+test('클리어 가치 부분점수가 모든 후보에 있고 목록은 티어 → 결손 기여 → 가치 순이다',()=>{
   const rows=E._test.upperRouteCandidates(friendModel(),[]);
   for(const row of rows){
     const value=row.clearValue;
     assert(value,`${row.name} clearValue 누락`);
-    for(const key of ['value','roleFit','roleFitBucket','dpsCover','dpsTrust','line','rareUtil','utility','deadlineFactor'])
+    for(const key of ['value','tierRank','tierDrop','roleFit','roleFitBucket','dpsCover','dpsTrust','line','rareUtil','utility','deadlineFactor'])
       assert(typeof value[key]==='number'&&value[key]>=0,`${row.name}.${key} 이상`);
     assert(value.value<=1.2+1e-9,`${row.name} 가치 상한 초과`);
     assert(value.roleFit<=1+1e-9,`${row.name} 결손 기여 상한 초과`);
@@ -79,11 +86,15 @@ test('클리어 가치 부분점수가 모든 후보에 있고 목록은 결손 
     const prev=rows[i-1].clearValue,now=rows[i].clearValue;
     const gated=row=>row.storyReward||row.specialGate?1:0;
     if(gated(rows[i-1])!==gated(rows[i])){assert(gated(rows[i-1])<gated(rows[i]),`게이트 후보 정렬 위반 @${i}`);continue;}
+    if(C.num(prev.tierDrop)!==C.num(now.tierDrop)){
+      assert(C.num(now.tierDrop)>C.num(prev.tierDrop),`티어 낙폭 정렬 위반 @${i}`);
+      continue;
+    }
     if(C.num(prev.roleFitBucket)!==C.num(now.roleFitBucket)){
       assert(C.num(now.roleFitBucket)<C.num(prev.roleFitBucket),`결손 기여 정렬 위반 @${i}`);
       continue;
     }
-    assert(C.num(now.value)<=C.num(prev.value)+1e-9,`동일 결손 기여 내 가치 정렬 위반 @${i}`);
+    assert(C.num(now.value)<=C.num(prev.value)+1e-9,`동일 단계 내 가치 정렬 위반 @${i}`);
   }
 });
 

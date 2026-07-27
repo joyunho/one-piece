@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P){
 'use strict';
 
-const VERSION='17.19.0';
+const VERSION='17.20.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -441,6 +441,40 @@ function upperRoleFit(unit,baseline,route){
 //    (카벤딧슈 proc 4.97M/초 = 평타의 47배가 물딜 상위를 독주하던 원인).
 //  - 나머지 축(dps·유틸·희귀활용·라인)이 story가 빠진 100%를 나눠 갖는다.
 const ROLE_FIT_BUCKET=.05;
+// v17.20 (사용자 확인): "각이 아주 잘 나오지 않는 이상 좋은 상위를 간다."
+// 그래서 1순위 축은 "지금 패 원장으로 도달 가능한 최고 티어"이고, 아래
+// 티어는 선위가 크게 쌀 때만 그 자리를 뺏는다.  한 단계 내려오는 값은
+// 선위 20 — 엔진의 도달 환산(4선위/라)으로 약 5라운드치다.  "아주 잘"에
+// 방점이 있으므로 몇 선위 아끼는 정도로는 티어를 내리지 않는다.
+// 0725 로그 25라 실측: 보유 22선위에서 (S)징베 3 · (A)카벤딧슈 17 ·
+// (D)스코퍼가반 22(+특수재료 차단)였는데 화면은 A와 D만 올렸다.
+const TIER_DOWNGRADE_WISP=20;
+function tierRankOf(unit){const grade=C.upperTierGrade?C.upperTierGrade(unit):null;return grade?num(grade.rank):num(C.UPPER_TIER_LETTERS?C.UPPER_TIER_LETTERS.length:6)/2;}
+// 레인 안에서 각 후보의 "티어 낙폭"을 매긴다.  0이면 최고 티어와 동급
+// 취급이고, 클수록 더 낮은 티어를 더 비싸게 사는 선택이다.
+function assignTierDrop(rows){
+  const list=(rows||[]).filter(row=>row&&row.clearValue&&!row.storyReward&&!row.specialGate);
+  // 도달 가능(50라 준비 창 안)한 후보만 기준 티어를 정한다 — 60선위짜리
+  // S가 기준이 되면 티어 축 자체가 무력해진다.
+  const reachable=list.filter(row=>num(row.clearValue.deadlineFactor)>=1);
+  const pool=reachable.length?reachable:list;
+  if(!pool.length)return;
+  const bestRank=Math.min(...pool.map(row=>num(row.clearValue.tierRank)));
+  const bestWisp=Math.min(...pool.filter(row=>num(row.clearValue.tierRank)===bestRank).map(row=>num(row.wispCost)));
+  for(const row of rows||[]){
+    if(!row||!row.clearValue)continue;
+    const steps=Math.max(0,num(row.clearValue.tierRank)-bestRank);
+    const saving=bestWisp-num(row.wispCost),allowance=saving/TIER_DOWNGRADE_WISP;
+    const drop=Math.max(0,steps-allowance);
+    row.clearValue.tierBest=bestRank;
+    row.clearValue.tierBestWisp=bestWisp;
+    row.clearValue.tierSteps=round(steps,2);
+    row.clearValue.tierAllowance=round(allowance,2);
+    // 0.5 단위 양자화 — 연속 실수를 사전식으로 비교하면 미세한 선위
+    // 차이가 티어 축을 흔든다.
+    row.clearValue.tierDrop=Math.round(drop*2)/2;
+  }
+}
 function clearValueScore(model,row,route,baseline){
   const unit=row.unit;
   const resolvedRoute=route||P.ROUTES[row.routeKey]||null;
@@ -480,7 +514,8 @@ function clearValueScore(model,row,route,baseline){
   const meta=metaEvidence(unit);
   const metaBonus=meta?Math.min(META_TIEBREAK_CAP,.004*Math.log10(1+meta.games))*deadlineFactor:0;
   const value=base+metaBonus;
-  return{value:round(value,4),roleFit:round(roleFit,4),roleFitScore:round(roleFitScore,4),roleFitBucket:Math.round(roleFitScore/ROLE_FIT_BUCKET),dpsCover:round(dpsCover,3),dpsTrust:round(dpsTrust,3),dpsVerified,line:round(line,2),rareUtil:round(rareUtil,3),utility:round(utility,3),roundsToGo,deadlineFactor,metaGames:meta?meta.games:0,metaShare:meta?meta.share:0,metaBonus:round(metaBonus,4)};
+  const tierGrade=C.upperTierGrade?C.upperTierGrade(unit):null;
+  return{value:round(value,4),tierLetter:tierGrade?tierGrade.letter:'',tierRanked:!!(tierGrade&&tierGrade.ranked),tierRank:tierRankOf(unit),tierDrop:0,roleFit:round(roleFit,4),roleFitScore:round(roleFitScore,4),roleFitBucket:Math.round(roleFitScore/ROLE_FIT_BUCKET),dpsCover:round(dpsCover,3),dpsTrust:round(dpsTrust,3),dpsVerified,line:round(line,2),rareUtil:round(rareUtil,3),utility:round(utility,3),roundsToGo,deadlineFactor,metaGames:meta?meta.games:0,metaShare:meta?meta.share:0,metaBonus:round(metaBonus,4)};
 }
 function clearValueCompare(left,right){
   // 0단계: 스토리 10 보상·미보유 특수재료 전제 후보는 지금 패로 살 수
@@ -489,7 +524,12 @@ function clearValueCompare(left,right){
   // 후보는 여기서 내리지 않는다(마감 할인 deadlineFactor로 다룬다).
   const gate=(left.storyReward||left.specialGate?1:0)-(right.storyReward||right.specialGate?1:0);
   if(gate)return gate;
-  // 1단계: 필수 결손 직접 기여(양자화).  2단계: 나머지 클리어 가치.
+  // 1단계: 티어 낙폭(v17.20).  도달 가능한 최고 티어가 기본이고, 아래
+  // 티어는 선위가 크게 쌀 때만 같은 자리로 올라온다.  같은 계열 변형끼리
+  // 비교하는 canonicalCompare는 티어가 같아 자동으로 통과한다.
+  const tier=num(left.clearValue&&left.clearValue.tierDrop)-num(right.clearValue&&right.clearValue.tierDrop);
+  if(tier)return tier;
+  // 2단계: 필수 결손 직접 기여(양자화).  3단계: 나머지 클리어 가치.
   const fit=num(right.clearValue&&right.clearValue.roleFitBucket)-num(left.clearValue&&left.clearValue.roleFitBucket);
   if(fit)return fit;
   const delta=num(right.clearValue&&right.clearValue.value)-num(left.clearValue&&left.clearValue.value);
@@ -515,6 +555,8 @@ function upperRouteCandidates(model,locks){
     // v17.12: 게이트 상위는 정규 카드 자리를 소비하지 않는다 — 별도 칩
     // 목록(gatedUppers)으로만 내려가고, 특수재료를 실제로 얻는 순간
     // 게이트가 풀려 정규 후보로 경쟁한다.
+    // 티어 낙폭은 레인 전체를 봐야 정해진다(기준 = 도달 가능한 최고 티어).
+    assignTierDrop([...canonical.values()]);
     const ranked=[...canonical.values()].filter(row=>!row.specialGate).sort(clearValueCompare);
     const shortlist=ranked.slice(0,UPPER_PROJECTION_CAP);
     // 단, 지금 패에서 가장 빨리 완성되는 상위(현재주의 선택지)는 가치가
@@ -528,12 +570,19 @@ function upperRouteCandidates(model,locks){
     if(laneStory&&!shortlist.includes(laneStory))shortlist.push(laneStory);
     const rows=shortlist.map(row=>projectUpperRouteRow(model,row,route));
     for(const row of rows)if(!row.clearValue)row.clearValue=clearValueScore(model,row,route,baseline);
+    // 투영 뒤에는 wispCost가 보조 제작까지 포함한 누적값으로 바뀌므로
+    // 티어 낙폭을 그 값으로 다시 매긴다.
+    assignTierDrop(rows);
     rows.sort(clearValueCompare);byRoute.push({route,rows});}
   const dedupe=list=>{const seenCanonical=new Map();const out=[];for(const row of list){const key=C.canonicalUpperId(row.id);const prior=seenCanonical.get(key);if(prior==null){seenCanonical.set(key,out.length);out.push(row);}else if(canonicalCompare(row,out[prior])<0)out[prior]=row;}return out;};
   // 최종 목록: 클리어 가치 순 + "최단 완성" 앵커 보장.  친구 사례(흰수염
   // 불멸 vs 핸콕 영원)처럼 눈앞의 쉬운 선택이 목록에서 사라지면 사용자는
   // 가치 차이를 볼 수 없다 — 순위는 가치가 정하고, 자리는 하나 보장한다.
-  const pool=dedupe(byRoute.flatMap(lane=>lane.rows).sort(clearValueCompare));
+  const merged=dedupe(byRoute.flatMap(lane=>lane.rows));
+  // 레인을 합친 뒤 기준 티어를 다시 잡는다 — 물딜/마딜 레인마다 도달
+  // 가능한 최고 티어가 다르므로 레인별 낙폭을 그대로 섞으면 안 된다.
+  assignTierDrop(merged);
+  const pool=merged.sort(clearValueCompare);
   const picked=pool.slice(0,ROUTE_CANDIDATE_LIMIT);
   const nearest=nearestOf(pool);
   if(nearest){nearest.nearestBuild=true;if(!picked.includes(nearest)){if(picked.length>=ROUTE_CANDIDATE_LIMIT)picked[picked.length-1]=nearest;else picked.push(nearest);}}
@@ -636,6 +685,6 @@ function buildDecision(input){
   return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,decide:buildDecision,metaPairs:metaPairEvidence,_test:{allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,upperRoleFit,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
+return{VERSION,AUTHORITY,decide:buildDecision,metaPairs:metaPairEvidence,_test:{allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,upperRoleFit,assignTierDrop,tierRankOf,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
 });
 

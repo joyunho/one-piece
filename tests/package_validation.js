@@ -21,7 +21,7 @@ for(const removed of ['ord_ai_advisor.js'])assert(!fs.existsSync(path.join(ext,r
 const read=file=>fs.readFileSync(path.join(ext,file),'utf8');
 const manifest=JSON.parse(read('manifest.json'));
 assert.strictEqual(manifest.manifest_version,3);
-assert.strictEqual(manifest.version,'17.19.0');
+assert.strictEqual(manifest.version,'17.20.0');
 assert.deepStrictEqual(manifest.background,{service_worker:'background.js'});
 assert.deepStrictEqual(new Set(manifest.permissions),new Set(['storage','tabs','scripting']));
 assert(manifest.host_permissions.length>0,'build-helper permissions are missing');
@@ -59,10 +59,10 @@ for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js'
   vm.runInContext(read(file),context,{filename:file});
 }
 const units=context.ORD_TMO_UNITS,C=context.ORDCore,planner=context.ORDSquadPlanner;
-assert.strictEqual(C.VERSION,'17.19.0');
-assert.strictEqual(planner.VERSION,'17.19.0');
+assert.strictEqual(C.VERSION,'17.20.0');
+assert.strictEqual(planner.VERSION,'17.20.0');
 assert.strictEqual(typeof planner.planFinalSquad,'function');
-assert.strictEqual(context.ORDV15Engine.VERSION,'17.19.0');
+assert.strictEqual(context.ORDV15Engine.VERSION,'17.20.0');
 const metaStats=context.ORD_META_STATS;
 assert(metaStats&&metaStats.schema==='ord-meta-stats-v1','meta stats digest missing');
 assert.strictEqual(metaStats.usage.gate,false,'meta stats must never gate');
@@ -117,7 +117,7 @@ const compactSnapshot={
 const payloadBytes=Buffer.byteLength(JSON.stringify(compactSnapshot));
 assert(payloadBytes<160000,`snapshot payload too large: ${payloadBytes}`);
 
-const manualPath=path.resolve(ext,'../ord_2305_nightmare_helper_v17_19_0_manual.html');
+const manualPath=path.resolve(ext,'../ord_2305_nightmare_helper_v17_20_0_manual.html');
 assert(fs.existsSync(manualPath),'standalone v15 manual bundle missing');
 assert(!fs.existsSync(path.resolve(ext,'../ord_2305_nightmare_helper_v14_2_0_manual.html')),'stale v14 manual remains in the v15 package');
 const manual=fs.readFileSync(manualPath,'utf8');
