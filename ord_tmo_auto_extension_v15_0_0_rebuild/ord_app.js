@@ -1078,8 +1078,9 @@ class App{
         const base=C.upperBossDps(upper,level,{bossArmor:preview.bossArmor,armorReduce:effReduce,speedBuffPct:speedBuff});
         if(!base)return null;
         const proc=C.upperSkillProcDps?C.upperSkillProcDps(upper,level,{bossArmor:preview.bossArmor,armorReduce:effReduce,speedBuffPct:speedBuff}):null;
-        const combined=base.effective+(proc?proc.dps:0);
-        return{combined,coverage:Math.round(100*combined/Math.max(1,C.num(preview.dpsNeed)))};
+        // v17.21: 미검증 스킬 프로필은 신뢰도만큼 감산한 값을 쓴다.
+        const combined=base.effective+(proc?C.num(proc.trustedDps!=null?proc.trustedDps:proc.dps):0);
+        return{combined,coverage:Math.round(100*combined/Math.max(1,C.num(preview.dpsNeed))),dpsTrust:proc?C.num(proc.trust):1,dpsVerified:!proc||proc.verified!==false};
       })();
       if(duel)rows.push(`<div class="${duel.coverage>=100?'ok':'gap'}"><small>필요 ${koNum(preview.dpsNeed)}/초 vs 내 상위 추정 하한</small><b>${koNum(duel.combined)}/초 · 커버 ${duel.coverage}%</b><span>평타+스킬유발 하한 · 수동스킬·보조딜 미집계 — 충족 표시도 킬 보장 아님</span></div>`);
       else rows.push(`<div><small>보스 단독 필요 DPS</small><b>${koNum(preview.dpsNeed)}/초</b><span>상위 확정 후 내 추정 하한과 대조합니다</span></div>`);
@@ -1391,10 +1392,16 @@ class App{
       // 보여준다.  FSM 트레인·수동 시전 미포함이므로 여전히 하한이며
       // 킬 판정은 내리지 않는다.
       const skillProc=C.upperSkillProcDps?C.upperSkillProcDps(upper,level,{bossArmor:preview.bossArmor,armorReduce,speedBuffPct:speedBuff}):null;
-      const combined=result.effective+(skillProc?skillProc.dps:0);
+      // v17.21: 순위와 같은 값을 보여준다 — 파서가 못 읽은 조건이 많은
+      // 프로필은 신뢰도로 감산하고, 원값과 감산값을 함께 표기한다.
+      const procRaw=skillProc?C.num(skillProc.dps):0,procTrusted=skillProc?C.num(skillProc.trustedDps!=null?skillProc.trustedDps:skillProc.dps):0;
+      const combined=result.effective+procTrusted;
       const enough=combined>=preview.dpsNeed;
       const skillProfile=C.upperSkillProfile?C.upperSkillProfile(upper):null;
-      return`<div class="v151-upper-dps ${enough?'ok':'gap'}"><small>평타${skillProc&&skillProc.dps>0?'+스킬유발(AST 하한)':''} 실효 DPS · 연구 Lv${level} · 방깎 ${Math.round(armorReduce)}</small><b>${koNum(combined)}/초</b><span>${preview.round}라 ${C.esc(preview.boss)} 필요 ${koNum(preview.dpsNeed)}/초 ${enough?'충족(하한 기준)':'· 트레인·수동스킬·보조딜은 별도'}${skillProfile&&skillProfile.skills.length?` · 스킬 ${skillProfile.skills.length}종 프로필(상세)`:''}</span></div>`;
+      const discounted=procRaw>0&&procTrusted<procRaw-1;
+      const trustNote=discounted?` · 스킬 발동 ${koNum(procRaw)} → 신뢰 ${Math.round(C.num(skillProc.trust)*100)}% 반영 ${koNum(procTrusted)}`:'';
+      const trustBadge=discounted?'<i class="v151-dps-unverified">미검증 감산</i>':'';
+      return`<div class="v151-upper-dps ${enough?'ok':'gap'}"><small>평타${procTrusted>0?'+스킬유발(AST 하한)':''} 실효 DPS · 연구 Lv${level} · 방깎 ${Math.round(armorReduce)}${trustBadge}</small><b>${koNum(combined)}/초</b><span>${preview.round}라 ${C.esc(preview.boss)} 필요 ${koNum(preview.dpsNeed)}/초 ${enough?'충족(하한 기준)':'· 트레인·수동스킬·보조딜은 별도'}${trustNote}${skillProfile&&skillProfile.skills.length?` · 스킬 ${skillProfile.skills.length}종 프로필(상세)`:''}</span></div>`;
     })();
     const mainPowerTier=upper&&C.upperPowerTier?C.upperPowerTier(upper,state.db):null,mainTierBadge=mainPowerTier&&mainPowerTier.known?`<i class="v151-power-tier tier-${mainPowerTier.letter.toLowerCase()}">${mainPowerTier.letter}티어</i>`:'',main=upper?`<div class="v151-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>메인 상위 · ${C.num(state.counts[upper.id])>0?'TMO 보유':'제작 준비'}</small><b>${C.esc(displayNameOf(upper))} <i>(${C.esc(tierLabel(upper))})</i>${mainTierBadge}${lineBadge}</b><em>${modeLabel(C.familyOf(upper))} · TMO ${fmt(C.completionPercent(state,upper))}% · ${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><span class="v151-card-actions"><button data-act="party-preview" data-id="${C.esc(upper.id)}">파티 보기</button><button data-act="detail" data-id="${C.esc(upper.id)}">상세</button></span></div>`:`<div class="v151-upper-main empty"><i>?</i><span><small>메인 상위 미확정</small><b>현재 패 후보를 비교하세요</b><em>상위는 전설 3기분으로 계산합니다.</em></span></div>`;
     // v17.8(사용자 요청 3): 잠금 상위 화면의 빈 공간에 완성까지 남은

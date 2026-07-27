@@ -707,6 +707,8 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
 .v151-upper-dps.ok{border:1px solid rgba(126,211,140,.35);background:rgba(126,211,140,.07)}
 .v151-upper-dps.gap{border:1px solid rgba(240,153,120,.35);background:rgba(240,153,120,.07)}
 .v151-upper-dps small{grid-column:1/-1;color:#8CA2BE;font-size:9px;font-weight:900}
+/* v17.21 미검증 스킬 프로필 감산 배지 */
+.v151-dps-unverified{display:inline-block;margin-left:6px;padding:0 5px;border-radius:6px;border:1px solid rgba(240,153,120,.45);background:rgba(240,153,120,.12);color:#FFC3A6;font-size:9px;font-style:normal;font-weight:900}
 .v151-upper-dps b{font-size:12px}.v151-upper-dps.ok b{color:#9FE8AC}.v151-upper-dps.gap b{color:#FFB99A}
 .v151-upper-dps span{overflow:hidden;color:#A7BBD0;font-size:9.5px;text-overflow:ellipsis;white-space:nowrap}
 /* Next-boss preview from the parsed 2.305 [C] map data. */
@@ -1667,6 +1669,25 @@ function upperSkillProfile(unit){
   for(const code of unit.codes||[])if(table.byTmo[code])return table.byTmo[code];
   return null;
 }
+// v17.21: 스킬 프로필 신뢰도.  AST 파서가 스스로 남긴 coverage 통계만
+// 근거로 쓴다 — 읽어낸 데미지 액션 비율(damageEvaluated/damageSeen)과
+// 데미지 액션당 미해석 조건 밀도(unknownConditions/profileDamageActions).
+// 2.305 프로필 60종 중 unknownConditions=0은 0종이라 이분 게이트는
+// 전부를 0으로 만든다 — 그래서 차단이 아니라 감산으로 쓴다.
+//   조건밀도 0 → 1.0 · 1 → 0.5 · 3 → 0.25 (1/(1+밀도))
+// 하한 0.1: 프로필이 있다는 사실 자체는 정보이므로 완전 삭제하지 않는다.
+// 카벤딧슈 사례: 발동 4,973,450/초(평타 105,671의 47배)가 status=pending ·
+// unknownConditions 15인 프로필에서 나왔다.
+const SKILL_PROC_TRUST_FLOOR=.1;
+function skillProcTrust(coverage,status){
+  if(!coverage)return{trust:SKILL_PROC_TRUST_FLOOR,verified:false,evalRatio:0,conditionDensity:null};
+  const seen=num(coverage.damageSeen),evaluated=num(coverage.damageEvaluated),actions=num(coverage.profileDamageActions),unknown=num(coverage.unknownConditions);
+  const evalRatio=seen>0?clamp(evaluated/seen,0,1):0;
+  const density=actions>0?Math.max(0,unknown/actions):null;
+  const conditionTrust=density==null?.5:1/(1+density);
+  const verified=String(status||'').indexOf('pending')<0&&unknown===0&&seen>0&&evaluated===seen;
+  return{trust:verified?1:clamp(evalRatio*conditionTrust,SKILL_PROC_TRUST_FLOOR,1),verified,evalRatio:round2(evalRatio),conditionDensity:density==null?null:round2(density)};
+}
 // v17.2: 액션 AST 정적 도출 — 자동공격 유발 스킬의 기대 데미지 하한.
 // strict(미해석 조건 분기=0, 명시 확률 게이트만 통과)만 수치로 쓰고,
 // approx(조건 통과 상한)는 진단용이다.  수동 시전·FSM 트레인 미포함,
@@ -1693,7 +1714,11 @@ function upperSkillProcDps(unit,level,options){
     trainDps+=(num(train.e&&train.e.universal)+num(train.e&&train.e.affected)*armorMult)*rate;
   }
   dps+=trainDps;
-  return{profileId,perAttackStrict:num(strict.affected)+num(strict.universal),dps,trainDps,attacksPerSec,basis:'static-lower-bound-attack-proc-and-rng-trains',coverage:derived.coverage||null};
+  // v17.21: dps는 기존 의미(파서 하한) 그대로 두고, 순위·화면이 쓰는
+  // trustedDps를 따로 낸다 — 미검증 프로필의 발동 DPS가 상위 평가를
+  // 독주하지 않게.
+  const profile=upperSkillProfile(unit),confidence=skillProcTrust(derived.coverage,profile&&profile.status);
+  return{profileId,perAttackStrict:num(strict.affected)+num(strict.universal),dps,trustedDps:dps*confidence.trust,trust:confidence.trust,verified:confidence.verified,evidence:confidence,trainDps,attacksPerSec,basis:'static-lower-bound-attack-proc-and-rng-trains',coverage:derived.coverage||null};
 }
 // 평타 한정 보스 타임라인 참고치.  options.skillDps에 upperSkillProcDps의
 // 하한을 넣을 수 있다 — 그래도 킬 판정은 내리지 않는다.
@@ -2690,7 +2715,7 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);
 
 </script>
@@ -3929,12 +3954,27 @@ function upperSafetyBand(row){
   if(num(row&&row.prefixActionCount)>0)return 1;
   return 0;
 }
+// v17.21: `prefixActionCount>=2`는 "지금 순차로 만들 게 2개 이상 남아
+// 있어야 각"이라는 뜻이라 뒤집혀 있었다 — 이미 목표 환산을 채워 더
+// 만들 게 없는 보드가 오히려 미래각(0)으로 떨어진다.  남은 행동 수가
+// 아니라 "경로가 있거나 이미 도착했는가"를 본다.
+//
+// (조사 기록) 로그 4판을 재생하면 좋은각·완벽각이 여전히 0건인데, 그건
+// 이 조건 때문이 아니라 safePrefix.checkpointPass가 전부 false이기
+// 때문이다.  0724(필수 결손이 처음으로 전부 닫힌 판)의 50라조차
+// readiness 93~98에 checkpointPass false다 — 이감·방깎 결손이 열려
+// 있으면 체크포인트를 못 지나기 때문이며, 각 판정은 그걸 정직하게
+// 보고하고 있다.  임계값을 낮춰 각이 아닌 판을 각이라 부르지 않는다.
+function angleHasPath(row){
+  const target=num(row&&row.plan&&row.plan.targetCount)||9;
+  return num(row&&row.prefixActionCount)>=2||num(row&&row.projectedCount)>=target;
+}
 function upperAngleBand(row){
   if(!row||num(row.rareConflict)>0||num(row.lineagePairs)>0||num(row.controlCapOverflow)>0)return 0;
   const prep=row.upperPreparation||{},prefix=row.safePrefix||{};
   if(row.guaranteed&&row.clearComplete&&prep.immediate)return 3;
-  if(prefix.checkpointPass&&row.roleComplete&&num(row.readiness)>=85&&num(row.prefixActionCount)>=2&&num(row.wispShortage)<=0&&num(row.futureDependencyCount)<=0)return 2;
-  if(prefix.checkpointPass&&num(row.projectedCount)>=6&&num(row.readiness)>=70&&num(row.prefixActionCount)>=2)return 1;
+  if(prefix.checkpointPass&&row.roleComplete&&num(row.readiness)>=85&&angleHasPath(row)&&num(row.wispShortage)<=0&&num(row.futureDependencyCount)<=0)return 2;
+  if(prefix.checkpointPass&&num(row.projectedCount)>=6&&num(row.readiness)>=70&&angleHasPath(row))return 1;
   return 0;
 }
 function decorateUpperStrategy(row,state,upper){
@@ -3944,11 +3984,17 @@ function decorateUpperStrategy(row,state,upper){
 
 function upperBlueprintCompare(a,b){
   const ag=!!a.guaranteed,bg=!!b.guaranteed;if(ag!==bg)return Number(bg)-Number(ag);
+  // v17.21: "각이 아주 잘 나오지 않는 이상 좋은 상위를 간다"를 순서로
+  // 옮긴다.  티어보다 앞설 수 있는 각은 완성 보장(guaranteed)과 angleBand
+  // 승격(effectiveTierRank)뿐이다.  자원 가용성(handFeasible/wispFeasible)과
+  // safetyBand는 "각"이 아니라 근접성이라 티어 뒤로 보낸다 — 이전 순서에서는
+  // 그 근접성만으로 D티어가 B티어 위로 올라왔고, 그게 사용자가 지적한
+  // "가반이 좋지도 않은데 계속 올라온다"와 같은 현상이다.
+  const at=a.powerTier||{},bt=b.powerTier||{},ae=a.effectiveTierRank!=null&&num(a.effectiveTierRank)>=0?num(a.effectiveTierRank):at.known?num(at.rank):null,be=b.effectiveTierRank!=null&&num(b.effectiveTierRank)>=0?num(b.effectiveTierRank):bt.known?num(bt.rank):null;
+  if(at.known&&bt.known&&ae!==be)return be-ae;
   if(!!a.handFeasible!==!!b.handFeasible)return Number(!!b.handFeasible)-Number(!!a.handFeasible);
   if(!!a.wispFeasible!==!!b.wispFeasible)return Number(!!b.wispFeasible)-Number(!!a.wispFeasible);
   const as=num(a.safetyBand!=null?a.safetyBand:upperSafetyBand(a)),bs=num(b.safetyBand!=null?b.safetyBand:upperSafetyBand(b));if(as!==bs)return bs-as;
-  const at=a.powerTier||{},bt=b.powerTier||{},ae=a.effectiveTierRank!=null?num(a.effectiveTierRank):at.known?num(at.rank):null,be=b.effectiveTierRank!=null?num(b.effectiveTierRank):bt.known?num(bt.rank):null;
-  if(at.known&&bt.known&&ae!==be)return be-ae;
   const aa=num(a.angleBand!=null?a.angleBand:upperAngleBand(a)),ba=num(b.angleBand!=null?b.angleBand:upperAngleBand(b));if(aa!==ba)return ba-aa;
   if(at.known&&bt.known&&num(at.rank)!==num(bt.rank))return num(bt.rank)-num(at.rank);
   // Put candidates in the same resource-feasibility band before comparing the
@@ -4426,7 +4472,7 @@ const UPPER_PROJECTION_CAP=8;
 // diverse but bounded union: clear-value anchors, role-vector anchors and the
 // nearest craft.  This prevents one fashionable Upper from monopolising the
 // list without walking the entire catalogue on every TMO update.
-const UPPER_BLUEPRINT_CAP=8;
+const UPPER_BLUEPRINT_CAP=6;
 const SUPPORT_STATIC_PROBE_CAP=30;
 const SUPPORT_CANDIDATE_CAP=12;
 const SUPPORT_BEAM_WIDTH=3;
@@ -4630,7 +4676,14 @@ function futureCoverage(model,node,route,locks,candidateUnits){
 function nodeBase(model,counts,route,locks,initial,sequence){const assessment=P.evaluate(model,counts,route,{round:model.round.value,locks}),resources=resourceTotals(sequence),story=(sequence||[]).reduce((total,step)=>total+num(C.storyGrade(step.quote.unit).score),0),completion=(sequence||[]).reduce((total,step)=>total+num(model.effective.percent[step.quote.unit.id]),0),combat=(sequence||[]).reduce((total,step)=>total+combatPowerScore(step.quote.unit,route),0),regression=P.compareVector(assessment.checkpointVector,initial.checkpointVector)>0?1:0;return{counts,assessment,sequence:sequence||[],resources,story,completion,combat,regression,coverage:null,rankVector:[]};}
 function nodeRank(model,node,initial){
   const coverage=node.coverage||{deadEnds:[],affordableCount:0},remainingWisp=num(node.counts[C.WISP_ID]),unresolved=(node.assessment.groups||[]).filter(group=>!group.pass).length,reserveTarget=Math.min(num(model.effective.counts[C.WISP_ID]),Math.max(2,unresolved*2)),reserveGap=Math.max(0,reserveTarget-remainingWisp),tier=node.resources.tiers,checkpoint=(node.assessment.checkpointVector||[]).slice(),rareExcess=checkpoint.length?checkpoint.pop():0;
-  node.reserve={target:reserveTarget,remaining:remainingWisp,gap:reserveGap};node.rankVector=[node.regression].concat(checkpoint,[coverage.deadEnds.length],node.assessment.fullVector,[reserveGap,-num(node.combat),rareExcess,-num(tier.rare),-num(tier.special),-num(tier.uncommon),-num(tier.common),num(node.resources.wisp),-coverage.affordableCount,-node.story,-node.completion]);return node.rankVector;
+  node.reserve={target:reserveTarget,remaining:remainingWisp,gap:reserveGap};// v17.21: 등급 소모량(-tier.*)이 누적 선위와 후속 커버리지 앞에 있어서
+  // "패를 더 많이 태우는 조합"이 "더 싸고 다음 결손까지 닫는 조합"을
+  // 이겼다.  순서를 뒤집는다 — 후속 커버리지 → 선위 → 등급 소모.
+  // 등급 소모는 남긴다(패 효율은 실제 가치): 위 축이 전부 같을 때만
+  // 작동하는 하위 타이브레이크로 내린다.  story는 제거한다 — 스토리
+  // 파괴 속도는 악몽 클리어 확률이 아니라고 등급표 스스로 선언했고,
+  // 무엇을 실제로 만들지 정하는 이 축에 남아 있으면 안 된다.
+  node.rankVector=[node.regression].concat(checkpoint,[coverage.deadEnds.length],node.assessment.fullVector,[reserveGap,-num(node.combat),rareExcess,-coverage.affordableCount,num(node.resources.wisp),-num(tier.rare),-num(tier.special),-num(tier.uncommon),-num(tier.common),-node.completion]);return node.rankVector;
 }
 function compareNodes(a,b){const vector=P.compareVector(a.rankVector,b.rankVector);if(vector)return vector;const aid=(a.sequence||[]).map(step=>step.quote.targetId).join('|'),bid=(b.sequence||[]).map(step=>step.quote.targetId).join('|');return aid.localeCompare(bid);}
 function candidatePool(model,route,locks,assessment,counts,availableRound,restrictedUnits){
@@ -4825,7 +4878,8 @@ function clearValueScore(model,row){
     const level=Math.max(1,num(model.settings.upperResearchLevel)||1);
     const combat=C.upperBossDps(unit,level,{bossArmor:preview.bossArmor,armorReduce:180});
     const proc=C.upperSkillProcDps?C.upperSkillProcDps(unit,level,{bossArmor:preview.bossArmor,armorReduce:180}):null;
-    if(combat)dpsCover=Math.min(1.2,(combat.effective+(proc?proc.dps:0))/Math.max(1,num(preview.dpsNeed)));
+    // v17.21: 미검증 프로필은 신뢰도로 감산한 값을 순위에 넣는다.
+    if(combat)dpsCover=Math.min(1.2,(combat.effective+(proc?num(proc.trustedDps!=null?proc.trustedDps:proc.dps):0))/Math.max(1,num(preview.dpsNeed)));
   }
   const strategy=C.upperStrategy(unit);
   let line=.5;
@@ -4878,17 +4932,72 @@ function integratedUpperCompare(left,right){
   const projected=routeCandidateCompare(left,right);if(projected)return projected;
   return clearValueCompare(left,right);
 }
+// v17.21: 9환산 전체 파티 계획은 후보 하나당 ~250ms다.  숏리스트 8개를
+// 전부 계획하면 방향 미확정 구간의 E.decide가 2.8초까지 늘어나고(기존
+// 0.7~0.9초) 그게 메인 스레드다 — 제작·리롤·드랍으로 패가 바뀔 때마다
+// 다시 걸린다.  상위 몇 개만 실제로 계획하고 나머지는 투영 순서를
+// 유지한다.  계획된 후보가 항상 위에 오므로 목록 상단(사용자가 실제로
+// 고르는 구간)은 그대로다.
+const UPPER_BLUEPRINT_PLAN_CAP=3;
+// 계획 전 예비 정렬 — 티어를 먼저 본다.  낮은 티어가 "가깝다"는 이유로
+// 고티어 후보를 계획 대상에서 밀어내면 티어 축 자체가 무너진다.
+// 승격 폭(최대 +2)을 감안해 최고 티어 −2단계까지는 계획 후보로 남긴다.
+function blueprintPlanPreorder(a,b){
+  const at=a&&a.powerTier||{},bt=b&&b.powerTier||{};
+  if(at.known&&bt.known&&num(at.rank)!==num(bt.rank))return num(bt.rank)-num(at.rank);
+  if(!!at.known!==!!bt.known)return at.known?-1:1;
+  return clearValueCompare(a,b);
+}
+function blueprintPlanTargets(rows){
+  const ordered=rows.slice().sort(blueprintPlanPreorder);
+  const known=ordered.filter(row=>row&&row.powerTier&&row.powerTier.known);
+  const bestRank=known.length?num(known[0].powerTier.rank):null;
+  const targets=[],seen=new Set();
+  const take=row=>{if(!row||seen.has(row.id)||targets.length>=UPPER_BLUEPRINT_PLAN_CAP)return;seen.add(row.id);targets.push(row);};
+  for(const row of ordered)take(row);
+  // 승격으로 뒤집힐 수 있는 하위 티어(최고 −1, −2)가 잘렸다면 한 자리를
+  // 내준다 — angleBand 승격이 실제로 작동하려면 그 후보도 계획돼야 한다.
+  if(bestRank!=null)for(const step of [1,2]){
+    if(targets.some(row=>num(row.powerTier.rank)===bestRank-step))continue;
+    const candidate=ordered.find(row=>row&&row.powerTier&&row.powerTier.known&&num(row.powerTier.rank)===bestRank-step&&!seen.has(row.id));
+    if(candidate&&targets.length<UPPER_BLUEPRINT_PLAN_CAP+1){seen.add(candidate.id);targets.push(candidate);}
+  }
+  return{targets,rest:ordered.filter(row=>!seen.has(row.id))};
+}
+// 계획된 후보와 계획 안 된 후보가 한 목록에 섞일 때 쓰는 비교자.
+//  - 둘 다 계획됨: 전체 파티 비교(안전 → 티어 → 각 …) 그대로.
+//  - 둘 다 미계획: 티어 우선 예비 정렬.
+//  - 한쪽만 계획됨: 티어를 먼저 본다.  아니면 "계획됐다"는 이유만으로
+//    낮은 티어가 높은 티어 위로 올라가는 표시 아티팩트가 생긴다.
+function planFlag(row){return num(row&&row.blueprintEvaluation&&row.blueprintEvaluation.rank)>0?1:0;}
+function plainTierRank(row){const tier=row&&row.powerTier||{};return tier.known?num(tier.rank):null;}
+function mixedPlanCompare(left,right){
+  const lp=planFlag(left),rp=planFlag(right);
+  if(lp&&rp)return integratedUpperCompare(left,right);
+  if(!lp&&!rp)return blueprintPlanPreorder(left,right);
+  const lt=plainTierRank(left),rt=plainTierRank(right);
+  if(lt!=null&&rt!=null&&lt!==rt)return rt-lt;
+  return rp-lp;
+}
 function applyBlueprintRanking(model,route,rows){
   if(!S||typeof S.rankUpperBlueprints!=='function'||!rows.length)return rows.slice().sort(integratedUpperCompare);
   const settings=Object.assign({},model.settings,{mode:route.mode,magicRoute:route.key,currentRound:model.round.value,targetSquadCount:9,targetLegendEquivalent:9,upperPreviewId:'',preferredLineupIds:[]});
+  const {targets:planTargets,rest:planRest}=blueprintPlanTargets(rows);
+  if(!planTargets.length)return rows.slice().sort(integratedUpperCompare);
   try{
-    const runtime=typeof window!=='undefined'?window:globalThis,ranked=S.rankUpperBlueprints({state:plannerState(model),settings,locks:[],upperMemo:runtime.ORD_UPPER_MEMO,synergyMemo:runtime.ORD_SYNERGY_MEMO},{candidateIds:rows.map(row=>row.id)})||[],byId=new Map(ranked.map(item=>[String(item.upperId),item]));
-    const decorated=rows.map(row=>{
+    const runtime=typeof window!=='undefined'?window:globalThis,ranked=S.rankUpperBlueprints({state:plannerState(model),settings,locks:[],upperMemo:runtime.ORD_UPPER_MEMO,synergyMemo:runtime.ORD_SYNERGY_MEMO},{candidateIds:planTargets.map(row=>row.id)})||[],byId=new Map(ranked.map(item=>[String(item.upperId),item]));
+    const decorated=planTargets.map(row=>{
       const item=byId.get(String(row.id));if(!item)return row;
       const plan=item.plan||{},planned=plan.roleCoverage&&plan.roleCoverage.planned||{},summary=plan.rareSummary||{};
       return Object.assign({},row,{powerTier:item.powerTier||row.powerTier,safetyBand:num(item.safetyBand),angleBand:num(item.angleBand),angleLabel:String(item.angleLabel||''),tierPromotion:num(item.tierPromotion),effectiveTierRank:num(item.effectiveTierRank),memoPackage:item.memoPackage||null,blueprintEvaluation:{basis:'upper-plus-support-full-squad',rank:num(item.rank),roleComplete:!!item.roleComplete,clearComplete:!!item.clearComplete,readiness:num(item.readiness),plannedEquivalent:num(plan.plannedCount),targetEquivalent:num(plan.targetCount)||9,plannedBoard:num(plan.plannedBoardCount),targetBoard:num(plan.targetBoardCount),rareUsed:num(item.rareUsed),rareConflict:num(item.rareConflict||summary.conflict),wispShortage:num(item.wispShortage),futureDependencyCount:num(item.futureDependencyCount),controlOverflow:num(item.controlCapOverflow),materialOverlapPenalty:num(item.materialOverlapPenalty),requirementPriority:[].concat(item.requirementPriority||[]),powerTier:item.powerTier||row.powerTier,safetyBand:num(item.safetyBand),angleBand:num(item.angleBand),angleLabel:String(item.angleLabel||''),tierPromotion:num(item.tierPromotion),effectiveTierRank:num(item.effectiveTierRank),memoPackage:item.memoPackage||null,supports:blueprintSupportRows(model,item),plannedComplete:!!planned.complete},blueprintProposal:item.blueprint||null});
     });
-    return decorated.sort(integratedUpperCompare);
+    // 계획된 후보끼리는 전체 파티 비교로, 나머지는 투영 순서 그대로
+    // 그 아래에 붙인다.  계획 안 된 후보에는 근거를 남겨 화면이 "왜
+    // 파티 평가가 없는지" 설명할 수 있게 한다.
+    // 계획하지 않은 후보에는 각 라벨을 지어내지 않는다.  '미평가'로
+    // 명시해 화면이 "왜 이 카드엔 파티 평가가 없는지" 설명할 수 있게 한다.
+    const skipped=planRest.map(row=>Object.assign({},row,{angleLabel:'미평가',angleBand:0,tierPromotion:0,effectiveTierRank:row.powerTier&&row.powerTier.known?num(row.powerTier.rank):-1,blueprintEvaluation:{basis:'route-projection-only',planned:false,rank:0,powerTier:row.powerTier||{known:false,letter:'',rank:-1},angleLabel:'미평가',angleBand:0,tierPromotion:0,note:`전체 파티 계획은 상위 ${UPPER_BLUEPRINT_PLAN_CAP}개까지만 수행합니다.`}}));
+    return decorated.concat(skipped).sort(mixedPlanCompare);
   }catch(error){
     return rows.slice().sort(integratedUpperCompare).map(row=>Object.assign({},row,{blueprintEvaluation:{basis:'route-projection-fallback',error:String(error&&error.message||error)}}));
   }
@@ -4930,11 +5039,11 @@ function upperRouteCandidates(model,locks){
     push(laneNearest);
     const rows=applyBlueprintRanking(model,route,shortlist.map(row=>projectUpperRouteRow(model,row,route)));
     for(const row of rows)if(!row.clearValue)row.clearValue=clearValueScore(model,row);
-    rows.sort(integratedUpperCompare);byRoute.push({route,rows});}
+    rows.sort(mixedPlanCompare);byRoute.push({route,rows});}
   const dedupe=list=>{const seenCanonical=new Map();const out=[];for(const row of list){const key=C.canonicalUpperId(row.id);const prior=seenCanonical.get(key);if(prior==null){seenCanonical.set(key,out.length);out.push(row);}else if(canonicalCompare(row,out[prior])<0)out[prior]=row;}return out;};
   // Final order is the integrated Upper+support blueprint.  Standalone clear
   // value is retained only as a late tie-break and explanation datum.
-  const pool=dedupe(byRoute.flatMap(lane=>lane.rows).sort(integratedUpperCompare)).sort(integratedUpperCompare);
+  const pool=dedupe(byRoute.flatMap(lane=>lane.rows).sort(mixedPlanCompare)).sort(mixedPlanCompare);
   const picked=pool.slice(0,ROUTE_CANDIDATE_LIMIT);
   const nearest=nearestOf(pool);
   const storyAnchor=storyRewardSettingKnown?pool.filter(row=>row.storyReward).sort(clearValueCompare)[0]:null,pinned=new Set(),pin=row=>{
@@ -4945,7 +5054,7 @@ function upperRouteCandidates(model,locks){
   if(nearest)nearest.nearestBuild=true;
   pin(nearest);
   pin(storyAnchor);
-  picked.sort(integratedUpperCompare).forEach((row,index)=>{
+  picked.sort(mixedPlanCompare).forEach((row,index)=>{
     if(row.blueprintEvaluation&&row.blueprintEvaluation.rank)row.blueprintEvaluation.rank=index+1;
   });
   // 카드 6개와 별개로, 게이트 상위 전체(베가펑크 4종 등 정규화 대표)를
@@ -6809,8 +6918,9 @@ class App{
         const base=C.upperBossDps(upper,level,{bossArmor:preview.bossArmor,armorReduce:effReduce,speedBuffPct:speedBuff});
         if(!base)return null;
         const proc=C.upperSkillProcDps?C.upperSkillProcDps(upper,level,{bossArmor:preview.bossArmor,armorReduce:effReduce,speedBuffPct:speedBuff}):null;
-        const combined=base.effective+(proc?proc.dps:0);
-        return{combined,coverage:Math.round(100*combined/Math.max(1,C.num(preview.dpsNeed)))};
+        // v17.21: 미검증 스킬 프로필은 신뢰도만큼 감산한 값을 쓴다.
+        const combined=base.effective+(proc?C.num(proc.trustedDps!=null?proc.trustedDps:proc.dps):0);
+        return{combined,coverage:Math.round(100*combined/Math.max(1,C.num(preview.dpsNeed))),dpsTrust:proc?C.num(proc.trust):1,dpsVerified:!proc||proc.verified!==false};
       })();
       if(duel)rows.push(`<div class="${duel.coverage>=100?'ok':'gap'}"><small>필요 ${koNum(preview.dpsNeed)}/초 vs 내 상위 추정 하한</small><b>${koNum(duel.combined)}/초 · 커버 ${duel.coverage}%</b><span>평타+스킬유발 하한 · 수동스킬·보조딜 미집계 — 충족 표시도 킬 보장 아님</span></div>`);
       else rows.push(`<div><small>보스 단독 필요 DPS</small><b>${koNum(preview.dpsNeed)}/초</b><span>상위 확정 후 내 추정 하한과 대조합니다</span></div>`);
@@ -7122,10 +7232,16 @@ class App{
       // 보여준다.  FSM 트레인·수동 시전 미포함이므로 여전히 하한이며
       // 킬 판정은 내리지 않는다.
       const skillProc=C.upperSkillProcDps?C.upperSkillProcDps(upper,level,{bossArmor:preview.bossArmor,armorReduce,speedBuffPct:speedBuff}):null;
-      const combined=result.effective+(skillProc?skillProc.dps:0);
+      // v17.21: 순위와 같은 값을 보여준다 — 파서가 못 읽은 조건이 많은
+      // 프로필은 신뢰도로 감산하고, 원값과 감산값을 함께 표기한다.
+      const procRaw=skillProc?C.num(skillProc.dps):0,procTrusted=skillProc?C.num(skillProc.trustedDps!=null?skillProc.trustedDps:skillProc.dps):0;
+      const combined=result.effective+procTrusted;
       const enough=combined>=preview.dpsNeed;
       const skillProfile=C.upperSkillProfile?C.upperSkillProfile(upper):null;
-      return`<div class="v151-upper-dps ${enough?'ok':'gap'}"><small>평타${skillProc&&skillProc.dps>0?'+스킬유발(AST 하한)':''} 실효 DPS · 연구 Lv${level} · 방깎 ${Math.round(armorReduce)}</small><b>${koNum(combined)}/초</b><span>${preview.round}라 ${C.esc(preview.boss)} 필요 ${koNum(preview.dpsNeed)}/초 ${enough?'충족(하한 기준)':'· 트레인·수동스킬·보조딜은 별도'}${skillProfile&&skillProfile.skills.length?` · 스킬 ${skillProfile.skills.length}종 프로필(상세)`:''}</span></div>`;
+      const discounted=procRaw>0&&procTrusted<procRaw-1;
+      const trustNote=discounted?` · 스킬 발동 ${koNum(procRaw)} → 신뢰 ${Math.round(C.num(skillProc.trust)*100)}% 반영 ${koNum(procTrusted)}`:'';
+      const trustBadge=discounted?'<i class="v151-dps-unverified">미검증 감산</i>':'';
+      return`<div class="v151-upper-dps ${enough?'ok':'gap'}"><small>평타${procTrusted>0?'+스킬유발(AST 하한)':''} 실효 DPS · 연구 Lv${level} · 방깎 ${Math.round(armorReduce)}${trustBadge}</small><b>${koNum(combined)}/초</b><span>${preview.round}라 ${C.esc(preview.boss)} 필요 ${koNum(preview.dpsNeed)}/초 ${enough?'충족(하한 기준)':'· 트레인·수동스킬·보조딜은 별도'}${trustNote}${skillProfile&&skillProfile.skills.length?` · 스킬 ${skillProfile.skills.length}종 프로필(상세)`:''}</span></div>`;
     })();
     const mainPowerTier=upper&&C.upperPowerTier?C.upperPowerTier(upper,state.db):null,mainTierBadge=mainPowerTier&&mainPowerTier.known?`<i class="v151-power-tier tier-${mainPowerTier.letter.toLowerCase()}">${mainPowerTier.letter}티어</i>`:'',main=upper?`<div class="v151-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>메인 상위 · ${C.num(state.counts[upper.id])>0?'TMO 보유':'제작 준비'}</small><b>${C.esc(displayNameOf(upper))} <i>(${C.esc(tierLabel(upper))})</i>${mainTierBadge}${lineBadge}</b><em>${modeLabel(C.familyOf(upper))} · TMO ${fmt(C.completionPercent(state,upper))}% · ${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><span class="v151-card-actions"><button data-act="party-preview" data-id="${C.esc(upper.id)}">파티 보기</button><button data-act="detail" data-id="${C.esc(upper.id)}">상세</button></span></div>`:`<div class="v151-upper-main empty"><i>?</i><span><small>메인 상위 미확정</small><b>현재 패 후보를 비교하세요</b><em>상위는 전설 3기분으로 계산합니다.</em></span></div>`;
     // v17.8(사용자 요청 3): 잠금 상위 화면의 빈 공간에 완성까지 남은

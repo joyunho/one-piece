@@ -51,9 +51,21 @@ assert.strictEqual(decision.state,'ROUTE_CHOICE');
 assert.strictEqual(decision.evidence.rankingAuthority,'upper-plus-support-full-squad');
 assert(decision.routeCandidates.length>0&&decision.routeCandidates.length<=6);
 
+// v17.21: 9환산 전체 파티 계획은 후보 하나당 ~250ms라 숏리스트 전부를
+// 계획하면 방향 미확정 구간의 E.decide가 2.8초까지 늘어난다(메인 스레드).
+// 상위 몇 개만 계획하고 나머지는 투영 순서를 유지하되, 계획하지 않은
+// 후보는 각 라벨을 지어내지 않고 '미평가'로 명시한다.
+let plannedRows=0;
 for(let index=0;index<decision.routeCandidates.length;index++){
   const row=decision.routeCandidates[index],bundle=row.blueprintEvaluation;
-  assert(bundle&&bundle.basis==='upper-plus-support-full-squad',`${row.name}: integrated bundle missing`);
+  assert(bundle,`${row.name}: blueprintEvaluation missing`);
+  if(bundle.basis!=='upper-plus-support-full-squad'){
+    assert.strictEqual(bundle.basis,'route-projection-only',`${row.name}: unexpected bundle basis ${bundle.basis}`);
+    assert.strictEqual(bundle.planned,false,`${row.name}: unplanned row claims a plan`);
+    assert.strictEqual(row.angleLabel,'미평가',`${row.name}: unplanned row invented an angle label`);
+    continue;
+  }
+  plannedRows+=1;
   assert.strictEqual(bundle.rank,index+1,`${row.name}: displayed order differs from bundle order`);
   assert(bundle.supports.length<=3,'support preview exceeds three');
   for(const support of bundle.supports){
@@ -61,12 +73,30 @@ for(let index=0;index<decision.routeCandidates.length;index++){
     assert(unit&&!C.isUpper(unit)&&!C.isShip(unit),`${support.name}: invalid support preview`);
   }
 }
+assert(plannedRows>0,'no candidate received the integrated full-squad bundle');
+// 계획된 후보는 반드시 목록 앞쪽에 모여 있어야 한다 — 뒤섞이면
+// 사용자가 "평가된 추천"과 "투영뿐인 참고"를 구분할 수 없다.
+const firstUnplanned=decision.routeCandidates.findIndex(row=>row.blueprintEvaluation.basis!=='upper-plus-support-full-squad');
+if(firstUnplanned>=0)assert(decision.routeCandidates.slice(firstUnplanned).every(row=>row.blueprintEvaluation.basis!=='upper-plus-support-full-squad'),'planned and unplanned rows are interleaved');
 
 const gabanIndex=decision.routeCandidates.findIndex(row=>row.id==='F40h');
 const cavendishIndex=decision.routeCandidates.findIndex(row=>row.id==='B50h');
+// v17.21: 이 단언의 취지는 "단독 DPS가 더 이상 1순위를 정하지 않는다"였다.
+// 티어(S>A>B>C>D>F)가 1순위 축이 된 뒤로 (A)카벤딧슈는 A티어 자격으로
+// 상단에 남을 수 있다 — 다만 더 이상 1순위가 아니고, 발동 DPS도 미검증
+// 감산을 거친 값이다.  (D)스코퍼가반은 티어대로 하단에 머문다.
 assert(gabanIndex>=3,`Gaban remained a top-three standalone recommendation (${gabanIndex+1})`);
-assert(cavendishIndex>=3,`Cavendish remained a top-three standalone recommendation (${cavendishIndex+1})`);
-assert(decision.routeCandidates.slice(0,3).every(row=>row.blueprintEvaluation.plannedEquivalent>=5),'top bundle did not improve the planned party over old four-equivalent leaders');
+assert(cavendishIndex>0,`Cavendish is still the standalone leader (${cavendishIndex+1})`);
+const leadTier=C.upperPowerTier(decision.routeCandidates[0].unit,replay.state.db);
+assert(leadTier.known,'lead candidate has no readable tier');
+for(const row of decision.routeCandidates.slice(1)){
+  const tier=C.upperPowerTier(row.unit,replay.state.db);
+  if(tier.known)assert(tier.rank<=leadTier.rank,`${row.name}(${tier.letter})가 1순위(${leadTier.letter})보다 높은 티어다`);
+}
+// v17.21: 티어가 1순위 축이 된 뒤로 3순위에는 환산이 낮은 A티어가 앉을
+// 수 있다.  이 단언의 취지는 "사용자가 실제로 고르는 1순위가 예전
+// 4환산 리더보다 나은 파티를 만든다"이므로 선두에만 건다.
+assert(C.num(decision.routeCandidates[0].blueprintEvaluation.plannedEquivalent)>=5,`lead bundle did not improve the planned party over old four-equivalent leaders (${decision.routeCandidates[0].blueprintEvaluation.plannedEquivalent})`);
 assert(decision.routeCandidates.some((row,index)=>index>0&&row.clearValue.value>decision.routeCandidates[index-1].clearValue.value),'standalone clearValue still controls the displayed order');
 
 const candidateIds=decision.routeCandidates.map(row=>row.id),rankInput={

@@ -1232,12 +1232,27 @@ function upperSafetyBand(row){
   if(num(row&&row.prefixActionCount)>0)return 1;
   return 0;
 }
+// v17.21: `prefixActionCount>=2`는 "지금 순차로 만들 게 2개 이상 남아
+// 있어야 각"이라는 뜻이라 뒤집혀 있었다 — 이미 목표 환산을 채워 더
+// 만들 게 없는 보드가 오히려 미래각(0)으로 떨어진다.  남은 행동 수가
+// 아니라 "경로가 있거나 이미 도착했는가"를 본다.
+//
+// (조사 기록) 로그 4판을 재생하면 좋은각·완벽각이 여전히 0건인데, 그건
+// 이 조건 때문이 아니라 safePrefix.checkpointPass가 전부 false이기
+// 때문이다.  0724(필수 결손이 처음으로 전부 닫힌 판)의 50라조차
+// readiness 93~98에 checkpointPass false다 — 이감·방깎 결손이 열려
+// 있으면 체크포인트를 못 지나기 때문이며, 각 판정은 그걸 정직하게
+// 보고하고 있다.  임계값을 낮춰 각이 아닌 판을 각이라 부르지 않는다.
+function angleHasPath(row){
+  const target=num(row&&row.plan&&row.plan.targetCount)||9;
+  return num(row&&row.prefixActionCount)>=2||num(row&&row.projectedCount)>=target;
+}
 function upperAngleBand(row){
   if(!row||num(row.rareConflict)>0||num(row.lineagePairs)>0||num(row.controlCapOverflow)>0)return 0;
   const prep=row.upperPreparation||{},prefix=row.safePrefix||{};
   if(row.guaranteed&&row.clearComplete&&prep.immediate)return 3;
-  if(prefix.checkpointPass&&row.roleComplete&&num(row.readiness)>=85&&num(row.prefixActionCount)>=2&&num(row.wispShortage)<=0&&num(row.futureDependencyCount)<=0)return 2;
-  if(prefix.checkpointPass&&num(row.projectedCount)>=6&&num(row.readiness)>=70&&num(row.prefixActionCount)>=2)return 1;
+  if(prefix.checkpointPass&&row.roleComplete&&num(row.readiness)>=85&&angleHasPath(row)&&num(row.wispShortage)<=0&&num(row.futureDependencyCount)<=0)return 2;
+  if(prefix.checkpointPass&&num(row.projectedCount)>=6&&num(row.readiness)>=70&&angleHasPath(row))return 1;
   return 0;
 }
 function decorateUpperStrategy(row,state,upper){
@@ -1247,11 +1262,17 @@ function decorateUpperStrategy(row,state,upper){
 
 function upperBlueprintCompare(a,b){
   const ag=!!a.guaranteed,bg=!!b.guaranteed;if(ag!==bg)return Number(bg)-Number(ag);
+  // v17.21: "각이 아주 잘 나오지 않는 이상 좋은 상위를 간다"를 순서로
+  // 옮긴다.  티어보다 앞설 수 있는 각은 완성 보장(guaranteed)과 angleBand
+  // 승격(effectiveTierRank)뿐이다.  자원 가용성(handFeasible/wispFeasible)과
+  // safetyBand는 "각"이 아니라 근접성이라 티어 뒤로 보낸다 — 이전 순서에서는
+  // 그 근접성만으로 D티어가 B티어 위로 올라왔고, 그게 사용자가 지적한
+  // "가반이 좋지도 않은데 계속 올라온다"와 같은 현상이다.
+  const at=a.powerTier||{},bt=b.powerTier||{},ae=a.effectiveTierRank!=null&&num(a.effectiveTierRank)>=0?num(a.effectiveTierRank):at.known?num(at.rank):null,be=b.effectiveTierRank!=null&&num(b.effectiveTierRank)>=0?num(b.effectiveTierRank):bt.known?num(bt.rank):null;
+  if(at.known&&bt.known&&ae!==be)return be-ae;
   if(!!a.handFeasible!==!!b.handFeasible)return Number(!!b.handFeasible)-Number(!!a.handFeasible);
   if(!!a.wispFeasible!==!!b.wispFeasible)return Number(!!b.wispFeasible)-Number(!!a.wispFeasible);
   const as=num(a.safetyBand!=null?a.safetyBand:upperSafetyBand(a)),bs=num(b.safetyBand!=null?b.safetyBand:upperSafetyBand(b));if(as!==bs)return bs-as;
-  const at=a.powerTier||{},bt=b.powerTier||{},ae=a.effectiveTierRank!=null?num(a.effectiveTierRank):at.known?num(at.rank):null,be=b.effectiveTierRank!=null?num(b.effectiveTierRank):bt.known?num(bt.rank):null;
-  if(at.known&&bt.known&&ae!==be)return be-ae;
   const aa=num(a.angleBand!=null?a.angleBand:upperAngleBand(a)),ba=num(b.angleBand!=null?b.angleBand:upperAngleBand(b));if(aa!==ba)return ba-aa;
   if(at.known&&bt.known&&num(at.rank)!==num(bt.rank))return num(bt.rank)-num(at.rank);
   // Put candidates in the same resource-feasibility band before comparing the

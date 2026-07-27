@@ -43,9 +43,15 @@ const physical=lanes.physical.rows[0];
 const dual=lanes.dual.rows[0];
 const single=lanes.singleEnd.rows[0];
 
-assert.strictEqual(physical.upperId,'190H','이 실제 패의 물딜 방향은 쵸파 상위가 최상단이어야 합니다.');
-assert.deepStrictEqual(physical.safePrefix.actions.map(action=>action.id),['190H']);
-assert.strictEqual(physical.safePrefix.checkpointPass,false,'쵸파 상위 한 기만으로 30라 상위+전설 체크를 통과시켰습니다.');
+// v17.21: 이 패에서는 (S)징베가 (A)쵸파와 함께 도달 가능하다.  상위
+// 티어(S>A>B>C>D>F)가 1순위 축이 된 뒤로 선두는 S티어여야 한다 —
+// 쵸파가 앞서던 근거는 safetyBand 1(당장 만들 게 하나 있음)뿐이었고
+// 그건 "각"이 아니라 근접성이다.  쵸파는 레인에 남아 있어야 한다.
+const catalogDb=C.buildDb(global.ORD_TMO_UNITS);
+const physicalTier=C.upperPowerTier(catalogDb.byId.get(physical.upperId),catalogDb);
+assert.strictEqual(physicalTier.letter,'S','물딜 선두가 도달 가능한 최고 티어가 아닙니다.');
+assert(lanes.physical.rows.some(row=>row.upperId==='190H'),'쵸파 상위가 물딜 레인에서 사라졌습니다.');
+assert.strictEqual(physical.safePrefix.checkpointPass,false,'상위 한 기만으로 30라 상위+전설 체크를 통과시켰습니다.');
 assert.strictEqual(physical.projectedComplete,false);
 assert.strictEqual(physical.wispFeasible,false);
 assert(physical.wispShortage>0,'미래 9기의 선택위습 부채가 숨겨졌습니다.');

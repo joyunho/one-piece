@@ -144,7 +144,8 @@ assert.strictEqual(decision.state,'ROUTE_CHOICE');
 assert(decision.routeCandidates.length>0&&decision.routeCandidates.length<=6);
 for(const candidate of decision.routeCandidates){
   assert(candidate.powerTier&&candidate.powerTier.known,`${candidate.name}: tier missing from engine output`);
-  assert(['미래각','준비각','좋은각','완벽각'].includes(candidate.angleLabel),`${candidate.name}: angle label missing`);
+  // v17.21: 전체 파티를 계획하지 않은 후보는 '미평가'가 정직한 값이다.
+  assert(['미래각','준비각','좋은각','완벽각','미평가'].includes(candidate.angleLabel),`${candidate.name}: angle label missing`);
   assert.strictEqual(candidate.blueprintEvaluation.powerTier.letter,candidate.powerTier.letter);
   for(const support of candidate.blueprintEvaluation.supports||[]){
     if(support.memoMatched){

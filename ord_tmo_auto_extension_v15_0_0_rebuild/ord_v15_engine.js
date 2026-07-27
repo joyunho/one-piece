@@ -21,7 +21,7 @@ const UPPER_PROJECTION_CAP=8;
 // diverse but bounded union: clear-value anchors, role-vector anchors and the
 // nearest craft.  This prevents one fashionable Upper from monopolising the
 // list without walking the entire catalogue on every TMO update.
-const UPPER_BLUEPRINT_CAP=8;
+const UPPER_BLUEPRINT_CAP=6;
 const SUPPORT_STATIC_PROBE_CAP=30;
 const SUPPORT_CANDIDATE_CAP=12;
 const SUPPORT_BEAM_WIDTH=3;
@@ -225,7 +225,14 @@ function futureCoverage(model,node,route,locks,candidateUnits){
 function nodeBase(model,counts,route,locks,initial,sequence){const assessment=P.evaluate(model,counts,route,{round:model.round.value,locks}),resources=resourceTotals(sequence),story=(sequence||[]).reduce((total,step)=>total+num(C.storyGrade(step.quote.unit).score),0),completion=(sequence||[]).reduce((total,step)=>total+num(model.effective.percent[step.quote.unit.id]),0),combat=(sequence||[]).reduce((total,step)=>total+combatPowerScore(step.quote.unit,route),0),regression=P.compareVector(assessment.checkpointVector,initial.checkpointVector)>0?1:0;return{counts,assessment,sequence:sequence||[],resources,story,completion,combat,regression,coverage:null,rankVector:[]};}
 function nodeRank(model,node,initial){
   const coverage=node.coverage||{deadEnds:[],affordableCount:0},remainingWisp=num(node.counts[C.WISP_ID]),unresolved=(node.assessment.groups||[]).filter(group=>!group.pass).length,reserveTarget=Math.min(num(model.effective.counts[C.WISP_ID]),Math.max(2,unresolved*2)),reserveGap=Math.max(0,reserveTarget-remainingWisp),tier=node.resources.tiers,checkpoint=(node.assessment.checkpointVector||[]).slice(),rareExcess=checkpoint.length?checkpoint.pop():0;
-  node.reserve={target:reserveTarget,remaining:remainingWisp,gap:reserveGap};node.rankVector=[node.regression].concat(checkpoint,[coverage.deadEnds.length],node.assessment.fullVector,[reserveGap,-num(node.combat),rareExcess,-num(tier.rare),-num(tier.special),-num(tier.uncommon),-num(tier.common),num(node.resources.wisp),-coverage.affordableCount,-node.story,-node.completion]);return node.rankVector;
+  node.reserve={target:reserveTarget,remaining:remainingWisp,gap:reserveGap};// v17.21: 등급 소모량(-tier.*)이 누적 선위와 후속 커버리지 앞에 있어서
+  // "패를 더 많이 태우는 조합"이 "더 싸고 다음 결손까지 닫는 조합"을
+  // 이겼다.  순서를 뒤집는다 — 후속 커버리지 → 선위 → 등급 소모.
+  // 등급 소모는 남긴다(패 효율은 실제 가치): 위 축이 전부 같을 때만
+  // 작동하는 하위 타이브레이크로 내린다.  story는 제거한다 — 스토리
+  // 파괴 속도는 악몽 클리어 확률이 아니라고 등급표 스스로 선언했고,
+  // 무엇을 실제로 만들지 정하는 이 축에 남아 있으면 안 된다.
+  node.rankVector=[node.regression].concat(checkpoint,[coverage.deadEnds.length],node.assessment.fullVector,[reserveGap,-num(node.combat),rareExcess,-coverage.affordableCount,num(node.resources.wisp),-num(tier.rare),-num(tier.special),-num(tier.uncommon),-num(tier.common),-node.completion]);return node.rankVector;
 }
 function compareNodes(a,b){const vector=P.compareVector(a.rankVector,b.rankVector);if(vector)return vector;const aid=(a.sequence||[]).map(step=>step.quote.targetId).join('|'),bid=(b.sequence||[]).map(step=>step.quote.targetId).join('|');return aid.localeCompare(bid);}
 function candidatePool(model,route,locks,assessment,counts,availableRound,restrictedUnits){
@@ -420,7 +427,8 @@ function clearValueScore(model,row){
     const level=Math.max(1,num(model.settings.upperResearchLevel)||1);
     const combat=C.upperBossDps(unit,level,{bossArmor:preview.bossArmor,armorReduce:180});
     const proc=C.upperSkillProcDps?C.upperSkillProcDps(unit,level,{bossArmor:preview.bossArmor,armorReduce:180}):null;
-    if(combat)dpsCover=Math.min(1.2,(combat.effective+(proc?proc.dps:0))/Math.max(1,num(preview.dpsNeed)));
+    // v17.21: 미검증 프로필은 신뢰도로 감산한 값을 순위에 넣는다.
+    if(combat)dpsCover=Math.min(1.2,(combat.effective+(proc?num(proc.trustedDps!=null?proc.trustedDps:proc.dps):0))/Math.max(1,num(preview.dpsNeed)));
   }
   const strategy=C.upperStrategy(unit);
   let line=.5;
@@ -473,17 +481,72 @@ function integratedUpperCompare(left,right){
   const projected=routeCandidateCompare(left,right);if(projected)return projected;
   return clearValueCompare(left,right);
 }
+// v17.21: 9환산 전체 파티 계획은 후보 하나당 ~250ms다.  숏리스트 8개를
+// 전부 계획하면 방향 미확정 구간의 E.decide가 2.8초까지 늘어나고(기존
+// 0.7~0.9초) 그게 메인 스레드다 — 제작·리롤·드랍으로 패가 바뀔 때마다
+// 다시 걸린다.  상위 몇 개만 실제로 계획하고 나머지는 투영 순서를
+// 유지한다.  계획된 후보가 항상 위에 오므로 목록 상단(사용자가 실제로
+// 고르는 구간)은 그대로다.
+const UPPER_BLUEPRINT_PLAN_CAP=3;
+// 계획 전 예비 정렬 — 티어를 먼저 본다.  낮은 티어가 "가깝다"는 이유로
+// 고티어 후보를 계획 대상에서 밀어내면 티어 축 자체가 무너진다.
+// 승격 폭(최대 +2)을 감안해 최고 티어 −2단계까지는 계획 후보로 남긴다.
+function blueprintPlanPreorder(a,b){
+  const at=a&&a.powerTier||{},bt=b&&b.powerTier||{};
+  if(at.known&&bt.known&&num(at.rank)!==num(bt.rank))return num(bt.rank)-num(at.rank);
+  if(!!at.known!==!!bt.known)return at.known?-1:1;
+  return clearValueCompare(a,b);
+}
+function blueprintPlanTargets(rows){
+  const ordered=rows.slice().sort(blueprintPlanPreorder);
+  const known=ordered.filter(row=>row&&row.powerTier&&row.powerTier.known);
+  const bestRank=known.length?num(known[0].powerTier.rank):null;
+  const targets=[],seen=new Set();
+  const take=row=>{if(!row||seen.has(row.id)||targets.length>=UPPER_BLUEPRINT_PLAN_CAP)return;seen.add(row.id);targets.push(row);};
+  for(const row of ordered)take(row);
+  // 승격으로 뒤집힐 수 있는 하위 티어(최고 −1, −2)가 잘렸다면 한 자리를
+  // 내준다 — angleBand 승격이 실제로 작동하려면 그 후보도 계획돼야 한다.
+  if(bestRank!=null)for(const step of [1,2]){
+    if(targets.some(row=>num(row.powerTier.rank)===bestRank-step))continue;
+    const candidate=ordered.find(row=>row&&row.powerTier&&row.powerTier.known&&num(row.powerTier.rank)===bestRank-step&&!seen.has(row.id));
+    if(candidate&&targets.length<UPPER_BLUEPRINT_PLAN_CAP+1){seen.add(candidate.id);targets.push(candidate);}
+  }
+  return{targets,rest:ordered.filter(row=>!seen.has(row.id))};
+}
+// 계획된 후보와 계획 안 된 후보가 한 목록에 섞일 때 쓰는 비교자.
+//  - 둘 다 계획됨: 전체 파티 비교(안전 → 티어 → 각 …) 그대로.
+//  - 둘 다 미계획: 티어 우선 예비 정렬.
+//  - 한쪽만 계획됨: 티어를 먼저 본다.  아니면 "계획됐다"는 이유만으로
+//    낮은 티어가 높은 티어 위로 올라가는 표시 아티팩트가 생긴다.
+function planFlag(row){return num(row&&row.blueprintEvaluation&&row.blueprintEvaluation.rank)>0?1:0;}
+function plainTierRank(row){const tier=row&&row.powerTier||{};return tier.known?num(tier.rank):null;}
+function mixedPlanCompare(left,right){
+  const lp=planFlag(left),rp=planFlag(right);
+  if(lp&&rp)return integratedUpperCompare(left,right);
+  if(!lp&&!rp)return blueprintPlanPreorder(left,right);
+  const lt=plainTierRank(left),rt=plainTierRank(right);
+  if(lt!=null&&rt!=null&&lt!==rt)return rt-lt;
+  return rp-lp;
+}
 function applyBlueprintRanking(model,route,rows){
   if(!S||typeof S.rankUpperBlueprints!=='function'||!rows.length)return rows.slice().sort(integratedUpperCompare);
   const settings=Object.assign({},model.settings,{mode:route.mode,magicRoute:route.key,currentRound:model.round.value,targetSquadCount:9,targetLegendEquivalent:9,upperPreviewId:'',preferredLineupIds:[]});
+  const {targets:planTargets,rest:planRest}=blueprintPlanTargets(rows);
+  if(!planTargets.length)return rows.slice().sort(integratedUpperCompare);
   try{
-    const runtime=typeof window!=='undefined'?window:globalThis,ranked=S.rankUpperBlueprints({state:plannerState(model),settings,locks:[],upperMemo:runtime.ORD_UPPER_MEMO,synergyMemo:runtime.ORD_SYNERGY_MEMO},{candidateIds:rows.map(row=>row.id)})||[],byId=new Map(ranked.map(item=>[String(item.upperId),item]));
-    const decorated=rows.map(row=>{
+    const runtime=typeof window!=='undefined'?window:globalThis,ranked=S.rankUpperBlueprints({state:plannerState(model),settings,locks:[],upperMemo:runtime.ORD_UPPER_MEMO,synergyMemo:runtime.ORD_SYNERGY_MEMO},{candidateIds:planTargets.map(row=>row.id)})||[],byId=new Map(ranked.map(item=>[String(item.upperId),item]));
+    const decorated=planTargets.map(row=>{
       const item=byId.get(String(row.id));if(!item)return row;
       const plan=item.plan||{},planned=plan.roleCoverage&&plan.roleCoverage.planned||{},summary=plan.rareSummary||{};
       return Object.assign({},row,{powerTier:item.powerTier||row.powerTier,safetyBand:num(item.safetyBand),angleBand:num(item.angleBand),angleLabel:String(item.angleLabel||''),tierPromotion:num(item.tierPromotion),effectiveTierRank:num(item.effectiveTierRank),memoPackage:item.memoPackage||null,blueprintEvaluation:{basis:'upper-plus-support-full-squad',rank:num(item.rank),roleComplete:!!item.roleComplete,clearComplete:!!item.clearComplete,readiness:num(item.readiness),plannedEquivalent:num(plan.plannedCount),targetEquivalent:num(plan.targetCount)||9,plannedBoard:num(plan.plannedBoardCount),targetBoard:num(plan.targetBoardCount),rareUsed:num(item.rareUsed),rareConflict:num(item.rareConflict||summary.conflict),wispShortage:num(item.wispShortage),futureDependencyCount:num(item.futureDependencyCount),controlOverflow:num(item.controlCapOverflow),materialOverlapPenalty:num(item.materialOverlapPenalty),requirementPriority:[].concat(item.requirementPriority||[]),powerTier:item.powerTier||row.powerTier,safetyBand:num(item.safetyBand),angleBand:num(item.angleBand),angleLabel:String(item.angleLabel||''),tierPromotion:num(item.tierPromotion),effectiveTierRank:num(item.effectiveTierRank),memoPackage:item.memoPackage||null,supports:blueprintSupportRows(model,item),plannedComplete:!!planned.complete},blueprintProposal:item.blueprint||null});
     });
-    return decorated.sort(integratedUpperCompare);
+    // 계획된 후보끼리는 전체 파티 비교로, 나머지는 투영 순서 그대로
+    // 그 아래에 붙인다.  계획 안 된 후보에는 근거를 남겨 화면이 "왜
+    // 파티 평가가 없는지" 설명할 수 있게 한다.
+    // 계획하지 않은 후보에는 각 라벨을 지어내지 않는다.  '미평가'로
+    // 명시해 화면이 "왜 이 카드엔 파티 평가가 없는지" 설명할 수 있게 한다.
+    const skipped=planRest.map(row=>Object.assign({},row,{angleLabel:'미평가',angleBand:0,tierPromotion:0,effectiveTierRank:row.powerTier&&row.powerTier.known?num(row.powerTier.rank):-1,blueprintEvaluation:{basis:'route-projection-only',planned:false,rank:0,powerTier:row.powerTier||{known:false,letter:'',rank:-1},angleLabel:'미평가',angleBand:0,tierPromotion:0,note:`전체 파티 계획은 상위 ${UPPER_BLUEPRINT_PLAN_CAP}개까지만 수행합니다.`}}));
+    return decorated.concat(skipped).sort(mixedPlanCompare);
   }catch(error){
     return rows.slice().sort(integratedUpperCompare).map(row=>Object.assign({},row,{blueprintEvaluation:{basis:'route-projection-fallback',error:String(error&&error.message||error)}}));
   }
@@ -525,11 +588,11 @@ function upperRouteCandidates(model,locks){
     push(laneNearest);
     const rows=applyBlueprintRanking(model,route,shortlist.map(row=>projectUpperRouteRow(model,row,route)));
     for(const row of rows)if(!row.clearValue)row.clearValue=clearValueScore(model,row);
-    rows.sort(integratedUpperCompare);byRoute.push({route,rows});}
+    rows.sort(mixedPlanCompare);byRoute.push({route,rows});}
   const dedupe=list=>{const seenCanonical=new Map();const out=[];for(const row of list){const key=C.canonicalUpperId(row.id);const prior=seenCanonical.get(key);if(prior==null){seenCanonical.set(key,out.length);out.push(row);}else if(canonicalCompare(row,out[prior])<0)out[prior]=row;}return out;};
   // Final order is the integrated Upper+support blueprint.  Standalone clear
   // value is retained only as a late tie-break and explanation datum.
-  const pool=dedupe(byRoute.flatMap(lane=>lane.rows).sort(integratedUpperCompare)).sort(integratedUpperCompare);
+  const pool=dedupe(byRoute.flatMap(lane=>lane.rows).sort(mixedPlanCompare)).sort(mixedPlanCompare);
   const picked=pool.slice(0,ROUTE_CANDIDATE_LIMIT);
   const nearest=nearestOf(pool);
   const storyAnchor=storyRewardSettingKnown?pool.filter(row=>row.storyReward).sort(clearValueCompare)[0]:null,pinned=new Set(),pin=row=>{
@@ -540,7 +603,7 @@ function upperRouteCandidates(model,locks){
   if(nearest)nearest.nearestBuild=true;
   pin(nearest);
   pin(storyAnchor);
-  picked.sort(integratedUpperCompare).forEach((row,index)=>{
+  picked.sort(mixedPlanCompare).forEach((row,index)=>{
     if(row.blueprintEvaluation&&row.blueprintEvaluation.rank)row.blueprintEvaluation.rank=index+1;
   });
   // 카드 6개와 별개로, 게이트 상위 전체(베가펑크 4종 등 정규화 대표)를

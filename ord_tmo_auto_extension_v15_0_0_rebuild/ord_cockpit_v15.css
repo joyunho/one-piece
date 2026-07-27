@@ -478,6 +478,8 @@
 .v151-upper-dps.ok{border:1px solid rgba(126,211,140,.35);background:rgba(126,211,140,.07)}
 .v151-upper-dps.gap{border:1px solid rgba(240,153,120,.35);background:rgba(240,153,120,.07)}
 .v151-upper-dps small{grid-column:1/-1;color:#8CA2BE;font-size:9px;font-weight:900}
+/* v17.21 미검증 스킬 프로필 감산 배지 */
+.v151-dps-unverified{display:inline-block;margin-left:6px;padding:0 5px;border-radius:6px;border:1px solid rgba(240,153,120,.45);background:rgba(240,153,120,.12);color:#FFC3A6;font-size:9px;font-style:normal;font-weight:900}
 .v151-upper-dps b{font-size:12px}.v151-upper-dps.ok b{color:#9FE8AC}.v151-upper-dps.gap b{color:#FFB99A}
 .v151-upper-dps span{overflow:hidden;color:#A7BBD0;font-size:9.5px;text-overflow:ellipsis;white-space:nowrap}
 /* Next-boss preview from the parsed 2.305 [C] map data. */
