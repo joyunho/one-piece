@@ -125,4 +125,3 @@ function observedEvidence(model){return{snapshot:model.observed.sourceHealth,ass
 
 return{VERSION,HAND_TIERS,build,completionFor,completionScore,withCounts,durableCounts,finalEntries,finalSummary,tierInventory,roleState,observedEvidence,_test:{copyCountsFromSnapshot,applyScenarioPatch,completionDetails,completionDetail,digestText,stablePairs,cloneCounts}};
 });
-

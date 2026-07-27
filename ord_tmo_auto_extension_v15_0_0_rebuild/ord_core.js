@@ -249,23 +249,6 @@ function upperSkillProfile(unit){
   for(const code of unit.codes||[])if(table.byTmo[code])return table.byTmo[code];
   return null;
 }
-// v17.19: 스킬 프로필 신뢰도.  AST 파서가 스스로 남긴 coverage 통계만
-// 근거로 쓴다 — 읽어낸 데미지 액션 비율(damageEvaluated/damageSeen)과
-// 데미지 액션당 미해석 조건 밀도(unknownConditions/profileDamageActions).
-// 2.305 프로필 60종 중 unknownConditions=0은 0종이라 이분 게이트는
-// 전부를 0으로 만든다 — 그래서 차단이 아니라 감산으로 쓴다.
-//   조건밀도 0 → 1.0 · 1 → 0.5 · 3 → 0.25 (1/(1+밀도))
-// 하한 0.1: 프로필이 있다는 사실 자체는 정보이므로 완전 삭제하지 않는다.
-const SKILL_PROC_TRUST_FLOOR=.1;
-function skillProcTrust(coverage,status){
-  if(!coverage)return{trust:SKILL_PROC_TRUST_FLOOR,verified:false,evalRatio:0,conditionDensity:null};
-  const seen=num(coverage.damageSeen),evaluated=num(coverage.damageEvaluated),actions=num(coverage.profileDamageActions),unknown=num(coverage.unknownConditions);
-  const evalRatio=seen>0?clamp(evaluated/seen,0,1):0;
-  const density=actions>0?Math.max(0,unknown/actions):null;
-  const conditionTrust=density==null?.5:1/(1+density);
-  const verified=String(status||'').indexOf('pending')<0&&unknown===0&&seen>0&&evaluated===seen;
-  return{trust:verified?1:clamp(evalRatio*conditionTrust,SKILL_PROC_TRUST_FLOOR,1),verified,evalRatio:round2(evalRatio),conditionDensity:density==null?null:round2(density)};
-}
 // v17.2: 액션 AST 정적 도출 — 자동공격 유발 스킬의 기대 데미지 하한.
 // strict(미해석 조건 분기=0, 명시 확률 게이트만 통과)만 수치로 쓰고,
 // approx(조건 통과 상한)는 진단용이다.  수동 시전·FSM 트레인 미포함,
@@ -292,11 +275,7 @@ function upperSkillProcDps(unit,level,options){
     trainDps+=(num(train.e&&train.e.universal)+num(train.e&&train.e.affected)*armorMult)*rate;
   }
   dps+=trainDps;
-  // v17.19: dps는 기존 의미(파서 하한) 그대로 두고, 순위·화면이 쓰는
-  // trustedDps를 따로 낸다 — 미검증 프로필의 발동 DPS가 상위 선택을
-  // 독주하지 않게(카벤딧슈 proc 4.97M/초 = 평타의 47배 사례).
-  const profile=upperSkillProfile(unit),confidence=skillProcTrust(derived.coverage,profile&&profile.status);
-  return{profileId,perAttackStrict:num(strict.affected)+num(strict.universal),dps,trustedDps:dps*confidence.trust,trust:confidence.trust,verified:confidence.verified,evidence:confidence,trainDps,attacksPerSec,basis:'static-lower-bound-attack-proc-and-rng-trains',coverage:derived.coverage||null};
+  return{profileId,perAttackStrict:num(strict.affected)+num(strict.universal),dps,trainDps,attacksPerSec,basis:'static-lower-bound-attack-proc-and-rng-trains',coverage:derived.coverage||null};
 }
 // 평타 한정 보스 타임라인 참고치.  options.skillDps에 upperSkillProcDps의
 // 하한을 넣을 수 있다 — 그래도 킬 판정은 내리지 않는다.
@@ -322,6 +301,52 @@ const UPPER_VARIANT_FAMILIES=[
 const UPPER_VARIANT_CANONICAL={};
 const UPPER_VARIANT_PRIORITY={};
 for(const family of UPPER_VARIANT_FAMILIES)family.forEach((id,index)=>{UPPER_VARIANT_CANONICAL[id]=family[0];UPPER_VARIANT_PRIORITY[id]=index;});
+
+// 34366 작성자가 상위 이름 앞에 기록한 실전 티어. 스토리 등급과는
+// 완전히 다른 값이며, 좋은 상위를 기본으로 두는 전략 prior로만 쓴다.
+// 신규 상위의 표기가 없을 때 F로 몰아넣지 않도록 unknown(-1)은 비교에서
+// 제외한다. 변형의 직접 표기가 부모보다 우선하고, 무표기 변형만 정확히
+// 하나의 상위 재료 또는 canonical 원형에서 티어를 상속한다.
+const UPPER_POWER_TIER_RANK=Object.freeze({F:0,D:1,C:2,B:3,A:4,S:5});
+const UPPER_POWER_TIER_LETTERS=Object.freeze(['S','A','B','C','D','F']);
+const UPPER_POWER_TIER_CACHE=new WeakMap();
+function directUpperPowerTier(u){
+  if(!u||!isUpper(u))return'';
+  const match=String(u.name||'').match(/^\s*\(\s*(S|A|B|C|D|F)\s*\)/);
+  return match?match[1]:'';
+}
+function upperPowerTier(u,db,trail){
+  if(!u||!isUpper(u))return{known:false,letter:'',rank:-1,source:'not-upper',sourceId:''};
+  let cache=null;
+  if(db&&typeof db==='object'){
+    cache=UPPER_POWER_TIER_CACHE.get(db);
+    if(!cache){cache=new Map();UPPER_POWER_TIER_CACHE.set(db,cache);}
+    if(!trail&&cache.has(u.id))return cache.get(u.id);
+  }
+  const seen=trail||new Set();
+  if(seen.has(u.id))return{known:false,letter:'',rank:-1,source:'cycle',sourceId:u.id};
+  const next=new Set(seen);next.add(u.id);
+  const direct=directUpperPowerTier(u);
+  let result;
+  if(direct)result={known:true,letter:direct,rank:UPPER_POWER_TIER_RANK[direct],source:'direct',sourceId:u.id};
+  else{
+    const canonicalId=canonicalUpperId(u.id),canonical=db&&canonicalId!==u.id&&db.byId&&db.byId.get(canonicalId);
+    if(canonical&&isUpper(canonical)){
+      const inherited=upperPowerTier(canonical,db,next);
+      if(inherited.known)result={known:true,letter:inherited.letter,rank:inherited.rank,source:'canonical',sourceId:canonical.id};
+    }
+    if(!result&&db&&db.byId){
+      const parents=(u.stuffs||[]).map(stuff=>db.byId.get(stuff.id)).filter(parent=>parent&&isUpper(parent));
+      if(parents.length===1){
+        const inherited=upperPowerTier(parents[0],db,next);
+        if(inherited.known)result={known:true,letter:inherited.letter,rank:inherited.rank,source:'recipe-parent',sourceId:parents[0].id};
+      }
+    }
+    if(!result)result={known:false,letter:'',rank:-1,source:'unknown',sourceId:u.id};
+  }
+  if(cache&&!trail)cache.set(u.id,result);
+  return result;
+}
 
 // 유닛 설명에 명시된 상위+상위 조합. 숫자 스펙은 abilities/스턴표로 다시 계산하고,
 // 이 표는 '왜 같이 쓰는가'라는 전략 조건에만 사용합니다.
@@ -541,21 +566,6 @@ function upperPairSynergy(a,b){
 function tierKey(u){
   if(isCommon(u))return'common';if(isUncommon(u))return'uncommon';if(isSpecialTier(u))return'special';if(isRare(u))return'rare';
   if(isUpper(u))return'upper';if(isLegendish(u))return'legend';if(groupName(u)==='특수재료'||SPECIAL_IDS[u&&u.id])return'hard';return'other';
-}
-// v17.20 (사용자 확인): 상위 이름 앞의 알파벳이 맵이 정한 상위 티어다.
-// S > A > B > C > D > F — E가 없다는 점이 등급 표기(제한됨/초월/불멸/영원)와
-// 다른 독립 축임을 뒷받침하고, 스토리 파괴 순위 중앙값(S 27 < A 35 < B 40)도
-// 같은 방향이다.  분포는 S 8 · A 24 · B 18 · C 9 · D 9 · F 5 · 미표기 3.
-// 미표기 3종(요크·릴리스·아틀라스)은 서열을 알 수 없으므로 B~C 사이의
-// 중립값을 준다 — 맨 뒤로 밀면 실측 픽이 있는 유닛이 영구히 잠긴다.
-const UPPER_TIER_LETTERS=Object.freeze(['S','A','B','C','D','F']);
-const UPPER_TIER_UNRANKED=2.5;
-function upperTierGrade(u){
-  if(!u||!isUpper(u))return null;
-  const match=/^\(([A-Z]+)\)/.exec(nameOf(u)),letter=match?match[1]:'';
-  const index=UPPER_TIER_LETTERS.indexOf(letter);
-  if(index<0)return{letter:'',rank:UPPER_TIER_UNRANKED,ranked:false,label:'티어 미표기',steps:UPPER_TIER_LETTERS.length};
-  return{letter,rank:index,ranked:true,label:`${letter}티어`,steps:UPPER_TIER_LETTERS.length};
 }
 function familyOf(u){
   if(u&&FAMILY_OVERRIDES[u.id])return FAMILY_OVERRIDES[u.id];
@@ -1262,6 +1272,5 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,upperTierGrade,UPPER_TIER_LETTERS,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);
-

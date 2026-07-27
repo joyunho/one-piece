@@ -478,7 +478,6 @@
 .v151-upper-dps.ok{border:1px solid rgba(126,211,140,.35);background:rgba(126,211,140,.07)}
 .v151-upper-dps.gap{border:1px solid rgba(240,153,120,.35);background:rgba(240,153,120,.07)}
 .v151-upper-dps small{grid-column:1/-1;color:#8CA2BE;font-size:9px;font-weight:900}
-.v151-dps-unverified{display:inline-block;margin-left:6px;padding:0 5px;border-radius:6px;border:1px solid rgba(240,153,120,.45);background:rgba(240,153,120,.12);color:#FFC3A6;font-size:9px;font-style:normal;font-weight:900}
 .v151-upper-dps b{font-size:12px}.v151-upper-dps.ok b{color:#9FE8AC}.v151-upper-dps.gap b{color:#FFB99A}
 .v151-upper-dps span{overflow:hidden;color:#A7BBD0;font-size:9.5px;text-overflow:ellipsis;white-space:nowrap}
 /* Next-boss preview from the parsed 2.305 [C] map data. */
@@ -721,15 +720,9 @@
 .upper-path-grid>small{grid-column:1/-1;color:#8CA2BE;font-size:9.5px}
 @media (max-width:640px){.upper-path-grid{grid-template-columns:1fr}}
 .v151-nearest-badge{display:inline-block;margin-left:4px;padding:0 4px;border:1px solid #6E86B8;border-radius:6px;color:#9FB6E4;font-size:8px;font-style:normal;font-weight:800;vertical-align:1px}
-/* v17.20 상위 티어 배지 — 이름보다 먼저 읽히도록 색으로 단계를 구분한다. */
-.v151-tier-badge{display:inline-block;min-width:15px;margin-right:5px;padding:0 3px;border-radius:5px;font-size:11px;font-style:normal;font-weight:900;text-align:center;line-height:15px;vertical-align:1px;background:#4A5878;color:#DCE6F7}
-.v151-tier-badge.tier-S{background:#F0C674;color:#2A2113}
-.v151-tier-badge.tier-A{background:#7ED38C;color:#122A17}
-.v151-tier-badge.tier-B{background:#7FB4E8;color:#0F2233}
-.v151-tier-badge.tier-C{background:#8CA2BE;color:#151D28}
-.v151-tier-badge.tier-D{background:#B58A6E;color:#241811}
-.v151-tier-badge.tier-F{background:#C87A72;color:#2A1413}
-.v151-tier-drop{display:inline-block;margin-left:4px;padding:0 4px;border:1px solid rgba(240,153,120,.4);border-radius:6px;color:#F0B497;font-size:8px;font-style:normal;font-weight:800;vertical-align:1px}
+.v151-power-tier,.v151-angle-badge{display:inline-block;margin-left:4px;padding:0 5px;border:1px solid #4D6788;border-radius:6px;background:rgba(19,42,70,.7);color:#C8DCF4;font-size:8px;font-style:normal;font-weight:900;vertical-align:1px}
+.v151-power-tier.tier-s{border-color:#E4B14C;background:rgba(112,72,9,.34);color:#FFE18F}.v151-power-tier.tier-a{border-color:#9A78E4;color:#D9C9FF}.v151-power-tier.tier-b{border-color:#4E91CB;color:#B9DEFF}
+.v151-angle-badge.angle-3{border-color:#3FD6A2;color:#AAFFE2}.v151-angle-badge.angle-2{border-color:#72B4E5;color:#BFE5FF}.v151-angle-badge.angle-1{border-color:#8799B1;color:#CED8E5}.v151-angle-badge.angle-0{opacity:.72}
 .v151-clear-why{display:block;color:#C6D9F0;font-size:10px;line-height:1.45;white-space:normal}
 .v151-boss-warn{display:flex;align-items:center;gap:7px;margin-top:7px;border:1px solid rgba(239,107,107,.62);border-radius:11px;padding:7px 10px;background:rgba(92,24,36,.28);color:#ffc1bd;font-size:11px;line-height:1.35}
 .v151-boss-warn i{font-style:normal}

@@ -15,7 +15,9 @@ const staleOutputs = [
   path.join(packageDir, 'ord_2305_nightmare_helper_v17_14_0_manual.html'),
   path.join(packageDir, 'ord_2305_nightmare_helper_v17_15_0_manual.html'),
   path.join(packageDir, 'ord_2305_nightmare_helper_v17_16_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_17_0_manual.html')
+  path.join(packageDir, 'ord_2305_nightmare_helper_v17_17_0_manual.html'),
+  path.join(packageDir, 'ord_2305_nightmare_helper_v17_18_0_manual.html'),
+  path.join(packageDir, 'ord_2305_nightmare_helper_v17_19_0_manual.html')
 ];
 const cssPath = path.join(extensionDir, 'ord_app.css');
 const cockpitCssPath = path.join(extensionDir, 'ord_cockpit_v15.css');

@@ -40,9 +40,7 @@ for(const file of ['background.js','content-tmo.js','ord_story_nonupper_data.js'
 }
 const helper=read('ord_helper.html'),popup=read('popup.html');
 assert(!/\son\w+\s*=/.test(helper+popup),'inline event handler violates MV3 CSP');
-// 버전을 정규식에 직접 박아두면 릴리스마다 조용히 낡는다(실제로 메시지가
-// v17.15.0에 멈춰 있었다) — manifest 버전을 단일 원천으로 쓴다.
-assert(helper.includes(`<meta name="ord-helper" content="v${manifest.version}-decision-engine">`),`v${manifest.version} helper marker missing`);
+assert(/<meta name="ord-helper" content="v17\.20\.0-decision-engine">/.test(helper),'v17.20.0 helper marker missing');
 assert(helper.indexOf('ord_data_patch.js')<helper.indexOf('ord_story_nonupper_data.js'),'data patch must load before measured story data');
 assert(helper.indexOf('ord_story_nonupper_data.js')<helper.indexOf('ord_story_upper_data.js'),'non-upper story data must load before upper story data');
 assert(helper.indexOf('ord_story_upper_data.js')<helper.indexOf('ord_core.js'),'measured story data must load before core');
@@ -120,8 +118,10 @@ assert(payloadBytes<160000,`snapshot payload too large: ${payloadBytes}`);
 const manualPath=path.resolve(ext,'../ord_2305_nightmare_helper_v17_20_0_manual.html');
 assert(fs.existsSync(manualPath),'standalone v15 manual bundle missing');
 assert(!fs.existsSync(path.resolve(ext,'../ord_2305_nightmare_helper_v14_2_0_manual.html')),'stale v14 manual remains in the v15 package');
+assert(!fs.existsSync(path.resolve(ext,'../ord_2305_nightmare_helper_v17_18_0_manual.html')),'stale v17.18 manual remains in the v17.20 package');
+assert(!fs.existsSync(path.resolve(ext,'../ord_2305_nightmare_helper_v17_19_0_manual.html')),'stale v17.19 manual remains in the v17.20 package');
 const manual=fs.readFileSync(manualPath,'utf8');
-assert(manual.includes(`<meta name="ord-helper" content="v${manifest.version}-decision-engine-manual">`),'manual build marker missing');
+assert(/<meta name="ord-helper" content="v17\.20\.0-decision-engine-manual">/.test(manual),'manual build marker missing');
 assert(/source:\s*['\"]standalone-manual['\"]/.test(manual),'standalone manual boot missing');
 assert(!/openai|ord_ai_advisor|127\.0\.0\.1:38766/i.test(manual),'OpenAI surface remains in manual');
 let manualScripts=0;const embeddedScripts=new Map();
