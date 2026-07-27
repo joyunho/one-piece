@@ -347,7 +347,7 @@ class App{
     },key=[fingerprint(this.state.snapshot),JSON.stringify(strategic)].join('|');
     if(key!==this._v15CacheKey){
       try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings,locks:this.state.locks||[]});}
-      catch(error){this._v15Cache={version:'17.17.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
+      catch(error){this._v15Cache={version:'17.18.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
     }
     const base=this._v15Cache;if(!base)return null;
@@ -1243,8 +1243,17 @@ class App{
     const funded=projected>=totalNeed;
     // 11환산 확장: 파티 밖 제작 가능 전설급 상위 2개(스토리 등급 우선).
     const lineupIds=new Set(rows.map(row=>row.id));
+    // v17.18(사용자 교정): 확장 후보도 스토리가 아니라 기준 상위와의 실측
+    // 동반 순 — 동반 실측이 없으면 전체 실측 픽, 그다음 이름순.
+    const stretchPairs=(()=>{
+      const engine=global.ORDV15Engine,upperUnit=state.db.byId.get(upperId);
+      const evidence=engine&&engine.metaPairs&&upperUnit?engine.metaPairs(upperUnit):null;
+      const map=new Map();
+      for(const pair of evidence&&evidence.pairs||[])map.set(String(pair.code).toLowerCase(),C.num(pair.games));
+      return unit=>{let best=0;for(const code of unit&&unit.codes||[]){const games=C.num(map.get(String(code).toLowerCase()));if(games>best)best=games;}return best;};
+    })();
     const stretch=(plan.rows||[]).filter(row=>row.unit&&C.isLegendish(row.unit)&&!lineupIds.has(row.unit.id)&&row.solve&&row.solve.wispCost!=null).slice(0,8)
-      .sort((a,b)=>C.num(C.storyGrade(b.unit).score)-C.num(C.storyGrade(a.unit).score)).slice(0,2)
+      .sort((a,b)=>stretchPairs(b.unit)-stretchPairs(a.unit)||C.num(C.storyGrade(b.unit).score)-C.num(C.storyGrade(a.unit).score)).slice(0,2)
       .map(row=>({id:row.unit.id,name:displayNameOf(row.unit),wispCost:C.num(row.solve.wispCost)}));
     return{upperId,rows,totalNeed,available,income,projected:Math.floor(projected),funded,plannedCount:C.num(squad.plannedCount),targetCount:C.num(squad.targetCount),stretch};
   }

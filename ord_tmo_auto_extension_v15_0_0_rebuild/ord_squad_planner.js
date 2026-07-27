@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='17.17.0';
+const VERSION='17.18.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -25,14 +25,41 @@ function metaGamesOf(unit){
   for(const code of unit&&unit.codes||[]){const entry=byCode[String(code).toLowerCase()];if(entry&&num(entry.games)>best)best=num(entry.games);}
   return best;
 }
-const AFFINITY_CACHE=new WeakMap();
+// v17.18(사용자 교정): 최종 파티에서 스토리 랭크는 중요치 않다 — 스토리
+// 성분을 제거하고, 기준 상위와의 실측 동반(upperPairs: 그 상위와 함께
+// 클리어한 판 수)을 주성분(상한 0.8), 전체 실측 픽을 보조(상한 0.2)로
+// 쓴다. 상위 유닛 자신은 동반 목록에 없으므로 자동으로 개별 평가(전체
+// 실측 픽)만 받는다. 컨텍스트(기준 상위)는 planFinalSquad 진입 시마다
+// 재설정되며, 없으면 동반 성분 0으로 무해하다.
+let AFFINITY_CONTEXT=null;
+let AFFINITY_MEMO=new Map();
+function setAffinityContext(upperUnits){
+  AFFINITY_MEMO=new Map();
+  AFFINITY_CONTEXT=null;
+  if(!META_STATS||!META_STATS.usage||META_STATS.usage.softTiebreak!==true)return;
+  const pairGames=new Map();
+  for(const upper of upperUnits||[]){
+    for(const code of upper&&upper.codes||[]){
+      const list=(META_STATS.upperPairs||{})[String(code).toLowerCase()]||[];
+      for(const entry of list){const key=String(entry[0]).toLowerCase(),games=num(entry[1]);if(games>num(pairGames.get(key)))pairGames.set(key,games);}
+    }
+  }
+  if(pairGames.size)AFFINITY_CONTEXT={pairGames};
+}
+function pairGamesOf(unit){
+  if(!AFFINITY_CONTEXT)return 0;
+  let best=0;
+  for(const code of unit&&unit.codes||[]){const games=num(AFFINITY_CONTEXT.pairGames.get(String(code).toLowerCase()));if(games>best)best=games;}
+  return best;
+}
 function clearAffinity(unit){
   if(!unit||typeof unit!=='object')return 0;
-  if(AFFINITY_CACHE.has(unit))return AFFINITY_CACHE.get(unit);
-  const story=Math.max(0,Math.min(100,num(C.storyGrade&&C.storyGrade(unit).score)))/100;
-  const meta=Math.min(.2,.04*Math.log10(1+metaGamesOf(unit)));
-  const value=Math.round((story*.8+meta)*10000)/10000;
-  AFFINITY_CACHE.set(unit,value);
+  const memoKey=String(unit.id||'');
+  if(memoKey&&AFFINITY_MEMO.has(memoKey))return AFFINITY_MEMO.get(memoKey);
+  const pair=Math.min(.8,.16*Math.log10(1+pairGamesOf(unit)));
+  const pick=Math.min(.2,.04*Math.log10(1+metaGamesOf(unit)));
+  const value=Math.round((pair+pick)*10000)/10000;
+  if(memoKey)AFFINITY_MEMO.set(memoKey,value);
   return value;
 }
 function compareAffinity(a,b){const av=clearAffinity(a),bv=clearAffinity(b);return av===bv?0:bv-av;}
@@ -1245,10 +1272,10 @@ function rankDeckDirections(input,options){
 }
 
 function planFinalSquad(input){
-  input=input||{};const started=Date.now(),baseSettings=normalizeSettings(input),base=makeState(input,baseSettings),policy=normalizeCommonPolicy(input,base),state=makePlanningState(base,policy),blueprint=normalizeBlueprint(input,baseSettings,state),settings=settingsWithBlueprint(baseSettings,state,blueprint),fixed=fixedUpperIds(state,input.locks||[],settings,blueprint),result=choosePreparedPlan(input,state,settings,policy,fixed,blueprint);
+  input=input||{};const started=Date.now(),baseSettings=normalizeSettings(input),base=makeState(input,baseSettings),policy=normalizeCommonPolicy(input,base),state=makePlanningState(base,policy),blueprint=normalizeBlueprint(input,baseSettings,state),settings=settingsWithBlueprint(baseSettings,state,blueprint),fixed=fixedUpperIds(state,input.locks||[],settings,blueprint),result=choosePreparedPlan(input,state,settings,policy,fixed,blueprint);setAffinityContext([settings.upperPreviewId&&state.db.byId.get(settings.upperPreviewId)].concat((fixed||[]).map(id=>state.db.byId.get(id))).filter(Boolean));
   result.blueprint=blueprintMetadata(state,blueprint,result);delete result._search;delete result._blueprintAttempt;result.reservedCommons=Object.entries(policy.reserved).map(([id,count])=>({id,name:displayNameOf(state.db.byId.get(id)),count}));result.elapsedMs=Date.now()-started;return result;
 }
 
-return{VERSION,planFinalSquad,rankUpperBlueprints,rankDeckDirections,_test:{clearAffinity,compareAffinity,metaGamesOf,normalizeSettings,normalizeCommonPolicy,normalizeBlueprint,requirementRows,routeEvaluationFor,commonPressure,finalEntries,finalOnlySpec,buildStaticRows,makeLightStaticData,routeFor,routeBoardTarget,settingsForRoute,finalWeight,legendEquivalentCount,decorateLegendEquivalent,squadDecisionSummary,finalStageSnapshot,strategyGateRows,stageGateSnapshot,rareDeadlineAssessment,timelineReadiness,exactPrefixStage,exactPrefixCheckpoint,exactPrefixMetrics,compareExactPrefixMetrics,exactPrefixPlan,finalPatchOptions,allowedCandidate,prerequisiteStatus,staticPotential,excessStun,excessSlow,hasNonControlRole,incrementalStunPenalty,incrementalSlowPenalty,recipeProfile,pairMaterialOverlap,lineupMaterialOverlap,introducesLineageConflict,candidateOverlapPenalty,consumptionTotals,tierBurnVector,compareTierBurn,handFitMetrics,compareHandFit,fullHandAllocation,wispBudgetSummary,futureWispCharge,deferredFutureFeasibility,compareDeferredSwaps,buildDeferred,requirementPriorityVector,comparePriorityVectors,nodeCompare,compareRoutePlans,searchExactBlueprint,searchRouteLight,draftUpperBlueprintPlan,repairDraftSingleSwap,blueprintMetadata,projectUpperCandidate,upperPreparationFor,upperBlueprintCompare,directionRow,uniqueDirectionRows,directionUpperShortlist}};
+return{VERSION,planFinalSquad,rankUpperBlueprints,rankDeckDirections,_test:{clearAffinity,compareAffinity,metaGamesOf,setAffinityContext,pairGamesOf,normalizeSettings,normalizeCommonPolicy,normalizeBlueprint,requirementRows,routeEvaluationFor,commonPressure,finalEntries,finalOnlySpec,buildStaticRows,makeLightStaticData,routeFor,routeBoardTarget,settingsForRoute,finalWeight,legendEquivalentCount,decorateLegendEquivalent,squadDecisionSummary,finalStageSnapshot,strategyGateRows,stageGateSnapshot,rareDeadlineAssessment,timelineReadiness,exactPrefixStage,exactPrefixCheckpoint,exactPrefixMetrics,compareExactPrefixMetrics,exactPrefixPlan,finalPatchOptions,allowedCandidate,prerequisiteStatus,staticPotential,excessStun,excessSlow,hasNonControlRole,incrementalStunPenalty,incrementalSlowPenalty,recipeProfile,pairMaterialOverlap,lineupMaterialOverlap,introducesLineageConflict,candidateOverlapPenalty,consumptionTotals,tierBurnVector,compareTierBurn,handFitMetrics,compareHandFit,fullHandAllocation,wispBudgetSummary,futureWispCharge,deferredFutureFeasibility,compareDeferredSwaps,buildDeferred,requirementPriorityVector,comparePriorityVectors,nodeCompare,compareRoutePlans,searchExactBlueprint,searchRouteLight,draftUpperBlueprintPlan,repairDraftSingleSwap,blueprintMetadata,projectUpperCandidate,upperPreparationFor,upperBlueprintCompare,directionRow,uniqueDirectionRows,directionUpperShortlist}};
 });
 

@@ -89,23 +89,30 @@ test('단계 8(51~65라): 중간 마감 분할 + 킬 판정은 의도적으로 �
   assert(global.ORD_META_STATS.usage.allowKillVerdict === false, '킬 판정 금지 경계가 사라짐');
 });
 
-test('파티 추천 클리어 지향(v17.17): 동률 후보는 스토리·실측 순 — 유계·무해', () => {
+test('파티 추천 클리어 지향(v17.18 교정): 스토리 아님 — 기준 상위 동반 실측 우선', () => {
   require(path.join(ext, 'ord_squad_planner.js'));
   const planner = global.ORDSquadPlanner;
-  const aff = planner._test.clearAffinity, cmp = planner._test.compareAffinity, games = planner._test.metaGamesOf;
+  const aff = planner._test.clearAffinity, cmp = planner._test.compareAffinity;
+  const setCtx = planner._test.setAffinityContext, pairGames = planner._test.pairGamesOf;
   const db = C.buildDb(global.ORD_TMO_UNITS);
-  // 토키(스토리 상위 + 실측 4,427판)는 실측 극소 전설급보다 affinity가 높다.
   const toki = global.ORD_TMO_UNITS.find(unit => (unit.codes || []).some(code => code.toLowerCase() === '780h'));
-  const weak = db.legendish.filter(unit => games(unit) === 0).sort((a, b) => C.num(C.storyGrade(a).score) - C.num(C.storyGrade(b).score))[0];
-  assert(toki && weak, '픽스처 유닛 없음');
-  assert(aff(toki) > aff(weak), `토키 affinity가 더 높아야 함: ${aff(toki)} vs ${aff(weak)}`);
-  assert(cmp(toki, weak) < 0, '비교기가 토키를 앞세워야 함');
-  // 유계: affinity ∈ [0,1], 실측 기여는 최대 0.2 (전 판 등장 가정에도 상한).
-  for (const unit of [toki, weak]) { const value = aff(unit); assert(value >= 0 && value <= 1, `affinity 범위 이탈: ${value}`); }
-  const metaMax = Math.min(.2, .04 * Math.log10(1 + 12035));
-  assert(metaMax <= .2, '실측 상한 붕괴');
-  // 무해: 코드·스토리 없는 객체는 0 (다이제스트 부재 환경과 동일 경로).
-  assert.strictEqual(aff({}), 0.192, '스토리 추정 최저선(24점) 기반 기본값이 변했으면 확인 필요');
+  // 컨텍스트 없음: 동반 성분 0 — 전체 실측 픽만(상한 0.2), 스토리 무관.
+  setCtx([]);
+  const noCtx = aff(toki);
+  assert(noCtx > 0 && noCtx <= 0.2, `컨텍스트 없음 = 전체 픽 상한 0.2: ${noCtx}`);
+  const storyOnly = { id: 'story-only-fixture', codes: [] };
+  assert.strictEqual(aff(storyOnly), 0, '실측 없는 유닛은 0 — 스토리 랭크는 최종 파티 기준이 아님');
+  // 컨텍스트(영원 비비): 토키는 동반 687판 — 동반 성분이 주도.
+  const vivi = global.ORD_TMO_UNITS.find(unit => /^\(?.?\)?비비/.test(unit.name) && /^영원/.test(unit.groupName || ''));
+  assert(vivi, '영원 비비 픽스처 없음');
+  setCtx([vivi]);
+  assert(pairGames(toki) > 500, `비비 컨텍스트에서 토키 동반 실측이 커야 함: ${pairGames(toki)}`);
+  const withCtx = aff(toki);
+  assert(withCtx > noCtx, `동반 컨텍스트가 affinity를 올려야 함: ${withCtx} vs ${noCtx}`);
+  assert(withCtx <= 1, `유계 이탈: ${withCtx}`);
+  const weak = db.legendish.find(unit => pairGames(unit) === 0 && planner._test.metaGamesOf(unit) === 0);
+  assert(weak && cmp(toki, weak) < 0, '동반·실측 우위 유닛이 앞서야 함');
+  setCtx([]);
 });
 
 for (const [name, fn] of tests) {

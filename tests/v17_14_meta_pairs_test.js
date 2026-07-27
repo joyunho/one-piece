@@ -58,7 +58,8 @@ test('metaPairs: 실측 없는 유닛·상위 아닌 유닛은 null', () => {
 test('표시 전용 계약: 앱은 렌더에서만 metaPairs를 호출하고 플래너·결정에는 안 쓴다', () => {
   const app = fs.readFileSync(path.join(ext, 'ord_app.js'), 'utf8');
   const calls = app.match(/metaPairs\(/g) || [];
-  assert.strictEqual(calls.length, 1, `metaPairs 호출이 렌더 1곳이어야 함: ${calls.length}곳`);
+  // v17.18: 미리 파티 스트립(렌더) + 11환산 확장 정렬(표시용 파생) 2곳.
+  assert.strictEqual(calls.length, 2, `metaPairs 호출이 표시 경로 2곳이어야 함: ${calls.length}곳`);
   assert(app.includes('renderV151MetaPairs(state,unit)'), '미리 파티 모달 배선이 사라짐');
   assert(app.includes('v151-meta-pairs'), '실측 동반 전설 스트립 클래스가 사라짐');
   // v17.17 계약 개정: 플래너도 실측을 "유계 타이브레이크"로만 쓸 수 있다.
