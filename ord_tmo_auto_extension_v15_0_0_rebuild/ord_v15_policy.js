@@ -6,7 +6,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='17.20.0';
+const VERSION='17.22.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -15,6 +15,7 @@ const ROUTES=Object.freeze({
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function round(value,digits=3){const p=Math.pow(10,digits);return Math.round(num(value)*p)/p;}
+function clamp(value,low,high){return Math.max(low,Math.min(high,num(value)));}
 function resolveRoute(intent,settings){const mode=intent&&intent.damageMode||settings&&settings.mode;if(mode==='physical')return ROUTES.physical;if(mode!=='magic')return null;const requested=intent&&intent.magicRoute||settings&&settings.magicRoute;if(requested==='dual')return ROUTES.dual;if(requested==='singleEnd')return ROUTES.singleEnd;return null;}
 function checkpointFor(roundNow){
   const round=Math.max(1,Math.round(num(roundNow)||1));
@@ -33,6 +34,41 @@ function checkpointFor(roundNow){
 }
 function requirementMap(role){return new Map((role&&role.deficits&&role.deficits.requirements||[]).map(row=>[row.key,row]));}
 function fallbackRequirement(key){const labels={main:'상위 딜러',armor:'상시 풀방깎',stunBase:'최소 0.5스턴',slow:'안전 이감',bossFrenzy:'광보잡',stunFull:'충분한 1.5스턴',toki:'토키',singleEndExpected:'검증된 단일·끝딜'};return{key,label:labels[key]||key,current:0,target:1,gap:1,required:true,status:'bad'};}
+// v17.22: 필수 역할 그룹이 순수 사전식이면 앞 그룹이 완전히 닫힐 때까지
+// 뒤 그룹은 자원을 한 톨도 못 받는다.  물딜의 상시 방깎 180~190은 역할표
+// 전체에서 가장 큰 수치라 판이 끝날 때까지 안 닫히는 일이 흔하고, 그
+// 동안 이감은 0에 방치된다 — 0725 로그에서 이감이 55라 내내 10/102로
+// 고정된 원인이고, 45라까지 이감 유닛이 "다음 행동"으로 한 번도 제시되지
+// 않은 이유다.  더 나쁜 건 이감을 늦출수록 비싸진다는 점이다: 같은 패
+// 재생에서 30라엔 선위 4개로 이감 110을 만들 수 있었는데 45라엔 16개를
+// 써도 95에서 멈췄다(방깎 전설이 같은 하위 재료를 먼저 먹는다).
+//
+// 그래서 정적 순서 대신 "마감 대비 얼마나 뒤처졌는가"로 정렬한다.
+// 그룹마다 체크포인트 마감이 있고(방깎·0.5스턴 40라, 이감·광보잡 45라,
+// 1.5스턴·보스화력 50라), 지금 라운드에서 요구되는 진척과 실제 진척의
+// 차이가 큰 쪽이 먼저 온다.  이러면 한 그룹이 자원을 독점하지 않고
+// 번갈아 진행된다.  하드 게이트(무엇이 필수인가)는 건드리지 않는다 —
+// 순서만 바꾼다.
+const ROLE_DEADLINE_ROUND=Object.freeze({main:30,armor:40,stunBase:40,slow:45,bossFrenzy:45,stunFull:50,toki:50,single:50,end:50,singleEndExpected:50,singleEndStable:50});
+const PACE_START_ROUND=10;
+const PACE_SWAP_MARGIN=.08;
+function groupDeadline(rows){
+  let due=50;
+  for(const row of rows||[]){const value=ROLE_DEADLINE_ROUND[row&&row.key];if(value!=null)due=Math.min(due,value);}
+  return due;
+}
+// 그룹 진척은 최악 행이 아니라 행 평균으로 본다.  최악 행만 보면 미충족
+// 이진 역할(광보잡 0/1) 하나가 그룹 전체를 0으로 만들어, 서로 다른 두
+// 그룹이 똑같이 "진척 0"으로 보이고 정렬이 정적 순서로 되돌아간다.
+function groupPaceBehind(rows,roundNow){
+  const active=(rows||[]).filter(row=>row&&row.required!==false&&!row.waived);
+  if(!active.length)return -1;
+  const debt=active.reduce((total,row)=>total+clamp(Math.max(0,num(row.gap))/Math.max(.01,num(row.target)),0,1),0);
+  const progress=1-debt/active.length;
+  const due=groupDeadline(active),span=Math.max(1,due-PACE_START_ROUND);
+  const pace=clamp((num(roundNow)-PACE_START_ROUND)/span,0,1);
+  return round(pace-progress,6);
+}
 function groupRows(route,role,checkpoint){
   const map=requirementMap(role),covered=new Set(route.groups.flat());
   const groups=route.groups.map(keys=>keys.map(key=>map.get(key)||fallbackRequirement(key)));
@@ -68,7 +104,7 @@ function groupRows(route,role,checkpoint){
   const BOSS_POWER_KEYS=new Set(['single','end','singleEndExpected','attack','toki','stunFull']);
   const bossPowerOpen=rows=>rows.some(row=>row.required!==false&&!row.waived&&BOSS_POWER_KEYS.has(row.key)&&num(row.gap)>0);
   const bossWindow=num(checkpoint&&checkpoint.dueRound)>=50;
-  const head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows),binary:binaryOpen(rows),bossPowerRows:bossPowerOpen(rows)}));
+  const roundNow=num(checkpoint&&checkpoint.dueRound),head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows),binary:binaryOpen(rows),bossPowerRows:bossPowerOpen(rows),behind:groupPaceBehind(rows,roundNow)}));
   const survivalCrisis=tail.some(item=>!item.bossPowerRows&&item.rel>.3);
   for(const item of tail)item.bossPower=bossWindow&&!survivalCrisis&&item.bossPowerRows;
   tail.sort((a,b)=>{
@@ -76,6 +112,9 @@ function groupRows(route,role,checkpoint){
     if(a.bossPower!==b.bossPower)return a.bossPower?-1:1;
     const aNearlyDone=a.rel<=.1,bNearlyDone=b.rel<=.1;
     if(aNearlyDone!==bNearlyDone&&Math.max(a.rel,b.rel)>=.3)return aNearlyDone?1:-1;
+    // 마감 대비 뒤처짐이 뚜렷하게 다를 때만 정적 순서를 뒤집는다 —
+    // 미세한 차이로 매 라운드 순서가 흔들리면 추천이 요동친다.
+    if(Math.abs(a.behind-b.behind)>PACE_SWAP_MARGIN)return b.behind-a.behind;
     return a.offset-b.offset;
   });
   const ordered=head.concat(tail.map(item=>item.rows));
@@ -105,5 +144,5 @@ function evaluate(model,counts,routeInput,options){
 function compareVector(left,right){const length=Math.max((left||[]).length,(right||[]).length);for(let index=0;index<length;index++){const a=num(left&&left[index]),b=num(right&&right[index]);if(Math.abs(a-b)>1e-9)return a-b;}return 0;}
 function improved(before,after){return compareVector(after&&after.checkpointVector,before&&before.checkpointVector)<0||compareVector(after&&after.fullVector,before&&before.fullVector)<0;}
 
-return{VERSION,ROUTES,resolveRoute,checkpointFor,evaluate,compareVector,improved,_test:{groupRows,groupVector,rareCount,requirementMap,fallbackRequirement}};
+return{VERSION,ROUTES,resolveRoute,checkpointFor,evaluate,compareVector,improved,_test:{groupRows,groupVector,rareCount,requirementMap,fallbackRequirement,groupPaceBehind,groupDeadline,ROLE_DEADLINE_ROUND}};
 });

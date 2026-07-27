@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v17.20.0-decision-engine-manual">
+  <meta name="ord-helper" content="v17.22.0-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.305 악몽 수동 도우미">
-  <title>원랜디 2.305 악몽 실전 판단 코치 v17.20.0 · 수동 모드</title>
+  <title>원랜디 2.305 악몽 실전 판단 코치 v17.22.0 · 수동 모드</title>
   <style data-source="ord_app.css">
 :root{color-scheme:dark;--bg:#060b18;--panel:#0d162a;--panel2:#101d35;--line:#223454;--text:#eef5ff;--muted:#91a2bd;--blue:#4f7cff;--cyan:#25c2e7;--green:#27d17f;--amber:#f3b84b;--red:#ef6262;--violet:#8b67ff;--shadow:0 20px 55px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 10% 0,#122a5a 0,#060b18 35%,#040812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-break:keep-all;overflow-wrap:anywhere}button,input,select{font:inherit}button{cursor:pointer}.ord-app{min-height:100vh;padding:18px;max-width:1860px;margin:0 auto}.ord-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px;border:1px solid rgba(112,154,255,.26);border-radius:24px;background:linear-gradient(135deg,rgba(66,83,222,.34),rgba(17,64,94,.3));box-shadow:var(--shadow)}.ord-kicker{font-size:11px;letter-spacing:.14em;color:#9bb7ff;font-weight:900}.ord-header h1{margin:5px 0 3px;font-size:29px;line-height:1.15}.ord-header p{margin:0;color:var(--muted);font-size:13px}.ord-head-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:720px}.ord-head-status>*{border:1px solid var(--line);border-radius:999px;background:rgba(6,11,24,.7);color:#d9e8ff;padding:8px 12px;font-size:12px;font-weight:800;white-space:nowrap}.ord-head-status .good{border-color:rgba(39,209,127,.45);color:#a8f7ce}.ord-head-status .warn{border-color:rgba(243,184,75,.45);color:#ffe1a1}.ord-head-status button{background:#1b2b4d}.ord-tabs{display:flex;gap:8px;margin:14px 0}.ord-tabs button,.purpose-buttons button,.two-button button,.round-box button,.action-buttons button,.prep-list button,.mini-cards button,.ghost,.primary{border:1px solid var(--line);border-radius:11px;background:#111d32;color:#dce9ff;padding:9px 13px;font-weight:850}.ord-tabs button.on,.purpose-buttons button.on,.primary{border-color:transparent;background:linear-gradient(135deg,var(--violet),var(--blue));color:white}.ord-layout{display:grid;grid-template-columns:294px minmax(0,1fr);gap:14px;align-items:start}.ord-side{display:grid;gap:12px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;padding-right:3px;min-width:0}.side-card,.ord-panel{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(15,26,48,.96),rgba(9,16,31,.96));box-shadow:0 14px 38px rgba(0,0,0,.18);min-width:0}.side-card{padding:14px}.side-card b{font-size:14px}.side-title{display:flex;justify-content:space-between;gap:8px}.side-title span{font-size:11px;color:var(--cyan)}.side-card label{display:grid;gap:5px;color:var(--muted);font-size:11px;margin-top:11px}.side-card input,.side-card select,.form-grid input{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#071020;color:var(--text);padding:9px}.side-card small{display:block;color:var(--muted);font-size:10.5px;line-height:1.45;margin-top:6px}.round-box{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding:10px;border:1px solid rgba(37,194,231,.3);border-radius:13px;background:rgba(10,39,62,.35)}.round-box strong{font-size:13px;min-width:0}.round-box div{display:flex;gap:4px}.round-box button{padding:6px 8px;font-size:11px}.side-card details{margin-top:10px}.side-card summary,.detail-modal summary{cursor:pointer;color:#cbd9ef;font-size:11px;font-weight:800}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.two-button{display:flex;gap:6px;margin-top:10px}.two-button button{flex:1;font-size:11px;padding:8px}.two-button .on{border-color:var(--green);color:#c5ffe0;background:rgba(39,209,127,.1)}.two-button .danger.on{border-color:var(--red);color:#ffc1c1;background:rgba(239,98,98,.1)}.stat-row{display:flex;justify-content:space-between;align-items:center}.stat-row b{font-size:24px;color:#ffe7a3}.lock-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.lock-list>span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(139,103,255,.35);border-radius:999px;padding:5px 8px;background:rgba(139,103,255,.1);font-size:10px}.lock-list button{border:0;background:none;color:#ffaaaa;font-weight:900}.side-card.compact{padding-bottom:10px}.common-line{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;margin-top:7px;font-size:11px}.common-line i{width:8px;height:8px;border-radius:50%}.common-line b{font-size:11px}.ord-main{display:grid;gap:13px;min-width:0}.milestone{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 19px;border:1px solid rgba(37,194,231,.4);border-radius:21px;background:linear-gradient(135deg,rgba(6,47,78,.78),rgba(31,25,87,.56));min-width:0}.milestone small{color:#61daf5;font-weight:900}.milestone h2{margin:3px 0 5px;font-size:24px}.milestone p{margin:0;color:#abc0df;font-size:12px}.purpose-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.purpose-buttons button{font-size:11px}.top-two{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:13px}.ord-panel{padding:17px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px}.panel-head small{color:#72d8ef;font-size:10px;font-weight:900}.panel-head h2{margin:2px 0 4px;font-size:20px}.panel-head p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.45}.count-pill,.mode-pill,.control-badge{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;white-space:nowrap}.mode-pill.physical{color:#ffcb9a;border-color:#e48e45}.mode-pill.magic{color:#a9c9ff;border-color:#5c84d8}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.profile-grid>div,.spec-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px;min-width:0}.profile-grid small,.spec-grid small{display:block;color:var(--muted);font-size:10px}.profile-grid b{display:block;margin-top:5px;font-size:12px;line-height:1.45}.synergy-line{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.synergy-line small{width:100%;color:var(--muted)}.synergy-line span{border:1px solid rgba(39,209,127,.3);border-radius:999px;padding:5px 8px;font-size:10px;color:#b8f7d5}.upper-focus details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.upper-focus details p{color:#aebbd0;font-size:11px}.control-badge.safe{color:#a9f7cc;border-color:rgba(39,209,127,.45)}.control-badge.edge{color:#ffe2a4;border-color:rgba(243,184,75,.45)}.control-badge.danger{color:#ffb4b4;border-color:rgba(239,98,98,.45)}.spec-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.spec-grid b{display:block;font-size:21px;margin:4px 0}.spec-grid span{color:#8193ae;font-size:9.5px}.deficit-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}.deficit-line>b{font-size:11px}.deficit-line span{border:1px solid rgba(243,184,75,.32);border-radius:999px;padding:5px 8px;color:#ffd78d;font-size:10px}.deficit-line .ok{color:#a9f7cc;border-color:rgba(39,209,127,.3)}.state-intro{display:flex;justify-content:space-between;gap:15px;align-items:center}.state-intro h2{margin:4px 0}.state-intro p{color:var(--muted);margin:0;font-size:12px}.control{min-width:260px;border:1px solid var(--line);border-radius:15px;padding:12px}.control b,.control span{display:block}.control span{font-size:10px;color:var(--muted);margin-top:4px}.control.safe{border-color:rgba(39,209,127,.35)}.control.edge{border-color:rgba(243,184,75,.35)}.control.danger{border-color:rgba(239,98,98,.35)}.mini-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mini-cards article{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.mini-cards img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mini-cards b,.mini-cards span,.mini-cards small{display:block;min-width:0}.mini-cards b{font-size:12px}.mini-cards span{font-size:10px;color:#9fb1ca}.mini-cards small{font-size:9px;color:#7085a4}.mini-cards button{padding:7px;font-size:10px}.action-list{display:grid;gap:8px}.action-row{display:grid;grid-template-columns:42px 48px minmax(0,1fr) 124px auto;gap:11px;align-items:center;border:1px solid rgba(55,84,132,.8);border-radius:16px;padding:11px;background:linear-gradient(90deg,rgba(12,27,50,.95),rgba(8,17,33,.95));min-width:0}.action-row .rank{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));font-weight:950}.action-row>img{width:46px;height:46px;border-radius:12px;object-fit:cover}.action-main{min-width:0}.unit-title{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.unit-title b{font-size:14px}.unit-title span{font-size:10px;color:#8da1bd}.role-tags{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.role-tags>span,.role-tags i{border:1px solid #284266;border-radius:999px;padding:4px 7px;font-size:9.5px;font-style:normal;color:#bcd3f2}.role-tags i{border-color:color-mix(in srgb,var(--pc) 60%,#223454);box-shadow:inset 3px 0 var(--pc)}.action-main p{margin:0;color:#91a6c2;font-size:10.5px}.action-cost{border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}.action-cost b{display:block;font-size:22px;color:#ffe1a1}.action-cost small{display:block;color:#7f91ab;font-size:9px}.action-cost span{display:block;margin-top:4px;font-size:9px}.action-cost .good{color:#9ff1c5}.action-cost .warn{color:#ffd083}.action-cost .bad{color:#ffaaaa}.action-buttons{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.action-buttons button{font-size:10px;padding:8px}.empty{padding:20px;border:1px dashed #2c4266;border-radius:14px;text-align:center;color:#8193ad}.prep-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prep-list>div{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.prep-list img{width:38px;height:38px;border-radius:10px;object-fit:cover}.prep-list b,.prep-list small{display:block}.prep-list b{font-size:12px}.prep-list small{color:#8195b2;font-size:9.5px}.prep-list em{font-style:normal;color:#ffd587;font-size:9.5px}.prep-list button{font-size:9px;padding:6px}.rare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rare-columns>div{border:1px solid var(--line);border-radius:14px;padding:11px}.rare-columns h3{margin:0 0 8px;font-size:12px}.rare-columns .use{border-color:rgba(39,209,127,.3)}.rare-columns .hold{border-color:rgba(243,184,75,.3)}.rare-columns .reroll{border-color:rgba(239,98,98,.3)}.rare-columns>div>div{display:grid;grid-template-columns:28px 1fr auto;gap:7px;align-items:center;margin-top:6px;font-size:10px}.rare-columns img{width:28px;height:28px;border-radius:8px}.rare-panel>small{display:block;margin-top:9px;color:#7f91aa;font-size:9.5px}.owned-chips{display:flex;gap:7px;flex-wrap:wrap}.owned-chips button{display:flex;align-items:center;gap:7px;max-width:260px;border:1px solid var(--line);border-radius:12px;background:#091326;color:#dceaff;padding:7px 9px}.owned-chips img{width:30px;height:30px;border-radius:8px}.owned-chips span{font-size:10px;text-align:left}.deck-page,.data-page{display:grid;gap:13px}.raw-ability-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.raw-ability-grid>div{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px;background:#091326;font-size:10px}.raw-ability-grid b{color:#d9ecff}.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.owned-grid button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#091326;color:#e3efff;padding:9px;text-align:left}.owned-grid img{width:36px;height:36px;border-radius:9px}.owned-grid span,.owned-grid small{display:block}.owned-grid span{font-size:11px}.owned-grid small{font-size:9px;color:#8296b4}.owned-grid.small button{grid-template-columns:32px 1fr auto}.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.diag-grid>div{border:1px solid var(--line);border-radius:12px;padding:10px;background:#091326}.diag-grid small,.diag-grid b{display:block}.diag-grid small{color:#8395b0;font-size:9px}.diag-grid b{font-size:11px;margin-top:4px}.data-page pre{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#050b16;padding:11px;color:#9fb5d0;font-size:10px}.manual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.manual-grid label{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;font-size:10px}.manual-grid input{width:100%;border:1px solid var(--line);border-radius:8px;background:#050b16;color:white;padding:7px}.modal-back{position:fixed;inset:0;z-index:9999;background:rgba(1,4,12,.8);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px}.detail-modal{width:min(900px,96vw);max-height:92vh;overflow:auto;border:1px solid #30486f;border-radius:24px;background:#081121;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.65);position:relative}.modal-x{position:absolute;right:15px;top:15px;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#111d31;color:white;font-size:20px}.detail-modal header{display:flex;gap:12px;align-items:center;padding-right:50px}.detail-modal header img{width:54px;height:54px;border-radius:14px}.detail-modal h2{margin:0;font-size:19px}.detail-modal header p{margin:4px 0 0;color:#8ea4c1;font-size:10px}.detail-hero{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:15px 0}.detail-hero>div,.missing-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px}.detail-hero small,.detail-hero b,.detail-hero span{display:block}.detail-hero small{color:#8296b4;font-size:9px}.detail-hero b{margin:4px 0;font-size:16px}.detail-hero span{font-size:10px;color:#a9bad0}.detail-modal section{margin-top:14px}.detail-modal h3{font-size:12px}.direct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.direct-grid>div{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:10px}.missing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.missing-grid small,.missing-grid b{display:block}.missing-grid small{color:#8296b4;font-size:9px}.missing-grid b{font-size:10px;line-height:1.55;margin-top:5px}.detail-modal details{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px}.detail-modal details p{font-size:10px;color:#9cb0cb}.detail-modal .close{margin-top:14px}.ord-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;border-radius:14px;padding:11px 16px;background:linear-gradient(135deg,var(--violet),var(--blue));box-shadow:var(--shadow);font-weight:900;font-size:12px}
@@ -1421,7 +1421,7 @@ window.ORD_META_STATS={"schema":"ord-meta-stats-v1","source":"tmo_api_histories_
 (function(global){
 'use strict';
 
-const VERSION='17.20.0';
+const VERSION='17.22.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -2728,7 +2728,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='17.20.0';
+const VERSION='17.22.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -4143,7 +4143,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='17.20.0';
+const VERSION='17.22.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -4273,7 +4273,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='17.20.0';
+const VERSION='17.22.0';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -4345,7 +4345,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='17.20.0';
+const VERSION='17.22.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -4354,6 +4354,7 @@ const ROUTES=Object.freeze({
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function round(value,digits=3){const p=Math.pow(10,digits);return Math.round(num(value)*p)/p;}
+function clamp(value,low,high){return Math.max(low,Math.min(high,num(value)));}
 function resolveRoute(intent,settings){const mode=intent&&intent.damageMode||settings&&settings.mode;if(mode==='physical')return ROUTES.physical;if(mode!=='magic')return null;const requested=intent&&intent.magicRoute||settings&&settings.magicRoute;if(requested==='dual')return ROUTES.dual;if(requested==='singleEnd')return ROUTES.singleEnd;return null;}
 function checkpointFor(roundNow){
   const round=Math.max(1,Math.round(num(roundNow)||1));
@@ -4372,6 +4373,41 @@ function checkpointFor(roundNow){
 }
 function requirementMap(role){return new Map((role&&role.deficits&&role.deficits.requirements||[]).map(row=>[row.key,row]));}
 function fallbackRequirement(key){const labels={main:'상위 딜러',armor:'상시 풀방깎',stunBase:'최소 0.5스턴',slow:'안전 이감',bossFrenzy:'광보잡',stunFull:'충분한 1.5스턴',toki:'토키',singleEndExpected:'검증된 단일·끝딜'};return{key,label:labels[key]||key,current:0,target:1,gap:1,required:true,status:'bad'};}
+// v17.22: 필수 역할 그룹이 순수 사전식이면 앞 그룹이 완전히 닫힐 때까지
+// 뒤 그룹은 자원을 한 톨도 못 받는다.  물딜의 상시 방깎 180~190은 역할표
+// 전체에서 가장 큰 수치라 판이 끝날 때까지 안 닫히는 일이 흔하고, 그
+// 동안 이감은 0에 방치된다 — 0725 로그에서 이감이 55라 내내 10/102로
+// 고정된 원인이고, 45라까지 이감 유닛이 "다음 행동"으로 한 번도 제시되지
+// 않은 이유다.  더 나쁜 건 이감을 늦출수록 비싸진다는 점이다: 같은 패
+// 재생에서 30라엔 선위 4개로 이감 110을 만들 수 있었는데 45라엔 16개를
+// 써도 95에서 멈췄다(방깎 전설이 같은 하위 재료를 먼저 먹는다).
+//
+// 그래서 정적 순서 대신 "마감 대비 얼마나 뒤처졌는가"로 정렬한다.
+// 그룹마다 체크포인트 마감이 있고(방깎·0.5스턴 40라, 이감·광보잡 45라,
+// 1.5스턴·보스화력 50라), 지금 라운드에서 요구되는 진척과 실제 진척의
+// 차이가 큰 쪽이 먼저 온다.  이러면 한 그룹이 자원을 독점하지 않고
+// 번갈아 진행된다.  하드 게이트(무엇이 필수인가)는 건드리지 않는다 —
+// 순서만 바꾼다.
+const ROLE_DEADLINE_ROUND=Object.freeze({main:30,armor:40,stunBase:40,slow:45,bossFrenzy:45,stunFull:50,toki:50,single:50,end:50,singleEndExpected:50,singleEndStable:50});
+const PACE_START_ROUND=10;
+const PACE_SWAP_MARGIN=.08;
+function groupDeadline(rows){
+  let due=50;
+  for(const row of rows||[]){const value=ROLE_DEADLINE_ROUND[row&&row.key];if(value!=null)due=Math.min(due,value);}
+  return due;
+}
+// 그룹 진척은 최악 행이 아니라 행 평균으로 본다.  최악 행만 보면 미충족
+// 이진 역할(광보잡 0/1) 하나가 그룹 전체를 0으로 만들어, 서로 다른 두
+// 그룹이 똑같이 "진척 0"으로 보이고 정렬이 정적 순서로 되돌아간다.
+function groupPaceBehind(rows,roundNow){
+  const active=(rows||[]).filter(row=>row&&row.required!==false&&!row.waived);
+  if(!active.length)return -1;
+  const debt=active.reduce((total,row)=>total+clamp(Math.max(0,num(row.gap))/Math.max(.01,num(row.target)),0,1),0);
+  const progress=1-debt/active.length;
+  const due=groupDeadline(active),span=Math.max(1,due-PACE_START_ROUND);
+  const pace=clamp((num(roundNow)-PACE_START_ROUND)/span,0,1);
+  return round(pace-progress,6);
+}
 function groupRows(route,role,checkpoint){
   const map=requirementMap(role),covered=new Set(route.groups.flat());
   const groups=route.groups.map(keys=>keys.map(key=>map.get(key)||fallbackRequirement(key)));
@@ -4407,7 +4443,7 @@ function groupRows(route,role,checkpoint){
   const BOSS_POWER_KEYS=new Set(['single','end','singleEndExpected','attack','toki','stunFull']);
   const bossPowerOpen=rows=>rows.some(row=>row.required!==false&&!row.waived&&BOSS_POWER_KEYS.has(row.key)&&num(row.gap)>0);
   const bossWindow=num(checkpoint&&checkpoint.dueRound)>=50;
-  const head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows),binary:binaryOpen(rows),bossPowerRows:bossPowerOpen(rows)}));
+  const roundNow=num(checkpoint&&checkpoint.dueRound),head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows),binary:binaryOpen(rows),bossPowerRows:bossPowerOpen(rows),behind:groupPaceBehind(rows,roundNow)}));
   const survivalCrisis=tail.some(item=>!item.bossPowerRows&&item.rel>.3);
   for(const item of tail)item.bossPower=bossWindow&&!survivalCrisis&&item.bossPowerRows;
   tail.sort((a,b)=>{
@@ -4415,6 +4451,9 @@ function groupRows(route,role,checkpoint){
     if(a.bossPower!==b.bossPower)return a.bossPower?-1:1;
     const aNearlyDone=a.rel<=.1,bNearlyDone=b.rel<=.1;
     if(aNearlyDone!==bNearlyDone&&Math.max(a.rel,b.rel)>=.3)return aNearlyDone?1:-1;
+    // 마감 대비 뒤처짐이 뚜렷하게 다를 때만 정적 순서를 뒤집는다 —
+    // 미세한 차이로 매 라운드 순서가 흔들리면 추천이 요동친다.
+    if(Math.abs(a.behind-b.behind)>PACE_SWAP_MARGIN)return b.behind-a.behind;
     return a.offset-b.offset;
   });
   const ordered=head.concat(tail.map(item=>item.rows));
@@ -4444,7 +4483,7 @@ function evaluate(model,counts,routeInput,options){
 function compareVector(left,right){const length=Math.max((left||[]).length,(right||[]).length);for(let index=0;index<length;index++){const a=num(left&&left[index]),b=num(right&&right[index]);if(Math.abs(a-b)>1e-9)return a-b;}return 0;}
 function improved(before,after){return compareVector(after&&after.checkpointVector,before&&before.checkpointVector)<0||compareVector(after&&after.fullVector,before&&before.fullVector)<0;}
 
-return{VERSION,ROUTES,resolveRoute,checkpointFor,evaluate,compareVector,improved,_test:{groupRows,groupVector,rareCount,requirementMap,fallbackRequirement}};
+return{VERSION,ROUTES,resolveRoute,checkpointFor,evaluate,compareVector,improved,_test:{groupRows,groupVector,rareCount,requirementMap,fallbackRequirement,groupPaceBehind,groupDeadline,ROLE_DEADLINE_ROUND}};
 });
 
 </script>
@@ -4457,7 +4496,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='17.20.0';
+const VERSION='17.22.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -4979,13 +5018,32 @@ function mixedPlanCompare(left,right){
   if(lt!=null&&rt!=null&&lt!==rt)return rt-lt;
   return rp-lp;
 }
+// v17.22: 전체 파티 계획을 메인 스레드 밖에서 미리 돌릴 수 있게 한다.
+// settings._blueprintRankings[routeKey]에 upperId → ranking 맵이 오면
+// 플래너를 부르지 않고 그 결과를 그대로 쓴다(앱이 ord_direction_worker
+// 에서 계산해 넣는다).  주입값이 없고 _blueprintPlanSync가 false면
+// 계획을 아예 건너뛰고 투영+티어 순서만 쓴다 — 워커 결과가 도착하기
+// 전의 첫 렌더가 여기 해당하며, 도착하면 같은 목록이 재정렬된다.
+function injectedBlueprintRankings(model,route){
+  const bag=model&&model.settings&&model.settings._blueprintRankings;
+  if(!bag||typeof bag!=='object')return null;
+  const lane=bag[route&&route.key]||bag[route&&route.mode];
+  if(!lane||typeof lane!=='object')return null;
+  const map=new Map();
+  for(const [id,item] of Object.entries(lane))if(item&&typeof item==='object')map.set(String(id),item);
+  return map.size?map:null;
+}
 function applyBlueprintRanking(model,route,rows){
-  if(!S||typeof S.rankUpperBlueprints!=='function'||!rows.length)return rows.slice().sort(integratedUpperCompare);
+  if(!rows.length)return rows.slice().sort(integratedUpperCompare);
   const settings=Object.assign({},model.settings,{mode:route.mode,magicRoute:route.key,currentRound:model.round.value,targetSquadCount:9,targetLegendEquivalent:9,upperPreviewId:'',preferredLineupIds:[]});
+  const injected=injectedBlueprintRankings(model,route);
+  const planSync=model&&model.settings&&model.settings._blueprintPlanSync;
+  if(!injected&&(planSync===false||!S||typeof S.rankUpperBlueprints!=='function'))
+    return rows.map(row=>Object.assign({},row,{angleLabel:'미평가',angleBand:0,tierPromotion:0,effectiveTierRank:row.powerTier&&row.powerTier.known?num(row.powerTier.rank):-1,blueprintEvaluation:{basis:'route-projection-only',planned:false,rank:0,powerTier:row.powerTier||{known:false,letter:'',rank:-1},angleLabel:'미평가',angleBand:0,tierPromotion:0,note:'전체 파티 계획은 백그라운드에서 계산 중입니다.'}})).sort(blueprintPlanPreorder);
   const {targets:planTargets,rest:planRest}=blueprintPlanTargets(rows);
   if(!planTargets.length)return rows.slice().sort(integratedUpperCompare);
   try{
-    const runtime=typeof window!=='undefined'?window:globalThis,ranked=S.rankUpperBlueprints({state:plannerState(model),settings,locks:[],upperMemo:runtime.ORD_UPPER_MEMO,synergyMemo:runtime.ORD_SYNERGY_MEMO},{candidateIds:planTargets.map(row=>row.id)})||[],byId=new Map(ranked.map(item=>[String(item.upperId),item]));
+    const runtime=typeof window!=='undefined'?window:globalThis,ranked=injected?planTargets.map(row=>injected.get(String(row.id))).filter(Boolean):S.rankUpperBlueprints({state:plannerState(model),settings,locks:[],upperMemo:runtime.ORD_UPPER_MEMO,synergyMemo:runtime.ORD_SYNERGY_MEMO},{candidateIds:planTargets.map(row=>row.id)})||[],byId=new Map(ranked.map(item=>[String(item.upperId),item]));
     const decorated=planTargets.map(row=>{
       const item=byId.get(String(row.id));if(!item)return row;
       const plan=item.plan||{},planned=plan.roleCoverage&&plan.roleCoverage.planned||{},summary=plan.rareSummary||{};
@@ -5146,7 +5204,7 @@ function buildDecision(input){
   return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,decide:buildDecision,metaPairs:metaPairEvidence,_test:{allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
+return{VERSION,AUTHORITY,decide:buildDecision,metaPairs:metaPairEvidence,_test:{injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
 });
 
 </script>
@@ -6079,7 +6137,7 @@ function transactionSourceMatches(snapshot,transaction){const tx=normalizeTransa
 class App{
   constructor(root,catalog,config){
     this.root=root;this.catalog=catalog||[];this.config=config||{};const stored=readStore();this.state=normalizeInitialState(stored);
-    this.state.manualCounts=Object.assign({},stored.manualCounts||{});this.state.pendingCounts={};this.state.pendingAt={};this.state.pendingTransaction=normalizeTransaction(stored.pendingTransaction);this.state.locks=Array.isArray(stored.locks)?stored.locks:[];this.state.upperBlueprint=normalizeUpperBlueprint(stored.upperBlueprint);this.state.upperDetection=normalizeUpperDetection(stored.upperDetection);this.state.watchStability=normalizeWatchStability(stored.watchStability);this.onConnectionTest=null;this.onOpenTmo=null;this._renderedRound=1;this._squadCacheKey='';this._squadCache=null;this._v15CacheKey='';this._v15Cache=null;this._terminalCandidate=null;this._terminalWipeAt=0;this._lastVerdictReport=null;this._verdictCache=null;this._verdictCacheKey='';this._upperRankCacheKey='';this._upperRankCache=[];this._directionRankCacheKey='';this._directionRankCache=null;this._directionDesiredKey='';this._directionRankSeq=0;this._directionRankTimer=0;this._directionWorker=null;this._directionInFlight=null;this._directionWorkerDisabled=false;this.runLog=null;this._runLogReady=false;this._runLogBaseline=null;this._runLogLastDecisionDigest='';this._runLogHistory=[];this._runLogSelectedRun=null;this._runLogSelectedId='';this._runLogFilter='all';this._runLogDeleteArmedAt=0;this._runResultOpen=false;this._runResultSaving=false;this._runResultDraft=Object.assign({},RUN_RESULT_DEFAULTS);this._clockTimer=setInterval(()=>this.updateClockOnly(),1000);this._onDocumentKeydown=e=>{if(e.key==='Escape'&&this.state.detailId){this.state.detailId='';this.render();}else if(e.key==='Escape'&&this._runResultOpen&&!this._runResultSaving){this._runResultOpen=false;this.render();}};document.addEventListener('keydown',this._onDocumentKeydown);this.bind();this.persist();this.render();this._runLogReadyPromise=this.initRunLog();
+    this.state.manualCounts=Object.assign({},stored.manualCounts||{});this.state.pendingCounts={};this.state.pendingAt={};this.state.pendingTransaction=normalizeTransaction(stored.pendingTransaction);this.state.locks=Array.isArray(stored.locks)?stored.locks:[];this.state.upperBlueprint=normalizeUpperBlueprint(stored.upperBlueprint);this.state.upperDetection=normalizeUpperDetection(stored.upperDetection);this.state.watchStability=normalizeWatchStability(stored.watchStability);this.onConnectionTest=null;this.onOpenTmo=null;this._renderedRound=1;this._squadCacheKey='';this._squadCache=null;this._v15CacheKey='';this._v15Cache=null;this._terminalCandidate=null;this._terminalWipeAt=0;this._lastVerdictReport=null;this._verdictCache=null;this._verdictCacheKey='';this._upperRankCacheKey='';this._upperRankCache=[];this._directionRankCacheKey='';this._directionRankCache=null;this._blueprintRankings=null;this._blueprintRankingsKey='';this._blueprintDesiredKey='';this._blueprintRankSeq=0;this._blueprintWorkerDisabled=false;this._directionDesiredKey='';this._directionRankSeq=0;this._directionRankTimer=0;this._directionWorker=null;this._directionInFlight=null;this._directionWorkerDisabled=false;this.runLog=null;this._runLogReady=false;this._runLogBaseline=null;this._runLogLastDecisionDigest='';this._runLogHistory=[];this._runLogSelectedRun=null;this._runLogSelectedId='';this._runLogFilter='all';this._runLogDeleteArmedAt=0;this._runResultOpen=false;this._runResultSaving=false;this._runResultDraft=Object.assign({},RUN_RESULT_DEFAULTS);this._clockTimer=setInterval(()=>this.updateClockOnly(),1000);this._onDocumentKeydown=e=>{if(e.key==='Escape'&&this.state.detailId){this.state.detailId='';this.render();}else if(e.key==='Escape'&&this._runResultOpen&&!this._runResultSaving){this._runResultOpen=false;this.render();}};document.addEventListener('keydown',this._onDocumentKeydown);this.bind();this.persist();this.render();this._runLogReadyPromise=this.initRunLog();
   }
   destroy(){clearInterval(this._clockTimer);clearTimeout(this._toastTimer);clearTimeout(this._directionRankTimer);this._directionRankSeq++;if(this._directionWorker)this._directionWorker.terminate();this._directionWorker=null;if(this.runLog)this.runLog.destroy().catch(()=>{});document.removeEventListener('keydown',this._onDocumentKeydown);}
   persist(){const copy=Object.assign({},this.state);for(const k of ['snapshot','liveAt','connectionDiagnostic','message','detailId','unitSearch','newGameArmedAt'])delete copy[k];writeStore(copy);}
@@ -6162,7 +6220,7 @@ class App{
   compactDirectionSnapshot(){const snapshot=this.state.snapshot||{},units=(snapshot.units||[]).map(unit=>({id:String(unit&&unit.id||''),name:unit&&unit.name,groupName:unit&&unit.groupName,count:C.num(unit&&unit.count),percent:C.num(unit&&unit.percent),tmoPercent:C.num(unit&&unit.tmoPercent),abilities:unit&&unit.abilities||{}})).filter(unit=>unit.id);return{counts:Object.assign({},snapshot.counts||{}),currentAbilities:Object.assign({},snapshot.currentAbilities||{}),units};}
   stopDirectionWorker(){if(this._directionWorker)this._directionWorker.terminate();this._directionWorker=null;this._directionInFlight=null;}
   ensureDirectionWorker(){
-    if(this._directionWorkerDisabled||!this.config.directionWorkerUrl||typeof Worker!=='function')return null;if(this._directionWorker)return this._directionWorker;try{const worker=new Worker(this.config.directionWorkerUrl);worker.onmessage=event=>{const message=event&&event.data||{};if(message.type==='rank-directions-error')this.failDirectionRank(message.error||'방향 계산 Worker 오류',{requestId:message.requestId,key:message.key});else this.acceptDirectionRank(message);};worker.onerror=event=>this.failDirectionRank(String(event&&event.message||'방향 계산 Worker 오류'));this._directionWorker=worker;return worker;}catch(error){this._directionWorkerDisabled=true;return null;}
+    if(this._directionWorkerDisabled||!this.config.directionWorkerUrl||typeof Worker!=='function')return null;if(this._directionWorker)return this._directionWorker;try{const worker=new Worker(this.config.directionWorkerUrl);worker.onmessage=event=>{const message=event&&event.data||{};if(message.type==='rank-upper-blueprints-result'){this.applyBlueprintRankings(message);return;}if(message.type==='rank-upper-blueprints-error'){this._blueprintWorkerDisabled=true;return;}if(message.type==='rank-directions-error')this.failDirectionRank(message.error||'방향 계산 Worker 오류',{requestId:message.requestId,key:message.key});else this.acceptDirectionRank(message);};worker.onerror=event=>this.failDirectionRank(String(event&&event.message||'방향 계산 Worker 오류'));this._directionWorker=worker;return worker;}catch(error){this._directionWorkerDisabled=true;return null;}
   }
   queueDirectionRank(key,settings){
     if(!key||this._directionRankCacheKey===key||this._directionDesiredKey===key&&(this._directionRankTimer||this._directionInFlight))return;this._directionDesiredKey=key;clearTimeout(this._directionRankTimer);if(this._directionInFlight&&this._directionInFlight.key!==key)this.stopDirectionWorker();const requestId=++this._directionRankSeq,job={requestId,key,payload:{snapshot:this.compactDirectionSnapshot(),settings:Object.assign({},settings,{upperPreviewId:'',preferredLineupIds:[]}),options:{perLane:2,candidateCap:8}}};this._directionRankTimer=setTimeout(()=>{this._directionRankTimer=0;if(requestId!==this._directionRankSeq||key!==this._directionDesiredKey)return;const worker=this.ensureDirectionWorker();if(worker){this._directionInFlight={requestId,key};worker.postMessage(Object.assign({type:'rank-directions'},job));return;}this.runDirectionFallback(job);},180);
@@ -6172,6 +6230,30 @@ class App{
   }
   acceptDirectionRank(message){
     if(message.type!=='rank-directions-result'||message.requestId!==this._directionRankSeq||message.key!==this._directionDesiredKey)return;this._directionInFlight=null;this._directionRankCache=message.board||{lanes:[],safeReroll:[]};this._directionRankCacheKey=message.key;if(this.shouldDeferExternalRender()){this._deferredExternalRender=true;return;}this.render();
+  }
+  queueBlueprintRank(key,settings,decision){
+    // 방향 미확정(ROUTE_CHOICE)에서만 전체 파티 계획이 필요하다.
+    if(!decision||decision.state!=='ROUTE_CHOICE')return;
+    const candidates=decision.routeCandidates||[];if(!candidates.length)return;
+    const worker=this.ensureDirectionWorker();if(!worker)return;
+    const byLane=new Map();
+    for(const row of candidates){
+      const laneKey=String(row.routeKey||row.mode||'physical');
+      if(!byLane.has(laneKey))byLane.set(laneKey,{key:laneKey,mode:row.mode||'physical',route:row.routeKey||laneKey,candidateIds:[]});
+      byLane.get(laneKey).candidateIds.push(String(row.id));
+    }
+    const requestId=++this._blueprintRankSeq;
+    this._blueprintDesiredKey=key;
+    worker.postMessage({type:'rank-upper-blueprints',requestId,key,payload:{snapshot:this.compactDirectionSnapshot(),settings:Object.assign({},settings,{upperPreviewId:'',preferredLineupIds:[]}),lanes:[...byLane.values()]}});
+  }
+  applyBlueprintRankings(message){
+    if(!message||message.requestId!==this._blueprintRankSeq||message.key!==this._blueprintDesiredKey)return;
+    this._blueprintRankings=message.rankings||null;
+    this._blueprintRankingsKey=message.key;
+    // 같은 패로 다시 계산해 주입된 랭킹이 반영되게 한다.
+    this._v15CacheKey='';
+    if(this.shouldDeferExternalRender()){this._deferredExternalRender=true;return;}
+    this.render();
   }
   failDirectionRank(error,job){
     const active=job||this._directionInFlight;if(active&&(active.requestId!==this._directionRankSeq||active.key!==this._directionDesiredKey))return;this.stopDirectionWorker();this._directionWorkerDisabled=true;this._directionRankCache={error:String(error||'방향 계산 오류'),lanes:[],safeReroll:[]};this._directionRankCacheKey=this._directionDesiredKey;if(this.shouldDeferExternalRender())this._deferredExternalRender=true;else this.render();
@@ -6186,9 +6268,14 @@ class App{
       pendingReroll:this.state.pendingReroll&&[this.state.pendingReroll.id,this.state.pendingReroll.baseFingerprint,this.state.pendingReroll.beforeCount]
     },key=[fingerprint(this.state.snapshot),JSON.stringify(strategic)].join('|');
     if(key!==this._v15CacheKey){
-      try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings,locks:this.state.locks||[]});}
-      catch(error){this._v15Cache={version:'17.20.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
+      // v17.22: 전체 파티 계획은 워커가 돌린다.  워커를 못 쓰는 환경
+      // (Worker 미지원·오류)에서는 인라인 계획으로 되돌아간다.
+      const workerReady=!this._blueprintWorkerDisabled&&!!this.ensureDirectionWorker();
+      const decideSettings=Object.assign({},settings,{_blueprintRankings:this._blueprintRankingsKey===key?this._blueprintRankings:null,_blueprintPlanSync:!workerReady});
+      try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings:decideSettings,locks:this.state.locks||[]});}
+      catch(error){this._v15Cache={version:'17.22.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
+      if(workerReady&&this._blueprintRankingsKey!==key)this.queueBlueprintRank(key,settings,this._v15Cache);
     }
     const base=this._v15Cache;if(!base)return null;
     if(this.state.pendingTransaction)return Object.assign({},base,{state:'SYNC_BLOCKED',label:'제작 결과 확인 대기',reason:'직전 제작의 유닛·소모 재료·선택 위습이 TMO에서 확인될 때까지 다음 자원 행동을 잠급니다.',action:null,blockedAction:base.action||base.blockedAction||null,pendingKind:'build'});

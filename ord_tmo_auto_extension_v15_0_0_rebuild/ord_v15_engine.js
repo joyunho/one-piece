@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='17.20.0';
+const VERSION='17.22.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -528,13 +528,32 @@ function mixedPlanCompare(left,right){
   if(lt!=null&&rt!=null&&lt!==rt)return rt-lt;
   return rp-lp;
 }
+// v17.22: 전체 파티 계획을 메인 스레드 밖에서 미리 돌릴 수 있게 한다.
+// settings._blueprintRankings[routeKey]에 upperId → ranking 맵이 오면
+// 플래너를 부르지 않고 그 결과를 그대로 쓴다(앱이 ord_direction_worker
+// 에서 계산해 넣는다).  주입값이 없고 _blueprintPlanSync가 false면
+// 계획을 아예 건너뛰고 투영+티어 순서만 쓴다 — 워커 결과가 도착하기
+// 전의 첫 렌더가 여기 해당하며, 도착하면 같은 목록이 재정렬된다.
+function injectedBlueprintRankings(model,route){
+  const bag=model&&model.settings&&model.settings._blueprintRankings;
+  if(!bag||typeof bag!=='object')return null;
+  const lane=bag[route&&route.key]||bag[route&&route.mode];
+  if(!lane||typeof lane!=='object')return null;
+  const map=new Map();
+  for(const [id,item] of Object.entries(lane))if(item&&typeof item==='object')map.set(String(id),item);
+  return map.size?map:null;
+}
 function applyBlueprintRanking(model,route,rows){
-  if(!S||typeof S.rankUpperBlueprints!=='function'||!rows.length)return rows.slice().sort(integratedUpperCompare);
+  if(!rows.length)return rows.slice().sort(integratedUpperCompare);
   const settings=Object.assign({},model.settings,{mode:route.mode,magicRoute:route.key,currentRound:model.round.value,targetSquadCount:9,targetLegendEquivalent:9,upperPreviewId:'',preferredLineupIds:[]});
+  const injected=injectedBlueprintRankings(model,route);
+  const planSync=model&&model.settings&&model.settings._blueprintPlanSync;
+  if(!injected&&(planSync===false||!S||typeof S.rankUpperBlueprints!=='function'))
+    return rows.map(row=>Object.assign({},row,{angleLabel:'미평가',angleBand:0,tierPromotion:0,effectiveTierRank:row.powerTier&&row.powerTier.known?num(row.powerTier.rank):-1,blueprintEvaluation:{basis:'route-projection-only',planned:false,rank:0,powerTier:row.powerTier||{known:false,letter:'',rank:-1},angleLabel:'미평가',angleBand:0,tierPromotion:0,note:'전체 파티 계획은 백그라운드에서 계산 중입니다.'}})).sort(blueprintPlanPreorder);
   const {targets:planTargets,rest:planRest}=blueprintPlanTargets(rows);
   if(!planTargets.length)return rows.slice().sort(integratedUpperCompare);
   try{
-    const runtime=typeof window!=='undefined'?window:globalThis,ranked=S.rankUpperBlueprints({state:plannerState(model),settings,locks:[],upperMemo:runtime.ORD_UPPER_MEMO,synergyMemo:runtime.ORD_SYNERGY_MEMO},{candidateIds:planTargets.map(row=>row.id)})||[],byId=new Map(ranked.map(item=>[String(item.upperId),item]));
+    const runtime=typeof window!=='undefined'?window:globalThis,ranked=injected?planTargets.map(row=>injected.get(String(row.id))).filter(Boolean):S.rankUpperBlueprints({state:plannerState(model),settings,locks:[],upperMemo:runtime.ORD_UPPER_MEMO,synergyMemo:runtime.ORD_SYNERGY_MEMO},{candidateIds:planTargets.map(row=>row.id)})||[],byId=new Map(ranked.map(item=>[String(item.upperId),item]));
     const decorated=planTargets.map(row=>{
       const item=byId.get(String(row.id));if(!item)return row;
       const plan=item.plan||{},planned=plan.roleCoverage&&plan.roleCoverage.planned||{},summary=plan.rareSummary||{};
@@ -695,5 +714,5 @@ function buildDecision(input){
   return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,decide:buildDecision,metaPairs:metaPairEvidence,_test:{allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
+return{VERSION,AUTHORITY,decide:buildDecision,metaPairs:metaPairEvidence,_test:{injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
 });

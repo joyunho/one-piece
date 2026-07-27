@@ -239,7 +239,7 @@ function transactionSourceMatches(snapshot,transaction){const tx=normalizeTransa
 class App{
   constructor(root,catalog,config){
     this.root=root;this.catalog=catalog||[];this.config=config||{};const stored=readStore();this.state=normalizeInitialState(stored);
-    this.state.manualCounts=Object.assign({},stored.manualCounts||{});this.state.pendingCounts={};this.state.pendingAt={};this.state.pendingTransaction=normalizeTransaction(stored.pendingTransaction);this.state.locks=Array.isArray(stored.locks)?stored.locks:[];this.state.upperBlueprint=normalizeUpperBlueprint(stored.upperBlueprint);this.state.upperDetection=normalizeUpperDetection(stored.upperDetection);this.state.watchStability=normalizeWatchStability(stored.watchStability);this.onConnectionTest=null;this.onOpenTmo=null;this._renderedRound=1;this._squadCacheKey='';this._squadCache=null;this._v15CacheKey='';this._v15Cache=null;this._terminalCandidate=null;this._terminalWipeAt=0;this._lastVerdictReport=null;this._verdictCache=null;this._verdictCacheKey='';this._upperRankCacheKey='';this._upperRankCache=[];this._directionRankCacheKey='';this._directionRankCache=null;this._directionDesiredKey='';this._directionRankSeq=0;this._directionRankTimer=0;this._directionWorker=null;this._directionInFlight=null;this._directionWorkerDisabled=false;this.runLog=null;this._runLogReady=false;this._runLogBaseline=null;this._runLogLastDecisionDigest='';this._runLogHistory=[];this._runLogSelectedRun=null;this._runLogSelectedId='';this._runLogFilter='all';this._runLogDeleteArmedAt=0;this._runResultOpen=false;this._runResultSaving=false;this._runResultDraft=Object.assign({},RUN_RESULT_DEFAULTS);this._clockTimer=setInterval(()=>this.updateClockOnly(),1000);this._onDocumentKeydown=e=>{if(e.key==='Escape'&&this.state.detailId){this.state.detailId='';this.render();}else if(e.key==='Escape'&&this._runResultOpen&&!this._runResultSaving){this._runResultOpen=false;this.render();}};document.addEventListener('keydown',this._onDocumentKeydown);this.bind();this.persist();this.render();this._runLogReadyPromise=this.initRunLog();
+    this.state.manualCounts=Object.assign({},stored.manualCounts||{});this.state.pendingCounts={};this.state.pendingAt={};this.state.pendingTransaction=normalizeTransaction(stored.pendingTransaction);this.state.locks=Array.isArray(stored.locks)?stored.locks:[];this.state.upperBlueprint=normalizeUpperBlueprint(stored.upperBlueprint);this.state.upperDetection=normalizeUpperDetection(stored.upperDetection);this.state.watchStability=normalizeWatchStability(stored.watchStability);this.onConnectionTest=null;this.onOpenTmo=null;this._renderedRound=1;this._squadCacheKey='';this._squadCache=null;this._v15CacheKey='';this._v15Cache=null;this._terminalCandidate=null;this._terminalWipeAt=0;this._lastVerdictReport=null;this._verdictCache=null;this._verdictCacheKey='';this._upperRankCacheKey='';this._upperRankCache=[];this._directionRankCacheKey='';this._directionRankCache=null;this._blueprintRankings=null;this._blueprintRankingsKey='';this._blueprintDesiredKey='';this._blueprintRankSeq=0;this._blueprintWorkerDisabled=false;this._directionDesiredKey='';this._directionRankSeq=0;this._directionRankTimer=0;this._directionWorker=null;this._directionInFlight=null;this._directionWorkerDisabled=false;this.runLog=null;this._runLogReady=false;this._runLogBaseline=null;this._runLogLastDecisionDigest='';this._runLogHistory=[];this._runLogSelectedRun=null;this._runLogSelectedId='';this._runLogFilter='all';this._runLogDeleteArmedAt=0;this._runResultOpen=false;this._runResultSaving=false;this._runResultDraft=Object.assign({},RUN_RESULT_DEFAULTS);this._clockTimer=setInterval(()=>this.updateClockOnly(),1000);this._onDocumentKeydown=e=>{if(e.key==='Escape'&&this.state.detailId){this.state.detailId='';this.render();}else if(e.key==='Escape'&&this._runResultOpen&&!this._runResultSaving){this._runResultOpen=false;this.render();}};document.addEventListener('keydown',this._onDocumentKeydown);this.bind();this.persist();this.render();this._runLogReadyPromise=this.initRunLog();
   }
   destroy(){clearInterval(this._clockTimer);clearTimeout(this._toastTimer);clearTimeout(this._directionRankTimer);this._directionRankSeq++;if(this._directionWorker)this._directionWorker.terminate();this._directionWorker=null;if(this.runLog)this.runLog.destroy().catch(()=>{});document.removeEventListener('keydown',this._onDocumentKeydown);}
   persist(){const copy=Object.assign({},this.state);for(const k of ['snapshot','liveAt','connectionDiagnostic','message','detailId','unitSearch','newGameArmedAt'])delete copy[k];writeStore(copy);}
@@ -322,7 +322,7 @@ class App{
   compactDirectionSnapshot(){const snapshot=this.state.snapshot||{},units=(snapshot.units||[]).map(unit=>({id:String(unit&&unit.id||''),name:unit&&unit.name,groupName:unit&&unit.groupName,count:C.num(unit&&unit.count),percent:C.num(unit&&unit.percent),tmoPercent:C.num(unit&&unit.tmoPercent),abilities:unit&&unit.abilities||{}})).filter(unit=>unit.id);return{counts:Object.assign({},snapshot.counts||{}),currentAbilities:Object.assign({},snapshot.currentAbilities||{}),units};}
   stopDirectionWorker(){if(this._directionWorker)this._directionWorker.terminate();this._directionWorker=null;this._directionInFlight=null;}
   ensureDirectionWorker(){
-    if(this._directionWorkerDisabled||!this.config.directionWorkerUrl||typeof Worker!=='function')return null;if(this._directionWorker)return this._directionWorker;try{const worker=new Worker(this.config.directionWorkerUrl);worker.onmessage=event=>{const message=event&&event.data||{};if(message.type==='rank-directions-error')this.failDirectionRank(message.error||'방향 계산 Worker 오류',{requestId:message.requestId,key:message.key});else this.acceptDirectionRank(message);};worker.onerror=event=>this.failDirectionRank(String(event&&event.message||'방향 계산 Worker 오류'));this._directionWorker=worker;return worker;}catch(error){this._directionWorkerDisabled=true;return null;}
+    if(this._directionWorkerDisabled||!this.config.directionWorkerUrl||typeof Worker!=='function')return null;if(this._directionWorker)return this._directionWorker;try{const worker=new Worker(this.config.directionWorkerUrl);worker.onmessage=event=>{const message=event&&event.data||{};if(message.type==='rank-upper-blueprints-result'){this.applyBlueprintRankings(message);return;}if(message.type==='rank-upper-blueprints-error'){this._blueprintWorkerDisabled=true;return;}if(message.type==='rank-directions-error')this.failDirectionRank(message.error||'방향 계산 Worker 오류',{requestId:message.requestId,key:message.key});else this.acceptDirectionRank(message);};worker.onerror=event=>this.failDirectionRank(String(event&&event.message||'방향 계산 Worker 오류'));this._directionWorker=worker;return worker;}catch(error){this._directionWorkerDisabled=true;return null;}
   }
   queueDirectionRank(key,settings){
     if(!key||this._directionRankCacheKey===key||this._directionDesiredKey===key&&(this._directionRankTimer||this._directionInFlight))return;this._directionDesiredKey=key;clearTimeout(this._directionRankTimer);if(this._directionInFlight&&this._directionInFlight.key!==key)this.stopDirectionWorker();const requestId=++this._directionRankSeq,job={requestId,key,payload:{snapshot:this.compactDirectionSnapshot(),settings:Object.assign({},settings,{upperPreviewId:'',preferredLineupIds:[]}),options:{perLane:2,candidateCap:8}}};this._directionRankTimer=setTimeout(()=>{this._directionRankTimer=0;if(requestId!==this._directionRankSeq||key!==this._directionDesiredKey)return;const worker=this.ensureDirectionWorker();if(worker){this._directionInFlight={requestId,key};worker.postMessage(Object.assign({type:'rank-directions'},job));return;}this.runDirectionFallback(job);},180);
@@ -332,6 +332,30 @@ class App{
   }
   acceptDirectionRank(message){
     if(message.type!=='rank-directions-result'||message.requestId!==this._directionRankSeq||message.key!==this._directionDesiredKey)return;this._directionInFlight=null;this._directionRankCache=message.board||{lanes:[],safeReroll:[]};this._directionRankCacheKey=message.key;if(this.shouldDeferExternalRender()){this._deferredExternalRender=true;return;}this.render();
+  }
+  queueBlueprintRank(key,settings,decision){
+    // 방향 미확정(ROUTE_CHOICE)에서만 전체 파티 계획이 필요하다.
+    if(!decision||decision.state!=='ROUTE_CHOICE')return;
+    const candidates=decision.routeCandidates||[];if(!candidates.length)return;
+    const worker=this.ensureDirectionWorker();if(!worker)return;
+    const byLane=new Map();
+    for(const row of candidates){
+      const laneKey=String(row.routeKey||row.mode||'physical');
+      if(!byLane.has(laneKey))byLane.set(laneKey,{key:laneKey,mode:row.mode||'physical',route:row.routeKey||laneKey,candidateIds:[]});
+      byLane.get(laneKey).candidateIds.push(String(row.id));
+    }
+    const requestId=++this._blueprintRankSeq;
+    this._blueprintDesiredKey=key;
+    worker.postMessage({type:'rank-upper-blueprints',requestId,key,payload:{snapshot:this.compactDirectionSnapshot(),settings:Object.assign({},settings,{upperPreviewId:'',preferredLineupIds:[]}),lanes:[...byLane.values()]}});
+  }
+  applyBlueprintRankings(message){
+    if(!message||message.requestId!==this._blueprintRankSeq||message.key!==this._blueprintDesiredKey)return;
+    this._blueprintRankings=message.rankings||null;
+    this._blueprintRankingsKey=message.key;
+    // 같은 패로 다시 계산해 주입된 랭킹이 반영되게 한다.
+    this._v15CacheKey='';
+    if(this.shouldDeferExternalRender()){this._deferredExternalRender=true;return;}
+    this.render();
   }
   failDirectionRank(error,job){
     const active=job||this._directionInFlight;if(active&&(active.requestId!==this._directionRankSeq||active.key!==this._directionDesiredKey))return;this.stopDirectionWorker();this._directionWorkerDisabled=true;this._directionRankCache={error:String(error||'방향 계산 오류'),lanes:[],safeReroll:[]};this._directionRankCacheKey=this._directionDesiredKey;if(this.shouldDeferExternalRender())this._deferredExternalRender=true;else this.render();
@@ -346,9 +370,14 @@ class App{
       pendingReroll:this.state.pendingReroll&&[this.state.pendingReroll.id,this.state.pendingReroll.baseFingerprint,this.state.pendingReroll.beforeCount]
     },key=[fingerprint(this.state.snapshot),JSON.stringify(strategic)].join('|');
     if(key!==this._v15CacheKey){
-      try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings,locks:this.state.locks||[]});}
-      catch(error){this._v15Cache={version:'17.20.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
+      // v17.22: 전체 파티 계획은 워커가 돌린다.  워커를 못 쓰는 환경
+      // (Worker 미지원·오류)에서는 인라인 계획으로 되돌아간다.
+      const workerReady=!this._blueprintWorkerDisabled&&!!this.ensureDirectionWorker();
+      const decideSettings=Object.assign({},settings,{_blueprintRankings:this._blueprintRankingsKey===key?this._blueprintRankings:null,_blueprintPlanSync:!workerReady});
+      try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings:decideSettings,locks:this.state.locks||[]});}
+      catch(error){this._v15Cache={version:'17.22.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
+      if(workerReady&&this._blueprintRankingsKey!==key)this.queueBlueprintRank(key,settings,this._v15Cache);
     }
     const base=this._v15Cache;if(!base)return null;
     if(this.state.pendingTransaction)return Object.assign({},base,{state:'SYNC_BLOCKED',label:'제작 결과 확인 대기',reason:'직전 제작의 유닛·소모 재료·선택 위습이 TMO에서 확인될 때까지 다음 자원 행동을 잠급니다.',action:null,blockedAction:base.action||base.blockedAction||null,pendingKind:'build'});

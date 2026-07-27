@@ -43,8 +43,31 @@ function compactRow(row){
 function compactBoard(board){
   return Object.assign(pick(board,['version','dominant','decision','reason','safeReroll','evaluatedCandidates','availableCandidates','elapsedMs']),{provisionalDirection:board.provisionalDirection?pick(board.provisionalDirection,['upperId','upperCanonicalId','upperName','routeKeys','checkpoint','actions']):null,lanes:(board.lanes||[]).map(lane=>Object.assign(pick(lane,['key','mode','route','label','priority']),{rows:(lane.rows||[]).map(compactRow)}))});
 }
+// v17.22: 상위 후보의 9환산 전체 파티 계획을 메인 스레드 밖에서 돌린다.
+// 후보 하나당 ~250ms라 인라인으로 돌리면 방향 미확정 구간의 판단이
+// 2.8초까지 멈춘다.  결과는 upperId → ranking 맵으로 돌려주고 엔진이
+// settings._blueprintRankings로 주입받아 그대로 쓴다.
+function rankBlueprintsForLanes(payload){
+  const lanes=payload&&payload.lanes||[],out={};
+  for(const lane of lanes){
+    const ids=[...new Set((lane&&lane.candidateIds||[]).map(String))].filter(Boolean);
+    if(!ids.length)continue;
+    const settings=Object.assign({},payload.settings||{},{mode:lane.mode,magicRoute:lane.route||lane.key,targetSquadCount:9,targetLegendEquivalent:9,upperPreviewId:'',preferredLineupIds:[]});
+    const ranked=self.ORDSquadPlanner.rankUpperBlueprints({catalog:self.ORD_TMO_UNITS,snapshot:payload.snapshot||{},settings,locks:[],upperMemo:self.ORD_UPPER_MEMO,synergyMemo:self.ORD_SYNERGY_MEMO},{candidateIds:ids})||[];
+    const bag={};
+    for(const row of ranked)bag[String(row.upperId)]=compactRow(row);
+    out[String(lane.key||lane.mode)]=bag;
+  }
+  return out;
+}
 self.onmessage=event=>{
-  const request=event&&event.data||{};if(request.type!=='rank-directions')return;try{
+  const request=event&&event.data||{};
+  if(request.type==='rank-upper-blueprints'){
+    try{self.postMessage({type:'rank-upper-blueprints-result',requestId:request.requestId,key:request.key,rankings:rankBlueprintsForLanes(request.payload||{})});}
+    catch(error){self.postMessage({type:'rank-upper-blueprints-error',requestId:request.requestId,key:request.key,error:String(error&&error.stack||error)});}
+    return;
+  }
+  if(request.type!=='rank-directions')return;try{
     const payload=request.payload||{},board=self.ORDSquadPlanner.rankDeckDirections({catalog:self.ORD_TMO_UNITS,snapshot:payload.snapshot||{},settings:payload.settings||{},locks:[]},Object.assign({perLane:2,candidateCap:8},payload.options||{}));
     self.postMessage({type:'rank-directions-result',requestId:request.requestId,key:request.key,board:compactBoard(board)});
   }catch(error){self.postMessage({type:'rank-directions-error',requestId:request.requestId,key:request.key,error:String(error&&error.stack||error)});}
