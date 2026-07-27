@@ -21,7 +21,7 @@ for(const removed of ['ord_ai_advisor.js'])assert(!fs.existsSync(path.join(ext,r
 const read=file=>fs.readFileSync(path.join(ext,file),'utf8');
 const manifest=JSON.parse(read('manifest.json'));
 assert.strictEqual(manifest.manifest_version,3);
-assert.strictEqual(manifest.version,'17.18.0');
+assert.strictEqual(manifest.version,'17.19.0');
 assert.deepStrictEqual(manifest.background,{service_worker:'background.js'});
 assert.deepStrictEqual(new Set(manifest.permissions),new Set(['storage','tabs','scripting']));
 assert(manifest.host_permissions.length>0,'build-helper permissions are missing');
@@ -40,7 +40,9 @@ for(const file of ['background.js','content-tmo.js','ord_story_nonupper_data.js'
 }
 const helper=read('ord_helper.html'),popup=read('popup.html');
 assert(!/\son\w+\s*=/.test(helper+popup),'inline event handler violates MV3 CSP');
-assert(/<meta name="ord-helper" content="v17\.18\.0-decision-engine">/.test(helper),'v17.15.0 helper marker missing');
+// 버전을 정규식에 직접 박아두면 릴리스마다 조용히 낡는다(실제로 메시지가
+// v17.15.0에 멈춰 있었다) — manifest 버전을 단일 원천으로 쓴다.
+assert(helper.includes(`<meta name="ord-helper" content="v${manifest.version}-decision-engine">`),`v${manifest.version} helper marker missing`);
 assert(helper.indexOf('ord_data_patch.js')<helper.indexOf('ord_story_nonupper_data.js'),'data patch must load before measured story data');
 assert(helper.indexOf('ord_story_nonupper_data.js')<helper.indexOf('ord_story_upper_data.js'),'non-upper story data must load before upper story data');
 assert(helper.indexOf('ord_story_upper_data.js')<helper.indexOf('ord_core.js'),'measured story data must load before core');
@@ -57,10 +59,10 @@ for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js'
   vm.runInContext(read(file),context,{filename:file});
 }
 const units=context.ORD_TMO_UNITS,C=context.ORDCore,planner=context.ORDSquadPlanner;
-assert.strictEqual(C.VERSION,'17.18.0');
-assert.strictEqual(planner.VERSION,'17.18.0');
+assert.strictEqual(C.VERSION,'17.19.0');
+assert.strictEqual(planner.VERSION,'17.19.0');
 assert.strictEqual(typeof planner.planFinalSquad,'function');
-assert.strictEqual(context.ORDV15Engine.VERSION,'17.18.0');
+assert.strictEqual(context.ORDV15Engine.VERSION,'17.19.0');
 const metaStats=context.ORD_META_STATS;
 assert(metaStats&&metaStats.schema==='ord-meta-stats-v1','meta stats digest missing');
 assert.strictEqual(metaStats.usage.gate,false,'meta stats must never gate');
@@ -115,11 +117,11 @@ const compactSnapshot={
 const payloadBytes=Buffer.byteLength(JSON.stringify(compactSnapshot));
 assert(payloadBytes<160000,`snapshot payload too large: ${payloadBytes}`);
 
-const manualPath=path.resolve(ext,'../ord_2305_nightmare_helper_v17_18_0_manual.html');
+const manualPath=path.resolve(ext,'../ord_2305_nightmare_helper_v17_19_0_manual.html');
 assert(fs.existsSync(manualPath),'standalone v15 manual bundle missing');
 assert(!fs.existsSync(path.resolve(ext,'../ord_2305_nightmare_helper_v14_2_0_manual.html')),'stale v14 manual remains in the v15 package');
 const manual=fs.readFileSync(manualPath,'utf8');
-assert(/<meta name="ord-helper" content="v17\.18\.0-decision-engine-manual">/.test(manual),'manual build marker missing');
+assert(manual.includes(`<meta name="ord-helper" content="v${manifest.version}-decision-engine-manual">`),'manual build marker missing');
 assert(/source:\s*['\"]standalone-manual['\"]/.test(manual),'standalone manual boot missing');
 assert(!/openai|ord_ai_advisor|127\.0\.0\.1:38766/i.test(manual),'OpenAI surface remains in manual');
 let manualScripts=0;const embeddedScripts=new Map();

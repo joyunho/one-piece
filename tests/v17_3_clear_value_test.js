@@ -62,17 +62,29 @@ test('친구 사례: 핸콕 영원(C50h)이 흰수염 불멸(A40h)보다 위, �
   assert(C.num(rows[white].wispGap)<C.num(rows[han].wispGap),'앵커는 실제로 더 가까워야 한다');
 });
 
-test('클리어 가치 부분점수가 모든 후보에 있고 목록은 가치 내림차순이다',()=>{
+// v17.19: 정렬 계약이 (결손 기여 버킷 → 클리어 가치)의 2단계로 바뀌었다.
+// story는 점수식에서 완전히 빠졌다 — 되살아나지 않도록 함께 고정한다.
+test('클리어 가치 부분점수가 모든 후보에 있고 목록은 결손 기여 → 가치 순이다',()=>{
   const rows=E._test.upperRouteCandidates(friendModel(),[]);
   for(const row of rows){
     const value=row.clearValue;
     assert(value,`${row.name} clearValue 누락`);
-    for(const key of ['value','story','dpsCover','line','rareUtil','utility','deadlineFactor'])
+    for(const key of ['value','roleFit','roleFitBucket','dpsCover','dpsTrust','line','rareUtil','utility','deadlineFactor'])
       assert(typeof value[key]==='number'&&value[key]>=0,`${row.name}.${key} 이상`);
     assert(value.value<=1.2+1e-9,`${row.name} 가치 상한 초과`);
+    assert(value.roleFit<=1+1e-9,`${row.name} 결손 기여 상한 초과`);
+    assert(!('story' in value),`${row.name} 상위 점수에 story가 되살아났다`);
   }
-  for(let i=1;i<rows.length;i+=1)
-    assert(C.num(rows[i].clearValue.value)<=C.num(rows[i-1].clearValue.value)+1e-9,`가치 정렬 위반 @${i}`);
+  for(let i=1;i<rows.length;i+=1){
+    const prev=rows[i-1].clearValue,now=rows[i].clearValue;
+    const gated=row=>row.storyReward||row.specialGate?1:0;
+    if(gated(rows[i-1])!==gated(rows[i])){assert(gated(rows[i-1])<gated(rows[i]),`게이트 후보 정렬 위반 @${i}`);continue;}
+    if(C.num(prev.roleFitBucket)!==C.num(now.roleFitBucket)){
+      assert(C.num(now.roleFitBucket)<C.num(prev.roleFitBucket),`결손 기여 정렬 위반 @${i}`);
+      continue;
+    }
+    assert(C.num(now.value)<=C.num(prev.value)+1e-9,`동일 결손 기여 내 가치 정렬 위반 @${i}`);
+  }
 });
 
 test('선위→라운드 환산 4/라: 부족 61선위·r26이면 마감 할인 없이 비교된다',()=>{
