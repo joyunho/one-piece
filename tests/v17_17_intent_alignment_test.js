@@ -89,6 +89,25 @@ test('단계 8(51~65라): 중간 마감 분할 + 킬 판정은 의도적으로 �
   assert(global.ORD_META_STATS.usage.allowKillVerdict === false, '킬 판정 금지 경계가 사라짐');
 });
 
+test('파티 추천 클리어 지향(v17.17): 동률 후보는 스토리·실측 순 — 유계·무해', () => {
+  require(path.join(ext, 'ord_squad_planner.js'));
+  const planner = global.ORDSquadPlanner;
+  const aff = planner._test.clearAffinity, cmp = planner._test.compareAffinity, games = planner._test.metaGamesOf;
+  const db = C.buildDb(global.ORD_TMO_UNITS);
+  // 토키(스토리 상위 + 실측 4,427판)는 실측 극소 전설급보다 affinity가 높다.
+  const toki = global.ORD_TMO_UNITS.find(unit => (unit.codes || []).some(code => code.toLowerCase() === '780h'));
+  const weak = db.legendish.filter(unit => games(unit) === 0).sort((a, b) => C.num(C.storyGrade(a).score) - C.num(C.storyGrade(b).score))[0];
+  assert(toki && weak, '픽스처 유닛 없음');
+  assert(aff(toki) > aff(weak), `토키 affinity가 더 높아야 함: ${aff(toki)} vs ${aff(weak)}`);
+  assert(cmp(toki, weak) < 0, '비교기가 토키를 앞세워야 함');
+  // 유계: affinity ∈ [0,1], 실측 기여는 최대 0.2 (전 판 등장 가정에도 상한).
+  for (const unit of [toki, weak]) { const value = aff(unit); assert(value >= 0 && value <= 1, `affinity 범위 이탈: ${value}`); }
+  const metaMax = Math.min(.2, .04 * Math.log10(1 + 12035));
+  assert(metaMax <= .2, '실측 상한 붕괴');
+  // 무해: 코드·스토리 없는 객체는 0 (다이제스트 부재 환경과 동일 경로).
+  assert.strictEqual(aff({}), 0.192, '스토리 추정 최저선(24점) 기반 기본값이 변했으면 확인 필요');
+});
+
 for (const [name, fn] of tests) {
   try { fn(); console.log(`PASS ${name}`); }
   catch (error) { failed++; console.log(`FAIL ${name}\n  ${error && error.message}`); }

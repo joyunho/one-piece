@@ -61,8 +61,13 @@ test('표시 전용 계약: 앱은 렌더에서만 metaPairs를 호출하고 플
   assert.strictEqual(calls.length, 1, `metaPairs 호출이 렌더 1곳이어야 함: ${calls.length}곳`);
   assert(app.includes('renderV151MetaPairs(state,unit)'), '미리 파티 모달 배선이 사라짐');
   assert(app.includes('v151-meta-pairs'), '실측 동반 전설 스트립 클래스가 사라짐');
+  // v17.17 계약 개정: 플래너도 실측을 "유계 타이브레이크"로만 쓸 수 있다.
+  // 여전히 금지: 동반 목록(metaPairs) 사용, 게이트·임계 비교, 점수 가산.
   const planner = fs.readFileSync(path.join(ext, 'ord_squad_planner.js'), 'utf8');
-  assert(!planner.includes('metaPairs') && !planner.includes('ORD_META_STATS'), '플래너가 실측을 참조하면 안 됨(파티 구성은 원장 기준)');
+  assert(!planner.includes('metaPairs'), '플래너가 동반 실측(metaPairs)을 참조하면 안 됨');
+  assert(planner.includes('usage.softTiebreak!==true)return 0'), '플래너 실측 참조에 softTiebreak 게이트가 없음');
+  assert(!/metaGamesOf\([^)]*\)\s*[<>]=?\s*\d/.test(planner), '실측이 임계 게이트로 쓰이면 안 됨 — 정렬 꼬리 전용');
+  assert((planner.match(/metaGamesOf\(/g) || []).length <= 2, '플래너의 실측 참조 지점이 과다');
 });
 
 test('CSS: 미리 파티 실측 스트립 스타일 존재', () => {
