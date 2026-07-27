@@ -1,8 +1,8 @@
 'use strict';
 
 // v17.3: 종착점 클리어 가치 랭킹 + FSM 트레인 하한 + 1번 패널 재료 즉시 표시.
-//  - 친구 사례(r55 도플라밍고 사망 로그로 실증): 마르코·킬러·흰수염 전설 보유
-//    희귀 8종 패에서 "쉬운" 흰수염 불멸보다 핸콕 영원이 위로 온다.
+//  - v17.19: clearValue는 상위 단독 참고치일 뿐 최종 정렬 권위가 아니다.
+//    역할 투영/전체 파티가 먼저이며, 최단 완성 후보는 비교 앵커로 남는다.
 //  - 최단 완성 후보(현재주의 선택지)는 가치가 낮아도 목록에 남는다(nearestBuild).
 //  - FSM 트레인: RNG 게이트(p<1)만 포함, BD1 재진입은 1/지속시간 상한.
 //  - 1번 패널: 대안 제거, "바로 필요한 조합 재료"와 "부족 최하위 재료 = 선택위습 N".
@@ -50,19 +50,15 @@ function friendModel(){
   return M.build({catalog:units,snapshot:{source:'test',sessionId:'s',seq:1,at:1,dataChangedAt:1,counts,currentAbilities:{},wispCountFound:true,wispCount:12},settings:{mode:'',magicRoute:'auto',currentRound:26,gorosei:'none',postLegendRoute:'upper',superKumaOwned:true,upperResearchLevel:1},locks:[]});
 }
 
-test('친구 사례: 핸콕 영원(C50h)이 흰수염 불멸(A40h)보다 위, 둘 다 목록에 있다',()=>{
+test('최단 완성 후보는 통합 역할 정렬에서도 비교 앵커로 남는다',()=>{
   const rows=E._test.upperRouteCandidates(friendModel(),[]);
   assert(rows.length>0&&rows.length<=6,'후보 1~6개');
-  const idx=id=>rows.findIndex(row=>C.canonicalUpperId(row.id)===C.canonicalUpperId(id));
-  const han=idx('C50h'),white=idx('A40h');
-  assert(han>=0,'핸콕 영원이 후보 목록에 없다');
-  assert(white>=0,'흰수염 불멸(최단 완성 앵커)이 후보 목록에 없다');
-  assert(han<white,`핸콕 영원(${han})이 흰수염 불멸(${white})보다 아래다`);
-  assert(rows[white].nearestBuild===true,'최단 완성 앵커 표시 누락');
-  assert(C.num(rows[white].wispGap)<C.num(rows[han].wispGap),'앵커는 실제로 더 가까워야 한다');
+  const nearest=rows.find(row=>row.nearestBuild===true);
+  assert(nearest,'최단 완성 앵커 표시 누락');
+  assert.strictEqual(C.num(nearest.wispGap),Math.min(...rows.map(row=>C.num(row.wispGap))),'nearestBuild가 실제 최단 후보가 아니다');
 });
 
-test('클리어 가치 부분점수가 모든 후보에 있고 목록은 가치 내림차순이다',()=>{
+test('클리어 가치 부분점수는 남지만 최종 통합 순위를 지배하지 않는다',()=>{
   const rows=E._test.upperRouteCandidates(friendModel(),[]);
   for(const row of rows){
     const value=row.clearValue;
@@ -71,8 +67,7 @@ test('클리어 가치 부분점수가 모든 후보에 있고 목록은 가치 
       assert(typeof value[key]==='number'&&value[key]>=0,`${row.name}.${key} 이상`);
     assert(value.value<=1.2+1e-9,`${row.name} 가치 상한 초과`);
   }
-  for(let i=1;i<rows.length;i+=1)
-    assert(C.num(rows[i].clearValue.value)<=C.num(rows[i-1].clearValue.value)+1e-9,`가치 정렬 위반 @${i}`);
+  assert(rows.some((row,index)=>index>0&&C.num(row.clearValue.value)>C.num(rows[index-1].clearValue.value)+1e-9),'clearValue가 아직 최종 내림차순 권위다');
 });
 
 test('선위→라운드 환산 4/라: 부족 61선위·r26이면 마감 할인 없이 비교된다',()=>{

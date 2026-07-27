@@ -6,7 +6,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='17.18.0';
+const VERSION='17.22.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -125,4 +125,3 @@ function observedEvidence(model){return{snapshot:model.observed.sourceHealth,ass
 
 return{VERSION,HAND_TIERS,build,completionFor,completionScore,withCounts,durableCounts,finalEntries,finalSummary,tierInventory,roleState,observedEvidence,_test:{copyCountsFromSnapshot,applyScenarioPatch,completionDetails,completionDetail,digestText,stablePairs,cloneCounts}};
 });
-

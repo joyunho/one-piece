@@ -131,11 +131,13 @@ function comparableNode(id,vector,complete=true){
   };
 }
 
-test('planner node comparison uses the same four-tier lexicographic order and exact-tie wisp rule',()=>{
+test('planner node comparison spends useful Rare, then protects wisp before lower-tier raw burn',()=>{
   const ranked=Object.entries(BURNS)
     .map(([id,vector])=>comparableNode(id,vector))
     .sort(P._test.nodeCompare);
-  assert.deepStrictEqual(ranked.map(row=>row.id),EXPECTED);
+  assert.deepStrictEqual(ranked.map(row=>row.id),[
+    'rare-first','low-wisp','high-wisp','special-second','uncommon-third','common-fourth'
+  ]);
 });
 
 test('a hard-clear-complete support stays ahead of a higher-burn incomplete support',()=>{
