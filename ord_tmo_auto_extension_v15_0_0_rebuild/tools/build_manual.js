@@ -6,14 +6,16 @@ const path = require('path');
 
 const extensionDir = path.resolve(__dirname, '..');
 const packageDir = path.resolve(extensionDir, '..');
-const outputPath = path.join(packageDir, 'ord_2305_nightmare_helper_v17_16_0_manual.html');
+const outputPath = path.join(packageDir, 'ord_2305_nightmare_helper_v17_18_0_manual.html');
 const staleOutputs = [
   path.join(packageDir, 'ord_2305_nightmare_helper_v14_2_0_manual.html'),
   path.join(packageDir, 'ord_2305_nightmare_helper_v15_1_0_manual.html'),
   path.join(packageDir, 'ord_2305_nightmare_helper_v17_12_1_manual.html'),
   path.join(packageDir, 'ord_2305_nightmare_helper_v17_13_0_manual.html'),
   path.join(packageDir, 'ord_2305_nightmare_helper_v17_14_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_15_0_manual.html')
+  path.join(packageDir, 'ord_2305_nightmare_helper_v17_15_0_manual.html'),
+  path.join(packageDir, 'ord_2305_nightmare_helper_v17_16_0_manual.html'),
+  path.join(packageDir, 'ord_2305_nightmare_helper_v17_17_0_manual.html')
 ];
 const cssPath = path.join(extensionDir, 'ord_app.css');
 const cockpitCssPath = path.join(extensionDir, 'ord_cockpit_v15.css');
@@ -145,9 +147,9 @@ const html = `<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v17.16.0-decision-engine-manual">
+  <meta name="ord-helper" content="v17.18.0-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.305 악몽 수동 도우미">
-  <title>원랜디 2.305 악몽 실전 판단 코치 v17.16.0 · 수동 모드</title>
+  <title>원랜디 2.305 악몽 실전 판단 코치 v17.18.0 · 수동 모드</title>
   <style data-source="ord_app.css">
 ${safeStyle(fs.readFileSync(cssPath, 'utf8'))}
   </style>

@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v17.16.0-decision-engine-manual">
+  <meta name="ord-helper" content="v17.18.0-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.305 악몽 수동 도우미">
-  <title>원랜디 2.305 악몽 실전 판단 코치 v17.16.0 · 수동 모드</title>
+  <title>원랜디 2.305 악몽 실전 판단 코치 v17.18.0 · 수동 모드</title>
   <style data-source="ord_app.css">
 :root{color-scheme:dark;--bg:#060b18;--panel:#0d162a;--panel2:#101d35;--line:#223454;--text:#eef5ff;--muted:#91a2bd;--blue:#4f7cff;--cyan:#25c2e7;--green:#27d17f;--amber:#f3b84b;--red:#ef6262;--violet:#8b67ff;--shadow:0 20px 55px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 10% 0,#122a5a 0,#060b18 35%,#040812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-break:keep-all;overflow-wrap:anywhere}button,input,select{font:inherit}button{cursor:pointer}.ord-app{min-height:100vh;padding:18px;max-width:1860px;margin:0 auto}.ord-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px;border:1px solid rgba(112,154,255,.26);border-radius:24px;background:linear-gradient(135deg,rgba(66,83,222,.34),rgba(17,64,94,.3));box-shadow:var(--shadow)}.ord-kicker{font-size:11px;letter-spacing:.14em;color:#9bb7ff;font-weight:900}.ord-header h1{margin:5px 0 3px;font-size:29px;line-height:1.15}.ord-header p{margin:0;color:var(--muted);font-size:13px}.ord-head-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:720px}.ord-head-status>*{border:1px solid var(--line);border-radius:999px;background:rgba(6,11,24,.7);color:#d9e8ff;padding:8px 12px;font-size:12px;font-weight:800;white-space:nowrap}.ord-head-status .good{border-color:rgba(39,209,127,.45);color:#a8f7ce}.ord-head-status .warn{border-color:rgba(243,184,75,.45);color:#ffe1a1}.ord-head-status button{background:#1b2b4d}.ord-tabs{display:flex;gap:8px;margin:14px 0}.ord-tabs button,.purpose-buttons button,.two-button button,.round-box button,.action-buttons button,.prep-list button,.mini-cards button,.ghost,.primary{border:1px solid var(--line);border-radius:11px;background:#111d32;color:#dce9ff;padding:9px 13px;font-weight:850}.ord-tabs button.on,.purpose-buttons button.on,.primary{border-color:transparent;background:linear-gradient(135deg,var(--violet),var(--blue));color:white}.ord-layout{display:grid;grid-template-columns:294px minmax(0,1fr);gap:14px;align-items:start}.ord-side{display:grid;gap:12px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;padding-right:3px;min-width:0}.side-card,.ord-panel{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(15,26,48,.96),rgba(9,16,31,.96));box-shadow:0 14px 38px rgba(0,0,0,.18);min-width:0}.side-card{padding:14px}.side-card b{font-size:14px}.side-title{display:flex;justify-content:space-between;gap:8px}.side-title span{font-size:11px;color:var(--cyan)}.side-card label{display:grid;gap:5px;color:var(--muted);font-size:11px;margin-top:11px}.side-card input,.side-card select,.form-grid input{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#071020;color:var(--text);padding:9px}.side-card small{display:block;color:var(--muted);font-size:10.5px;line-height:1.45;margin-top:6px}.round-box{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding:10px;border:1px solid rgba(37,194,231,.3);border-radius:13px;background:rgba(10,39,62,.35)}.round-box strong{font-size:13px;min-width:0}.round-box div{display:flex;gap:4px}.round-box button{padding:6px 8px;font-size:11px}.side-card details{margin-top:10px}.side-card summary,.detail-modal summary{cursor:pointer;color:#cbd9ef;font-size:11px;font-weight:800}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.two-button{display:flex;gap:6px;margin-top:10px}.two-button button{flex:1;font-size:11px;padding:8px}.two-button .on{border-color:var(--green);color:#c5ffe0;background:rgba(39,209,127,.1)}.two-button .danger.on{border-color:var(--red);color:#ffc1c1;background:rgba(239,98,98,.1)}.stat-row{display:flex;justify-content:space-between;align-items:center}.stat-row b{font-size:24px;color:#ffe7a3}.lock-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.lock-list>span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(139,103,255,.35);border-radius:999px;padding:5px 8px;background:rgba(139,103,255,.1);font-size:10px}.lock-list button{border:0;background:none;color:#ffaaaa;font-weight:900}.side-card.compact{padding-bottom:10px}.common-line{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;margin-top:7px;font-size:11px}.common-line i{width:8px;height:8px;border-radius:50%}.common-line b{font-size:11px}.ord-main{display:grid;gap:13px;min-width:0}.milestone{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 19px;border:1px solid rgba(37,194,231,.4);border-radius:21px;background:linear-gradient(135deg,rgba(6,47,78,.78),rgba(31,25,87,.56));min-width:0}.milestone small{color:#61daf5;font-weight:900}.milestone h2{margin:3px 0 5px;font-size:24px}.milestone p{margin:0;color:#abc0df;font-size:12px}.purpose-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.purpose-buttons button{font-size:11px}.top-two{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:13px}.ord-panel{padding:17px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px}.panel-head small{color:#72d8ef;font-size:10px;font-weight:900}.panel-head h2{margin:2px 0 4px;font-size:20px}.panel-head p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.45}.count-pill,.mode-pill,.control-badge{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;white-space:nowrap}.mode-pill.physical{color:#ffcb9a;border-color:#e48e45}.mode-pill.magic{color:#a9c9ff;border-color:#5c84d8}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.profile-grid>div,.spec-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px;min-width:0}.profile-grid small,.spec-grid small{display:block;color:var(--muted);font-size:10px}.profile-grid b{display:block;margin-top:5px;font-size:12px;line-height:1.45}.synergy-line{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.synergy-line small{width:100%;color:var(--muted)}.synergy-line span{border:1px solid rgba(39,209,127,.3);border-radius:999px;padding:5px 8px;font-size:10px;color:#b8f7d5}.upper-focus details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.upper-focus details p{color:#aebbd0;font-size:11px}.control-badge.safe{color:#a9f7cc;border-color:rgba(39,209,127,.45)}.control-badge.edge{color:#ffe2a4;border-color:rgba(243,184,75,.45)}.control-badge.danger{color:#ffb4b4;border-color:rgba(239,98,98,.45)}.spec-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.spec-grid b{display:block;font-size:21px;margin:4px 0}.spec-grid span{color:#8193ae;font-size:9.5px}.deficit-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}.deficit-line>b{font-size:11px}.deficit-line span{border:1px solid rgba(243,184,75,.32);border-radius:999px;padding:5px 8px;color:#ffd78d;font-size:10px}.deficit-line .ok{color:#a9f7cc;border-color:rgba(39,209,127,.3)}.state-intro{display:flex;justify-content:space-between;gap:15px;align-items:center}.state-intro h2{margin:4px 0}.state-intro p{color:var(--muted);margin:0;font-size:12px}.control{min-width:260px;border:1px solid var(--line);border-radius:15px;padding:12px}.control b,.control span{display:block}.control span{font-size:10px;color:var(--muted);margin-top:4px}.control.safe{border-color:rgba(39,209,127,.35)}.control.edge{border-color:rgba(243,184,75,.35)}.control.danger{border-color:rgba(239,98,98,.35)}.mini-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mini-cards article{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.mini-cards img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mini-cards b,.mini-cards span,.mini-cards small{display:block;min-width:0}.mini-cards b{font-size:12px}.mini-cards span{font-size:10px;color:#9fb1ca}.mini-cards small{font-size:9px;color:#7085a4}.mini-cards button{padding:7px;font-size:10px}.action-list{display:grid;gap:8px}.action-row{display:grid;grid-template-columns:42px 48px minmax(0,1fr) 124px auto;gap:11px;align-items:center;border:1px solid rgba(55,84,132,.8);border-radius:16px;padding:11px;background:linear-gradient(90deg,rgba(12,27,50,.95),rgba(8,17,33,.95));min-width:0}.action-row .rank{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));font-weight:950}.action-row>img{width:46px;height:46px;border-radius:12px;object-fit:cover}.action-main{min-width:0}.unit-title{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.unit-title b{font-size:14px}.unit-title span{font-size:10px;color:#8da1bd}.role-tags{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.role-tags>span,.role-tags i{border:1px solid #284266;border-radius:999px;padding:4px 7px;font-size:9.5px;font-style:normal;color:#bcd3f2}.role-tags i{border-color:color-mix(in srgb,var(--pc) 60%,#223454);box-shadow:inset 3px 0 var(--pc)}.action-main p{margin:0;color:#91a6c2;font-size:10.5px}.action-cost{border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}.action-cost b{display:block;font-size:22px;color:#ffe1a1}.action-cost small{display:block;color:#7f91ab;font-size:9px}.action-cost span{display:block;margin-top:4px;font-size:9px}.action-cost .good{color:#9ff1c5}.action-cost .warn{color:#ffd083}.action-cost .bad{color:#ffaaaa}.action-buttons{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.action-buttons button{font-size:10px;padding:8px}.empty{padding:20px;border:1px dashed #2c4266;border-radius:14px;text-align:center;color:#8193ad}.prep-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prep-list>div{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.prep-list img{width:38px;height:38px;border-radius:10px;object-fit:cover}.prep-list b,.prep-list small{display:block}.prep-list b{font-size:12px}.prep-list small{color:#8195b2;font-size:9.5px}.prep-list em{font-style:normal;color:#ffd587;font-size:9.5px}.prep-list button{font-size:9px;padding:6px}.rare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rare-columns>div{border:1px solid var(--line);border-radius:14px;padding:11px}.rare-columns h3{margin:0 0 8px;font-size:12px}.rare-columns .use{border-color:rgba(39,209,127,.3)}.rare-columns .hold{border-color:rgba(243,184,75,.3)}.rare-columns .reroll{border-color:rgba(239,98,98,.3)}.rare-columns>div>div{display:grid;grid-template-columns:28px 1fr auto;gap:7px;align-items:center;margin-top:6px;font-size:10px}.rare-columns img{width:28px;height:28px;border-radius:8px}.rare-panel>small{display:block;margin-top:9px;color:#7f91aa;font-size:9.5px}.owned-chips{display:flex;gap:7px;flex-wrap:wrap}.owned-chips button{display:flex;align-items:center;gap:7px;max-width:260px;border:1px solid var(--line);border-radius:12px;background:#091326;color:#dceaff;padding:7px 9px}.owned-chips img{width:30px;height:30px;border-radius:8px}.owned-chips span{font-size:10px;text-align:left}.deck-page,.data-page{display:grid;gap:13px}.raw-ability-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.raw-ability-grid>div{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px;background:#091326;font-size:10px}.raw-ability-grid b{color:#d9ecff}.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.owned-grid button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#091326;color:#e3efff;padding:9px;text-align:left}.owned-grid img{width:36px;height:36px;border-radius:9px}.owned-grid span,.owned-grid small{display:block}.owned-grid span{font-size:11px}.owned-grid small{font-size:9px;color:#8296b4}.owned-grid.small button{grid-template-columns:32px 1fr auto}.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.diag-grid>div{border:1px solid var(--line);border-radius:12px;padding:10px;background:#091326}.diag-grid small,.diag-grid b{display:block}.diag-grid small{color:#8395b0;font-size:9px}.diag-grid b{font-size:11px;margin-top:4px}.data-page pre{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#050b16;padding:11px;color:#9fb5d0;font-size:10px}.manual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.manual-grid label{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;font-size:10px}.manual-grid input{width:100%;border:1px solid var(--line);border-radius:8px;background:#050b16;color:white;padding:7px}.modal-back{position:fixed;inset:0;z-index:9999;background:rgba(1,4,12,.8);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px}.detail-modal{width:min(900px,96vw);max-height:92vh;overflow:auto;border:1px solid #30486f;border-radius:24px;background:#081121;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.65);position:relative}.modal-x{position:absolute;right:15px;top:15px;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#111d31;color:white;font-size:20px}.detail-modal header{display:flex;gap:12px;align-items:center;padding-right:50px}.detail-modal header img{width:54px;height:54px;border-radius:14px}.detail-modal h2{margin:0;font-size:19px}.detail-modal header p{margin:4px 0 0;color:#8ea4c1;font-size:10px}.detail-hero{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:15px 0}.detail-hero>div,.missing-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px}.detail-hero small,.detail-hero b,.detail-hero span{display:block}.detail-hero small{color:#8296b4;font-size:9px}.detail-hero b{margin:4px 0;font-size:16px}.detail-hero span{font-size:10px;color:#a9bad0}.detail-modal section{margin-top:14px}.detail-modal h3{font-size:12px}.direct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.direct-grid>div{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:10px}.missing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.missing-grid small,.missing-grid b{display:block}.missing-grid small{color:#8296b4;font-size:9px}.missing-grid b{font-size:10px;line-height:1.55;margin-top:5px}.detail-modal details{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px}.detail-modal details p{font-size:10px;color:#9cb0cb}.detail-modal .close{margin-top:14px}.ord-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;border-radius:14px;padding:11px 16px;background:linear-gradient(135deg,var(--violet),var(--blue));box-shadow:var(--shadow);font-weight:900;font-size:12px}
@@ -1416,7 +1416,7 @@ window.ORD_META_STATS={"schema":"ord-meta-stats-v1","source":"tmo_api_histories_
 (function(global){
 'use strict';
 
-const VERSION='17.16.0';
+const VERSION='17.18.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -2564,7 +2564,7 @@ function gameFlow(state,locks,settings){
 }
 // 구버전 호출 호환용입니다. 실제 추천은 보유·락 상태를 보는 gameFlow를 사용합니다.
 function milestonePurpose(round,hasUpper,hasLockedUpper){if(hasUpper||hasLockedUpper)return'spec';if(num(round)<=7)return'rare';if(num(round)<=20)return'story';return'upper';}
-function phaseForRound(round){round=num(round)||1;if(round<=7)return{key:'rare',label:'첫 희귀 + 선택 위습',note:'7라운드 안에 첫 희귀를 완성합니다.'};if(round<=20)return{key:'story',label:'첫 전설·히든',note:'첫 전설 또는 히든을 늦어도 20라 전에 완성합니다.'};if(round<=25)return{key:'route',label:'상위·딜 계통 결정',note:'희귀 8장 전후의 전체 패로 상위와 물딜·마딜을 결정합니다.'};if(round<=30)return{key:'upper',label:'상위 + 라인 전설',note:'상위 하나와 희귀보다 강한 라인 방어 전설을 마련합니다.'};if(round<=50)return{key:'spec',label:'50라 전 9환산 보강',note:'상위 결손을 채우며 실제 전설 환산 9기를 보수적 구조 최소선으로 맞춥니다.'};return{key:'finish',label:'최종 9기+ 마감',note:'전설·히든, 해적선, 희귀 2기, 변화됨 중 최저비용 경로로 마지막 스펙을 채웁니다.'};}
+function phaseForRound(round){round=num(round)||1;if(round<=7)return{key:'rare',label:'첫 희귀 + 선택 위습',note:'7라운드 안에 첫 희귀를 완성합니다.'};if(round<=20)return{key:'story',label:'첫 전설·히든',note:'첫 전설 또는 히든을 늦어도 20라 전에 완성합니다.'};if(round<=25)return{key:'route',label:'상위·딜 계통 결정',note:'스토리 보상 희귀·고급도박 유입이 끝난 전체 패(희귀 8장 전후)로 상위와 물딜·마딜을 결정합니다. 유입 전에는 선택 위습 소비를 아끼세요.'};if(round<=30)return{key:'upper',label:'상위 + 라인 전설',note:'상위 하나와 희귀보다 강한 라인 방어 전설을 마련합니다.'};if(round<=50)return{key:'spec',label:'50라 전 9환산 보강',note:'상위 결손을 채우며 실제 전설 환산 9기를 보수적 구조 최소선으로 맞춥니다. 패 불리기는 흔함·안흔이 나오는 하급도박이 효율적입니다.'};return{key:'finish',label:'최종 9기+ 마감',note:'전설·히든, 해적선, 희귀 2기, 변화됨 중 최저비용 경로로 마지막 스펙을 채웁니다.'};}
 function roundDuration(round,settings){return BOSS_ROUNDS.has(round)?num(settings.roundBossSeconds)||60:num(settings.roundNormalSeconds)||35;}
 function roundClock(settings,now){
   const s=settings||{},started=num(s.roundStartedAt),prep=num(s.roundPrepSeconds)||10,round=Math.max(1,num(s.currentRound)||1);if(!started)return{running:false,round,label:`${round}라 · 수동`,remaining:0,prep:false};let elapsed=Math.max(0,Math.floor(((now||Date.now())-started)/1000));if(elapsed<prep)return{running:true,round:0,label:'준비',remaining:prep-elapsed,prep:true};elapsed-=prep;let r=1;while(elapsed>=roundDuration(r,s)&&r<80){elapsed-=roundDuration(r,s);r++;}return{running:true,round:r,label:`${r}라${BOSS_ROUNDS.has(r)?' · 보스':''}`,remaining:Math.max(0,roundDuration(r,s)-elapsed),prep:false};
@@ -2655,13 +2655,63 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='17.16.0';
+const VERSION='17.18.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
 const SLOW_OVERSUPPLY_PENALTY=4;
 const SIDE_STUN_PENALTY=100;
 const SIDE_SLOW_PENALTY=.9;
+// v17.17(사용자 요청): "클리어에 더 도움되는" 파티 — 유계 타이브레이크.
+// clearAffinity = 스토리 실측 점수(0~1)×0.8 + 상위권 실측 픽 log 스케일(상한 0.2).
+// 사전식 비교의 최말단(기존 id 사전순 자리)에서만 쓰여, 필수 요구·비용·패
+// 소모가 같은 후보끼리의 순서만 바꾼다. 게이트·필터·점수 가산에는 절대
+// 쓰지 않으며(usage.gate=false), 다이제스트가 없으면 0으로 조용히 무해하다.
+const META_STATS=(typeof window!=='undefined'&&window.ORD_META_STATS)||(typeof globalThis!=='undefined'&&globalThis.ORD_META_STATS)||null;
+function metaGamesOf(unit){
+  if(!META_STATS||!META_STATS.usage||META_STATS.usage.softTiebreak!==true)return 0;
+  const byCode=META_STATS.byCode||{};let best=0;
+  for(const code of unit&&unit.codes||[]){const entry=byCode[String(code).toLowerCase()];if(entry&&num(entry.games)>best)best=num(entry.games);}
+  return best;
+}
+// v17.18(사용자 교정): 최종 파티에서 스토리 랭크는 중요치 않다 — 스토리
+// 성분을 제거하고, 기준 상위와의 실측 동반(upperPairs: 그 상위와 함께
+// 클리어한 판 수)을 주성분(상한 0.8), 전체 실측 픽을 보조(상한 0.2)로
+// 쓴다. 상위 유닛 자신은 동반 목록에 없으므로 자동으로 개별 평가(전체
+// 실측 픽)만 받는다. 컨텍스트(기준 상위)는 planFinalSquad 진입 시마다
+// 재설정되며, 없으면 동반 성분 0으로 무해하다.
+let AFFINITY_CONTEXT=null;
+let AFFINITY_MEMO=new Map();
+function setAffinityContext(upperUnits){
+  AFFINITY_MEMO=new Map();
+  AFFINITY_CONTEXT=null;
+  if(!META_STATS||!META_STATS.usage||META_STATS.usage.softTiebreak!==true)return;
+  const pairGames=new Map();
+  for(const upper of upperUnits||[]){
+    for(const code of upper&&upper.codes||[]){
+      const list=(META_STATS.upperPairs||{})[String(code).toLowerCase()]||[];
+      for(const entry of list){const key=String(entry[0]).toLowerCase(),games=num(entry[1]);if(games>num(pairGames.get(key)))pairGames.set(key,games);}
+    }
+  }
+  if(pairGames.size)AFFINITY_CONTEXT={pairGames};
+}
+function pairGamesOf(unit){
+  if(!AFFINITY_CONTEXT)return 0;
+  let best=0;
+  for(const code of unit&&unit.codes||[]){const games=num(AFFINITY_CONTEXT.pairGames.get(String(code).toLowerCase()));if(games>best)best=games;}
+  return best;
+}
+function clearAffinity(unit){
+  if(!unit||typeof unit!=='object')return 0;
+  const memoKey=String(unit.id||'');
+  if(memoKey&&AFFINITY_MEMO.has(memoKey))return AFFINITY_MEMO.get(memoKey);
+  const pair=Math.min(.8,.16*Math.log10(1+pairGamesOf(unit)));
+  const pick=Math.min(.2,.04*Math.log10(1+metaGamesOf(unit)));
+  const value=Math.round((pair+pick)*10000)/10000;
+  if(memoKey)AFFINITY_MEMO.set(memoKey,value);
+  return value;
+}
+function compareAffinity(a,b){const av=clearAffinity(a),bv=clearAffinity(b);return av===bv?0:bv-av;}
 const OVERLAP_HEURISTIC_WEIGHT=.08;
 const RECIPE_PROFILE_CACHE=new WeakMap();
 const PAIR_OVERLAP_CACHE=new WeakMap();
@@ -2890,7 +2940,7 @@ function checkpointDebtVector(stage,mode,route,dueRound){
   for(const group of groups){const selected=group.filter(key=>keys.has(key)).map(key=>byKey.get(key)||{key,target:1,gap:Infinity});if(!selected.length)continue;const missed=selected.filter(row=>num(row.gap)>0).length,debt=selected.reduce((total,row)=>total+num(row.gap)/Math.max(.01,num(row.target)||1),0);vector.push(missed,round(debt,6));}return vector;
 }
 function exactPrefixMetrics(state,node,mode,route,settings,fixed){
-  const roundNow=Math.max(1,num(settings&&settings.currentRound)||25),stage=exactPrefixStage(state,node,mode,route,settings,fixed),rareRemaining=state.db.rares.reduce((total,unit)=>total+Math.max(0,num(node.counts[unit.id])),0),checkpoint=exactPrefixCheckpoint(roundNow,stage,mode,route,rareRemaining),used=node.used||consumptionTotals(node.actions||[],state),lineUnits=finalEntries(state,node.counts),storyProxy=lineUnits.reduce((total,unit)=>total+num(C.storyGrade&&C.storyGrade(unit).score),0),fixedMissing=(fixed||[]).filter(id=>{const unit=state.db.byId.get(id);return unit&&!lineUnits.some(owned=>lineupKey(owned)===lineupKey(unit));}).length,vector=[],gateVector=[],checkpointDebts=checkpoint.dueRound===30?[]:checkpointDebtVector(stage,mode,route,checkpoint.dueRound),checkpointMisses=checkpointDebts.filter((value,index)=>index%2===0),strategyMisses=(stage.damageCore&&stage.damageCore.rows||[]).filter(row=>row&&row.upperId).map(row=>row.pass?0:1),equivalentGap=Math.max(0,checkpoint.equivalent-stage.legendEquivalent);
+  const roundNow=Math.max(1,num(settings&&settings.currentRound)||25),stage=exactPrefixStage(state,node,mode,route,settings,fixed),rareRemaining=state.db.rares.reduce((total,unit)=>total+Math.max(0,num(node.counts[unit.id])),0),checkpoint=exactPrefixCheckpoint(roundNow,stage,mode,route,rareRemaining),used=node.used||consumptionTotals(node.actions||[],state),lineUnits=finalEntries(state,node.counts),storyProxy=Math.round(lineUnits.reduce((total,unit)=>total+clearAffinity(unit),0)*10000)/10000,fixedMissing=(fixed||[]).filter(id=>{const unit=state.db.byId.get(id);return unit&&!lineUnits.some(owned=>lineupKey(owned)===lineupKey(unit));}).length,vector=[],gateVector=[],checkpointDebts=checkpoint.dueRound===30?[]:checkpointDebtVector(stage,mode,route,checkpoint.dueRound),checkpointMisses=checkpointDebts.filter((value,index)=>index%2===0),strategyMisses=(stage.damageCore&&stage.damageCore.rows||[]).filter(row=>row&&row.upperId).map(row=>row.pass?0:1),equivalentGap=Math.max(0,checkpoint.equivalent-stage.legendEquivalent);
   if(checkpoint.key==='r30'){vector.push(fixedMissing,Math.max(0,1-stage.upperCount),Math.max(0,1-stage.nonUpperFinalCount),equivalentGap);gateVector.push(...vector);}
   else if(checkpoint.key==='r40'){vector.push(fixedMissing,...checkpointDebts,equivalentGap);gateVector.push(fixedMissing,...checkpointMisses,equivalentGap);}
   else if(checkpoint.key==='r45'){vector.push(fixedMissing,...checkpointDebts,equivalentGap,rareRemaining);gateVector.push(fixedMissing,...checkpointMisses,equivalentGap,rareRemaining);}
@@ -3117,7 +3167,7 @@ function incrementalSlowPenalty(requirements,vector){
 }
 
 function solveHandFit(state,stock,solve,policy){const pressure=commonPressure(solve,stock,policy),used=consumptionTotals([{solve,commonPressure:pressure}],state);return{pressure,fit:handFitMetrics(state,stock,solve.stockAfter,used),used};}
-function compareStaticHandRows(a,b){const tierOrder=compareTierBurn(a&&a.handFit,b&&b.handFit);if(tierOrder)return tierOrder;const aw=num(a&&a.solve&&a.solve.wispCost),bw=num(b&&b.solve&&b.solve.wispCost);if(aw!==bw)return aw-bw;return num(b&&b.score)-num(a&&a.score)||compareText(a&&a.unit&&a.unit.id,b&&b.unit&&b.unit.id);}
+function compareStaticHandRows(a,b){const tierOrder=compareTierBurn(a&&a.handFit,b&&b.handFit);if(tierOrder)return tierOrder;const aw=num(a&&a.solve&&a.solve.wispCost),bw=num(b&&b.solve&&b.solve.wispCost);if(aw!==bw)return aw-bw;return num(b&&b.score)-num(a&&a.score)||compareAffinity(a&&a.unit,b&&b.unit)||compareText(a&&a.unit&&a.unit.id,b&&b.unit&&b.unit.id);}
 
 function buildStaticRows(state,mode,route,settings,policy,fixed,initialReq){
   const all=state.db.legendish.concat(state.db.uppers).filter(u=>allowedCandidate(u,mode,route,settings,state,state.counts)),rows=[];
@@ -3125,7 +3175,7 @@ function buildStaticRows(state,mode,route,settings,policy,fixed,initialReq){
     const potential=staticPotential(vector,initialReq),resourceScore=num(hand.fit.metrics.score)-(blocked?120:0),score=mandatory+blueprintBonus+potential+resourceScore+(C.isUpper(u)&&initialReq.rows.find(x=>x.key==='main'&&x.gap>0)?90:0);
     rows.push({unit:u,solve,vector,pressure,handFit:hand.fit,score:round(score),resourceScore:round(resourceScore),mandatory,blueprintBonus,blocked,prerequisite});
   }
-  rows.sort((a,b)=>b.score-a.score||a.solve.wispCost-b.solve.wispCost||compareText(nameOf(a.unit),nameOf(b.unit))||compareText(a.unit.id,b.unit.id));
+  rows.sort((a,b)=>b.score-a.score||a.solve.wispCost-b.solve.wispCost||compareAffinity(a.unit,b.unit)||compareText(nameOf(a.unit),nameOf(b.unit))||compareText(a.unit.id,b.unit.id));
   const chosen=[],seen=new Set(),push=row=>{if(row&&!seen.has(row.unit.id)){seen.add(row.unit.id);chosen.push(row);}};
   for(const id of fixed)push(rows.find(x=>x.unit.id===id));
   // 탐색 폭 때문에 패 소모 최상 후보가 후보군 밖으로 밀리지 않도록
@@ -3143,7 +3193,7 @@ function buildStaticRows(state,mode,route,settings,policy,fixed,initialReq){
       const aw=C.requiresWarpedCraft&&C.requiresWarpedCraft(state.db,a.unit,state.counts)?1:0,bw=C.requiresWarpedCraft&&C.requiresWarpedCraft(state.db,b.unit,state.counts)?1:0;if(aw!==bw)return aw-bw;
       const useful=row=>Math.min(num(req.gap),num(row.vector[req.key])),au=useful(a),bu=useful(b);if(au!==bu)return bu-au;
       const ac=num(a.vector.stun)+num(a.vector.slow)/102,bc=num(b.vector.stun)+num(b.vector.slow)/102;if(ac!==bc)return ac-bc;
-      return num(b.resourceScore)-num(a.resourceScore)||compareText(a.unit.id,b.unit.id);
+      return num(b.resourceScore)-num(a.resourceScore)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id);
     });
     for(const row of lean.slice(0,4))push(row);
   }
@@ -3154,10 +3204,10 @@ function buildStaticRows(state,mode,route,settings,policy,fixed,initialReq){
   // Keep low-stun role alternatives inside the bounded beam. Otherwise an
   // early 0.5-stun gap can fill the entire shortlist with stunners, leaving no
   // sensible damage/buffer/armor candidates for slots 6~9 after 1.5 is met.
-  const lowStun=rows.filter(x=>!C.isUpper(x.unit)&&num(x.vector.stun)<=.05).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||num(b.resourceScore)-num(a.resourceScore)||compareText(a.unit.id,b.unit.id));for(const row of lowStun.slice(0,9))push(row);
-  const lightStun=rows.filter(x=>!C.isUpper(x.unit)&&num(x.vector.stun)>.05&&num(x.vector.stun)<=.35).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||num(b.resourceScore)-num(a.resourceScore)||compareText(a.unit.id,b.unit.id));for(const row of lightStun.slice(0,4))push(row);
-  const targetStun=rows.filter(x=>!C.isUpper(x.unit)&&num(x.vector.stun)>.35&&num(x.vector.stun)<=.8).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||Math.abs(num(a.vector.stun)-.5)-Math.abs(num(b.vector.stun)-.5)||compareText(a.unit.id,b.unit.id));for(const row of targetStun.slice(0,5))push(row);
-  const combinedRole=rows.filter(x=>!C.isUpper(x.unit)).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||num(b.resourceScore)-num(a.resourceScore)||compareText(a.unit.id,b.unit.id));for(const row of combinedRole.slice(0,12))push(row);
+  const lowStun=rows.filter(x=>!C.isUpper(x.unit)&&num(x.vector.stun)<=.05).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||num(b.resourceScore)-num(a.resourceScore)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id));for(const row of lowStun.slice(0,9))push(row);
+  const lightStun=rows.filter(x=>!C.isUpper(x.unit)&&num(x.vector.stun)>.05&&num(x.vector.stun)<=.35).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||num(b.resourceScore)-num(a.resourceScore)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id));for(const row of lightStun.slice(0,4))push(row);
+  const targetStun=rows.filter(x=>!C.isUpper(x.unit)&&num(x.vector.stun)>.35&&num(x.vector.stun)<=.8).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||Math.abs(num(a.vector.stun)-.5)-Math.abs(num(b.vector.stun)-.5)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id));for(const row of targetStun.slice(0,5))push(row);
+  const combinedRole=rows.filter(x=>!C.isUpper(x.unit)).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||num(b.resourceScore)-num(a.resourceScore)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id));for(const row of combinedRole.slice(0,12))push(row);
   for(const row of rows.filter(x=>!C.isUpper(x.unit)).slice(0,10))push(row);
   for(const row of rows.filter(x=>C.isUpper(x.unit)).slice(0,5))push(row);
   for(const row of rows.slice().sort(compareStaticHandRows).slice(0,7))push(row);
@@ -3324,7 +3374,7 @@ function searchRoute(state,mode,route,settings,policy,fixed){
   const staticData=buildStaticRows(state,mode,route,settings,policy,fixed,initial.requirements),maxDepth=Math.min(DEFAULTS.maxDepth,Math.max(3,target-initial.projectedCount+4));let beam=[initial],archive=[initial];
   for(let depth=0;depth<maxDepth;depth++){
     const children=[];
-    for(const node of beam){if(node.complete)continue;const ranked=staticData.shortlist.filter(row=>!num(node.counts[row.unit.id])&&!ruleBlocked(state,node,row.unit,mode,route,settings,fixed)).map(row=>({row,rank:quickRank(state,row,node,fixed,policy)})).filter(item=>Number.isFinite(item.rank)).sort((a,b)=>b.rank-a.rank||compareText(a.row.unit.id,b.row.unit.id)).map(item=>item.row),branches=diverseBranchRows(ranked,node.requirements,DEFAULTS.branchWidth);
+    for(const node of beam){if(node.complete)continue;const ranked=staticData.shortlist.filter(row=>!num(node.counts[row.unit.id])&&!ruleBlocked(state,node,row.unit,mode,route,settings,fixed)).map(row=>({row,rank:quickRank(state,row,node,fixed,policy)})).filter(item=>Number.isFinite(item.rank)).sort((a,b)=>b.rank-a.rank||compareAffinity(a.row.unit,b.row.unit)||compareText(a.row.unit.id,b.row.unit.id)).map(item=>item.row),branches=diverseBranchRows(ranked,node.requirements,DEFAULTS.branchWidth);
       for(const row of branches){const next=expandNode(state,node,row,mode,route,settings,fixed,target,policy);if(!next)continue;next.target=target;children.push(next);}
     }
     if(!children.length)break;const dedup=new Map();for(const node of children){const key=nodeSignature(node,state),old=dedup.get(key);if(!old||nodeCompare(node,old)<0)dedup.set(key,node);}beam=boundedBeam([...dedup.values()],DEFAULTS.beamWidth);archive.push(...beam);if(beam.every(x=>x.complete))break;
@@ -3406,7 +3456,7 @@ function searchRouteLight(state,mode,route,settings,policy,fixed,staticData){
   const target=settings.targetSquadCount,liveSpec=C.currentSpec(state,mode,Object.assign({},settings,{_upperUnit:mainUpperFor(state,state.counts,fixed)})),baseSpec=finalOnlySpec(state,state.counts,mode),initial=evaluateNode(state,{counts:clone(state.counts),wisp:num(state.counts[C.WISP_ID]),spec:baseSpec,actions:[]},mode,route,settings,fixed,target);initial.target=target;
   const data=staticData||makeLightStaticData(state,mode,route,settings,policy),rowById=new Map(data.rows.map(row=>[row.unit.id,row])),lightRows=[],lightSeen=new Set(),push=row=>{if(row&&!lightSeen.has(row.unit.id)){lightSeen.add(row.unit.id);lightRows.push(row);}};for(const id of fixed)push(rowById.get(id));for(const row of data.shortlist)push(row);const maxDepth=Math.min(11,Math.max(3,target-initial.projectedCount+2));let beam=[initial],archive=[initial];
   for(let depth=0;depth<maxDepth;depth++){
-    const children=[];for(const node of beam){if(node.complete)continue;const ranked=lightRows.filter(row=>!num(node.counts[row.unit.id])&&!ruleBlocked(state,node,row.unit,mode,route,settings,fixed)).map(row=>({row,rank:quickRank(state,row,node,fixed,policy)})).filter(item=>Number.isFinite(item.rank)).sort((a,b)=>b.rank-a.rank||compareText(a.row.unit.id,b.row.unit.id)).map(item=>item.row),branches=diverseBranchRows(ranked,node.requirements,2).slice(0,5);for(const row of branches){const next=expandNode(state,node,row,mode,route,settings,fixed,target,policy);if(!next)continue;next.target=target;children.push(next);}}
+    const children=[];for(const node of beam){if(node.complete)continue;const ranked=lightRows.filter(row=>!num(node.counts[row.unit.id])&&!ruleBlocked(state,node,row.unit,mode,route,settings,fixed)).map(row=>({row,rank:quickRank(state,row,node,fixed,policy)})).filter(item=>Number.isFinite(item.rank)).sort((a,b)=>b.rank-a.rank||compareAffinity(a.row.unit,b.row.unit)||compareText(a.row.unit.id,b.row.unit.id)).map(item=>item.row),branches=diverseBranchRows(ranked,node.requirements,2).slice(0,5);for(const row of branches){const next=expandNode(state,node,row,mode,route,settings,fixed,target,policy);if(!next)continue;next.target=target;children.push(next);}}
     if(!children.length)break;const dedup=new Map();for(const node of children){const key=nodeSignature(node,state),old=dedup.get(key);if(!old||nodeCompare(node,old)<0)dedup.set(key,node);}beam=boundedBeam([...dedup.values()],2);archive.push(...beam);if(beam.every(x=>x.complete))break;
   }
   archive.sort(nodeCompare);return{best:archive[0],alternates:archive.filter(x=>nodeSignature(x,state)!==nodeSignature(archive[0],state)).slice(0,2),staticData:data,route,liveSpec,light:true};
@@ -3726,7 +3776,7 @@ function compareRoutePlans(a,b){
   const aw=num(a.handFit&&a.handFit.wisp&&a.handFit.wisp.required),bw=num(b.handFit&&b.handFit.wisp&&b.handFit.wisp.required);if(aw!==bw)return aw<bw?a:b;
   const handOrder=compareHandFit(a.handFit&&a.handFit.metrics,b.handFit&&b.handFit.metrics);if(handOrder)return handOrder<0?a:b;
   if(num(a.materialOverlap&&a.materialOverlap.penalty)!==num(b.materialOverlap&&b.materialOverlap.penalty))return num(a.materialOverlap&&a.materialOverlap.penalty)<num(b.materialOverlap&&b.materialOverlap.penalty)?a:b;
-  const ae=excessStun(ap.spec),be=excessStun(bp.spec);if(ae!==be)return ae<be?a:b;return a.score>=b.score?a:b;
+  const ae=excessStun(ap.spec),be=excessStun(bp.spec);if(ae!==be)return ae<be?a:b;const asp=num(ax.storyProxy),bsp=num(bx.storyProxy);if(asp!==bsp)return asp>bsp?a:b;return a.score>=b.score?a:b;
 }
 
 function finishPlanOne(input,state,settings,policy,route,fixed,searched,blueprintAttempt){
@@ -3871,11 +3921,11 @@ function rankDeckDirections(input,options){
 }
 
 function planFinalSquad(input){
-  input=input||{};const started=Date.now(),baseSettings=normalizeSettings(input),base=makeState(input,baseSettings),policy=normalizeCommonPolicy(input,base),state=makePlanningState(base,policy),blueprint=normalizeBlueprint(input,baseSettings,state),settings=settingsWithBlueprint(baseSettings,state,blueprint),fixed=fixedUpperIds(state,input.locks||[],settings,blueprint),result=choosePreparedPlan(input,state,settings,policy,fixed,blueprint);
+  input=input||{};const started=Date.now(),baseSettings=normalizeSettings(input),base=makeState(input,baseSettings),policy=normalizeCommonPolicy(input,base),state=makePlanningState(base,policy),blueprint=normalizeBlueprint(input,baseSettings,state),settings=settingsWithBlueprint(baseSettings,state,blueprint),fixed=fixedUpperIds(state,input.locks||[],settings,blueprint),result=choosePreparedPlan(input,state,settings,policy,fixed,blueprint);setAffinityContext([settings.upperPreviewId&&state.db.byId.get(settings.upperPreviewId)].concat((fixed||[]).map(id=>state.db.byId.get(id))).filter(Boolean));
   result.blueprint=blueprintMetadata(state,blueprint,result);delete result._search;delete result._blueprintAttempt;result.reservedCommons=Object.entries(policy.reserved).map(([id,count])=>({id,name:displayNameOf(state.db.byId.get(id)),count}));result.elapsedMs=Date.now()-started;return result;
 }
 
-return{VERSION,planFinalSquad,rankUpperBlueprints,rankDeckDirections,_test:{normalizeSettings,normalizeCommonPolicy,normalizeBlueprint,requirementRows,routeEvaluationFor,commonPressure,finalEntries,finalOnlySpec,buildStaticRows,makeLightStaticData,routeFor,routeBoardTarget,settingsForRoute,finalWeight,legendEquivalentCount,decorateLegendEquivalent,squadDecisionSummary,finalStageSnapshot,strategyGateRows,stageGateSnapshot,rareDeadlineAssessment,timelineReadiness,exactPrefixStage,exactPrefixCheckpoint,exactPrefixMetrics,compareExactPrefixMetrics,exactPrefixPlan,finalPatchOptions,allowedCandidate,prerequisiteStatus,staticPotential,excessStun,excessSlow,hasNonControlRole,incrementalStunPenalty,incrementalSlowPenalty,recipeProfile,pairMaterialOverlap,lineupMaterialOverlap,introducesLineageConflict,candidateOverlapPenalty,consumptionTotals,tierBurnVector,compareTierBurn,handFitMetrics,compareHandFit,fullHandAllocation,wispBudgetSummary,futureWispCharge,deferredFutureFeasibility,compareDeferredSwaps,buildDeferred,requirementPriorityVector,comparePriorityVectors,nodeCompare,compareRoutePlans,searchExactBlueprint,searchRouteLight,draftUpperBlueprintPlan,repairDraftSingleSwap,blueprintMetadata,projectUpperCandidate,upperPreparationFor,upperBlueprintCompare,directionRow,uniqueDirectionRows,directionUpperShortlist}};
+return{VERSION,planFinalSquad,rankUpperBlueprints,rankDeckDirections,_test:{clearAffinity,compareAffinity,metaGamesOf,setAffinityContext,pairGamesOf,normalizeSettings,normalizeCommonPolicy,normalizeBlueprint,requirementRows,routeEvaluationFor,commonPressure,finalEntries,finalOnlySpec,buildStaticRows,makeLightStaticData,routeFor,routeBoardTarget,settingsForRoute,finalWeight,legendEquivalentCount,decorateLegendEquivalent,squadDecisionSummary,finalStageSnapshot,strategyGateRows,stageGateSnapshot,rareDeadlineAssessment,timelineReadiness,exactPrefixStage,exactPrefixCheckpoint,exactPrefixMetrics,compareExactPrefixMetrics,exactPrefixPlan,finalPatchOptions,allowedCandidate,prerequisiteStatus,staticPotential,excessStun,excessSlow,hasNonControlRole,incrementalStunPenalty,incrementalSlowPenalty,recipeProfile,pairMaterialOverlap,lineupMaterialOverlap,introducesLineageConflict,candidateOverlapPenalty,consumptionTotals,tierBurnVector,compareTierBurn,handFitMetrics,compareHandFit,fullHandAllocation,wispBudgetSummary,futureWispCharge,deferredFutureFeasibility,compareDeferredSwaps,buildDeferred,requirementPriorityVector,comparePriorityVectors,nodeCompare,compareRoutePlans,searchExactBlueprint,searchRouteLight,draftUpperBlueprintPlan,repairDraftSingleSwap,blueprintMetadata,projectUpperCandidate,upperPreparationFor,upperBlueprintCompare,directionRow,uniqueDirectionRows,directionUpperShortlist}};
 });
 
 
@@ -3889,7 +3939,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='17.16.0';
+const VERSION='17.18.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -4020,7 +4070,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='17.16.0';
+const VERSION='17.18.0';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -4092,7 +4142,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='17.16.0';
+const VERSION='17.18.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -4204,7 +4254,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P){
 'use strict';
 
-const VERSION='17.16.0';
+const VERSION='17.18.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -5807,7 +5857,7 @@ class App{
     },key=[fingerprint(this.state.snapshot),JSON.stringify(strategic)].join('|');
     if(key!==this._v15CacheKey){
       try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings,locks:this.state.locks||[]});}
-      catch(error){this._v15Cache={version:'17.16.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
+      catch(error){this._v15Cache={version:'17.18.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
     }
     const base=this._v15Cache;if(!base)return null;
@@ -6362,7 +6412,12 @@ class App{
       }
       const pairs=this.renderV151MetaPairs(state,unit);
       const body=party?this.renderV151ClearParty(party):`<div class="v151-empty"><b>파티 계산 대기</b><span>${C.esc(squad&&squad.error||'현재 패로는 이 상위 기준 파티를 아직 구성하지 못했습니다.')}</span></div>`;
-      partyHtml=`<div class="v152-rare-party"><div class="v152-rare-party-head"><small>기준 상위</small><b>${C.esc(displayNameOf(unit))}</b>${lock?'<em>확정</em>':candidateRow?'<em>1순위 후보</em>':''}<button data-act="party-preview" data-id="${C.esc(unit.id)}">크게 보기</button></div>${why}${pairs}${body}</div>`;
+      // v17.17(사용자 의도 7단계): 50라부터는 못 쓰는 유닛을 팔아 마지막
+      // 전설급을 만드는 구간 — 최종 파티에 안 쓰이는 희귀를 판매 후보로
+      // 표시한다(판매 자체는 게임에서, 여기는 안내만).
+      const sellRows=this.actualRound()>=50&&squad&&Array.isArray(squad.unusedRare)?squad.unusedRare.slice(0,6):[];
+      const sellHtml=sellRows.length?`<div class="v152-sell-hint"><small>판매·정리 후보 (최종 파티 미사용 희귀)</small><span>${sellRows.map(row=>`${C.esc(row.name)}${C.num(row.count)>1?`×${C.num(row.count)}`:''}`).join(' · ')}</span><em>50라+: 못 쓰는 재료를 팔아 마지막 전설급 제작 자원으로 — 특별·안흔·흔함도 최종 파티 미사용분은 정리 대상</em></div>`:'';
+      partyHtml=`<div class="v152-rare-party"><div class="v152-rare-party-head"><small>기준 상위</small><b>${C.esc(displayNameOf(unit))}</b>${lock?'<em>확정</em>':candidateRow?'<em>1순위 후보</em>':''}<button data-act="party-preview" data-id="${C.esc(unit.id)}">크게 보기</button></div>${why}${pairs}${body}${sellHtml}</div>`;
     }else{
       partyHtml='<div class="v151-empty"><b>기준 상위 없음</b><span>4번 패널에서 상위 후보를 비교·확정하면 희귀 활용 파티가 여기 표시됩니다.</span></div>';
     }
@@ -6698,8 +6753,17 @@ class App{
     const funded=projected>=totalNeed;
     // 11환산 확장: 파티 밖 제작 가능 전설급 상위 2개(스토리 등급 우선).
     const lineupIds=new Set(rows.map(row=>row.id));
+    // v17.18(사용자 교정): 확장 후보도 스토리가 아니라 기준 상위와의 실측
+    // 동반 순 — 동반 실측이 없으면 전체 실측 픽, 그다음 이름순.
+    const stretchPairs=(()=>{
+      const engine=global.ORDV15Engine,upperUnit=state.db.byId.get(upperId);
+      const evidence=engine&&engine.metaPairs&&upperUnit?engine.metaPairs(upperUnit):null;
+      const map=new Map();
+      for(const pair of evidence&&evidence.pairs||[])map.set(String(pair.code).toLowerCase(),C.num(pair.games));
+      return unit=>{let best=0;for(const code of unit&&unit.codes||[]){const games=C.num(map.get(String(code).toLowerCase()));if(games>best)best=games;}return best;};
+    })();
     const stretch=(plan.rows||[]).filter(row=>row.unit&&C.isLegendish(row.unit)&&!lineupIds.has(row.unit.id)&&row.solve&&row.solve.wispCost!=null).slice(0,8)
-      .sort((a,b)=>C.num(C.storyGrade(b.unit).score)-C.num(C.storyGrade(a.unit).score)).slice(0,2)
+      .sort((a,b)=>stretchPairs(b.unit)-stretchPairs(a.unit)||C.num(C.storyGrade(b.unit).score)-C.num(C.storyGrade(a.unit).score)).slice(0,2)
       .map(row=>({id:row.unit.id,name:displayNameOf(row.unit),wispCost:C.num(row.solve.wispCost)}));
     return{upperId,rows,totalNeed,available,income,projected:Math.floor(projected),funded,plannedCount:C.num(squad.plannedCount),targetCount:C.num(squad.targetCount),stretch};
   }

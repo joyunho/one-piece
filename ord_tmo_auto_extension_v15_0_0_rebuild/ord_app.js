@@ -347,7 +347,7 @@ class App{
     },key=[fingerprint(this.state.snapshot),JSON.stringify(strategic)].join('|');
     if(key!==this._v15CacheKey){
       try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings,locks:this.state.locks||[]});}
-      catch(error){this._v15Cache={version:'17.16.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
+      catch(error){this._v15Cache={version:'17.18.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
     }
     const base=this._v15Cache;if(!base)return null;
@@ -902,7 +902,12 @@ class App{
       }
       const pairs=this.renderV151MetaPairs(state,unit);
       const body=party?this.renderV151ClearParty(party):`<div class="v151-empty"><b>파티 계산 대기</b><span>${C.esc(squad&&squad.error||'현재 패로는 이 상위 기준 파티를 아직 구성하지 못했습니다.')}</span></div>`;
-      partyHtml=`<div class="v152-rare-party"><div class="v152-rare-party-head"><small>기준 상위</small><b>${C.esc(displayNameOf(unit))}</b>${lock?'<em>확정</em>':candidateRow?'<em>1순위 후보</em>':''}<button data-act="party-preview" data-id="${C.esc(unit.id)}">크게 보기</button></div>${why}${pairs}${body}</div>`;
+      // v17.17(사용자 의도 7단계): 50라부터는 못 쓰는 유닛을 팔아 마지막
+      // 전설급을 만드는 구간 — 최종 파티에 안 쓰이는 희귀를 판매 후보로
+      // 표시한다(판매 자체는 게임에서, 여기는 안내만).
+      const sellRows=this.actualRound()>=50&&squad&&Array.isArray(squad.unusedRare)?squad.unusedRare.slice(0,6):[];
+      const sellHtml=sellRows.length?`<div class="v152-sell-hint"><small>판매·정리 후보 (최종 파티 미사용 희귀)</small><span>${sellRows.map(row=>`${C.esc(row.name)}${C.num(row.count)>1?`×${C.num(row.count)}`:''}`).join(' · ')}</span><em>50라+: 못 쓰는 재료를 팔아 마지막 전설급 제작 자원으로 — 특별·안흔·흔함도 최종 파티 미사용분은 정리 대상</em></div>`:'';
+      partyHtml=`<div class="v152-rare-party"><div class="v152-rare-party-head"><small>기준 상위</small><b>${C.esc(displayNameOf(unit))}</b>${lock?'<em>확정</em>':candidateRow?'<em>1순위 후보</em>':''}<button data-act="party-preview" data-id="${C.esc(unit.id)}">크게 보기</button></div>${why}${pairs}${body}${sellHtml}</div>`;
     }else{
       partyHtml='<div class="v151-empty"><b>기준 상위 없음</b><span>4번 패널에서 상위 후보를 비교·확정하면 희귀 활용 파티가 여기 표시됩니다.</span></div>';
     }
@@ -1238,8 +1243,17 @@ class App{
     const funded=projected>=totalNeed;
     // 11환산 확장: 파티 밖 제작 가능 전설급 상위 2개(스토리 등급 우선).
     const lineupIds=new Set(rows.map(row=>row.id));
+    // v17.18(사용자 교정): 확장 후보도 스토리가 아니라 기준 상위와의 실측
+    // 동반 순 — 동반 실측이 없으면 전체 실측 픽, 그다음 이름순.
+    const stretchPairs=(()=>{
+      const engine=global.ORDV15Engine,upperUnit=state.db.byId.get(upperId);
+      const evidence=engine&&engine.metaPairs&&upperUnit?engine.metaPairs(upperUnit):null;
+      const map=new Map();
+      for(const pair of evidence&&evidence.pairs||[])map.set(String(pair.code).toLowerCase(),C.num(pair.games));
+      return unit=>{let best=0;for(const code of unit&&unit.codes||[]){const games=C.num(map.get(String(code).toLowerCase()));if(games>best)best=games;}return best;};
+    })();
     const stretch=(plan.rows||[]).filter(row=>row.unit&&C.isLegendish(row.unit)&&!lineupIds.has(row.unit.id)&&row.solve&&row.solve.wispCost!=null).slice(0,8)
-      .sort((a,b)=>C.num(C.storyGrade(b.unit).score)-C.num(C.storyGrade(a.unit).score)).slice(0,2)
+      .sort((a,b)=>stretchPairs(b.unit)-stretchPairs(a.unit)||C.num(C.storyGrade(b.unit).score)-C.num(C.storyGrade(a.unit).score)).slice(0,2)
       .map(row=>({id:row.unit.id,name:displayNameOf(row.unit),wispCost:C.num(row.solve.wispCost)}));
     return{upperId,rows,totalNeed,available,income,projected:Math.floor(projected),funded,plannedCount:C.num(squad.plannedCount),targetCount:C.num(squad.targetCount),stretch};
   }

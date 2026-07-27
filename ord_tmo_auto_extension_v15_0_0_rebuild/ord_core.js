@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='17.16.0';
+const VERSION='17.18.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1149,7 +1149,7 @@ function gameFlow(state,locks,settings){
 }
 // 구버전 호출 호환용입니다. 실제 추천은 보유·락 상태를 보는 gameFlow를 사용합니다.
 function milestonePurpose(round,hasUpper,hasLockedUpper){if(hasUpper||hasLockedUpper)return'spec';if(num(round)<=7)return'rare';if(num(round)<=20)return'story';return'upper';}
-function phaseForRound(round){round=num(round)||1;if(round<=7)return{key:'rare',label:'첫 희귀 + 선택 위습',note:'7라운드 안에 첫 희귀를 완성합니다.'};if(round<=20)return{key:'story',label:'첫 전설·히든',note:'첫 전설 또는 히든을 늦어도 20라 전에 완성합니다.'};if(round<=25)return{key:'route',label:'상위·딜 계통 결정',note:'희귀 8장 전후의 전체 패로 상위와 물딜·마딜을 결정합니다.'};if(round<=30)return{key:'upper',label:'상위 + 라인 전설',note:'상위 하나와 희귀보다 강한 라인 방어 전설을 마련합니다.'};if(round<=50)return{key:'spec',label:'50라 전 9환산 보강',note:'상위 결손을 채우며 실제 전설 환산 9기를 보수적 구조 최소선으로 맞춥니다.'};return{key:'finish',label:'최종 9기+ 마감',note:'전설·히든, 해적선, 희귀 2기, 변화됨 중 최저비용 경로로 마지막 스펙을 채웁니다.'};}
+function phaseForRound(round){round=num(round)||1;if(round<=7)return{key:'rare',label:'첫 희귀 + 선택 위습',note:'7라운드 안에 첫 희귀를 완성합니다.'};if(round<=20)return{key:'story',label:'첫 전설·히든',note:'첫 전설 또는 히든을 늦어도 20라 전에 완성합니다.'};if(round<=25)return{key:'route',label:'상위·딜 계통 결정',note:'스토리 보상 희귀·고급도박 유입이 끝난 전체 패(희귀 8장 전후)로 상위와 물딜·마딜을 결정합니다. 유입 전에는 선택 위습 소비를 아끼세요.'};if(round<=30)return{key:'upper',label:'상위 + 라인 전설',note:'상위 하나와 희귀보다 강한 라인 방어 전설을 마련합니다.'};if(round<=50)return{key:'spec',label:'50라 전 9환산 보강',note:'상위 결손을 채우며 실제 전설 환산 9기를 보수적 구조 최소선으로 맞춥니다. 패 불리기는 흔함·안흔이 나오는 하급도박이 효율적입니다.'};return{key:'finish',label:'최종 9기+ 마감',note:'전설·히든, 해적선, 희귀 2기, 변화됨 중 최저비용 경로로 마지막 스펙을 채웁니다.'};}
 function roundDuration(round,settings){return BOSS_ROUNDS.has(round)?num(settings.roundBossSeconds)||60:num(settings.roundNormalSeconds)||35;}
 function roundClock(settings,now){
   const s=settings||{},started=num(s.roundStartedAt),prep=num(s.roundPrepSeconds)||10,round=Math.max(1,num(s.currentRound)||1);if(!started)return{running:false,round,label:`${round}라 · 수동`,remaining:0,prep:false};let elapsed=Math.max(0,Math.floor(((now||Date.now())-started)/1000));if(elapsed<prep)return{running:true,round:0,label:'준비',remaining:prep-elapsed,prep:true};elapsed-=prep;let r=1;while(elapsed>=roundDuration(r,s)&&r<80){elapsed-=roundDuration(r,s);r++;}return{running:true,round:r,label:`${r}라${BOSS_ROUNDS.has(r)?' · 보스':''}`,remaining:Math.max(0,roundDuration(r,s)-elapsed),prep:false};
