@@ -902,7 +902,12 @@ class App{
       }
       const pairs=this.renderV151MetaPairs(state,unit);
       const body=party?this.renderV151ClearParty(party):`<div class="v151-empty"><b>파티 계산 대기</b><span>${C.esc(squad&&squad.error||'현재 패로는 이 상위 기준 파티를 아직 구성하지 못했습니다.')}</span></div>`;
-      partyHtml=`<div class="v152-rare-party"><div class="v152-rare-party-head"><small>기준 상위</small><b>${C.esc(displayNameOf(unit))}</b>${lock?'<em>확정</em>':candidateRow?'<em>1순위 후보</em>':''}<button data-act="party-preview" data-id="${C.esc(unit.id)}">크게 보기</button></div>${why}${pairs}${body}</div>`;
+      // v17.17(사용자 의도 7단계): 50라부터는 못 쓰는 유닛을 팔아 마지막
+      // 전설급을 만드는 구간 — 최종 파티에 안 쓰이는 희귀를 판매 후보로
+      // 표시한다(판매 자체는 게임에서, 여기는 안내만).
+      const sellRows=this.actualRound()>=50&&squad&&Array.isArray(squad.unusedRare)?squad.unusedRare.slice(0,6):[];
+      const sellHtml=sellRows.length?`<div class="v152-sell-hint"><small>판매·정리 후보 (최종 파티 미사용 희귀)</small><span>${sellRows.map(row=>`${C.esc(row.name)}${C.num(row.count)>1?`×${C.num(row.count)}`:''}`).join(' · ')}</span><em>50라+: 못 쓰는 재료를 팔아 마지막 전설급 제작 자원으로 — 특별·안흔·흔함도 최종 파티 미사용분은 정리 대상</em></div>`:'';
+      partyHtml=`<div class="v152-rare-party"><div class="v152-rare-party-head"><small>기준 상위</small><b>${C.esc(displayNameOf(unit))}</b>${lock?'<em>확정</em>':candidateRow?'<em>1순위 후보</em>':''}<button data-act="party-preview" data-id="${C.esc(unit.id)}">크게 보기</button></div>${why}${pairs}${body}${sellHtml}</div>`;
     }else{
       partyHtml='<div class="v151-empty"><b>기준 상위 없음</b><span>4번 패널에서 상위 후보를 비교·확정하면 희귀 활용 파티가 여기 표시됩니다.</span></div>';
     }
