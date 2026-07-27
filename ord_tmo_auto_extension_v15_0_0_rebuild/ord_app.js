@@ -347,7 +347,7 @@ class App{
     },key=[fingerprint(this.state.snapshot),JSON.stringify(strategic)].join('|');
     if(key!==this._v15CacheKey){
       try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings,locks:this.state.locks||[]});}
-      catch(error){this._v15Cache={version:'17.15.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
+      catch(error){this._v15Cache={version:'17.16.0',authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
     }
     const base=this._v15Cache;if(!base)return null;
@@ -961,7 +961,25 @@ class App{
       ];
       return`<div class="v152-hero-row">${tiles.join('')}</div>`;
     })();
-    return`<div class="v151-spec-head"><div class="damage-mode-switch" role="group" aria-label="딜 계통 선택"><button class="${!this.state.mode?'on':''}" data-act="mode" data-value="">자동</button><button class="${this.state.mode==='physical'?'on':''}" data-act="mode" data-value="physical">물딜</button><button class="${magic?'on':''}" data-act="mode" data-value="magic">마딜</button></div>${magic?`<select data-opt="magicRoute" aria-label="마딜 경로"><option value="auto" ${route==='auto'?'selected':''}>자동 경로</option><option value="dual" ${route==='dual'?'selected':''}>2상위·토키</option><option value="singleEnd" ${route==='singleEnd'?'selected':''}>1상위·단끝</option></select>`:''}${resolvedChip}</div>${hero}${summary}<div class="v151-spec-body">${body}</div>`;
+    // v17.16(사용자 피드백): 스펙 패널의 빈 공간을 "지금 내 파티"로 채운다 —
+    // 한눈에 내 스펙이 보이려면 수치만이 아니라 보드에 뭐가 있는지가 보여야
+    // 한다. 보유 상위·전설급 칩(클릭=상세) + 재료 패 요약 한 줄.
+    const partyNow=(()=>{
+      if(!state.db||!state.db.byId)return'';
+      const chips=[];
+      const push=(unit,owned,cls)=>chips.push(`<button class="${cls}" data-act="detail" data-id="${C.esc(unit.id)}"><b>${C.esc(displayNameOf(unit))}</b>${owned>1?`<i>×${owned}</i>`:''}</button>`);
+      for(const unit of state.db.uppers||[]){const owned=C.num(state.counts[unit.id]);if(owned>0)push(unit,owned,'upper');}
+      for(const unit of state.db.legendish||[]){const owned=C.num(state.counts[unit.id]);if(owned>0)push(unit,owned,'legend');}
+      let rareN=0,specialN=0,uncommonN=0,commonN=0;
+      for(const unit of state.db.byId.values()){
+        const owned=C.num(state.counts[unit.id]);
+        if(owned<=0)continue;
+        if(C.isRare(unit))rareN+=owned;else if(C.isSpecialTier(unit))specialN+=owned;else if(C.isUncommon(unit))uncommonN+=owned;else if(C.isCommon(unit))commonN+=owned;
+      }
+      const handSummary=`재료 패: 희귀 <b>${rareN}</b> · 특별 <b>${specialN}</b> · 안흔 <b>${uncommonN}</b> · 흔함 <b>${commonN}</b>`;
+      return`<div class="v152-party-now"><small>지금 내 파티 (상위·전설급 보드)</small>${chips.length?`<div class="v152-party-chips">${chips.join('')}</div>`:'<span class="v152-party-empty">아직 전설급 보드가 비어 있습니다 — 첫 전설·히든이 여기 표시됩니다.</span>'}<em class="v152-hand-sum">${handSummary}</em></div>`;
+    })();
+    return`<div class="v151-spec-head"><div class="damage-mode-switch" role="group" aria-label="딜 계통 선택"><button class="${!this.state.mode?'on':''}" data-act="mode" data-value="">자동</button><button class="${this.state.mode==='physical'?'on':''}" data-act="mode" data-value="physical">물딜</button><button class="${magic?'on':''}" data-act="mode" data-value="magic">마딜</button></div>${magic?`<select data-opt="magicRoute" aria-label="마딜 경로"><option value="auto" ${route==='auto'?'selected':''}>자동 경로</option><option value="dual" ${route==='dual'?'selected':''}>2상위·토키</option><option value="singleEnd" ${route==='singleEnd'?'selected':''}>1상위·단끝</option></select>`:''}${resolvedChip}</div>${hero}${partyNow}${summary}<div class="v151-spec-body">${body}</div>`;
   }
 
   // v16.7: 자동 모드에서는 첫 전설(보유 비상위 전설·히든)의 계열이 이후

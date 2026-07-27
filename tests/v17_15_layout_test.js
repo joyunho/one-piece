@@ -53,6 +53,11 @@ test('파티 스펙: 히어로 타일(전설급 환산·선위·최우선 결손
   const counts = C.progressionCounts(state);
   assert.strictEqual(counts.squad, 5, `상위 1(×3)+전설 2 = 5환산이어야 함: ${counts.squad}`);
   assert(css.includes('.v152-hero b{font-size:30px'), '히어로 수치 대형 타이포가 사라짐');
+  // v17.16(사용자 피드백): 결손 타일 줄바꿈 + "지금 내 파티" 칩으로 공백 제거.
+  assert(css.includes("repeat(auto-fill,minmax(190px,1fr))"), '결손 타일 줄바꿈 확대가 사라짐');
+  for (const marker of ['v152-party-now', '지금 내 파티', 'v152-hand-sum', '재료 패:']) {
+    assert(app.includes(marker), `파티 나우 블록 마커가 사라짐: ${marker}`);
+  }
 });
 
 test('희귀 활용 방안: 파티 미리보기·이유 문장·리롤·제작 가능 전설급', () => {
