@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='18.2.0';
+const VERSION='18.3.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -35,12 +35,15 @@ const COMPLETION_MILESTONES=Object.freeze({
 // are reserved and the survival search keeps running.
 const UPPER_HOLD_WISP_BAND=4;
 const UPPER_HOLD_WISP_RATIO=.15;
-// v17.13: 상위권 실측 다이제스트(ord_meta_stats.js, 55인·12,035판).  용도는
+// v17.13: 실측 다이제스트(ord_meta_stats.js).  v18.1부터 전수 표본(4,863명·96,627판).  용도는
 // 캘리브레이션 원칙 그대로 — 근거 칩 표시 + clearValue 동률 근처 보조
 // 타이브레이크(로그 스케일, 상한 소폭)뿐.  게이트·킬 판정에는 절대 쓰지
 // 않으며, 모듈이 없으면(구버전 수동판·일부 테스트) 조용히 0으로 동작한다.
 const META_STATS=(typeof window!=='undefined'&&window.ORD_META_STATS)||(typeof globalThis!=='undefined'&&globalThis.ORD_META_STATS)||null;
 const META_TIEBREAK_CAP=.02;
+// 픽률(0~1)을 기존 판수 스케일로 되돌리는 환산 기준. v17.13 표본 크기로 고정해
+// 두면 표본이 커져도 보너스 수치가 그대로다(순위는 log 단조라 영향 없음).
+const META_REF_GAMES=12035;
 function metaEvidence(unit){
   if(!META_STATS||!META_STATS.usage||META_STATS.usage.softTiebreak!==true)return null;
   const byCode=META_STATS.byCode||{};
@@ -51,7 +54,9 @@ function metaEvidence(unit){
   }
   if(!best)return null;
   const games=num(best.games),total=Math.max(1,num(META_STATS.gameCount));
-  return{games,share:round(games/total*100,1)};
+  // rate 는 표본 불변 가중치용, games/share 는 근거 칩 표시용.
+  const rate=best.rate!=null?num(best.rate):games/total;
+  return{games,rate,share:round(rate*100,1)};
 }
 // v17.14: 이 상위와 함께 쓰인 전설급 실측(upperPairs) — 미리 파티 모달의
 // 표시 전용 근거.  변신 상태 코드가 여럿이면 표본이 가장 큰 코드의 동반
@@ -68,9 +73,39 @@ function metaPairEvidence(unit){
   }
   if(!bestKey)return null;
   const total=Math.max(1,num(META_STATS.gameCount));
-  const pairs=pairsMap[bestKey].map(entry=>({code:String(entry[0]),games:num(entry[1]),name:byCode[entry[0]]?String(byCode[entry[0]].name):String(entry[0])}));
+  // v18.1: 조건부 확률(3번째)과 95% 신뢰구간 반폭(4번째)을 함께 넘긴다.
+  // "몇 판 함께 썼나"보다 "그 상위를 쓴 판의 몇 %에 있었나 ± 얼마나 확실한가"가
+  // 읽는 사람에게 쓸모 있다 — 상위 표본이 32판이면 ±16%p 로 드러난다.
+  const pairs=pairsMap[bestKey].map(entry=>({
+    code:String(entry[0]),
+    games:num(entry[1]),
+    conditional:entry.length>2?round(num(entry[2])*100,1):null,
+    ci:entry.length>3?num(entry[3]):null,
+    name:byCode[entry[0]]?String(byCode[entry[0]].name):String(entry[0]),
+  }));
   return{games:bestGames,share:round(bestGames/total*100,1),totalGames:total,pairs};
 }
+// v18.1: 다이제스트 노후 경보. 실측은 과거로 만들어 미래에 쓰는 물건이라 언젠가
+// 낡는다 — 6→7월 픽률이 평균 0.24%p, 최다 이동은 3.3%p 움직였다. 낡은 수치가
+// 조용히 근거 행세를 하지 않도록, 경과 개월과 예상 누적 이동폭을 함께 돌려준다.
+// now 를 인자로 받는 이유는 테스트 결정성 — 기본값만 시계를 읽는다.
+function metaStaleness(now){
+  if(!META_STATS||!META_STATS.collectedAt)return null;
+  const collected=Date.parse(META_STATS.collectedAt);
+  if(!Number.isFinite(collected))return null;
+  const nowMs=Number.isFinite(now)?now:Date.now();
+  const months=(nowMs-collected)/(1000*60*60*24*30.44);
+  const drift=META_STATS.drift||null;
+  const limit=drift&&num(drift.staleAfterMonths)>0?num(drift.staleAfterMonths):3;
+  return{
+    months:round(months,1),
+    stale:months>=limit,
+    staleAfterMonths:limit,
+    // 월 평균 이동폭 × 경과 개월 = 지금쯤 어긋나 있을 픽률(대략).
+    expectedShift:drift?round(num(drift.meanAbsShift)*Math.max(0,months),2):null,
+  };
+}
+
 const RECIPE_PROFILE_CACHE=new WeakMap();
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function round(value,digits=3){const p=Math.pow(10,digits);return Math.round(num(value)*p)/p;}
@@ -484,7 +519,11 @@ function clearValueScore(model,row){
   // 기반 부분점수(story 0.3 등)의 1/15 수준이라 동률 근처에서만 순서를
   // 바꿀 수 있다.  실측이 없거나 모듈이 없으면 0.
   const meta=metaEvidence(unit);
-  const metaBonus=meta?Math.min(META_TIEBREAK_CAP,.004*Math.log10(1+meta.games))*deadlineFactor:0;
+  // v18.1: 판수가 아니라 픽률로 계산한다. 판수를 쓰면 표본을 12,035판에서
+  // 96,627판으로 늘리는 것만으로 모든 후보의 보너스가 일괄 올라, 데이터 수집이
+  // 곧 가중치 상향이 돼 버린다. META_REF_GAMES 로 환산해 현재 수치대를 그대로
+  // 유지하면서 표본 크기에는 불변이 된다.
+  const metaBonus=meta?Math.min(META_TIEBREAK_CAP,.004*Math.log10(1+meta.rate*META_REF_GAMES))*deadlineFactor:0;
   const value=base+metaBonus;
   return{value:round(value,4),dpsCover:round(dpsCover,3),line:round(line,2),rareUtil:round(rareUtil,3),utility:round(utility,3),roundsToGo,deadlineFactor,metaGames:meta?meta.games:0,metaShare:meta?meta.share:0,metaBonus:round(metaBonus,4)};
 }
@@ -1053,5 +1092,5 @@ function buildDecision(input){
   return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,stickyPath,continuableStep,withStickyCandidate,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
+return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,stickyPath,continuableStep,withStickyCandidate,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};
 });

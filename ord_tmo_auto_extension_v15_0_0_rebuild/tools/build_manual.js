@@ -6,24 +6,18 @@ const path = require('path');
 
 const extensionDir = path.resolve(__dirname, '..');
 const packageDir = path.resolve(extensionDir, '..');
-const outputPath = path.join(packageDir, 'ord_2305_nightmare_helper_v18_2_0_manual.html');
-const staleOutputs = [
-  path.join(packageDir, 'ord_2305_nightmare_helper_v14_2_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v15_1_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_12_1_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_13_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_14_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_15_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_16_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_17_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_18_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_19_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_22_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_23_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v17_28_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v18_0_0_manual.html'),
-  path.join(packageDir, 'ord_2305_nightmare_helper_v18_1_0_manual.html')
-];
+// v18.3: 출력 파일명과 청소 목록을 package.json 버전에서 파생시킨다.
+// 예전에는 둘 다 손으로 적었는데, 릴리스마다 여기를 고치는 걸 잊으면 옛 버전
+// 파일명으로 빌드되거나 낡은 번들이 패키지에 남았다(테스트가 그걸 잡아 왔다).
+const RELEASE_VERSION = String(require(path.join(packageDir, 'package.json')).version);
+const MANUAL_PREFIX = 'ord_2305_nightmare_helper_v';
+const MANUAL_SUFFIX = '_manual.html';
+const outputName = `${MANUAL_PREFIX}${RELEASE_VERSION.replace(/\./g, '_')}${MANUAL_SUFFIX}`;
+const outputPath = path.join(packageDir, outputName);
+// 현재 산출물이 아닌 과거 수동판은 전부 청소 대상 — 목록을 유지보수하지 않는다.
+const staleOutputs = fs.readdirSync(packageDir)
+  .filter((name) => name.startsWith(MANUAL_PREFIX) && name.endsWith(MANUAL_SUFFIX) && name !== outputName)
+  .map((name) => path.join(packageDir, name));
 const cssPath = path.join(extensionDir, 'ord_app.css');
 const cockpitCssPath = path.join(extensionDir, 'ord_cockpit_v15.css');
 const scriptFiles = [
@@ -154,9 +148,9 @@ const html = `<!doctype html>
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v18.2.0-decision-engine-manual">
+  <meta name="ord-helper" content="v${RELEASE_VERSION}-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.305 악몽 수동 도우미">
-  <title>원랜디 2.305 악몽 실전 판단 코치 v18.2.0 · 수동 모드</title>
+  <title>원랜디 2.305 악몽 실전 판단 코치 v${RELEASE_VERSION} · 수동 모드</title>
   <style data-source="ord_app.css">
 ${safeStyle(fs.readFileSync(cssPath, 'utf8'))}
   </style>

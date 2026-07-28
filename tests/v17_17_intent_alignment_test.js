@@ -96,22 +96,29 @@ test('파티 추천 클리어 지향(v17.18 교정): 스토리 아님 — 기준
   const setCtx = planner._test.setAffinityContext, pairGames = planner._test.pairGamesOf;
   const db = C.buildDb(global.ORD_TMO_UNITS);
   const toki = global.ORD_TMO_UNITS.find(unit => (unit.codes || []).some(code => code.toLowerCase() === '780h'));
-  // 컨텍스트 없음: 동반 성분 0 — 전체 실측 픽만(상한 0.2), 스토리 무관.
+  // v18.1: 동반 성분의 단위가 판수 → 조건부 확률 P(보조|상위)로 바뀌었다.
+  // 컨텍스트 없음: 동반 신호 0 — 전체 픽률로만 줄 세우는 대체값(동반 있는
+  // 후보보다 반드시 아래). 스토리 무관은 그대로.
   setCtx([]);
   const noCtx = aff(toki);
-  assert(noCtx > 0 && noCtx <= 0.2, `컨텍스트 없음 = 전체 픽 상한 0.2: ${noCtx}`);
+  assert(noCtx > 0 && noCtx < 0.01, `컨텍스트 없음 = 미관측 대체값(동반 후보보다 아래): ${noCtx}`);
   const storyOnly = { id: 'story-only-fixture', codes: [] };
   assert.strictEqual(aff(storyOnly), 0, '실측 없는 유닛은 0 — 스토리 랭크는 최종 파티 기준이 아님');
-  // 컨텍스트(영원 비비): 토키는 동반 687판 — 동반 성분이 주도.
+  // 컨텍스트(영원 비비): 비비 판의 82.7%에 토키가 있다 — 동반 성분이 주도.
   const vivi = global.ORD_TMO_UNITS.find(unit => /^\(?.?\)?비비/.test(unit.name) && /^영원/.test(unit.groupName || ''));
   assert(vivi, '영원 비비 픽스처 없음');
   setCtx([vivi]);
-  assert(pairGames(toki) > 500, `비비 컨텍스트에서 토키 동반 실측이 커야 함: ${pairGames(toki)}`);
+  const cond = pairGames(toki);
+  assert(cond > 0.5 && cond <= 1, `비비 컨텍스트에서 토키 동반 조건부가 커야 함: ${cond}`);
   const withCtx = aff(toki);
   assert(withCtx > noCtx, `동반 컨텍스트가 affinity를 올려야 함: ${withCtx} vs ${noCtx}`);
   assert(withCtx <= 1, `유계 이탈: ${withCtx}`);
-  const weak = db.legendish.find(unit => pairGames(unit) === 0 && planner._test.metaGamesOf(unit) === 0);
-  assert(weak && cmp(toki, weak) < 0, '동반·실측 우위 유닛이 앞서야 함');
+  // v18.1: 전수 표본이라 전설급은 전부 픽률을 갖는다(예전엔 실측 0인 유닛이 있었다).
+  // 그래서 "동반 신호가 없는" 유닛을 약자로 잡는다 — 대체값 구간에 머물러야 한다.
+  const weak = db.legendish.find(unit => pairGames(unit) === 0);
+  assert(weak, '동반 신호 없는 전설급 픽스처가 없음');
+  assert(cmp(toki, weak) < 0, '동반 우위 유닛이 앞서야 함');
+  assert(aff(weak) < aff(toki), `대체값이 동반 성분을 넘어서면 안 됨: ${aff(weak)} vs ${aff(toki)}`);
   setCtx([]);
 });
 
