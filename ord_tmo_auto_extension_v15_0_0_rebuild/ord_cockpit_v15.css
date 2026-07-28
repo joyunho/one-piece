@@ -1004,3 +1004,22 @@
   .v153-spec-summary,.v153-rare-columns,.v153-upper-list,.v153-rare-crafts>div{grid-template-columns:1fr}.v153-slow-pin b{font-size:20px}.v153-gap-grid{grid-template-columns:1fr}.v153-rare-columns>section{padding:9px}.v153-upper-main{grid-template-columns:54px minmax(0,1fr)}.v153-upper-main>img{width:54px;height:54px}.v153-upper-main>button{grid-column:1/-1}.v153-support-list>button{grid-template-columns:24px 38px minmax(0,1fr)}.v153-support-list button em{grid-column:3}
   .v153-setting-row,.v153-tool-actions{grid-template-columns:1fr}
 }
+
+/* v17.27 지금 가진 희귀함으로 만들 수 있는 전설급 — 추천과 독립된 사실 칸 */
+.v152-rare-craftable{display:flex;flex-direction:column;gap:5px;margin-top:8px;padding-top:8px;border-top:1px solid rgba(140,162,190,.22)}
+.v152-rare-craftable>small{color:#8CA2BE;font-size:10px;font-weight:900}
+.v152-rare-summary{color:#C7D6EC;font-size:11px;font-weight:800}
+.v152-rare-summary b{color:#9FE8AC;font-size:13px}
+.v152-rare-group{display:flex;flex-direction:column;gap:3px;padding:5px 6px;border:1px solid rgba(140,162,190,.2);border-radius:8px;background:rgba(20,28,40,.35)}
+.v152-rare-head{display:flex;align-items:baseline;gap:6px;flex-wrap:wrap}
+.v152-rare-head b{color:#E4ECF8;font-size:12px}
+.v152-rare-head span{color:#8CA2BE;font-size:10px;font-weight:800}
+.v152-more{color:#8CA2BE;font-size:9px;font-style:normal}
+.v152-rare-group button{display:flex;align-items:baseline;justify-content:space-between;gap:8px;width:100%;padding:3px 6px;border:1px solid transparent;border-radius:6px;background:rgba(255,255,255,.03);color:inherit;text-align:left;cursor:pointer}
+.v152-rare-group button:hover{border-color:rgba(140,162,190,.45)}
+.v152-rare-group button.ready{border-color:rgba(126,211,140,.4);background:rgba(126,211,140,.09)}
+.v152-rare-group button.blocked{opacity:.55}
+.v152-rare-group button b{font-size:11px}
+.v152-rare-group button small{display:block;color:#8CA2BE;font-size:9px}
+.v152-rare-group button em{flex:0 0 auto;color:#9FB6E4;font-size:10px;font-style:normal;font-weight:800}
+.v152-rare-group button.ready em{color:#9FE8AC}

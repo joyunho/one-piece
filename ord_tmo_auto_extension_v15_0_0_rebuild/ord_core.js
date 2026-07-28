@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='17.26.0';
+const VERSION='17.27.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1265,6 +1265,52 @@ function compareSupportRows(a,b){
   if(!!a.pairSynergy!==!!b.pairSynergy)return Number(!!b.pairSynergy)-Number(!!a.pairSynergy);if(num(a.coverage)!==num(b.coverage))return num(b.coverage)-num(a.coverage);
   return nameOf(a.unit).localeCompare(nameOf(b.unit),'ko');
 }
+// v17.27(사용자 요청): "지금 가진 희귀함으로 만들 수 있는 전설급 유닛".
+// 재료를 모으는 구간에서는 다음 행동이 PREPARE로 잠겨 화면에 할 일이
+// 안 보인다.  그때도 "내 희귀함으로 뭘 만들 수 있는지"는 항상 보여야
+// 사용자가 스스로 판단할 수 있다.
+//
+// 판단 엔진의 추천과 독립적이다 — 순위나 권장이 아니라 현재 패 원장으로
+// 계산한 사실 목록이다.  희귀를 실제로 소모하는 전설급만 싣고, 그 희귀
+// 아래에 묶는다.  이미 보유한 유닛과 상위는 제외한다.
+function rareCraftableLegends(state,options){
+  options=options||{};
+  if(!state||!state.db||!Array.isArray(state.db.rares))return[];
+  const db=state.db,counts=state.counts||{},maxPerRare=Math.max(1,num(options.maxPerRare)||6);
+  const family=options.family==='physical'||options.family==='magic'?options.family:'';
+  const out=[];
+  for(const rare of db.rares){
+    const owned=Math.max(0,num(counts[rare.id]));
+    if(owned<=0)continue;
+    const made=[];
+    for(const unit of db.legendish){
+      if(!unit||isUpper(unit)||num(counts[unit.id])>0)continue;
+      if(family&&familyOf(unit)!=='neutral'&&familyOf(unit)!==family)continue;
+      let solve=null;
+      try{solve=recipeSolve(db,unit.id,counts);}catch(error){continue;}
+      if(!solve)continue;
+      // 이 희귀를 실제로 쓰는 조합만 이 칸에 싣는다.
+      if(num(solve.rareUse&&solve.rareUse[rare.id])<=0)continue;
+      const hardBlocked=solve.hardMissing&&Object.keys(solve.hardMissing).length>0;
+      const wispCost=num(solve.wispCost),wispHave=num(counts[WISP_ID]);
+      made.push({
+        id:unit.id,unit,name:nameOf(unit),
+        wispCost,wispGap:Math.max(0,wispCost-wispHave),
+        ready:!hardBlocked&&wispCost<=wispHave,
+        blocked:hardBlocked,
+        rareUse:num(solve.rareUse[rare.id]),
+        roles:summarizeRoles({role:roleProfile(unit)},options.mode==='magic'?'magic':'physical'),
+        missing:commonTop(db,solve.lowestMissing||{},3)
+      });
+    }
+    if(!made.length)continue;
+    // 지금 바로 되는 것 → 선위만 모자란 것 → 막힌 것 순.
+    made.sort((a,b)=>Number(b.ready)-Number(a.ready)||Number(a.blocked)-Number(b.blocked)||a.wispCost-b.wispCost||nameOf(a.unit).localeCompare(nameOf(b.unit),'ko'));
+    out.push({id:rare.id,name:nameOf(rare),unit:rare,owned,readyCount:made.filter(row=>row.ready).length,rows:made.slice(0,maxPerRare),total:made.length});
+  }
+  out.sort((a,b)=>b.readyCount-a.readyCount||b.total-a.total||nameOf(a.unit).localeCompare(nameOf(b.unit),'ko'));
+  return out;
+}
 function upperProfileData(state,upper,plan,upperMemo,synergyMemo){
   if(!upper)return null;plan=plan||{};const memo=upperMemoFor(upper,upperMemo),role=roleProfile(upper),facts=skillFacts(upper),strategy=upperStrategy(upper),mode=familyOf(upper)==='neutral'?plan.mode:familyOf(upper),supports=(plan.rows||[]).filter(row=>row&&row.unit&&row.unit.id!==upper.id&&canonicalUpperId(row.unit.id)!==canonicalUpperId(upper.id)&&num(state.counts[row.unit.id])<=0).filter(row=>num(row.coverage)>0||row.pairSynergy).map(row=>Object.assign({},row,{tierUse:supportTierUse(state,row),supportStage:supportClearStage(row,plan)})).sort(compareSupportRows);
   supports.forEach((row,index)=>{row.supportRank=index+1;row.supportStageLabel=row.supportStage.label;});
@@ -1295,5 +1341,5 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);
