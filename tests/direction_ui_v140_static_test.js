@@ -138,7 +138,11 @@ check('renderer shows three independent lanes and explicit actions',()=>{
   assert(physicalButton&&!physicalButton[0].includes('disabled'),'safePrefix에 선택 상위가 있는 경로를 잠그지 못했습니다.');
   const dualButton=html.match(/data-act="choose-direction" data-key="dual"[^>]*>/);
   assert(dualButton&&dualButton[0].includes('disabled'),'raw 후보 경고 표시는 유지합니다.');
-  assert(source.includes("querySelectorAll('[data-act=\"choose-direction\"]')"),'25라 실제 화면에서 checkpoint 경고 버튼을 다시 여는 후처리가 없습니다.');
+  assert(!source.includes("querySelectorAll('[data-act=\"choose-direction\"]')"),'평가 전 방향 버튼을 일괄 활성화하는 구 후처리가 다시 들어왔습니다.');
+  assert.strictEqual(T.routeCandidateReady({blueprintEvaluation:{basis:'route-projection-only',planned:false,rank:1}}),false,'투영뿐인 후보가 확정 가능해졌습니다.');
+  assert.strictEqual(T.routeCandidateReady({blueprintEvaluation:{basis:'upper-plus-support-full-squad',rank:0}}),false,'파티 평가 순위가 없는 후보가 확정 가능해졌습니다.');
+  assert.strictEqual(T.routeCandidateReady({blueprintEvaluation:{basis:'upper-plus-support-full-squad',rank:1}}),true,'상위+보조 전체 파티 평가 완료 후보가 잠겼습니다.');
+  assert(source.includes('if(!routeCandidateReady(candidate))'),'이벤트 경로의 파티 평가 완료 fail-closed 게이트가 사라졌습니다.');
   assert(html.includes('data-act="preview-direction" data-key="dual"'),'checkpoint miss must keep its reference preview');
 });
 

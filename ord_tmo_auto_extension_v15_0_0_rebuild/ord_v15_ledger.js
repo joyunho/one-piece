@@ -6,7 +6,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='17.22.0';
+const VERSION='17.26.0';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -35,7 +35,9 @@ function ruleBlocks(model,unit,counts,options,solve,prerequisite){
   if(unit&&num(counts[unit.id])>0)reasons.push('이미 보유');
   if(unit&&C.isUpper(unit)&&db.uppers.some(other=>num(counts[other.id])>0&&C.canonicalUpperId(other.id)===C.canonicalUpperId(unit.id)))reasons.push('같은 상위 경로 이미 보유');
   if(unit&&C.isChanged(unit)&&round<50)reasons.push('변화됨은 50라부터');
-  if(unit&&C.isShip(unit)&&round<50)reasons.push('해적선은 50라 보강부터');
+  // v17.25: 해적선 완성체는 라운드로 잠그지 않는다. 실제 해적선 재료가
+  // 있어야 prerequisite가 열리므로, 상위 확정 뒤 현재 패에서 0선위로
+  // 닫히는 방주맥심 같은 좋은 보강을 50라까지 숨길 이유가 없다.
   if(unit&&C.isTranscend(unit)&&settings.superKumaOwned===false)reasons.push('이번 판 초월 불가');
   if(unit&&C.isChanged(unit)&&Math.max(usageCount(db,counts,C.isChanged),num(settings.changedUsed))>=2)reasons.push('변화됨 2회 소진');
   if(unit&&C.isSeraph(unit)&&(usageCount(db,counts,C.isSeraph)>0||num(settings.seraphUsed)>0))reasons.push('세라핌 1회 소진');

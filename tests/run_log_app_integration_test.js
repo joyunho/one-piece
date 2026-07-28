@@ -28,7 +28,7 @@ class MemoryStorage{
 
   const source=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8'),helper=fs.readFileSync(path.join(EXT,'ord_helper.html'),'utf8');
   assert(!source.includes('data-tab="runlog"'),'single-screen UI revived the legacy run-log tab');
-  for(const marker of ['data-region="game-recording"','판단 녹화 중','data-act="run-log-export"','data-act="run-result-open"','50라 실패','50라 보스 처치','51~65라 실패','65라 클리어','data-run-field="bossHpPercent"','data-run-field="attackUpgrade"','data-run-field="helperUsed"'])assert(source.includes(marker),`run-log UI marker missing: ${marker}`);
+  for(const marker of ['data-region="game-status"','data-act="run-log-open"','data-act="run-log-export"','data-act="run-result-open"','50라 실패','50라 보스 처치','51~65라 실패','65라 클리어','data-run-field="bossHpPercent"','data-run-field="attackUpgrade"','data-run-field="helperUsed"'])assert(source.includes(marker),`run-log UI marker missing: ${marker}`);
   assert(helper.indexOf('ord_run_log_compactor.js')<helper.indexOf('ord_run_log.js'));
   assert(helper.indexOf('ord_run_log.js')<helper.indexOf('ord_app.js'));
   assert(!/on(click|change|input)=/i.test(source+helper),'inline event handler was introduced');

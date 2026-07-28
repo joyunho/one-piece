@@ -1,8 +1,6 @@
 'use strict';
 
-// v17.15: 6영역 재구성 계약 — 사용자 지정 정보 구조가 유지되는지 고정한다.
-//  0 라운드·녹화 스트립 / 1 다음 행동(최대 5) / 2 파티 스펙(히어로 타일)
-//  3 희귀 활용 방안 / 4 상위·파티 특징 / 5 기타 설정.
+// v17.25 집중형 UI 계약. 상시 화면은 상태 스트립과 네 가지 판단만 남긴다.
 
 const assert = require('assert');
 const fs = require('fs');
@@ -11,86 +9,81 @@ const path = require('path');
 const ext = path.join(__dirname, '../ord_tmo_auto_extension_v15_0_0_rebuild');
 const app = fs.readFileSync(path.join(ext, 'ord_app.js'), 'utf8');
 const css = fs.readFileSync(path.join(ext, 'ord_cockpit_v15.css'), 'utf8');
+const slice = (start, end) => app.slice(app.indexOf(start), app.indexOf(end));
 
 const tests = [];
 let failed = 0;
 function test(name, fn) { tests.push([name, fn]); }
 
-test('renderCoach는 정확히 6영역을 사용자 순서로 배치한다', () => {
-  const start = app.indexOf('renderCoach(state,plan,phase,clock,health){');
-  const end = app.indexOf('renderCoachDetails(state,plan,open=false){');
-  const coach = app.slice(start, end);
+test('renderCoach는 상태와 4개 핵심 판단 영역만 배치한다', () => {
+  const coach = slice('renderCoach(state,plan,phase,clock,health){', 'renderCoachDetails(state,plan,open=false){');
   const regions = [...coach.matchAll(/data-region="([^"]+)"/g)].map(m => m[1]);
-  assert.deepStrictEqual(regions, ['game-recording', 'next-action', 'current-spec', 'rare-plan', 'upper-info', 'gorosei']);
+  assert.deepStrictEqual(regions, ['next-action', 'clear-gaps', 'rare-ledger', 'upper-party']);
+  assert(coach.includes('renderV153Status(state,clock,health)'));
+  assert(!coach.includes('renderV151RunHeader'));
+  assert(!coach.includes('renderV152RarePlan'));
 });
 
-test('다음 행동: 확정 카드 + 이어질 후보(최대 4 = 합계 5) 리스트', () => {
-  assert(app.includes('renderV151NextAction(state,plan,health)}${this.renderV151Preparation(state,plan)'), '준비 목록이 다음 행동 영역에 없음');
-  assert(app.includes('items.slice(0,4)'), '이어질 후보가 4개(합계 5)로 제한되지 않음');
-  assert(app.includes('이어질 행동 후보'), '우선순위 리스트 제목이 사라짐');
+test('다음 행동은 확정 카드 하나와 후속 후보 최대 2개만 보인다', () => {
+  const coach = slice('renderCoach(state,plan,phase,clock,health){', 'renderCoachDetails(state,plan,open=false){');
+  const candidate = slice('renderV153NextCandidate(state,plan){', 'renderV153Spec(state,plan){');
+  assert(coach.includes('renderV151NextAction(state,plan,health)'));
+  assert(coach.includes('renderV153NextCandidate(state,plan)'));
+  assert(candidate.includes('picked.length>=2'));
+  assert(candidate.includes('그다음 후보 · 지금 고정하지 않음'));
 });
 
-test('파티 스펙: 히어로 타일(전설급 환산·선위·최우선 결손)', () => {
-  for (const marker of ['v152-hero-row', '전설급 환산', '목표 9~11', '최우선 결손']) {
-    assert(app.includes(marker), `히어로 타일 마커가 사라짐: ${marker}`);
+test('클리어 결손은 전설 환산과 최우선 결손 최대 4개만 보여준다', () => {
+  const spec = slice('renderV153Spec(state,plan){', 'renderV153RareLedger(state,plan){');
+  assert(spec.includes('C.progressionCounts(state)'));
+  assert(spec.includes("open.filter(row=>row.key!=='slow').slice(0,4)"));
+  assert(spec.includes('v153-slow-pin'));
+  for (const marker of ['전설급 환산', '남은 필수 결손', '확보한 조건', '최우선']) {
+    assert(spec.includes(marker), marker);
   }
-  // v17.15.1(감사): 문자열 단언은 상위 미포함 버그를 통과시켰다 — 모델과
-  // 같은 단일 원천(progressionCounts)을 쓰는지와 그 함수의 행동을 함께 고정.
-  assert(app.includes('C.progressionCounts(state)'), '환산이 progressionCounts 단일 원천을 쓰지 않음');
-  global.window = global;
-  const p = (name) => path.join(ext, name);
-  require(p('ord_units_data.js')); require(p('ord_data_patch.js'));
-  require(p('ord_upper_memo.js')); require(p('ord_synergy_memo.js'));
-  require(p('ord_story_nonupper_data.js')); require(p('ord_story_upper_data.js'));
-  require(p('ord_upper_combat_data.js')); require(p('ord_upper_skill_digest.js')); require(p('ord_upper_skill_dps.js'));
-  require(p('ord_meta_stats.js')); require(p('ord_core.js'));
-  const C = global.ORDCore;
-  assert.strictEqual(typeof C.progressionCounts, 'function', 'progressionCounts가 공개되지 않음');
-  const state = C.normalizeState(global.ORD_TMO_UNITS, {}, {});
-  const upper = state.db.uppers.find(unit => C.num(state.counts[unit.id]) === 0);
-  const legend = state.db.legendish.find(unit => !C.isUpper(unit) && C.num(state.counts[unit.id]) === 0);
-  state.counts[upper.id] = 1; state.counts[legend.id] = 2;
-  const counts = C.progressionCounts(state);
-  assert.strictEqual(counts.squad, 5, `상위 1(×3)+전설 2 = 5환산이어야 함: ${counts.squad}`);
-  assert(css.includes('.v152-hero b{font-size:30px'), '히어로 수치 대형 타이포가 사라짐');
-  // v17.16(사용자 피드백): 결손 타일 줄바꿈 + "지금 내 파티" 칩으로 공백 제거.
-  assert(css.includes("repeat(auto-fill,minmax(190px,1fr))"), '결손 타일 줄바꿈 확대가 사라짐');
-  for (const marker of ['v152-party-now', '지금 내 파티', 'v152-hand-sum', '재료 패:']) {
-    assert(app.includes(marker), `파티 나우 블록 마커가 사라짐: ${marker}`);
+  assert(!spec.includes('지금 내 파티'));
+});
+
+test('희귀 장부는 사용·보류·리롤과 즉시 제작 전설급을 함께 보여준다', () => {
+  const rare = slice('renderV153RareLedger(state,plan){', 'renderV153UpperParty(state,plan){');
+  for (const marker of ['상위 올리기 전 안전 리롤', "key:'use'", "key:'hold'", "key:'reroll'", '지금 희귀로 만들 수 있음']) {
+    assert(rare.includes(marker), marker);
   }
+  assert(rare.includes('.filter(row=>row&&row.feasible).slice(0,3)'));
+  assert(rare.includes('후보 중 하나라도 사용하는 희귀는 돌리지 않습니다.'));
 });
 
-test('희귀 활용 방안: 파티 미리보기·이유 문장·리롤·제작 가능 전설급', () => {
-  assert(app.includes('renderV152RarePlan(state,plan){'), '희귀 활용 렌더러가 사라짐');
-  for (const marker of ['v151ComputeParty(state,plan,unit.id)', 'rareAllocation', '남는 희귀(리롤 후보)', 'v151RerollTargets(state,plan,decision)', '지금 희귀로 만들 수 있는 전설급']) {
-    assert(app.includes(marker), `희귀 활용 구성요소가 사라짐: ${marker}`);
-  }
-  // 이유 문장 폴백은 파티 계산의 희귀 배분에서 온다 — 표시 전용.
-  const rarePlan = app.slice(app.indexOf('renderV152RarePlan(state,plan){'), app.indexOf('renderV151CurrentSpec(state,plan){'));
-  assert(rarePlan.includes("use.status==='spent'") && rarePlan.includes("use.status==='reserved'"), 'rareAllocation 사용처 분해가 사라짐');
+test('상위 후보와 확정 후 보조·해적선 후보는 각각 최대 3개다', () => {
+  const upper = slice('renderV153UpperParty(state,plan){', 'renderCoach(state,plan,phase,clock,health){');
+  assert(upper.includes('(decision.routeCandidates||[]).slice(0,3)'));
+  assert(upper.includes('this.v151BuildableLegendRows(state,plan)'));
+  assert(upper.includes('v153ShipOpportunity(state,plan)'));
+  assert(upper.includes('supports=ship?'));
+  assert(upper.includes('.slice(0,3)'));
+  for (const marker of ['파티 보기', '다음 보조 전설급', '전체 파티 보기']) assert(upper.includes(marker), marker);
 });
 
-test('상위·파티 특징: upperStrategy 문장 + 메모 + 실측 동반', () => {
-  for (const marker of ['v152-upper-guide', 'C.upperStrategy(upper)', 'C.upperMemoFor', '이 상위·파티의 특징']) {
-    assert(app.includes(marker), `운영 가이드 구성요소가 사라짐: ${marker}`);
-  }
+test('설정·기록·진단은 상태 스트립의 기본 접힘 도구함에 남는다', () => {
+  const status = slice('renderV153Status(state,clock,health){', 'renderV153NextCandidate(state,plan){');
+  const settings = slice('renderV153Settings(state){', 'renderV153Status(state,clock,health){');
+  assert(status.includes('<details class="v153-tools">'));
+  for (const marker of ['TMO 동기화', '기록 보기', 'JSON 저장', '게임 결과', '수동 패 보정', '연결 진단']) assert(status.includes(marker), marker);
+  for (const marker of ['data-opt="gorosei"', 'data-opt="virtualSpecialId"', 'data-opt="story10Reward"', '연구소 설정']) assert(settings.includes(marker), marker);
 });
 
-test('기타 설정: 연구소 입력이 설정 패널로 이동', () => {
-  const spec = app.slice(app.indexOf('renderV151CurrentSpec(state,plan){'), app.indexOf('v151FamilyIntent(state){'));
-  assert(!spec.includes('v151-upg-row'), '연구소 입력이 스펙 패널에 남아 있음');
-  const gorosei = app.slice(app.indexOf('renderV151Gorosei(state,plan){'), app.indexOf('renderV151ClearParty(party){'));
-  assert(gorosei.includes('v151-upg-row') && gorosei.includes('upperLevel'), '연구소 입력이 설정 패널에 없음');
-});
-
-test('타이포 확대: 코치 화면 기본 14px + 그리드 정의', () => {
-  assert(css.includes('.v152-screen{font-size:14px}'), '기본 글자 확대가 사라짐');
-  assert(css.includes('.v152-grid{display:grid'), 'v152 그리드가 사라짐');
+test('대형 타이포와 반응형 12열 그리드를 사용한다', () => {
+  assert(css.includes('.v153-screen{'));
+  assert(css.includes('font-size:16px'));
+  assert(css.includes('.v153-panel>header h2'));
+  assert(css.includes('font-size:22px'));
+  assert(css.includes('.v153-next .v151-action-title{font-size:28px'));
+  assert(css.includes('.v153-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr))'));
+  assert(css.includes('@media(max-width:760px)'));
 });
 
 for (const [name, fn] of tests) {
   try { fn(); console.log(`PASS ${name}`); }
   catch (error) { failed++; console.log(`FAIL ${name}\n  ${error && error.message}`); }
 }
-console.log(`V17_15_LAYOUT ${tests.length - failed}/${tests.length} passed`);
+console.log(`V17_25_LAYOUT ${tests.length - failed}/${tests.length} passed`);
 if (failed) process.exit(1);

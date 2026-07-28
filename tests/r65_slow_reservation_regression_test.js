@@ -21,7 +21,9 @@ function plan(counts,currentAbilities,round){
 // Exact compact reconstruction of the failed run immediately after Mihawk was
 // completed (log seq 559). Ten selection wisps remained, armor was only eight
 // short, and slow was 77 short. The old planner spent 8-10 wisps on Bon Clay /
-// Bartolomeo and thereby made the affordable Marco slow route impossible.
+// Bartolomeo and thereby made an affordable slow route impossible. v17.25
+// correctly unlocks an actually-owned Pirate Ship before round 50, so Moby
+// Dick (+40 slow) supersedes Marco (+30) at the same five-wisp cost.
 const r46Counts={
   '100h':7,'300h':2,'340h':1,'400h':1,'500h':7,'540h':1,'800h':3,'810e':10,
   '830h':1,'900h':4,'910h':1,D00h:2,I70h:1,K00h:4,M00h:2,M20h:1,N30h:1,
@@ -32,14 +34,13 @@ const r46Abilities={'공격력 증가':45,'공격속도 증가':5,'공중이동'
 const r46=plan(r46Counts,r46Abilities,46),r46First=r46.safePrefix.actions[0],baby5=(r46.timelineReadiness.rare.rows||[]).find(row=>row.id==='M20h');
 
 assert(r46First,'R46 must expose a current-stock action');
-assert.strictEqual(r46First.id,'T20h',`slow budget was not protected; received ${r46First.name}`);
+assert.strictEqual(r46First.id,'Q30h',`best owned-ship slow route was not protected; received ${r46First.name}`);
 assert.strictEqual(r46First.wispCost,5);
 assert.strictEqual(r46.safePrefix.criticalRoleGuarded,true);
 assert(!r46.safePrefix.actions.some(action=>['O30h','Z20h'].includes(action.id)),'armor/stun overspend survived the slow-budget guard');
-assert(!r46.safePrefix.actions.some(action=>C.isShip(action.unit)),'a round-50 ship was recommended before it unlocked');
-assert(baby5&&baby5.hold===1&&baby5.reroll===0,'Marco material was simultaneously exposed as reroll');
-assert((baby5.destinations||[]).some(item=>item.id==='T20h'&&item.disposition==='hold'));
-assert((r46.finalLineup||[]).some(row=>row.id==='T20h'),'the visible party blueprint contradicted the safe next action');
+assert(C.isShip(r46First.unit),'owned Pirate Ship material was not used by the selected slow route');
+assert(baby5&&baby5.hold===0&&baby5.reroll===1,'unused Marco material stayed falsely protected after Moby Dick superseded it');
+assert((r46.finalLineup||[]).some(row=>row.id==='Q30h'),'the visible party blueprint contradicted the safe next action');
 
 // Compact reconstruction immediately before Vivi changed was built (seq 678).
 // The board already exceeded the minimum nine-equivalent target; the old
@@ -65,7 +66,7 @@ assert.strictEqual(roleIncomplete.withinBudget,true);
 assert.strictEqual(roleIncomplete.fullPartyFeasible,false);
 assert.strictEqual(roleIncomplete.evidence,'role-incomplete');
 
-console.log('PASS failed R65 run now reserves slow before small armor/stun overspend');
+console.log('PASS failed R65 run now uses an owned-ship slow route before small armor/stun overspend');
 console.log('PASS over-target Vivi repair and Rare reroll consistency');
 console.log('PASS full-party budget requires role completion');
 console.log('R65 slow-reservation regression: 4/4 passed');

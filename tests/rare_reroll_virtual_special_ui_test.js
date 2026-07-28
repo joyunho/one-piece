@@ -62,14 +62,15 @@ check('selected 152-kill Special is consumed by Rare recipes and is shown inside
 check('the active v15.1 screen renders one 152 selector and no legacy Rare board',()=>{
   const source=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
   const sidebar=source.slice(source.indexOf('renderSidebar(state'),source.indexOf('trustCopy(html'));
-  const reward=source.slice(source.indexOf('  renderV151RewardForecast('),source.indexOf('  renderV151Gorosei('));
-  const coach=source.slice(source.indexOf('  renderCoach(state'),source.indexOf('  renderCoachDetails('));const gorosei=source.slice(source.indexOf('  renderV151Gorosei('),source.indexOf('  v151ClearWhy('));
+  const settings=source.slice(source.indexOf('  renderV153Settings('),source.indexOf('  renderV153Status('));
+  const coach=source.slice(source.indexOf('  renderCoach(state'),source.indexOf('  renderCoachDetails('));
   assert(!sidebar.includes('data-opt="virtualSpecialId"'),'sidebar duplicated the 152-kill selector');
-  assert.strictEqual((reward.match(/data-opt="virtualSpecialId"/g)||[]).length,1,'active reward panel must have one selector');
-  assert(gorosei.includes('renderV151RewardForecast(state,plan)'),'152 forecast must render inside the gorosei panel');
+  assert.strictEqual((settings.match(/data-opt="virtualSpecialId"/g)||[]).length,1,'collapsed settings must have one 152 selector');
   assert(!coach.includes('renderV15RareBoard('),'legacy Rare board must not be reachable from the v15.1 screen');
   assert(!coach.includes('renderRareResolution('),'legacy Rare renderer must not be reachable from the v15 cockpit');
-  assert(!coach.includes('data-region="kill-152"'),'standalone kill-152 panel must stay removed');assert(coach.includes('data-region="gorosei"'));
+  assert(!coach.includes('data-region="kill-152"'),'standalone kill-152 panel must stay removed');
+  assert(coach.includes('data-region="rare-ledger"'));
+  assert(source.includes('<details class="v153-tools">'),'152 selector must remain reachable from the tools drawer');
 });
 
 check('changing the virtual Special invalidates both squad and upper-ranking caches',()=>{

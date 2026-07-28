@@ -6,7 +6,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='17.22.0';
+const VERSION='17.26.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -69,7 +69,7 @@ function groupPaceBehind(rows,roundNow){
   const pace=clamp((num(roundNow)-PACE_START_ROUND)/span,0,1);
   return round(pace-progress,6);
 }
-function groupRows(route,role,checkpoint){
+function groupRows(route,role,checkpoint,roundInput){
   const map=requirementMap(role),covered=new Set(route.groups.flat());
   const groups=route.groups.map(keys=>keys.map(key=>map.get(key)||fallbackRequirement(key)));
   // v16: main-upper strategic requirements (e.g. Dragon's 단일 2 / 끝딜 1) come
@@ -90,7 +90,7 @@ function groupRows(route,role,checkpoint){
   // completely untouched one-unit required role (target<=1, current 0 —
   // 광보잡·보잡·암브·보조딜·토키) may not sit behind partial numeric pools.
   const binaryOpen=rows=>rows.some(row=>row.required!==false&&!row.waived&&num(row.target)>0&&num(row.target)<=1&&num(row.current)<=0&&num(row.gap)>0);
-  const bossPhase=num(checkpoint&&checkpoint.dueRound)>=40;
+  const currentRound=Math.max(1,num(roundInput)||num(checkpoint&&checkpoint.dueRound)||1),bossPhase=currentRound>=40;
   // v17.4: two straight round-55 boss deaths (도플라밍고) shipped with the
   // boss-power pool (단일·끝딜 환산 1/3 → 2.5/3, 1.5스턴 0.4) still open while
   // wisps kept funding partial survival fragments (이감 7%, 스턴 조각).  The
@@ -103,8 +103,8 @@ function groupRows(route,role,checkpoint){
   // pairwise, so the ordering stays a coherent total order inside the search.
   const BOSS_POWER_KEYS=new Set(['single','end','singleEndExpected','attack','toki','stunFull']);
   const bossPowerOpen=rows=>rows.some(row=>row.required!==false&&!row.waived&&BOSS_POWER_KEYS.has(row.key)&&num(row.gap)>0);
-  const bossWindow=num(checkpoint&&checkpoint.dueRound)>=50;
-  const roundNow=num(checkpoint&&checkpoint.dueRound),head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows),binary:binaryOpen(rows),bossPowerRows:bossPowerOpen(rows),behind:groupPaceBehind(rows,roundNow)}));
+  const bossWindow=currentRound>=50;
+  const head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows),binary:binaryOpen(rows),bossPowerRows:bossPowerOpen(rows),behind:groupPaceBehind(rows,currentRound)}));
   const survivalCrisis=tail.some(item=>!item.bossPowerRows&&item.rel>.3);
   for(const item of tail)item.bossPower=bossWindow&&!survivalCrisis&&item.bossPowerRows;
   tail.sort((a,b)=>{
@@ -123,13 +123,13 @@ function groupRows(route,role,checkpoint){
 function groupVector(groups,count){const limit=Math.min(groups.length,Math.max(0,num(count)));const vector=[];for(const group of groups.slice(0,limit))vector.push(group.missed,group.debt);return vector;}
 function rareCount(model,counts){let total=0;for(const unit of model.knowledge.db.rares)total+=Math.max(0,num(counts[unit.id]));return total;}
 function evaluate(model,counts,routeInput,options){
-  const route=typeof routeInput==='string'?ROUTES[routeInput]:routeInput,checkpoint=checkpointFor(options&&options.round||model.round.value),stock=counts||model.effective.counts,summary=M.finalSummary(model,stock),rare=rareCount(model,stock),mode=route&&route.mode||model.intent.damageMode;
+  const roundNow=options&&options.round||model.round.value,route=typeof routeInput==='string'?ROUTES[routeInput]:routeInput,checkpoint=checkpointFor(roundNow),stock=counts||model.effective.counts,summary=M.finalSummary(model,stock),rare=rareCount(model,stock),mode=route&&route.mode||model.intent.damageMode;
   if(!route)return{version:VERSION,status:'unknown',label:'경로 선택 필요',route:null,checkpoint,actual:summary,rareRemaining:rare,requirements:[],groups:[],activeGroups:[],checkpointVector:[1],fullVector:[1],blockers:['물딜 또는 마딜 세부 경로를 먼저 선택해야 합니다.'],unknowns:['보스 DPS','라인 처리력'],evidence:{kind:'observed-plus-exact-ledger',combat:'unmeasured'}};
   // v16: requirement currents use the live owned board (Rare/Special direct
   // combat roles included), matching the documented survival role table.
   // Durability is enforced by the regression guards instead: any craft that
   // consumes a combat Rare visibly reopens the gap it was covering.
-  const role=M.roleState(model,stock,mode,Object.assign({},model.settings,{magicRoute:route.key,_resolvedMagicRoute:route.key}),options&&options.locks||[],false),groups=groupRows(route,role,checkpoint),activeCount=Math.min(groups.length,checkpoint.activeGroups),active=groups.slice(0,activeCount),structureRows=[
+  const role=M.roleState(model,stock,mode,Object.assign({},model.settings,{magicRoute:route.key,_resolvedMagicRoute:route.key}),options&&options.locks||[],false),groups=groupRows(route,role,checkpoint,roundNow),activeCount=Math.min(groups.length,checkpoint.activeGroups),active=groups.slice(0,activeCount),structureRows=[
     // v16.9: 4/6/9 환산은 공개 검증된 보스킬 최소치가 아니라 경제 진행
     // 경고선이다(사용자 검증 지침).  라벨로 이 성격을 드러낸다.
     {key:'equivalent',label:'전설 환산(경제선)',current:summary.legendEquivalent,target:checkpoint.equivalent,gap:Math.max(0,checkpoint.equivalent-summary.legendEquivalent)},

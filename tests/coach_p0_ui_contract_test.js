@@ -22,40 +22,61 @@ const between=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end
 let checks=0;
 function check(name,fn){fn();checks++;console.log(`PASS  ${name}`);}
 
-check('live coach exposes exactly the requested six regions in one screen',()=>{
+check('live coach exposes one status strip and four decision regions',()=>{
   const app=Object.create(App.prototype);
   app.state={mode:'physical',magicRoute:'auto',virtualSpecialId:'',locks:[]};
   app.upperLock=()=>null;
   app.renderV151NextAction=()=>'<i data-test="next"></i>';
-  app.renderV151Preparation=()=>'<i data-test="prep"></i>';
-  app.renderV151CurrentSpec=()=>'<i data-test="spec"></i>';
-  app.renderV151BuildableLegends=()=>'<i data-test="build"></i>';
-  app.renderV152RarePlan=()=>'<i data-test="rare"></i>';
-  app.renderV151RewardForecast=()=>'<i data-test="reward"></i>';
-  app.renderV151Gorosei=()=>'<i data-test="gorosei"></i>';
-  app.renderV151UpperInfo=()=>'<i data-test="upper"></i>';
-  app.renderV151RunHeader=()=>'<i data-test="run"></i>';
+  app.renderV153Status=()=>'<section data-region="game-status"><i data-test="status"></i></section>';
+  app.renderV153NextCandidate=()=>'<i data-test="candidate"></i>';
+  app.renderV153Spec=()=>'<i data-test="spec"></i>';
+  app.renderV153RareLedger=()=>'<i data-test="rare"></i>';
+  app.renderV153UpperParty=()=>'<i data-test="upper"></i>';
   const plan={v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:false}};
   const html=app.renderCoach({},plan,{}, {},{ready:true,key:'ok'});
   const regions=[...html.matchAll(/data-region="([^"]+)"/g)].map(match=>match[1]);
-  // v17.15: 6영역 재구성 — 라운드·녹화 스트립이 최상단, 준비 목록은
-  // 다음 행동에, 제작 가능 전설급은 희귀 활용 방안에 흡수됐다.
-  assert.deepStrictEqual(regions,['game-recording','next-action','current-spec','rare-plan','upper-info','gorosei']);
-  assert.strictEqual(new Set(regions).size,6);
-  for(const key of ['next','prep','spec','gorosei','upper','run'])assert.strictEqual((html.match(new RegExp(`data-test="${key}"`,'g'))||[]).length,1,key);
+  assert.deepStrictEqual(regions,['game-status','next-action','clear-gaps','rare-ledger','upper-party']);
+  assert.strictEqual(new Set(regions).size,5);
+  for(const key of ['status','next','candidate','spec','rare','upper'])assert.strictEqual((html.match(new RegExp(`data-test="${key}"`,'g'))||[]).length,1,key);
   for(const removed of ['ord-tabs','v15-rare-board','coach-details','v15-outcome-dock'])assert(!html.includes(removed),removed);
-  assert(html.includes('v151-screen'));
+  assert(html.includes('v153-screen'));
 });
 
-check('route and post-Legend states keep all six regions visible',()=>{
+check('route and post-Legend states keep the compact five-region shell visible',()=>{
   const app=Object.create(App.prototype);
   app.state={mode:'physical',magicRoute:'auto',virtualSpecialId:'',locks:[]};
   app.upperLock=()=>null;
-  for(const name of ['NextAction','Preparation','CurrentSpec','BuildableLegends','RewardForecast','Gorosei','UpperInfo','RunHeader'])app[`renderV151${name}`]=()=>'<i></i>';
+  app.renderV151NextAction=()=>'<i></i>';
+  for(const name of ['Status','NextCandidate','Spec','RareLedger','UpperParty'])app[`renderV153${name}`]=()=>name==='Status'?'<section data-region="game-status"></section>':'<i></i>';
   const route=app.renderCoach({}, {v15Decision:{state:'ROUTE_CHOICE'},postLegendDecision:{awaiting:false}}, {}, {}, {ready:true,key:'ok'});
   const postLegend=app.renderCoach({}, {v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:true}}, {}, {}, {ready:true,key:'ok'});
-  assert.strictEqual((route.match(/data-region=/g)||[]).length,6);
-  assert.strictEqual((postLegend.match(/data-region=/g)||[]).length,6);
+  assert.strictEqual((route.match(/data-region=/g)||[]).length,5);
+  assert.strictEqual((postLegend.match(/data-region=/g)||[]).length,5);
+});
+
+check('Rare focus shows the pre-upper safe reroll and at most three craftable Legends',()=>{
+  const app=Object.create(App.prototype);
+  app.state={rerollsUsed:0};
+  app.upperLock=()=>null;
+  const rareUnit={id:'rare-a',name:'남는 희귀',image:''};
+  const legends=Array.from({length:4},(_,index)=>({
+    unit:{id:`legend-${index}`,name:`전설 ${index+1}`,image:''},
+    feasible:true,
+    solve:{wispCost:index+1},
+    rareSpend:{byId:[{name:'남는 희귀',use:1}]}
+  }));
+  app.v151BuildableLegendRows=()=>legends;
+  const html=app.renderV153RareLedger({db:{byId:new Map([[rareUnit.id,rareUnit]])}},{
+    v15Decision:{rare:{rows:[
+      {id:rareUnit.id,name:rareUnit.name,unit:rareUnit,initial:1,use:0,hold:0,reroll:1,reason:'확정 사용처 없음'}
+    ]}}
+  });
+  assert(html.includes('상위 올리기 전 안전 리롤'));
+  assert(html.includes('남는 희귀'));
+  assert(html.includes('지금 희귀로 만들 수 있음'));
+  assert(html.includes('전설 1')&&html.includes('전설 3'));
+  assert(!html.includes('전설 4'));
+  assert.strictEqual((html.match(/class="v153-rare-crafts"/g)||[]).length,1);
 });
 
 check('the primary card exposes one action, reason, after-state, stop condition and uncertainty',()=>{
@@ -151,14 +172,13 @@ check('upper choice consumes only v15 route candidates, caps them at six and hid
 
 check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   const coachSource=between('  renderCoach(state,plan,phase,clock,health){','  renderCoachDetails(state,plan,open=false){');
-  // v17.15: 제작 가능 전설급은 renderV152RarePlan 내부에서 호출된다.
-  for(const method of ['renderV151NextAction','renderV151Preparation','renderV151CurrentSpec','renderV152RarePlan','renderV151Gorosei','renderV151UpperInfo','renderV151RunHeader'])assert(coachSource.includes(method),method);
-  assert(fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8').includes('renderV151BuildableLegends(state,plan)'),'buildable legends must stay reachable from the rare plan panel');
-  assert(fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8').includes('renderV151RewardForecast(state,plan)'),'152 forecast must stay reachable from the gorosei panel');
+  for(const method of ['renderV153Status','renderV151NextAction','renderV153NextCandidate','renderV153Spec','renderV153RareLedger','renderV153UpperParty'])assert(coachSource.includes(method),method);
+  assert(source.includes('this.v151BuildableLegendRows(state,plan).filter(row=>row&&row.feasible).slice(0,3)'),'buildable legends must stay reachable from the rare ledger');
+  assert(source.includes('data-opt="virtualSpecialId"'),'152 selector must stay reachable from collapsed settings');
   assert(!coachSource.includes('renderActions('));
   assert(!coachSource.includes('renderSquadPlan('));
-  assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,6);
-  for(const selector of ['.v151-screen{','.v151-grid{','.v151-next{','.v151-build{','.v151-run{'])assert(css.includes(selector),selector);
+  assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,4);
+  for(const selector of ['.v153-screen{','.v153-grid{','.v153-status{','.v153-panel{','.v153-next{','.v153-rare{'])assert(css.includes(selector),selector);
   assert(css.includes('grid-template-columns:repeat(12,minmax(0,1fr))'));
 });
 

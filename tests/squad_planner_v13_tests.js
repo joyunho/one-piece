@@ -54,7 +54,7 @@ test('explicit dual-magic route contains two uppers and Toki when resources allo
   const result=plan(abundantState(),{mode:'magic',magicRoute:'dual'}),toki=result.finalLineup.find(x=>/토키/.test(x.name));assert.strictEqual(result.magicRoute,'dual');assert.strictEqual(result.complete,true);assert.strictEqual(upperCount(result.finalLineup),2);assert(toki,'dual route must reserve a Toki slot');assert.strictEqual(result.roleCoverage.rows.find(x=>x.key==='toki').gap,0);
 });
 
-test('round-50 final patch menu exposes all four fallback mechanisms',()=>{
+test('final patch menu exposes all four fallback mechanisms and owned ships from round 25',()=>{
   const before=plan(abundantState(),{currentRound:49}),after=plan(abundantState(),{currentRound:55});
   const expected=[
     ['legendHidden','전설·히든 1기'],
@@ -67,8 +67,10 @@ test('round-50 final patch menu exposes all four fallback mechanisms',()=>{
   for(const kind of ['ship','rarePair','changed']){
     const locked=before.finalPatchOptions.find(option=>option.kind===kind);
     const unlocked=after.finalPatchOptions.find(option=>option.kind===kind);
-    assert.strictEqual(locked.availableRound,50,`${kind} round gate`);
-    assert.strictEqual(locked.status,'locked',`${kind} must stay locked before round 50`);
+    const expectedRound=kind==='ship'?25:50;
+    assert.strictEqual(locked.availableRound,expectedRound,`${kind} round gate`);
+    if(kind==='ship')assert.notStrictEqual(locked.status,'locked','an actually-owned Pirate Ship stayed hidden before round 50');
+    else assert.strictEqual(locked.status,'locked',`${kind} must stay locked before round 50`);
     assert.notStrictEqual(unlocked.status,'locked',`${kind} remained locked after round 50`);
     assert(unlocked.reason,`${kind} must explain how it patches the squad`);
   }
