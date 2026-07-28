@@ -127,7 +127,12 @@ function snapshotAtSeq(file,seq){
   const blocked=E.reconcileSquadExecution(staleDecision,squad,locks);
   assert.strictEqual(blocked.state,'SYNC_BLOCKED');
   assert.strictEqual(blocked.action,null);
-  assert.strictEqual(blocked.blockedAction,null);
+  // v17.28(사용자 지적): 승인은 계속 막되(action null) 화면까지 비우지는
+  // 않는다.  "이 타이밍에 추천을 안 해버리면 굉장히 곤란해진다" — 실측
+  // 로그에서 r38~r52의 9개 라운드가 이 상태로 1번 카드가 비어 있었다.
+  // 무엇을 왜 기다리는지는 blockedAction으로 계속 보여준다.
+  assert(blocked.blockedAction===null||blocked.blockedAction&&blocked.blockedAction.id,'대체 카드가 형식을 갖추지 않았다');
+  assert.notStrictEqual(blocked.blockedAction&&blocked.blockedAction.id,first.id,'차단된 바로 그 제작을 대체 카드로 내보냈다');
   assert.strictEqual(blocked.evidence.squadPrefixRejected,true);
   assert.strictEqual(blocked.evidence.plannedId,first.id);
   assert.notStrictEqual(

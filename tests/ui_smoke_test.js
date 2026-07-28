@@ -56,7 +56,7 @@ const {chromium}=require('playwright');
           legacyTabs:document.querySelectorAll('.ord-tabs').length
         };
       });
-      assert.strictEqual(metrics.version,'17.27.0');
+      assert.strictEqual(metrics.version,'17.28.0');
       assert.strictEqual(metrics.health.ready,true,`${cfg.name} fixture health blocked`);
       assert.deepStrictEqual(metrics.regions,REGIONS,`${cfg.name} region set/order changed`);
       assert.strictEqual(metrics.panelCount,4,`${cfg.name} expected exactly four decision panels`);
