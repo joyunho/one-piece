@@ -1015,7 +1015,11 @@ class App{
     const rerollTargets=this.v151RerollTargets(state,plan,decision);
     const targetsHtml=rerollTargets?`<div class="v151-reroll-targets"><small>리롤 목표 ${rerollTargets.kinds}종 · 남은 리롤 ${rerollTargets.rerollLeft}/2</small><div class="v151-reroll-target-chips">${rerollTargets.list.map(row=>`<button data-act="detail" data-id="${C.esc(row.id)}"><b>${C.esc(row.name)}${row.need>1?`×${row.need}`:''}</b><span>${row.sources.map(source=>C.esc(source)).join('·')}</span></button>`).join('')}</div><em>1회당 목표 적중 ${rerollTargets.kinds}/41 = ${rerollTargets.perRollPercent}%${rerollTargets.rerollLeft?` · 남은 ${rerollTargets.rerollLeft}회 안에 1개 이상 ${rerollTargets.anyHitPercent}%`:' · 리롤 소진'}</em>${rerollTargets.rollAway.length?`<span class="v151-reroll-fuel">돌릴 후보(사용처 없음): ${rerollTargets.rollAway.map(row=>C.esc(row.name)).join(' · ')}</span>`:'<span class="v151-reroll-fuel">지금 돌릴 무용 희귀 없음 — 무용 희귀가 잡히면 위 목표를 노리세요</span>'}</div>`:'';
     const buildable=`<div class="v152-rare-buildable"><small>지금 내 패로 만들 수 있는 전설급 · <i class="v151-pick-badge">추천</i>은 전체 파티 계획이 고른 것</small>${this.renderV151BuildableLegends(state,plan)}</div>`;
-    return`${partyHtml}${rerollHint}${targetsHtml}${buildable}`;
+    // v17.27(사용자 요청): 재료를 모으는 구간에는 다음 행동이 PREPARE로
+    // 잠겨 화면에 할 일이 안 보인다.  그때도 "내 희귀함으로 지금 뭘 만들
+    // 수 있는지"는 항상 보이게 독립 칸으로 둔다 — 추천이 아니라 사실이다.
+    const rareCraftable=this.renderV152RareCraftable(state,plan);
+    return`${partyHtml}${rerollHint}${targetsHtml}${buildable}${rareCraftable}`;
   }
 
   renderV151CurrentSpec(state,plan){
@@ -1131,6 +1135,27 @@ class App{
     return rows;
   }
 
+  renderV152RareCraftable(state,plan){
+    if(!C.rareCraftableLegends)return'';
+    const mode=plan&&plan.mode||this.state.mode||'physical';
+    const family=this.v151FamilyIntent?this.v151FamilyIntent(state):'';
+    const groups=C.rareCraftableLegends(state,{mode,family,maxPerRare:6});
+    const head='<small>지금 가진 희귀함으로 만들 수 있는 전설급 · 추천과 무관한 현재 패 사실</small>';
+    if(!groups.length)
+      return`<div class="v152-rare-craftable">${head}<div class="v151-empty"><b>희귀함으로 지금 만들 수 있는 전설급 없음</b><span>희귀함을 아직 안 들었거나, 들고 있는 희귀함을 쓰는 전설급이 특수 선행재료로 막혀 있습니다.</span></div></div>`;
+    const readyTotal=groups.reduce((sum,group)=>sum+C.num(group.readyCount),0);
+    const cards=groups.map(group=>{
+      const rows=group.rows.map(row=>{
+        const state=row.ready?'ready':row.blocked?'blocked':'wait';
+        const cost=row.ready?`선위 ${C.num(row.wispCost)}`:row.blocked?'선행재료 부족':`선위 ${C.num(row.wispGap)} 부족`;
+        const missing=!row.ready&&!row.blocked&&(row.missing||[]).length?` · ${(row.missing||[]).map(item=>C.esc(item.name)).join(' · ')}`:'';
+        return`<button class="${state}" data-act="detail" data-id="${C.esc(row.id)}"><span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(row.roles||'역할 보조')}</small></span><em>${C.esc(cost)}${missing}</em></button>`;
+      }).join('');
+      const more=group.total>group.rows.length?`<i class="v152-more">외 ${group.total-group.rows.length}종</i>`:'';
+      return`<div class="v152-rare-group"><div class="v152-rare-head"><b>${C.esc(displayNameOf(group.unit))}</b><span>×${C.num(group.owned)} · 바로 제작 ${C.num(group.readyCount)}/${C.num(group.total)}</span>${more}</div>${rows}</div>`;
+    }).join('');
+    return`<div class="v152-rare-craftable">${head}<div class="v152-rare-summary">보유 희귀 ${groups.length}종 · 지금 바로 만들 수 있는 전설급 <b>${readyTotal}</b>개</div>${cards}</div>`;
+  }
   renderV151BuildableLegends(state,plan){
     const rows=this.v151BuildableLegendRows(state,plan);
     if(!rows.length){
