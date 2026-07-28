@@ -1,5 +1,10 @@
 'use strict';
 
+// v18: 버전 리터럴을 테스트에 박아 두면 릴리스마다 여기서 먼저 깨진다
+// (v17.20·v17.22·v18에서 세 번 반복됐다).  package.json 을 단일
+// 원천으로 읽어 '모듈들이 서로 같은 버전인가'만 검사한다.
+const RELEASE_VERSION=require('../package.json').version;
+
 // Real-browser smoke for the focused one-screen cockpit,
 // no horizontal overflow, the grid fills a desktop viewport, and the
 // round-50 replay fixture (open 이감/단일 deficits) shows an actionable next
@@ -56,7 +61,7 @@ const {chromium}=require('playwright');
           legacyTabs:document.querySelectorAll('.ord-tabs').length
         };
       });
-      assert.strictEqual(metrics.version,'17.28.0');
+      assert.strictEqual(metrics.version,RELEASE_VERSION);
       assert.strictEqual(metrics.health.ready,true,`${cfg.name} fixture health blocked`);
       assert.deepStrictEqual(metrics.regions,REGIONS,`${cfg.name} region set/order changed`);
       assert.strictEqual(metrics.panelCount,4,`${cfg.name} expected exactly four decision panels`);

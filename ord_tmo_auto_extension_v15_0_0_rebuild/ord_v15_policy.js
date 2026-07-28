@@ -6,7 +6,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='17.28.0';
+const VERSION='18.0.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -50,6 +50,10 @@ function fallbackRequirement(key){const labels={main:'상위 딜러',armor:'상�
 // 번갈아 진행된다.  하드 게이트(무엇이 필수인가)는 건드리지 않는다 —
 // 순서만 바꾼다.
 const ROLE_DEADLINE_ROUND=Object.freeze({main:30,armor:40,stunBase:40,slow:45,bossFrenzy:45,stunFull:50,toki:50,single:50,end:50,singleEndExpected:50,singleEndStable:50});
+// v18: 생존 축 마감.  실측 근거는 6판 재생이다 — 첫 클리어는 생존 축을
+// r49에 닫았고, 두 축을 모두 닫고도 진 0724는 r56에 닫았다.  나머지 진
+// 판 4개는 끝까지 못 닫았다.  보스 구간 진입선인 50라를 마감으로 쓴다.
+const SURVIVAL_DEADLINE_ROUND=50;
 const PACE_START_ROUND=10;
 const PACE_SWAP_MARGIN=.08;
 function groupDeadline(rows){
@@ -136,13 +140,40 @@ function evaluate(model,counts,routeInput,options){
     {key:'upperCount',label:'상위',current:summary.upperCount,target:checkpoint.upper,gap:Math.max(0,checkpoint.upper-summary.upperCount)},
     {key:'nonUpperFinal',label:'비상위 전설급',current:summary.nonUpperFinalCount,target:checkpoint.nonUpper,gap:Math.max(0,checkpoint.nonUpper-summary.nonUpperFinalCount)}
   ],rareMinimumGap=Math.max(0,num(checkpoint.rareMinimum)-rare),rareExcess=Number.isFinite(checkpoint.rareMaximum)?Math.max(0,rare-num(checkpoint.rareMaximum)):0,structureMisses=structureRows.filter(row=>row.gap>0).length+(rareMinimumGap>0?1:0),activeMisses=active.reduce((total,group)=>total+group.missed,0),checkpointVector=[structureMisses,round(structureRows[0].gap),round(structureRows[1].gap),round(structureRows[2].gap),rareMinimumGap].concat(groupVector(groups,activeCount),[rareExcess]),fullVector=groupVector(groups,groups.length),blockers=structureRows.filter(row=>row.gap>0).map(row=>`${row.label} +${round(row.gap)}`).concat(rareMinimumGap>0?[`희귀 +${rareMinimumGap}`]:[],active.flatMap(group=>group.rows.filter(row=>num(row.gap)>0&&!row.waived).map(row=>`${row.label} +${round(row.gap)}`)),rareExcess>0?[`미사용 희귀 ${rareExcess}장`]:[]),structuralPass=structureMisses===0&&rareMinimumGap<=0&&activeMisses===0&&rareExcess<=0;
-  let status,label;if(structuralPass){status='structural';label='구조 조건 충족 · 화력 미검증';}else if(summary.legendEquivalent<checkpoint.equivalent||summary.upperCount<checkpoint.upper||summary.nonUpperFinalCount<checkpoint.nonUpper){status='developing';label='완성 전력 마감 미달';}else{status='unsafe';label='필수 역할 또는 희귀 정리 미달';}
+  // v18: 하나의 'unsafe'를 축으로 쪼갠다.  실전 6판 재생 결과 생존 축이
+  // 뚫린 판은 예외 없이 졌고(5판 중 4판은 끝까지 못 닫았다), 첫 클리어는
+  // 화력 축을 미달인 채로 이겼다.  두 상황을 같은 단어로 부르면 사용자가
+  // "지금 죽는 문제인지 미는 문제인지"를 구분할 수 없다.
+  const axes=(role&&role.deficits&&role.deficits.axes)||{},survivalPass=!!(axes.survival&&axes.survival.applicable&&axes.survival.pass);
+  const economyShort=summary.legendEquivalent<checkpoint.equivalent||summary.upperCount<checkpoint.upper||summary.nonUpperFinalCount<checkpoint.nonUpper;
+  let status,label;
+  if(structuralPass){status='structural';label='구조 조건 충족 · 화력 미검증';}
+  // 생존이 뚫려 있으면 경제선보다 그 말을 먼저 한다.  equivalent 4/6/9는
+  // 코드 주석이 스스로 '경제 진행 경고선'이라 선언한 값이고, 이감 10/102는
+  // 그 라운드에 죽는 사유다.  급한 쪽이 앞에 와야 한다.
+  else if(!survivalPass){status='survival-open';label='생존 구조 미달 · 이대로면 라인이 뚫린다';}
+  else if(economyShort){status='developing';label='완성 전력 마감 미달';}
+  else{status='firepower-open';label='생존 구조 완성 · 화력 미달';}
+  // 생존 축을 언제 닫았는지가 실제 승패와 붙어 있다.  기록상 클리어한
+  // 판은 r49에 닫았고, 두 축을 모두 닫고도 진 0724는 r56에 닫았다.
+  //
+  // 다만 판정은 라운드마다 독립이라 "언제 닫혔는지"는 알 수 없다.  50라를
+  // 넘긴 시점에 닫혀 있다고 해서 늦게 닫혔다고 말하면 엔진이 모르는 걸
+  // 주장하는 것이다.  확실히 말할 수 있는 것만 말한다: 마감 전에 닫혀
+  // 있는가, 마감을 넘겼는데 아직 열려 있는가.
+  const survivalPace=survivalPass
+    ?(roundNow<=SURVIVAL_DEADLINE_ROUND
+      ?{state:'on-time',note:`생존 구조 마감 · 기록상 클리어한 판도 ${SURVIVAL_DEADLINE_ROUND}라 전(49라)에 닫았습니다`}
+      :{state:'held',note:'생존 구조 유지 중'})
+    :(roundNow>SURVIVAL_DEADLINE_ROUND
+      ?{state:'overdue',note:`생존 구조가 ${SURVIVAL_DEADLINE_ROUND}라 마감을 넘겨 열려 있습니다 · 기록상 진 판 4개가 여기서 못 닫았습니다`}
+      :{state:'open',note:`생존 구조는 ${SURVIVAL_DEADLINE_ROUND}라 전에 닫아야 합니다`});
   const unknowns=['50~65라 실제 보스 DPS','라인 처리 속도'];if(route.key==='singleEnd')unknowns.push('단일·끝딜 컨트롤 수행');
   const requirements=groups.flatMap(group=>group.rows.map(row=>Object.assign({},row,{group:group.index,priority:group.index+1,active:group.index<activeCount})));
-  return{version:VERSION,status,label,route,checkpoint,actual:summary,rareRemaining:rare,rareExcess,role,requirements,groups,activeGroups:active,structureRows,structureMisses,activeMisses,checkpointVector,fullVector,structuralPass,blockers,unknowns,evidence:{kind:'observed-plus-exact-ledger',inventory:'current-stock-only',roles:'live-owned-with-regression-guards',combat:'unmeasured',triggerPolicy:'core-safe-envelope'}};
+  return{version:VERSION,status,label,route,checkpoint,actual:summary,rareRemaining:rare,rareExcess,role,requirements,groups,activeGroups:active,structureRows,structureMisses,activeMisses,checkpointVector,fullVector,structuralPass,axes,survivalPass,survivalPace,survivalDeadline:SURVIVAL_DEADLINE_ROUND,blockers,unknowns,evidence:{kind:'observed-plus-exact-ledger',inventory:'current-stock-only',roles:'live-owned-with-regression-guards',combat:'unmeasured',triggerPolicy:'core-safe-envelope',axisBasis:'replay-of-six-recorded-runs'}};
 }
 function compareVector(left,right){const length=Math.max((left||[]).length,(right||[]).length);for(let index=0;index<length;index++){const a=num(left&&left[index]),b=num(right&&right[index]);if(Math.abs(a-b)>1e-9)return a-b;}return 0;}
 function improved(before,after){return compareVector(after&&after.checkpointVector,before&&before.checkpointVector)<0||compareVector(after&&after.fullVector,before&&before.fullVector)<0;}
 
-return{VERSION,ROUTES,resolveRoute,checkpointFor,evaluate,compareVector,improved,_test:{groupRows,groupVector,rareCount,requirementMap,fallbackRequirement,groupPaceBehind,groupDeadline,ROLE_DEADLINE_ROUND}};
+return{VERSION,ROUTES,SURVIVAL_DEADLINE_ROUND,resolveRoute,checkpointFor,evaluate,compareVector,improved,_test:{groupRows,groupVector,rareCount,requirementMap,fallbackRequirement,groupPaceBehind,groupDeadline,ROLE_DEADLINE_ROUND}};
 });

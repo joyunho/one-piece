@@ -1,5 +1,10 @@
 'use strict';
 
+// v18: 버전 리터럴을 테스트에 박아 두면 릴리스마다 여기서 먼저 깨진다
+// (v17.20·v17.22·v18에서 세 번 반복됐다).  package.json 을 단일
+// 원천으로 읽어 '모듈들이 서로 같은 버전인가'만 검사한다.
+const RELEASE_VERSION=require('../package.json').version;
+
 const assert = require('assert');
 const fs = require('fs');
 const path = require('path');
@@ -115,7 +120,7 @@ function snapshot(helperId, overrides = {}) {
 (async () => {
   await test('manifest limits hosts to the two supported build-helper pages', () => {
     const manifest = JSON.parse(read('manifest.json'));
-    assert.strictEqual(manifest.version, '17.28.0');
+    assert.strictEqual(manifest.version, RELEASE_VERSION);
     assert.deepStrictEqual(manifest.permissions.sort(), ['scripting', 'storage', 'tabs']);
     const helperPermissions=manifest.host_permissions.filter(pattern=>pattern.includes('/build-helper/'));
     assert.strictEqual(helperPermissions.length,8);

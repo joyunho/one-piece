@@ -1023,3 +1023,42 @@
 .v152-rare-group button small{display:block;color:#8CA2BE;font-size:9px}
 .v152-rare-group button em{flex:0 0 auto;color:#9FB6E4;font-size:10px;font-style:normal;font-weight:800}
 .v152-rare-group button.ready em{color:#9FE8AC}
+
+/* v18 — 축 판정과 확신 등급.
+   생존 축과 화력 축은 다른 문제라서 다른 색으로 말한다: 생존이 열리면
+   빨강(그 라운드에 죽는다), 화력만 열리면 주황(밀린다).  확신 등급은
+   1번 카드 상태 배지 옆에 붙어 "지금 이게 얼마나 확실한 말인지"를 준다. */
+.v151-confidence{margin-right:5px;border-radius:999px;padding:1px 6px;font-size:9px;font-style:normal;font-weight:950;letter-spacing:.03em}
+.v151-confidence.lv-approved{background:rgba(54,213,138,.16);color:#86E3B5}
+.v151-confidence.lv-likely{background:rgba(114,221,239,.14);color:#72DDEF}
+.v151-confidence.lv-fallback{background:rgba(240,185,78,.15);color:#F0C978}
+.v151-confidence.lv-operations{background:rgba(159,182,228,.14);color:#B9C9E8}
+.v151-route-wait{display:grid;grid-template-columns:auto 1fr auto;gap:4px 8px;align-items:center;margin:8px 0 6px;border:1px dashed #3B577A;border-radius:12px;padding:9px 11px;background:#0A1729}
+.v151-route-wait b{font-size:14px}
+.v151-route-wait i{color:#9FB6E4;font-size:11px;font-style:normal;font-weight:800}
+.v151-route-wait small{grid-column:1/-1;color:#8CA2BE;font-size:10.5px;line-height:1.45}
+.v153-axis-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;margin-bottom:9px}
+.v153-axis{display:grid;gap:2px;border:1px solid #35516F;border-radius:12px;padding:8px 10px;background:#0A1729}
+.v153-axis small{color:#91A7C0;font-size:10.5px;font-weight:900}
+.v153-axis b{font-size:16px;line-height:1.25}
+.v153-axis i{color:#9AADC3;font-size:10.5px;font-style:normal;line-height:1.4}
+.v153-axis.ok{border-color:rgba(54,213,138,.48);background:rgba(30,158,102,.1)}
+.v153-axis.ok b{color:#86E3B5}
+.v153-axis.bad{border-color:rgba(240,145,143,.58);background:rgba(84,31,35,.18)}
+.v153-axis.bad b{color:#FFB1A8}
+.v153-axis.warn{border-color:rgba(240,185,78,.5);background:rgba(94,70,22,.16)}
+.v153-axis.warn b{color:#F0C978}
+.v153-axis.na b{color:#8CA2BE;font-size:14px}
+.v153-axis.pace.on-time{border-color:rgba(54,213,138,.42)}
+.v153-axis.pace.on-time b{color:#86E3B5}
+.v153-axis.pace.overdue{border-color:rgba(240,145,143,.5)}
+.v153-axis.pace.overdue b{color:#FFB1A8}
+@media (max-width:520px){.v153-axis-row{grid-template-columns:1fr}}
+.v151-phase-chip.ph-operations b{color:#B9C9E8}
+.v151-phase-chip.ph-direction b{color:#F0C978}
+.v151-phase-chip.ph-build b{color:#72DDEF}
+.v151-phase-chip.ph-opening b{color:#9FB6E4}
+/* 감당 불가 목표를 지목할 때는 부족량을 반드시 같이 보여준다.
+   "모으는 중"은 정당한 안내지만, 얼마나 모자란지 없이 이름만 내밀면
+   지금 할 수 있는 일처럼 읽힌다. */
+.v151-confidence.lv-short{background:rgba(240,145,143,.16);color:#FFB1A8}

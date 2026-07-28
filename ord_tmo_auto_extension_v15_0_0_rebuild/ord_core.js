@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='17.28.0';
+const VERSION='18.0.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1016,9 +1016,39 @@ function clearProfileDetails(spec,mode,settings){
   ],dualDistance=routeDistance(dual),singleEndDistance=routeDistance(singleEnd),requested=normalizeMagicRoute(settings._resolvedMagicRoute||settings.magicRoute),selected=requested==='auto'?(dualDistance<=singleEndDistance?'dual':'singleEnd'):requested,requirements=selected==='dual'?dual:singleEnd;
   return{mode,key:selected,label:selected==='dual'?'마딜 2상위 + 토키':'마딜 1상위 + 단일·끝딜',requested,requirements,distance:selected==='dual'?dualDistance:singleEndDistance,slowTarget,stunTarget:1.5,singleEndFloor:3,singleEndStable:3,priority:selected==='dual'?['main','stunBase','slow','stunFull','bossFrenzy','toki']:['bossFrenzy','stunBase','slow','stunFull','singleEndExpected'],routes:{dual:{key:'dual',label:'2상위 + 토키',distance:dualDistance,requirements:dual},singleEnd:{key:'singleEnd',label:'1상위 + 단·끝 3~4',distance:singleEndDistance,requirements:singleEnd}},note:selected==='dual'?'두 번째 상위와 0.5스턴을 최우선으로 보고, 토키·광보잡을 마감합니다.':'광보잡과 0.5스턴을 먼저 지키고, 단·끝은 메인 상위를 제외한 직접 abilities 기여만 합산합니다.'};
 }
+// v18: 역할 요구치를 축으로 나눈다.
+//
+// 실전 로그 6판을 통째로 재생해서 나온 결론이다.  지금까지는 모든
+// 요구치가 한 줄에 섞여 있었고, 하나라도 열려 있으면 똑같이 "필수 역할
+// 미달"이라는 한 문장으로 요약됐다.  그런데 6판을 놓고 보면 두 종류가
+// 전혀 다르게 행동한다.
+//
+//   생존 축(이감·스턴·방깎·광보잡·상위) — 뚫리면 죽는다.
+//     진 판 5개 중 4개가 이 축을 끝까지 한 번도 닫지 못했고,
+//     0725는 이감 10/102, 0723a는 이감 92.5 + 광보잡 0으로 끝났다.
+//   화력 축(단일·끝딜·검증단끝·공증·체젠) — 부족하면 밀리지만 즉사는 아니다.
+//     첫 클리어(0728c)는 단일 0.5/2, 검증단끝 2/3으로 미달인 채 이겼다.
+//     오히려 진 판 0723a가 단일 1로 클리어보다 화력이 높았다.
+//
+// 그래서 축은 요구치를 낮추는 장치가 아니다.  target은 그대로 두고
+// 분류만 붙인다.  화면과 판정이 "죽는 문제"와 "미는 문제"를 다른 말로
+// 하게 만드는 것이 목적이다.  0724가 두 축을 다 닫고도 졌으므로,
+// 두 축을 다 닫았다고 해서 클리어를 보장한다고 말하지는 않는다.
+const ROLE_AXIS=Object.freeze({
+  main:'survival',armor:'survival',stunBase:'survival',stunFull:'survival',
+  slow:'survival',bossFrenzy:'survival',toki:'survival',
+  single:'firepower',end:'firepower',singleEndExpected:'firepower',
+  singleEndStable:'firepower',singleEndMax:'firepower',magicSupport:'firepower',
+  attack:'firepower',regen:'firepower',speed:'firepower',armorBreak:'firepower',
+  subdamage:'firepower',deletion:'firepower',mana:'firepower'
+});
+// 모르는 키는 생존으로 올리지 않는다.  상위 전략이 새로 들여오는
+// 요구(공증·체젠 등)는 대부분 화력 보조이고, 잘못 생존으로 분류하면
+// "죽는다"는 경고가 헐거워진다.
+function roleAxis(key){return ROLE_AXIS[key]||'firepower';}
 function deficits(spec,mode,settings){
   const ctl=controlState(spec,mode,settings),profile=clearProfileDetails(spec,mode,settings),req=[],upper=settings&&settings._upperUnit,strategy=upperStrategy(upper);
-  const add=(key,label,current,target,weight,required=true,meta={})=>req.push(Object.assign({key,label,current:round2(current),target:round2(target),gap:round2(Math.max(0,target-current)),weight,required,recommended:!required,status:current>=target?'ok':current>=target*.7?'warn':'bad'},meta));
+  const add=(key,label,current,target,weight,required=true,meta={})=>req.push(Object.assign({key,label,axis:roleAxis(key),current:round2(current),target:round2(target),gap:round2(Math.max(0,target-current)),weight,required,recommended:!required,status:current>=target?'ok':current>=target*.7?'warn':'bad'},meta));
   for(const r of profile.requirements)add(r.key,r.label,r.current,r.target,r.weight,r.required!==false,r.meta||{});
   if(mode==='physical'&&!profile.requirements.some(r=>r.key==='bossFrenzy')){add('bossFrenzy','보스·광폭 보조',Math.min(num(spec.boss),num(spec.frenzy)),1,95,true);}
   if(mode==='magic'){if(profile.key==='singleEnd')add('singleEndStable','한 기 누락 후 단일·끝딜 하한',num(spec.singleEndStable),3,34,false,{recommended:true,maximum:num(spec.singleEndMax)});add('magicSupport','마딜 증폭·마방깎',num(spec.magicDef)+num(spec.magicAmp)+num(spec.explosionAmp),1,32,false,{recommended:true});}
@@ -1033,7 +1063,30 @@ function deficits(spec,mode,settings){
   const waivedKeys=new Set(strategy.waives||[]);
   if(waivedKeys.size)for(const row of req)if(waivedKeys.has(row.key)){row.required=false;row.recommended=false;row.waived=true;if(row.gap>0)row.status='waived';row.label=`${row.label} · 면제(스펙 대체)`;}
   const clearRows=req.filter(x=>x.required&&x.gap>0).sort((a,b)=>b.weight-a.weight),buildRows=req.filter(x=>(x.required||x.recommended)&&x.gap>0).sort((a,b)=>b.weight-a.weight),required=req.filter(x=>x.required),denominator=required.reduce((s,x)=>s+x.weight,0)||1,readiness=Math.round(required.reduce((s,x)=>s+x.weight*clamp(x.current/Math.max(.01,x.target),0,1),0)/denominator*100);
-  return{rows:buildRows,buildRows,clearRows,requirements:req,control:ctl,readiness,strategy,profile,route:profile.key};
+  return{rows:buildRows,buildRows,clearRows,requirements:req,control:ctl,readiness,axes:axisSummary(req),strategy,profile,route:profile.key};
+}
+// 축별 요약.  필수(required)이고 면제되지 않은 행만 센다 — 권장 행이
+// "죽는다" 판정에 끼어들면 경고가 무뎌진다.  readiness도 축별로 따로
+// 내서 화면이 "생존 92% · 화력 40%"처럼 말할 수 있게 한다.
+function axisSummary(rows){
+  const out={};
+  for(const axis of ['survival','firepower']){
+    const scoped=(rows||[]).filter(row=>row&&row.axis===axis&&row.required&&!row.waived);
+    const open=scoped.filter(row=>num(row.gap)>0);
+    const weight=scoped.reduce((total,row)=>total+num(row.weight),0)||1;
+    // 물딜 경로에는 화력 축 행이 아예 없다.  행이 없는 축을 "통과"라고
+    // 부르면 화면이 "화력 100%"라는 근거 없는 초록불을 켠다.  해당 없음을
+    // 별도로 표시하고 readiness는 null로 둔다.
+    out[axis]={
+      applicable:scoped.length>0,
+      pass:scoped.length>0&&open.length===0,
+      evaluated:scoped.length,
+      openCount:open.length,
+      open:open.map(row=>({key:row.key,label:row.label,current:row.current,target:row.target,gap:row.gap})),
+      readiness:scoped.length?Math.round(scoped.reduce((total,row)=>total+num(row.weight)*clamp(num(row.current)/Math.max(.01,num(row.target)),0,1),0)/weight*100):null
+    };
+  }
+  return out;
 }
 function roleContribution(u,mode){
   const r=roleProfile(u),magic=mode==='magic',finish=magicFinishProfile(u);return{main:isUpper(u)&&(r.family===mode||r.family==='neutral')?1:0,stun:r.stun,stunBase:Math.min(.5,r.stun),stunFull:r.stun,slow:r.slow+r.triggerSlow,armor:r.armor,triggerArmor:r.triggerArmor,boss:r.boss?1:0,frenzy:r.frenzy?1:0,bossFrenzy:r.boss&&r.frenzy?1:0,toki:magic&&/^토키(?:\s|\()/.test(nameOf(u))?1:0,single:magic?r.single:0,end:magic?r.end:0,singleEnd:magic?r.single+r.end:0,singleEndUnits:magic&&finish.directCredit>0?1:0,singleEndExpected:magic?finish.directCredit:0,singleEndMax:magic?finish.maxCredit:0,magicSupport:r.magicDef+r.magicAmp+r.explosionAmp,armorBreak:r.armorBreak?1:0,attack:r.attack-r.attackPenalty+r.triggerAttack*.65,speed:r.speed,regen:r.regen,mana:r.mana,deletion:r.deletion?1:0,utility:r.utility?1:0,subdamage:r.supportDamage?1:0};
@@ -1341,5 +1394,5 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);
