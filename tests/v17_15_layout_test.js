@@ -46,10 +46,15 @@ test('클리어 결손은 전설 환산과 최우선 결손 최대 4개만 보�
 
 test('희귀 장부는 사용·보류·리롤과 즉시 제작 전설급을 함께 보여준다', () => {
   const rare = slice('renderV153RareLedger(state,plan){', 'renderV153UpperParty(state,plan){');
-  for (const marker of ['상위 올리기 전 안전 리롤', "key:'use'", "key:'hold'", "key:'reroll'", '지금 희귀로 만들 수 있음']) {
+  for (const marker of ['상위 올리기 전 안전 리롤', "key:'use'", "key:'hold'", "key:'reroll'", '내 희귀함으로 만들 수 있는 전설급']) {
     assert(rare.includes(marker), marker);
   }
-  assert(rare.includes('.filter(row=>row&&row.feasible).slice(0,3)'));
+  // v17.28: 이 칸은 "내 희귀함으로 만들 수 있는" 목록이므로 보유 희귀를
+  // 실제로 쓰는 조합만 실어야 한다(v153RareCraftRows → rareCraftableLegends).
+  // 희귀 소모를 요구하지 않는 v151BuildableLegendRows를 쓰면 "희귀 직접
+  // 소모 없음" 항목이 그대로 실린다.
+  assert(rare.includes('this.v153RareCraftRows(state,plan)'));
+  assert(!rare.includes('.filter(row=>row&&row.feasible).slice(0,3)'));
   assert(rare.includes('후보 중 하나라도 사용하는 희귀는 돌리지 않습니다.'));
 });
 

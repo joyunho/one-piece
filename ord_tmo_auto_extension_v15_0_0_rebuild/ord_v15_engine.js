@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='17.27.0';
+const VERSION='17.28.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -721,7 +721,16 @@ function exclusionReason(best,path){if(path.coverage.deadEnds.length>best.covera
 function reconcileSquadExecution(decision,squad,locks){
   if(!decision||!decision.model||!squad||squad.error)return decision;
   const model=decision.model,prefix=squad.safePrefix||{},actions=Array.isArray(prefix.actions)?prefix.actions:[],audit=prefix.audit||{},rawAction=decision.action||decision.blockedAction||null,withEvidence=(patch,extra)=>Object.assign({},decision,patch,{evidence:Object.assign({},decision.evidence||{},extra||{})});
-  const blocked=(state,reason,extra)=>withEvidence({state,label:state==='SYNC_BLOCKED'?'현재 패 재검증 필요':'최종 파티 제작 순서 보류',reason,action:null,blockedAction:null},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:true,squadPrefixRejectReason:reason,...extra});
+  // v17.28(사용자 지적): "이 타이밍에 추천을 안 해버리면 굉장히 곤란하다."
+  // 이 가드는 최종 파티와 어긋나는 제작을 '승인'하지 않으려는 것이지
+  // 화면을 비우려는 게 아니다.  그런데 action·blockedAction을 둘 다
+  // null로 만들어 1번 카드에 아무것도 안 남았다 — 실측 로그
+  // ORD_2305_20260728_053445에서 r38~r52 사이 9개 라운드가 이 상태였고
+  // r39·r51은 그 라운드 내내 여기서 멈춰 있었다.
+  // 승인은 계속 막되(action은 null 유지), 엔진이 원래 만들려던 유닛을
+  // blockedAction으로 남겨 무엇을 왜 기다리는지 보이게 한다.
+  const blockedFallback=()=>decision&&(decision.action||decision.blockedAction)||null;
+  const blocked=(state,reason,extra)=>withEvidence({state,label:state==='SYNC_BLOCKED'?'현재 패 재검증 필요':'최종 파티 제작 순서 보류',reason,action:null,blockedAction:blockedFallback()},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:true,squadPrefixRejectReason:reason,...extra});
   if(!actions.length){
     if(decision.state==='ACT_NOW')return blocked('HOLD','최종 파티의 현재 패 검증 순서에 없는 제작이라 승인하지 않습니다. 패가 바뀌면 파티와 제작 순서를 함께 다시 계산합니다.',{rawActionId:String(rawAction&&rawAction.id||'')});
     return withEvidence({}, {executionAuthority:'squad-prefix-requoted-v15',squadPrefixEmpty:true});

@@ -1135,6 +1135,24 @@ class App{
     return rows;
   }
 
+  // v17.28(사용자 지적): 이 칸의 제목은 "내 희귀함으로 만들 수 있는
+  // 전설급"인데 v151BuildableLegendRows는 희귀 소모를 요구하지 않아
+  // "희귀 직접 소모 없음" 항목이 그대로 실렸다.  보유 희귀를 실제로
+  // 쓰는 조합만 싣는 코어 계산으로 교체한다.
+  v153RareCraftRows(state,plan){
+    if(!C.rareCraftableLegends)return[];
+    const mode=plan&&plan.mode||this.state.mode||'physical';
+    const family=this.v151FamilyIntent?this.v151FamilyIntent(state):'';
+    const groups=C.rareCraftableLegends(state,{mode,family,maxPerRare:8});
+    const seen=new Set(),out=[];
+    for(const group of groups)for(const row of group.rows){
+      if(!row.ready||seen.has(row.id))continue;
+      seen.add(row.id);
+      out.push({unit:row.unit,solve:{wispCost:row.wispCost},rareSpend:{byId:[{name:group.name,use:row.rareUse}]},feasible:true});
+      if(out.length>=8)break;
+    }
+    return out;
+  }
   renderV152RareCraftable(state,plan){
     if(!C.rareCraftableLegends)return'';
     const mode=plan&&plan.mode||this.state.mode||'physical';
@@ -1694,8 +1712,14 @@ class App{
     const columns=groups.map(group=>{const list=rows.filter(row=>C.num(row[group.key])>0),total=list.reduce((sum,row)=>sum+C.num(row[group.key]),0);return`<section class="${group.tone}"><header><b>${group.label}</b><strong>${total}장</strong></header><div>${list.map(row=>card(row,group.key)).join('')||`<p>${group.empty}</p>`}</div></section>`;}).join('');
     const rerollRows=rows.filter(row=>C.num(row.reroll)>0),upperChosen=!!this.upperLock(),rerollLeft=Math.max(0,2-C.num(this.state.rerollsUsed));
     const rerollBanner=rerollRows.length?`<div class="v153-reroll-now"><span><small>${upperChosen?'안전 리롤':'상위 올리기 전 안전 리롤'}</small><b>${rerollRows.map(row=>C.esc(row.name)).join(' · ')}</b></span><em>남은 ${rerollLeft}/2 · 한 장씩</em></div>`:`<div class="v153-reroll-safe"><b>${upperChosen?'현재 리롤할 희귀 없음':'상위 후보 재료는 전부 보류'}</b><span>${upperChosen?'확정 파티에서 사용처 없는 희귀가 생기면 표시합니다.':'후보 중 하나라도 사용하는 희귀는 돌리지 않습니다.'}</span></div>`;
-    const craftRows=this.v151BuildableLegendRows(state,plan).filter(row=>row&&row.feasible).slice(0,3);
-    const crafts=craftRows.length?`<div class="v153-rare-crafts"><header><b>지금 희귀로 만들 수 있음</b><span>최대 3개</span></header><div>${craftRows.map(row=>{const rare=(row.rareSpend&&row.rareSpend.byId||[]).filter(item=>C.num(item.use)>0).slice(0,3).map(item=>`${item.name}${C.num(item.use)>1?`×${C.num(item.use)}`:''}`).join(' · ');return`<button data-act="detail" data-id="${C.esc(row.unit.id)}">${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:''}<span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(rare||'희귀 직접 소모 없음')}</small></span><em>선위 ${C.num(row.solve&&row.solve.wispCost)}</em></button>`;}).join('')}</div></div>`:`<div class="v153-no-crafts"><b>현재 희귀로 바로 만들 전설급 없음</b><span>부족 재료가 채워지면 최대 3개만 표시합니다.</span></div>`;
+    const craftRows=this.v153RareCraftRows(state,plan);
+    // v17.28: 만들 수 있는 게 없어도 칸(제목)은 남긴다 — 재료를 모으는
+    // 구간에 칸이 통째로 사라지면 사용자가 상태를 확인할 수 없다.
+    // v17.28(사용자 지적): 만들 수 있는 게 없어도 칸(제목)은 남긴다 —
+    // 재료를 모으는 구간에 칸이 통째로 사라지면 사용자가 상태를 확인할
+    // 수 없다.  목록은 보유 희귀를 실제로 쓰는 조합만 싣는다.
+    const craftBody=craftRows.length?`<div>${craftRows.map(row=>{const rare=(row.rareSpend&&row.rareSpend.byId||[]).filter(item=>C.num(item.use)>0).slice(0,3).map(item=>`${item.name}${C.num(item.use)>1?`×${C.num(item.use)}`:''}`).join(' · ');return`<button data-act="detail" data-id="${C.esc(row.unit.id)}">${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:''}<span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(rare)}</small></span><em>선위 ${C.num(row.solve&&row.solve.wispCost)}</em></button>`;}).join('')}</div>`:`<div class="v153-no-crafts"><b>지금 보유 희귀로 바로 만들 전설급 없음</b><span>희귀를 쓰는 조합이 선택 위습이나 특수 선행재료로 막혀 있습니다. 재료가 들어오면 여기부터 다시 채워집니다.</span></div>`;
+    const crafts=`<div class="v153-rare-crafts"><header><b>내 희귀함으로 만들 수 있는 전설급</b><span>보유 희귀를 실제로 쓰는 조합만 · 최대 8개</span></header>${craftBody}</div>`;
     return`${ledger.conflict?'<div class="v153-ledger-warning">희귀 분류 충돌 — 제작·리롤을 멈추고 TMO를 다시 읽으세요.</div>':''}${rerollBanner}<div class="v153-rare-columns">${columns}</div>${crafts}`;
   }
 

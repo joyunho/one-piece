@@ -59,12 +59,15 @@ check('Rare focus shows the pre-upper safe reroll and at most three craftable Le
   app.state={rerollsUsed:0};
   app.upperLock=()=>null;
   const rareUnit={id:'rare-a',name:'남는 희귀',image:''};
-  const legends=Array.from({length:4},(_,index)=>({
+  const legends=Array.from({length:9},(_,index)=>({
     unit:{id:`legend-${index}`,name:`전설 ${index+1}`,image:''},
     feasible:true,
     solve:{wispCost:index+1},
     rareSpend:{byId:[{name:'남는 희귀',use:1}]}
   }));
+  // v17.28: 이 칸은 "내 희귀함으로 만들 수 있는" 목록이라 희귀 소모를
+  // 요구하는 계산(v153RareCraftRows)으로 바뀌었고 상한도 3 → 8이다.
+  app.v153RareCraftRows=()=>legends.slice(0,8);
   app.v151BuildableLegendRows=()=>legends;
   const html=app.renderV153RareLedger({db:{byId:new Map([[rareUnit.id,rareUnit]])}},{
     v15Decision:{rare:{rows:[
@@ -73,9 +76,9 @@ check('Rare focus shows the pre-upper safe reroll and at most three craftable Le
   });
   assert(html.includes('상위 올리기 전 안전 리롤'));
   assert(html.includes('남는 희귀'));
-  assert(html.includes('지금 희귀로 만들 수 있음'));
-  assert(html.includes('전설 1')&&html.includes('전설 3'));
-  assert(!html.includes('전설 4'));
+  assert(html.includes('내 희귀함으로 만들 수 있는 전설급'));
+  assert(html.includes('전설 1')&&html.includes('전설 8'));
+  assert(!html.includes('전설 9'),'희귀 제작 목록 상한(8)이 지켜지지 않았다');
   assert.strictEqual((html.match(/class="v153-rare-crafts"/g)||[]).length,1);
 });
 
@@ -173,7 +176,11 @@ check('upper choice consumes only v15 route candidates, caps them at six and hid
 check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   const coachSource=between('  renderCoach(state,plan,phase,clock,health){','  renderCoachDetails(state,plan,open=false){');
   for(const method of ['renderV153Status','renderV151NextAction','renderV153NextCandidate','renderV153Spec','renderV153RareLedger','renderV153UpperParty'])assert(coachSource.includes(method),method);
-  assert(source.includes('this.v151BuildableLegendRows(state,plan).filter(row=>row&&row.feasible).slice(0,3)'),'buildable legends must stay reachable from the rare ledger');
+  // v17.28: 희귀 장부의 제작 목록은 보유 희귀를 실제로 쓰는 조합만 싣는
+  // 계산으로 바뀌었다.  옛 계산은 희귀 소모를 요구하지 않아 "희귀 직접
+  // 소모 없음" 항목이 그대로 실렸다.
+  assert(source.includes('this.v153RareCraftRows(state,plan)'),'rare-based craft list must stay reachable from the rare ledger');
+  assert(source.includes('C.rareCraftableLegends'),'rare-based craft list must use the core ledger calculation');
   assert(source.includes('data-opt="virtualSpecialId"'),'152 selector must stay reachable from collapsed settings');
   assert(!coachSource.includes('renderActions('));
   assert(!coachSource.includes('renderSquadPlan('));
