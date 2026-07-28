@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v18.1.0-decision-engine-manual">
+  <meta name="ord-helper" content="v18.3.0-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.305 악몽 수동 도우미">
-  <title>원랜디 2.305 악몽 실전 판단 코치 v18.1.0 · 수동 모드</title>
+  <title>원랜디 2.305 악몽 실전 판단 코치 v18.3.0 · 수동 모드</title>
   <style data-source="ord_app.css">
 :root{color-scheme:dark;--bg:#060b18;--panel:#0d162a;--panel2:#101d35;--line:#223454;--text:#eef5ff;--muted:#91a2bd;--blue:#4f7cff;--cyan:#25c2e7;--green:#27d17f;--amber:#f3b84b;--red:#ef6262;--violet:#8b67ff;--shadow:0 20px 55px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 10% 0,#122a5a 0,#060b18 35%,#040812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-break:keep-all;overflow-wrap:anywhere}button,input,select{font:inherit}button{cursor:pointer}.ord-app{min-height:100vh;padding:18px;max-width:1860px;margin:0 auto}.ord-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px;border:1px solid rgba(112,154,255,.26);border-radius:24px;background:linear-gradient(135deg,rgba(66,83,222,.34),rgba(17,64,94,.3));box-shadow:var(--shadow)}.ord-kicker{font-size:11px;letter-spacing:.14em;color:#9bb7ff;font-weight:900}.ord-header h1{margin:5px 0 3px;font-size:29px;line-height:1.15}.ord-header p{margin:0;color:var(--muted);font-size:13px}.ord-head-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:720px}.ord-head-status>*{border:1px solid var(--line);border-radius:999px;background:rgba(6,11,24,.7);color:#d9e8ff;padding:8px 12px;font-size:12px;font-weight:800;white-space:nowrap}.ord-head-status .good{border-color:rgba(39,209,127,.45);color:#a8f7ce}.ord-head-status .warn{border-color:rgba(243,184,75,.45);color:#ffe1a1}.ord-head-status button{background:#1b2b4d}.ord-tabs{display:flex;gap:8px;margin:14px 0}.ord-tabs button,.purpose-buttons button,.two-button button,.round-box button,.action-buttons button,.prep-list button,.mini-cards button,.ghost,.primary{border:1px solid var(--line);border-radius:11px;background:#111d32;color:#dce9ff;padding:9px 13px;font-weight:850}.ord-tabs button.on,.purpose-buttons button.on,.primary{border-color:transparent;background:linear-gradient(135deg,var(--violet),var(--blue));color:white}.ord-layout{display:grid;grid-template-columns:294px minmax(0,1fr);gap:14px;align-items:start}.ord-side{display:grid;gap:12px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;padding-right:3px;min-width:0}.side-card,.ord-panel{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(15,26,48,.96),rgba(9,16,31,.96));box-shadow:0 14px 38px rgba(0,0,0,.18);min-width:0}.side-card{padding:14px}.side-card b{font-size:14px}.side-title{display:flex;justify-content:space-between;gap:8px}.side-title span{font-size:11px;color:var(--cyan)}.side-card label{display:grid;gap:5px;color:var(--muted);font-size:11px;margin-top:11px}.side-card input,.side-card select,.form-grid input{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#071020;color:var(--text);padding:9px}.side-card small{display:block;color:var(--muted);font-size:10.5px;line-height:1.45;margin-top:6px}.round-box{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding:10px;border:1px solid rgba(37,194,231,.3);border-radius:13px;background:rgba(10,39,62,.35)}.round-box strong{font-size:13px;min-width:0}.round-box div{display:flex;gap:4px}.round-box button{padding:6px 8px;font-size:11px}.side-card details{margin-top:10px}.side-card summary,.detail-modal summary{cursor:pointer;color:#cbd9ef;font-size:11px;font-weight:800}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.two-button{display:flex;gap:6px;margin-top:10px}.two-button button{flex:1;font-size:11px;padding:8px}.two-button .on{border-color:var(--green);color:#c5ffe0;background:rgba(39,209,127,.1)}.two-button .danger.on{border-color:var(--red);color:#ffc1c1;background:rgba(239,98,98,.1)}.stat-row{display:flex;justify-content:space-between;align-items:center}.stat-row b{font-size:24px;color:#ffe7a3}.lock-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.lock-list>span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(139,103,255,.35);border-radius:999px;padding:5px 8px;background:rgba(139,103,255,.1);font-size:10px}.lock-list button{border:0;background:none;color:#ffaaaa;font-weight:900}.side-card.compact{padding-bottom:10px}.common-line{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;margin-top:7px;font-size:11px}.common-line i{width:8px;height:8px;border-radius:50%}.common-line b{font-size:11px}.ord-main{display:grid;gap:13px;min-width:0}.milestone{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 19px;border:1px solid rgba(37,194,231,.4);border-radius:21px;background:linear-gradient(135deg,rgba(6,47,78,.78),rgba(31,25,87,.56));min-width:0}.milestone small{color:#61daf5;font-weight:900}.milestone h2{margin:3px 0 5px;font-size:24px}.milestone p{margin:0;color:#abc0df;font-size:12px}.purpose-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.purpose-buttons button{font-size:11px}.top-two{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:13px}.ord-panel{padding:17px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px}.panel-head small{color:#72d8ef;font-size:10px;font-weight:900}.panel-head h2{margin:2px 0 4px;font-size:20px}.panel-head p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.45}.count-pill,.mode-pill,.control-badge{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;white-space:nowrap}.mode-pill.physical{color:#ffcb9a;border-color:#e48e45}.mode-pill.magic{color:#a9c9ff;border-color:#5c84d8}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.profile-grid>div,.spec-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px;min-width:0}.profile-grid small,.spec-grid small{display:block;color:var(--muted);font-size:10px}.profile-grid b{display:block;margin-top:5px;font-size:12px;line-height:1.45}.synergy-line{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.synergy-line small{width:100%;color:var(--muted)}.synergy-line span{border:1px solid rgba(39,209,127,.3);border-radius:999px;padding:5px 8px;font-size:10px;color:#b8f7d5}.upper-focus details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.upper-focus details p{color:#aebbd0;font-size:11px}.control-badge.safe{color:#a9f7cc;border-color:rgba(39,209,127,.45)}.control-badge.edge{color:#ffe2a4;border-color:rgba(243,184,75,.45)}.control-badge.danger{color:#ffb4b4;border-color:rgba(239,98,98,.45)}.spec-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.spec-grid b{display:block;font-size:21px;margin:4px 0}.spec-grid span{color:#8193ae;font-size:9.5px}.deficit-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}.deficit-line>b{font-size:11px}.deficit-line span{border:1px solid rgba(243,184,75,.32);border-radius:999px;padding:5px 8px;color:#ffd78d;font-size:10px}.deficit-line .ok{color:#a9f7cc;border-color:rgba(39,209,127,.3)}.state-intro{display:flex;justify-content:space-between;gap:15px;align-items:center}.state-intro h2{margin:4px 0}.state-intro p{color:var(--muted);margin:0;font-size:12px}.control{min-width:260px;border:1px solid var(--line);border-radius:15px;padding:12px}.control b,.control span{display:block}.control span{font-size:10px;color:var(--muted);margin-top:4px}.control.safe{border-color:rgba(39,209,127,.35)}.control.edge{border-color:rgba(243,184,75,.35)}.control.danger{border-color:rgba(239,98,98,.35)}.mini-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mini-cards article{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.mini-cards img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mini-cards b,.mini-cards span,.mini-cards small{display:block;min-width:0}.mini-cards b{font-size:12px}.mini-cards span{font-size:10px;color:#9fb1ca}.mini-cards small{font-size:9px;color:#7085a4}.mini-cards button{padding:7px;font-size:10px}.action-list{display:grid;gap:8px}.action-row{display:grid;grid-template-columns:42px 48px minmax(0,1fr) 124px auto;gap:11px;align-items:center;border:1px solid rgba(55,84,132,.8);border-radius:16px;padding:11px;background:linear-gradient(90deg,rgba(12,27,50,.95),rgba(8,17,33,.95));min-width:0}.action-row .rank{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));font-weight:950}.action-row>img{width:46px;height:46px;border-radius:12px;object-fit:cover}.action-main{min-width:0}.unit-title{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.unit-title b{font-size:14px}.unit-title span{font-size:10px;color:#8da1bd}.role-tags{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.role-tags>span,.role-tags i{border:1px solid #284266;border-radius:999px;padding:4px 7px;font-size:9.5px;font-style:normal;color:#bcd3f2}.role-tags i{border-color:color-mix(in srgb,var(--pc) 60%,#223454);box-shadow:inset 3px 0 var(--pc)}.action-main p{margin:0;color:#91a6c2;font-size:10.5px}.action-cost{border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}.action-cost b{display:block;font-size:22px;color:#ffe1a1}.action-cost small{display:block;color:#7f91ab;font-size:9px}.action-cost span{display:block;margin-top:4px;font-size:9px}.action-cost .good{color:#9ff1c5}.action-cost .warn{color:#ffd083}.action-cost .bad{color:#ffaaaa}.action-buttons{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.action-buttons button{font-size:10px;padding:8px}.empty{padding:20px;border:1px dashed #2c4266;border-radius:14px;text-align:center;color:#8193ad}.prep-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prep-list>div{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.prep-list img{width:38px;height:38px;border-radius:10px;object-fit:cover}.prep-list b,.prep-list small{display:block}.prep-list b{font-size:12px}.prep-list small{color:#8195b2;font-size:9.5px}.prep-list em{font-style:normal;color:#ffd587;font-size:9.5px}.prep-list button{font-size:9px;padding:6px}.rare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rare-columns>div{border:1px solid var(--line);border-radius:14px;padding:11px}.rare-columns h3{margin:0 0 8px;font-size:12px}.rare-columns .use{border-color:rgba(39,209,127,.3)}.rare-columns .hold{border-color:rgba(243,184,75,.3)}.rare-columns .reroll{border-color:rgba(239,98,98,.3)}.rare-columns>div>div{display:grid;grid-template-columns:28px 1fr auto;gap:7px;align-items:center;margin-top:6px;font-size:10px}.rare-columns img{width:28px;height:28px;border-radius:8px}.rare-panel>small{display:block;margin-top:9px;color:#7f91aa;font-size:9.5px}.owned-chips{display:flex;gap:7px;flex-wrap:wrap}.owned-chips button{display:flex;align-items:center;gap:7px;max-width:260px;border:1px solid var(--line);border-radius:12px;background:#091326;color:#dceaff;padding:7px 9px}.owned-chips img{width:30px;height:30px;border-radius:8px}.owned-chips span{font-size:10px;text-align:left}.deck-page,.data-page{display:grid;gap:13px}.raw-ability-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.raw-ability-grid>div{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px;background:#091326;font-size:10px}.raw-ability-grid b{color:#d9ecff}.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.owned-grid button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#091326;color:#e3efff;padding:9px;text-align:left}.owned-grid img{width:36px;height:36px;border-radius:9px}.owned-grid span,.owned-grid small{display:block}.owned-grid span{font-size:11px}.owned-grid small{font-size:9px;color:#8296b4}.owned-grid.small button{grid-template-columns:32px 1fr auto}.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.diag-grid>div{border:1px solid var(--line);border-radius:12px;padding:10px;background:#091326}.diag-grid small,.diag-grid b{display:block}.diag-grid small{color:#8395b0;font-size:9px}.diag-grid b{font-size:11px;margin-top:4px}.data-page pre{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#050b16;padding:11px;color:#9fb5d0;font-size:10px}.manual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.manual-grid label{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;font-size:10px}.manual-grid input{width:100%;border:1px solid var(--line);border-radius:8px;background:#050b16;color:white;padding:7px}.modal-back{position:fixed;inset:0;z-index:9999;background:rgba(1,4,12,.8);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px}.detail-modal{width:min(900px,96vw);max-height:92vh;overflow:auto;border:1px solid #30486f;border-radius:24px;background:#081121;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.65);position:relative}.modal-x{position:absolute;right:15px;top:15px;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#111d31;color:white;font-size:20px}.detail-modal header{display:flex;gap:12px;align-items:center;padding-right:50px}.detail-modal header img{width:54px;height:54px;border-radius:14px}.detail-modal h2{margin:0;font-size:19px}.detail-modal header p{margin:4px 0 0;color:#8ea4c1;font-size:10px}.detail-hero{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:15px 0}.detail-hero>div,.missing-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px}.detail-hero small,.detail-hero b,.detail-hero span{display:block}.detail-hero small{color:#8296b4;font-size:9px}.detail-hero b{margin:4px 0;font-size:16px}.detail-hero span{font-size:10px;color:#a9bad0}.detail-modal section{margin-top:14px}.detail-modal h3{font-size:12px}.direct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.direct-grid>div{display:flex;justify-content:space-between;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:10px}.missing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.missing-grid small,.missing-grid b{display:block}.missing-grid small{color:#8296b4;font-size:9px}.missing-grid b{font-size:10px;line-height:1.55;margin-top:5px}.detail-modal details{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px}.detail-modal details p{font-size:10px;color:#9cb0cb}.detail-modal .close{margin-top:14px}.ord-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;border-radius:14px;padding:11px 16px;background:linear-gradient(135deg,var(--violet),var(--blue));box-shadow:var(--shadow);font-weight:900;font-size:12px}
@@ -1294,6 +1294,12 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
    "모으는 중"은 정당한 안내지만, 얼마나 모자란지 없이 이름만 내밀면
    지금 할 수 있는 일처럼 읽힌다. */
 .v151-confidence.lv-short{background:rgba(240,145,143,.16);color:#FFB1A8}
+.v151-confidence.lv-continue{background:rgba(114,221,239,.13);color:#72DDEF}
+.v151-continue{display:grid;grid-template-columns:auto 1fr auto;gap:3px 8px;align-items:center;margin:8px 0 4px;border:1px solid #35516F;border-radius:12px;padding:8px 10px;background:#0A1729}
+.v151-continue small{color:#91A7C0;font-size:10.5px;font-weight:900}
+.v151-continue b{font-size:13.5px}
+.v151-continue i{color:#9FB6E4;font-size:10.5px;font-style:normal;font-weight:800}
+.v151-continue span{grid-column:1/-1;color:#8CA2BE;font-size:10.5px;line-height:1.45}
 
   </style>
 </head>
@@ -1612,7 +1618,7 @@ window.ORD_META_STATS={"schema":"ord-meta-stats-v1","source":"tmo_nightmare_all_
 (function(global){
 'use strict';
 
-const VERSION='18.1.0';
+const VERSION='18.3.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -2394,6 +2400,46 @@ function mergeLiveCatalog(catalog,snapshot){
   const out=[];for(const base of catalog||[]){const live=liveMap.get(base.id)||{},hasLiveAbilities=Object.prototype.hasOwnProperty.call(live,'abilities'),merged=Object.assign({},base,live,{abilities:hasLiveAbilities?Object.assign({},live.abilities||{}):Object.assign({},base.abilities||{})});merged.tmoPercent=live.tmoPercent!=null?num(live.tmoPercent):live.percent!=null?num(live.percent):num(base.percent);merged.count=live.count!=null?num(live.count):0;out.push(merged);}
   for(const [id,live] of liveMap){if(!out.some(u=>u.id===id))out.push(Object.assign({},live));}return out;
 }
+// v18.1 — TMO 읽기 누락 보정.
+//
+// 실전 로그 20260728_170254에서 사용자가 고정한 상위 (S)료쿠규가 스냅샷에서
+// **스무 번** 사라졌다 되돌아왔다.  같은 스냅샷에서 다른 유닛은 하나도
+// 바뀌지 않았고 관측 신뢰도는 0.998이었다 — 제작으로 소비된 것이 아니라
+// 그 유닛 하나만 목록에서 빠진 것이다.
+//
+// 소실 구간 길이는 스무 번 모두 읽기 1~3회였고 영구 소실은 0건이었다.
+// 그런데 한 번 빠질 때마다 역할표가 통째로 무너졌다: 상위 1→0, 방깎 92→57,
+// 이감 42.5→30.  판정은 그때마다 완전히 다른 판을 보고 다시 계산했고,
+// 그래서 화면의 "지금 할 일"이 만드는 도중에 바뀌었다.  같은 라운드 안에서
+// readiness가 76↔50을 네 번 오간 라운드도 있다(r45).
+//
+// 그래서 최종 등급 유닛(상위·전설급)은 근거 없이 사라지면 직전 값을
+// 잠시 유지한다.  실제로 소비된 경우는 그 소비를 설명하는 제작이 있고,
+// 진짜로 없어졌다면 몇 번 더 읽어도 돌아오지 않으므로 그때 받아들인다.
+// 흔함·안흔함·희귀는 제외한다 — 재료로 정상 소비되는 등급이라 유지하면
+// 오히려 장부가 틀어진다.
+const FINAL_UNIT_HOLD_READS=4;
+function stabilizeFinalUnits(previous,counts,db,options){
+  const prior=previous&&previous.counts||{},misses=Object.assign({},previous&&previous.misses||{});
+  const next=Object.assign({},counts||{}),held=[],released=[];
+  const explained=new Set((options&&options.consumed||[]).map(String));
+  const limit=Math.max(1,num(options&&options.maxHold)||FINAL_UNIT_HOLD_READS);
+  const ids=new Set([...Object.keys(prior),...Object.keys(next)]);
+  for(const id of ids){
+    const unit=db&&db.byId&&db.byId.get(id);
+    if(!unit||!(isUpper(unit)||isLegendish(unit)))continue;
+    const before=num(prior[id]),now=num(next[id]);
+    if(now>=before){delete misses[id];continue;}
+    // 제작이 이 유닛을 재료로 먹었다면 줄어드는 게 정상이다.
+    if(explained.has(id)){delete misses[id];continue;}
+    const seen=num(misses[id])+1;
+    if(seen>=limit){delete misses[id];released.push({id,name:displayNameOf(unit),from:before,to:now});continue;}
+    misses[id]=seen;
+    next[id]=before;
+    held.push({id,name:displayNameOf(unit),qty:before,observed:now,reads:seen,limit});
+  }
+  return{counts:next,misses,held,released};
+}
 function normalizeState(catalog,snapshot,settings){
   const merged=mergeLiveCatalog(catalog,snapshot||{}),db=buildDb(merged),rawCounts=Object.assign({},snapshot&&snapshot.counts||{});
   for(const u of merged){if(u.count!=null&&!Object.prototype.hasOwnProperty.call(rawCounts,u.id))rawCounts[u.id]=num(u.count);}const counts=Object.assign({},rawCounts),manual=settings&&settings.manualCounts||{};
@@ -3005,7 +3051,7 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);
 
 </script>
@@ -3018,7 +3064,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='18.1.0';
+const VERSION='18.3.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -4522,7 +4568,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='18.1.0';
+const VERSION='18.3.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -4652,7 +4698,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='18.1.0';
+const VERSION='18.3.0';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -4726,7 +4772,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='18.1.0';
+const VERSION='18.3.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -4908,7 +4954,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='18.1.0';
+const VERSION='18.3.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -5169,6 +5215,12 @@ function nodeRank(model,node,initial){
   // 작동하는 하위 타이브레이크로 내린다.  story는 제거한다 — 스토리
   // 파괴 속도는 악몽 클리어 확률이 아니라고 등급표 스스로 선언했고,
   // 무엇을 실제로 만들지 정하는 이 축에 남아 있으면 안 된다.
+  // v18.2: 순위 벡터의 앞부분(회귀·체크포인트·막다른길·역할 전체)은
+  // "무엇을 닫는가"를 정하는 결정적 구간이고, 그 뒤(예비 선위·전투력·
+  // 커버리지·등급 소모 등)는 전부 동점일 때만 도는 타이브레이크다.
+  // 경계를 기록해 둔다 — 진행 중인 추천을 타이브레이크만으로 뒤집지
+  // 않기 위해 필요하다.
+  node.rankDecisiveLength=1+checkpoint.length+1+(node.assessment.fullVector||[]).length;
   node.rankVector=[node.regression].concat(checkpoint,[coverage.deadEnds.length],node.assessment.fullVector,[reserveGap,-num(node.combat),rareExcess,-coverage.affordableCount,num(node.resources.wisp),-num(tier.rare),-num(tier.special),-num(tier.uncommon),-num(tier.common),-node.completion]);return node.rankVector;
 }
 function compareNodes(a,b){const vector=P.compareVector(a.rankVector,b.rankVector);if(vector)return vector;const aid=(a.sequence||[]).map(step=>step.quote.targetId).join('|'),bid=(b.sequence||[]).map(step=>step.quote.targetId).join('|');return aid.localeCompare(bid);}
@@ -5236,8 +5288,29 @@ function recoveryPlan(model,route,locks,assessment,options){
   return targets.length?{basis:'nearest-closer-per-open-role',note:options&&options.note||'남은 필수 역할을 닫는 최근접 목표',targets}:null;
 }
 function expand(model,node,row,route,locks,initial){const quote=L.quote(model,row.unit,node.counts,{availableRound:model.round.value});if(!quote.feasible)return null;const before=ownedFinals(model,node.counts),after=ownedFinals(model,quote.after);if(introducesLineageConflict(model,before,after))return null;const next=nodeBase(model,quote.after,route,locks,initial,node.sequence.concat({quote}));return next;}
+// v18.2 — 직전에 추천하던 대상은 후보 목록에서 조용히 사라지지 않는다.
+//
+// 관성 장치를 넣고 실측해 보니 흔들림 79건 중 직전 대상이 이번 라운드
+// 후보 경로에 남아 있던 경우가 8건(10%)뿐이었다.  나머지 90%는 순위가
+// 밀린 게 아니라 후보 풀 자체에서 빠진 것이다 — candidatePool과 빔이
+// 매 라운드 상위 몇 개만 남기기 때문에, 선위가 0.5 늘거나 흔함 하나가
+// 드랍되는 것만으로도 어제의 1순위가 오늘 목록에 없다.
+//
+// 그러면 관성도 "계속 진행해도 된다"는 안내도 작동할 수 없다.  그래서
+// 직전 대상이 여전히 만들 수 있는 것이면 후보에 다시 넣어 준다.  순위를
+// 올려 주지는 않는다 — 평가를 받게만 해서, 이기면 유지되고 지면 최소한
+// "이것도 여전히 유효하다"고 말할 수 있게 한다.
+function withStickyCandidate(rows,rawPool,universe,model){
+  const id=String(model&&model.settings&&model.settings._stickyActionId||'');
+  if(!id)return rows;
+  if((rows||[]).some(row=>String(row&&row.unit&&row.unit.id||'')===id))return rows;
+  const found=(rawPool||[]).find(row=>String(row&&row.unit&&row.unit.id||'')===id)
+    ||(universe||[]).find(row=>String(row&&row.unit&&row.unit.id||'')===id);
+  if(!found)return rows;
+  return (rows||[]).concat([found]);
+}
 function search(model,route,locks){
-  const initialAssessment=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks}),initial=nodeBase(model,model.effective.counts,route,locks,initialAssessment,[]),universe=actionUniverse(model,route,locks,initialAssessment,model.effective.counts),rawPool=candidatePool(model,route,locks,initialAssessment,model.effective.counts,model.round.value,universe),budgetGuard=protectCriticalBudget(model,route,locks,initialAssessment,rawPool,model.effective.counts),basePool=budgetGuard.rows,candidateUnits=basePool.map(row=>row.unit),initialCoverage=futureCoverage(model,initial,route,locks,candidateUnits);initial.coverage=initialCoverage;nodeRank(model,initial,initialAssessment);
+  const initialAssessment=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks}),initial=nodeBase(model,model.effective.counts,route,locks,initialAssessment,[]),universe=actionUniverse(model,route,locks,initialAssessment,model.effective.counts),rawPool=candidatePool(model,route,locks,initialAssessment,model.effective.counts,model.round.value,universe),budgetGuard=protectCriticalBudget(model,route,locks,initialAssessment,rawPool,model.effective.counts),basePool=withStickyCandidate(budgetGuard.rows,rawPool,universe,model),candidateUnits=basePool.map(row=>row.unit),initialCoverage=futureCoverage(model,initial,route,locks,candidateUnits);initial.coverage=initialCoverage;nodeRank(model,initial,initialAssessment);
   // Coverage is an expensive exact re-quote. First rank all executable nodes
   // by the declarative role/checkpoint vector, then run coverage only for the
   // bounded finalists. This preserves role-diverse candidates from
@@ -5836,6 +5909,72 @@ function operationsNote(decision,recovery,roundNow,model){
   }
   return `${head} · 필수 구조는 정리됐습니다. ${reach} 남은 라운드는 배치와 컨트롤 문제입니다.`;
 }
+// v18.2 — 진행 중인 추천을 타이브레이크로 뒤집지 않는다.
+//
+// 사용자 신고: "만들고 있다가 갑자기 다른 걸로 바뀐다".  읽기 누락을
+// 고친 뒤에도 라운드 사이 교체가 판당 12~15회 남았고, 실측해 보면
+// 순환이 섞여 있었다 — 20260728_170254 r47~r50은 B30h→A30h→O30h→
+// B30h→A30h로 세 유닛을 돌았다.  이러면 아무것도 완성되지 않는다.
+//
+// 원인은 탐색이 라운드마다 백지에서 다시 도는 것이다.  후보 점수가
+// 앞부분에서 완전히 같으면 남는 것은 타이브레이크뿐이고, 선위 0.5
+// 증가 같은 미세한 변화로도 순서가 뒤집힌다.
+//
+// 그래서 관성은 "무조건 붙잡기"가 아니다.  직전 추천이 여전히 후보에
+// 있고, 결정적 구간(회귀·체크포인트·막다른길·역할 전체)에서 최선과
+// 완전히 동점일 때만 유지한다.  더 나은 후보가 실제로 나타나면 —
+// 결손을 더 닫거나 회귀가 적거나 — 그 즉시 바뀐다.  v17.22가 역할
+// 그룹 정렬에 넣은 스왑 마진과 같은 취지이고, 여기서는 마진을 임의로
+// 정하지 않아도 되도록 벡터 구조 자체를 기준으로 삼는다.
+function stickyPath(paths,best,stickyId){
+  if(!best||!stickyId)return best;
+  const id=String(stickyId);
+  if(String(best.sequence&&best.sequence[0]&&best.sequence[0].quote.targetId||'')===id)return best;
+  const held=(paths||[]).find(node=>String(node.sequence&&node.sequence[0]&&node.sequence[0].quote.targetId||'')===id);
+  if(!held)return best;
+  const length=Math.min(num(held.rankDecisiveLength)||0,num(best.rankDecisiveLength)||0);
+  if(length<=0)return best;
+  // ① 결정적 구간이 완전히 동점 — 남은 차이는 타이브레이크뿐이다.
+  if(P.compareVector(held.rankVector.slice(0,length),best.rankVector.slice(0,length))===0){held.stickyHold='tie';return held;}
+  // ② 동점은 아니지만 어느 필수 역할에서도 열등하지 않고 회귀도 더 크지
+  //    않으며 더 비싸지도 않다 — 바꿀 이유가 없다.
+  //
+  //    실측 근거(20260728_170254 r48): 코치가 r45~r47 내내 흰수염을
+  //    추천하다가 r48에 봉쿠레로 갈아탔는데, 흰수염이 그 라운드에도
+  //    선위 3에 방깎 +15 · 이감 +26.5를 닫을 수 있었고 봉쿠레는 선위 5에
+  //    방깎 +11 · 1.5스턴 +0.36이었다.  더 싸고 더 많이 닫는 쪽을 두고
+  //    바꾼 것이다.  그러면 사용자는 아무것도 완성하지 못한 채 카드만
+  //    바뀌는 것을 본다 — 실제로 r49에 다시 흰수염으로 돌아왔다.
+  if(!inferiorRequirements(held,best)&&num(held.regression)<=num(best.regression)&&stepCost(held)<=stepCost(best)){held.stickyHold='dominant';return held;}
+  return best;
+}
+// 직전에 제시하던 대상이 이번 라운드에도 여전히 만들 수 있고 필수 역할을
+// 실제로 닫는다면, 최선이 아니더라도 "계속 진행해도 된다"고 말해 준다.
+function continuableStep(paths,best,stickyId){
+  if(!stickyId)return null;
+  const id=String(stickyId);
+  if(String(best&&best.sequence&&best.sequence[0]&&best.sequence[0].quote.targetId||'')===id)return null;
+  const node=(paths||[]).find(item=>String(item.sequence&&item.sequence[0]&&item.sequence[0].quote.targetId||'')===id);
+  const step=node&&node.sequence&&node.sequence[0];
+  if(!step||!step.quote||!step.quote.feasible)return null;
+  // 필수 역할을 하나도 못 닫는 것이면 붙잡을 이유가 없다.
+  const before=new Map(((best.assessment||{}).requirements||[]).map(row=>[row.key,row]));
+  const closes=(((node.assessment||{}).requirements)||[]).filter(row=>row&&row.required!==false&&!row.waived&&num(row.gap)<num((before.get(row.key)||{}).gap||Infinity));
+  if(!closes.length)return null;
+  return{id,name:nameOf(step.quote.unit),wispCost:num(step.quote.wisp.cost),
+    closes:closes.slice(0,2).map(row=>({key:row.key,label:row.label,gap:round(num(row.gap))}))};
+}
+function stepCost(node){const step=node&&node.sequence&&node.sequence[0];return step?num(step.quote&&step.quote.wisp&&step.quote.wisp.cost):Infinity;}
+// held가 어떤 필수 역할에서든 best보다 결손이 크면 열등하다.
+function inferiorRequirements(held,best){
+  const target=new Map(((best.assessment||{}).requirements||[]).filter(row=>row&&row.required!==false&&!row.waived).map(row=>[row.key,num(row.gap)]));
+  for(const row of ((held.assessment||{}).requirements||[])){
+    if(!row||row.required===false||row.waived)continue;
+    if(!target.has(row.key))continue;
+    if(num(row.gap)>target.get(row.key)+1e-9)return true;
+  }
+  return false;
+}
 function buildDecision(input){
   if(!C||!M||!L||!P)throw new Error('ORDV15Engine requires ORDCore, model, ledger, and policy modules.');
   input=input||{};const model=input.model||M.build(input),locks=input.locks||[],roundNow=model.round.value,final=M.finalSummary(model,model.effective.counts),rareTotal=model.knowledge.db.rares.reduce((total,unit)=>total+Math.max(0,num(model.effective.counts[unit.id])),0),finalize=decision=>Object.assign(decision,{version:VERSION,authority:true,authorityEngine:AUTHORITY,inputFingerprint:model.fingerprint,model},coachGuidance(decision,model,roundNow));
@@ -5867,7 +6006,13 @@ function buildDecision(input){
     upperFallback=committed;
     upperReserve={id:committed.blockedAction.id,name:committed.blockedAction.name,reservedUnits,wispCost:num(committedQuote.wisp.cost),wispBefore:num(committedQuote.wisp.before),wispShort,holdBand:Math.max(UPPER_HOLD_WISP_BAND,round(num(committedQuote.wisp.cost)*UPPER_HOLD_WISP_RATIO,1)),storyRewardNeeded:(committedQuote.blocked||[]).some(text=>/레일리|해적선/.test(String(text)))&&story10RewardOpen(model)};
   }}}
-  const searched=search(searchModel,route,locks),best=searched.best;
+  const searched=search(searchModel,route,locks),stickyId=model.settings&&model.settings._stickyActionId,best=stickyPath(searched.paths,searched.best,stickyId);
+  // v18.2: 관성으로 붙잡지 못한 경우 — 즉 직전 추천과 이번 최선이 서로
+  // 다른 역할을 닫는 진짜 교환일 때 — 엔진 판단을 덮어쓰지는 않는다.
+  // 대신 "시작한 것도 여전히 유효한가"를 따로 알려준다.  사용자가 겪는
+  // 문제는 순위가 바뀌는 것 자체가 아니라, 만들던 걸 버려야 하는지
+  // 모르는 것이다.
+  const continueOption=continuableStep(searched.paths,best,stickyId);
   if(!best){const rare=rareDisposition(searchModel,route,locks,searched),recovery=recoveryPlan(searchModel,route,locks,searched.initialAssessment);
     // With an upper reservation active, an empty search keeps the familiar
     // 재료 보호 authority instead of a generic hold, enriched with the
@@ -5892,10 +6037,10 @@ function buildDecision(input){
   // 않아야 한다(충족 초과분 안에서의 소모는 허용).
   firepowerUpgrade=first.quote.feasible&&openRequiredKeys.size===0&&roundNow>=50&&noHarm&&equivalentGain>=0&&combatGain>0,
   commit=first.quote.feasible&&(best.regression===0&&(improves&&meaningfulProgress&&(!pathLoss||budgetProtected||freeRepair||requiredRepair)||surplusUpgrade)||firepowerUpgrade),reasonParts=deltas.filter(row=>row.gapGain>0).slice(0,3).map(row=>row.closed?`${row.label} 충족`:`${row.label} ${round(row.before)}→${round(row.after)}`),result=firstAssessment.structuralPass?'structural-only':'progress-only',guardReason=budgetProtected?`${searched.budgetGuard.reason} `:freeRepair&&pathLoss?'선택 위습을 쓰지 않고 필수 역할을 회귀 없이 보강합니다. ':'',reason=reasonParts.length?`${guardReason}${reasonParts.join(' · ')}. ${best.reserve.remaining}선위를 남겨 후속 필수 역할 경로를 보호합니다.`:firepowerUpgrade&&!improves&&!surplusUpgrade?`필수 역할은 모두 충족 — 검증된 전투 기여 점수 ${round(combatBefore,1)}→${round(combatAfter,1)}를 회귀 없이 올립니다. 실제 보스 DPS는 자동 측정하지 않으므로 화력 충분 판정은 하지 않습니다.`:surplusUpgrade&&!improves?`남은 필수 결손은 현재 패로 닫을 수 없습니다. 회귀 없이 스펙을 더 올리는 제작에 여유 자원을 씁니다.`:`${guardReason}현재 마감과 전체 필수 조건을 동시에 개선하는 현재 패 경로입니다.`,row=makeRow(searchModel,first.quote,firstAssessment,reason),action={id:first.quote.targetId,name:nameOf(first.quote.unit),unit:first.quote.unit,row,quote:first.quote,wispCost:first.quote.wisp.cost,wispAfter:first.quote.wisp.after,result,reason,deltas,stopCondition:`${Object.keys(first.quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${first.quote.wisp.cost}개 미만이면 만들지 말고 다시 동기화`,path:first.quote.targetId?best.sequence.map(step=>({id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost})):[]},rare=rareDisposition(searchModel,route,locks,searched),alternatives=searched.paths.slice(1,3).map(path=>{const step=path.sequence[0];return{id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost,reason:exclusionReason(best,path),residual:path.assessment.blockers.slice(0,3)};}),state=commit?'ACT_NOW':rare.safeReroll?'REROLL_ONE':'HOLD',compactGuard=searched.budgetGuard?{applied:!!searched.budgetGuard.applied,reason:searched.budgetGuard.reason||'',criticalIds:(searched.budgetGuard.criticalIds||[]).slice(),filteredIds:(searched.budgetGuard.filteredIds||[]).slice()}:null;
-  return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
+  return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};
+return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,stickyPath,continuableStep,withStickyCandidate,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};
 });
 
 </script>
@@ -6912,6 +7057,26 @@ class App{
     if(s.lastObservationKey!==observation){const continuing=same(rawIds,s.pendingIds);s.pendingIds=rawIds;s.pendingStreak=continuing?s.pendingStreak+1:1;s.lastObservationKey=observation;if(s.pendingStreak>=3){s.stableIds=rawIds;s.pendingIds=[];s.pendingStreak=0;this.state.watchStability=s;return plan;}}
     this.state.watchStability=s;const actions=new Set((plan.actions||[]).map(x=>x.unit.id)),rawById=new Map(raw.map(x=>[x.unit.id,x])),stable=s.stableIds.filter(id=>!actions.has(id)&&!C.num(state.counts[id])).map(id=>rawById.get(id)).filter(Boolean).slice(0,6);if(stable.length)plan.watch=stable;plan.watchStabilizing={pendingStreak:s.pendingStreak,required:3,pendingIds:s.pendingIds.slice()};return plan;
   }
+  // v18.1: TMO가 최종 등급 유닛 하나를 읽기에서 빠뜨리는 일이 있다.
+  // 실측(20260728_170254): 고정한 상위 (S)료쿠규가 20번 사라졌다 돌아왔고
+  // 그때마다 역할표가 무너져 "지금 할 일"이 갈아엎였다.  소실 구간은 전부
+  // 읽기 1~3회였으므로 몇 번은 직전 값을 유지하고, 그래도 안 돌아오면
+  // 진짜 없어진 것으로 받아들인다.  제작으로 소비된 것은 예외다.
+  stabilizeSnapshot(snapshot){
+    if(!C.stabilizeFinalUnits||!snapshot||!snapshot.counts)return snapshot;
+    const db=this.catalogDb&&this.catalogDb();
+    if(!db||!db.byId)return snapshot;
+    const pending=this.state.pendingTransaction;
+    const consumed=pending&&pending.consumed?Object.keys(pending.consumed):[];
+    const result=C.stabilizeFinalUnits(this._finalUnitGuard,snapshot.counts,db,{consumed});
+    this._finalUnitGuard={counts:Object.assign({},result.counts),misses:result.misses};
+    this._finalUnitHeld=result.held;
+    if(result.released.length)for(const row of result.released)
+      this.toast(`${row.name}이(가) TMO 패에서 계속 보이지 않아 없는 것으로 처리합니다.`);
+    if(!result.held.length)return snapshot;
+    // 유지한 값으로 판단하되, 무엇을 유지 중인지는 화면에 남긴다.
+    return Object.assign({},snapshot,{counts:result.counts,heldFinalUnits:result.held});
+  }
   compactDirectionSnapshot(){const snapshot=this.state.snapshot||{},units=(snapshot.units||[]).map(unit=>({id:String(unit&&unit.id||''),name:unit&&unit.name,groupName:unit&&unit.groupName,count:C.num(unit&&unit.count),percent:C.num(unit&&unit.percent),tmoPercent:C.num(unit&&unit.tmoPercent),abilities:unit&&unit.abilities||{}})).filter(unit=>unit.id);return{counts:Object.assign({},snapshot.counts||{}),currentAbilities:Object.assign({},snapshot.currentAbilities||{}),units};}
   stopDirectionWorker(){if(this._directionWorker)this._directionWorker.terminate();this._directionWorker=null;this._directionInFlight=null;}
   ensureDirectionWorker(){
@@ -6981,10 +7146,15 @@ class App{
       // v17.22: 전체 파티 계획은 워커가 돌린다.  워커를 못 쓰는 환경
       // (Worker 미지원·오류)에서는 인라인 계획으로 되돌아간다.
       const workerReady=!this._blueprintWorkerDisabled&&!!this.ensureDirectionWorker();
-      const decideSettings=Object.assign({},settings,{_blueprintRankings:this._blueprintRankingsKey===key?this._blueprintRankings:null,_blueprintPlanSync:!workerReady});
+      const decideSettings=Object.assign({},settings,{_blueprintRankings:this._blueprintRankingsKey===key?this._blueprintRankings:null,_blueprintPlanSync:!workerReady,_stickyActionId:this._stickyActionId||''});
       try{this._v15Cache=engine.decide({catalog:this.catalog,snapshot:this.state.snapshot||{},settings:decideSettings,locks:this.state.locks||[]});}
       catch(error){this._v15Cache={version:VERSION,authority:true,state:'SYNC_BLOCKED',label:'판단 엔진 점검 필요',reason:String(error&&error.message||error),action:null,alternatives:[],unknowns:['판단 엔진 오류']};}
       this._v15CacheKey=key;
+      // v18.2: 이번에 승인·제시한 대상을 기억해 다음 라운드에 넘긴다.
+      // 엔진은 이것이 여전히 최선과 결정적으로 동점일 때만 유지하므로,
+      // 더 나은 후보가 나타나면 그대로 바뀐다.
+      const proposed=this._v15Cache&&(this._v15Cache.action||this._v15Cache.blockedAction);
+      if(proposed&&proposed.id)this._stickyActionId=String(proposed.id);
       if(workerReady&&this._blueprintRankingsKey!==key)this.queueBlueprintRank(key,settings,this._v15Cache);
     }
     const base=this._v15Cache;if(!base)return null;
@@ -7146,7 +7316,7 @@ class App{
   updateSnapshot(snapshot){
     if(!snapshot)return;if(this.state.snapshot&&C.num(snapshot.at)<C.num(this.state.snapshot.at)-1000)return;const previous=this.state.snapshot,oldFp=fingerprint(previous),newFp=fingerprint(snapshot),incomingAuto=snapshot.autoRound&&snapshot.autoRound.active,sourceReset=incomingAuto&&C.num(snapshot.autoRound.generation)>C.num(this.state.roundAutoGeneration),completeZero=previous&&this.actualRound()>=50&&!sourceReset&&C.num(snapshot.nonzero)===0&&snapshot.collection&&snapshot.collection.found&&C.num(snapshot.collection.confidence)>=.9&&snapshot.countDiscovery&&snapshot.countDiscovery.found&&this.finalBoardCountFor(previous)>=5&&this.finalBoardCountFor(snapshot)===0;
     if(completeZero){const same=this._terminalCandidate&&this._terminalCandidate.fingerprint===newFp&&Date.now()-this._terminalCandidate.at<10000,count=same?this._terminalCandidate.count+1:1;this._terminalCandidate={fingerprint:newFp,count,at:Date.now()};if(count>=2){this._runResultOpen=true;this._terminalWipeAt=Date.now();this._runResultDraft=Object.assign({},RUN_RESULT_DEFAULTS,{kind:this.actualRound()>50?'r51_65_failed':'r50_failed',round:String(this.actualRound()),failureReason:'unknown',note:'TMO에서 전설급 보드 전멸을 2회 연속 감지함'});this.recordAuditAction({actor:'program',action:'suspected-terminal-wipe',round:this.actualRound(),lastLiveBoard:this.finalBoardCountFor(previous),confirmations:count});this.recordVerdictReport('terminal-wipe');this.setMessage('전설급 보드 전멸을 2회 확인했습니다. 마지막 생존 패를 보존하고 게임 결과 입력을 열었습니다.');this.render();}else this.updateLiveStatusOnly();return;}this._terminalCandidate=null;
-    const oldHealth=this.health(),pending=this.state.pendingReroll,priorCounts=previous&&previous.counts||{},priorSeq=C.num(previous&&previous.seq),pendingBefore=pending?(pending.beforeCount==null?C.num(priorCounts[pending.id]):C.num(pending.beforeCount)):0,nextPendingCount=pending?C.num(snapshot.counts&&snapshot.counts[pending.id]):0;this.state.snapshot=snapshot;this.state.liveAt=C.num(snapshot.at)||Date.now();if(this.state.awaitingNewGameFingerprint&&newFp!==this.state.awaitingNewGameFingerprint)this.state.awaitingNewGameFingerprint='';const nextCounts=snapshot.counts||{};let observedDrop='';if(!this.state.pendingTransaction){for(const key of Object.keys(priorCounts)){if(C.num(nextCounts[key])<C.num(priorCounts[key])){observedDrop=key;break;}}}if(observedDrop)this._recentCountDrop={id:observedDrop,at:Date.now()};if(pending){const releasedBy=this.pendingRerollRelease(pending,{pendingBefore,nextPendingCount,observedDrop,roundNow:this.actualRound(),now:Date.now()});if(releasedBy){this.state.pendingReroll=null;this._v15CacheKey='';if(releasedBy==='other')this.toast('다른 희귀 감소를 리롤 결과로 인정하고 대기를 해제했습니다.');else if(releasedBy==='timeout')this.toast('리롤 대기를 자동 해제했습니다 (2라운드/120초 경과). 현재 패 기준으로 다시 판단합니다.');}else if(pending.beforeCount==null){pending.beforeCount=pendingBefore;pending.baseSeq=priorSeq;}}if(oldFp&&oldFp!==newFp){this._directionRankCacheKey='';this._v15CacheKey='';}if(newFp&&this.state.directionStatus==='hold'&&this.state.directionHoldFingerprint!==newFp){this.state.directionStatus='open';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint='';this._directionRankCacheKey='';}const newHealth=this.health();let changed=oldFp!==newFp||oldHealth.key!==newHealth.key||oldHealth.ready!==newHealth.ready;
+    const oldHealth=this.health(),pending=this.state.pendingReroll,priorCounts=previous&&previous.counts||{},priorSeq=C.num(previous&&previous.seq),pendingBefore=pending?(pending.beforeCount==null?C.num(priorCounts[pending.id]):C.num(pending.beforeCount)):0,nextPendingCount=pending?C.num(snapshot.counts&&snapshot.counts[pending.id]):0;snapshot=this.stabilizeSnapshot(snapshot);this.state.snapshot=snapshot;this.state.liveAt=C.num(snapshot.at)||Date.now();if(this.state.awaitingNewGameFingerprint&&newFp!==this.state.awaitingNewGameFingerprint)this.state.awaitingNewGameFingerprint='';const nextCounts=snapshot.counts||{};let observedDrop='';if(!this.state.pendingTransaction){for(const key of Object.keys(priorCounts)){if(C.num(nextCounts[key])<C.num(priorCounts[key])){observedDrop=key;break;}}}if(observedDrop)this._recentCountDrop={id:observedDrop,at:Date.now()};if(pending){const releasedBy=this.pendingRerollRelease(pending,{pendingBefore,nextPendingCount,observedDrop,roundNow:this.actualRound(),now:Date.now()});if(releasedBy){this.state.pendingReroll=null;this._v15CacheKey='';if(releasedBy==='other')this.toast('다른 희귀 감소를 리롤 결과로 인정하고 대기를 해제했습니다.');else if(releasedBy==='timeout')this.toast('리롤 대기를 자동 해제했습니다 (2라운드/120초 경과). 현재 패 기준으로 다시 판단합니다.');}else if(pending.beforeCount==null){pending.beforeCount=pendingBefore;pending.baseSeq=priorSeq;}}if(oldFp&&oldFp!==newFp){this._directionRankCacheKey='';this._v15CacheKey='';}if(newFp&&this.state.directionStatus==='hold'&&this.state.directionHoldFingerprint!==newFp){this.state.directionStatus='open';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint='';this._directionRankCacheKey='';}const newHealth=this.health();let changed=oldFp!==newFp||oldHealth.key!==newHealth.key||oldHealth.ready!==newHealth.ready;
     const auto=snapshot.autoRound&&typeof snapshot.autoRound==='object'?snapshot.autoRound:null,autoSource=C.num(auto&&auto.sourceEpoch),autoGeneration=C.num(auto&&auto.generation),newAutoGeneration=!!(auto&&auto.active&&autoGeneration>0&&(autoSource!==C.num(this.state.roundAutoSourceEpoch)||autoGeneration>C.num(this.state.roundAutoGeneration)));if(newAutoGeneration){if(this._runLogReady&&this.runLog&&this.runLog.summary().status!=='active'){this.runLog.startRun({force:true,app:{build:'decision-audit-v1'}});this._runLogBaseline=null;this._runLogLastDecisionDigest='';}this.clearVerdictCache();const detectedAt=Math.max(1,C.num(auto.startedAt)||C.num(snapshot.dataChangedAt)||Date.now()),prepMs=(C.num(this.state.roundPrepSeconds)||10)*1000;this.state.roundAutoSourceEpoch=autoSource;this.state.roundAutoGeneration=autoGeneration;this.state.currentRound=1;this.state.roundStartedAt=Math.max(1,detectedAt-prepMs);this.setMessage('TMO에서 첫 실제 유닛을 감지해 1라운드 타이머를 자동 시작했습니다.');changed=true;}else if(auto&&autoSource!==C.num(this.state.roundAutoSourceEpoch)&&autoGeneration===0){this.state.roundAutoSourceEpoch=autoSource;this.state.roundAutoGeneration=0;changed=true;}
     if(this.prunePending(snapshot,Date.now()))changed=true;
     let upperObservation={changed:false};if(newHealth.ready)upperObservation=this.observeUpper(previous,snapshot);else if(!this.upperLock()&&(this.state.upperDetection.candidateId||this.state.upperDetection.streak)){this.state.upperDetection=emptyUpperDetection();upperObservation={changed:true};}if(upperObservation.changed)changed=true;if(upperObservation.message)this.setMessage(upperObservation.message);
@@ -7441,7 +7611,12 @@ class App{
     const safeReroll=decision.rare&&decision.rare.safeReroll;
     chips.push(`<span class="${rerollLeft>0&&safeReroll?'warn':''}"><small>리롤 잔여</small><b>${rerollLeft}/2</b><em>${safeReroll?`${C.esc(safeReroll.name)} 권장`:rerollLeft?'소비 가능 자원':'소진'}</em></span>`);
     chips.push(`<span><small>선택 위습</small><b>${C.num(state.wisp)}</b><em>${decision.search&&decision.search.budgetGuard&&decision.search.budgetGuard.applied?'예산 가드 작동':'전량 사용 가능'}</em></span>`);
-    return`<div class="v151-action-facts">${chips.join('')}</div>`;
+    // v18.2: 순위가 바뀌어도 직전에 만들던 것이 여전히 유효하면 그렇게
+    // 말해 준다.  사용자가 겪는 문제는 순위 변동 자체가 아니라 "만들던
+    // 걸 버려야 하나"를 모르는 것이다.
+    const cont=decision.continueOption;
+    const contHtml=cont?`<div class="v151-continue"><small>진행 중이던 것</small><b>${C.esc(cont.name)}</b><i>선위 ${C.num(cont.wispCost)}</i><span>지금 순위 1위는 아니지만 ${cont.closes.map(row=>C.esc(row.label)).join('·')}을(를) 여전히 닫습니다 — 만들던 것을 그대로 끝내도 손해가 아닙니다.</span></div>`:'';
+    return`${contHtml}<div class="v151-action-facts">${chips.join('')}</div>`;
   }
   renderV151NextAction(state,plan,health){
     const decision=plan.v15Decision||{},branch=plan.postLegendDecision||{},status=decision.state||'SYNC_BLOCKED';
@@ -7469,7 +7644,7 @@ class App{
     // 아래에서 여전히 decision.action 에만 열리므로 승인 권한은 그대로다.
     const coach=decision.confidence||null,coachStep=decision.coachAction||null;
     const shown=decision.action||decision.blockedAction||coachStep||null,reroll=decision.rare&&decision.rare.safeReroll,unit=shown&&shown.unit||reroll&&reroll.unit||null,target=status==='REROLL_ONE'&&reroll?`${reroll.name} 1장 리롤`:shown&&shown.name||decision.label||'현재 패 소비 보류',waivedKeys=new Set(((decision.assessment||{}).requirements||[]).filter(row=>row.waived).map(row=>row.key)),deltas=(shown&&shown.deltas||[]).filter(row=>!waivedKeys.has(row.key)&&(Math.abs(C.num(row.delta))>.001||row.closed)).slice(0,3),cost=shown?C.num(shown.wispCost):0,after=shown&&shown.wispAfter!=null?C.num(shown.wispAfter):C.num(state.wisp),button=status==='ACT_NOW'&&decision.action?`<button class="primary" data-act="mark-made" data-step="0" data-id="${C.esc(decision.action.id)}">제작함 · TMO 확인</button>`:status==='REROLL_ONE'&&reroll?`<button class="primary danger" data-act="reroll-confirmed" data-id="${C.esc(reroll.id)}">1장 리롤함</button>`:status==='SYNC_BLOCKED'?`<button data-act="connection">TMO 다시 읽기</button>${this.state.pendingTransaction?'<button data-act="dismiss-transaction">거래 취소 · TMO 현재값 사용</button>':''}${this.state.pendingReroll?'<button data-act="cancel-reroll">리롤 대기 해제</button>':''}`:'<button disabled>지금은 재료 보존</button>',stop=shown&&shown.stopCondition?shown.stopCondition:status==='PREPARE'?'재료나 선위가 달라지면 실행하지 않습니다.':'패가 바뀌면 먼저 다시 읽습니다.';
-    return`<div class="v151-action ${C.esc(status.toLowerCase())}" data-state="${C.esc(status)}"><div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v151StoryTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}</div>${deltas.length?`<div class="v151-deltas">${deltas.map(row=>`<span>${C.esc(row.label)} <b>${fmt(row.before)}→${fmt(row.after)}</b></span>`).join('')}</div>`:''}${decision.upperReserve?`<div class="v151-upper-guard"><i>🔒</i>확정 상위 <b>${C.esc(decision.upperReserve.name)}</b> 트리 재료 ${C.num(decision.upperReserve.reservedUnits)}개 잠금 · 선위 ${C.num(decision.upperReserve.wispCost)} 필요(부족 ${C.num(decision.upperReserve.wispShort)}) — 잠긴 재료를 빼고 추천 중${decision.upperReserve.storyRewardNeeded?' · 스토리 10 보상에서 레일리+해적선을 선택해야 열립니다':''}</div>`:''}${(()=>{
+    return`<div class="v151-action ${C.esc(status.toLowerCase())}" data-state="${C.esc(status)}"><div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v151StoryTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}</div>${deltas.length?`<div class="v151-deltas">${deltas.map(row=>`<span>${C.esc(row.label)} <b>${fmt(row.before)}→${fmt(row.after)}</b></span>`).join('')}</div>`:''}${decision.upperReserve?`<div class="v151-upper-guard"><i>🔒</i>확정 상위 <b>${C.esc(decision.upperReserve.name)}</b> 트리 재료 ${C.num(decision.upperReserve.reservedUnits)}개 잠금 · 선위 ${C.num(decision.upperReserve.wispCost)} 필요(부족 ${C.num(decision.upperReserve.wispShort)}) — 잠긴 재료를 빼고 추천 중${decision.upperReserve.storyRewardNeeded?' · 스토리 10 보상에서 레일리+해적선을 선택해야 열립니다':''}</div>`:''}${(()=>{
       // v17.4: 55라 도플라밍고 2연속 사망 — 생존 조각은 닫히는데 보스
       // 화력 역할(단일·끝딜·1.5스턴·토키)이 열린 채 보스전에 들어가는
       // 것을 라운드 중에 경고한다.  46라부터 다음 보스와 열린 화력

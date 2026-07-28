@@ -6,7 +6,7 @@ const path = require('path');
 
 const extensionDir = path.resolve(__dirname, '..');
 const packageDir = path.resolve(extensionDir, '..');
-// v18.1: 출력 파일명과 청소 목록을 package.json 버전에서 파생시킨다.
+// v18.3: 출력 파일명과 청소 목록을 package.json 버전에서 파생시킨다.
 // 예전에는 둘 다 손으로 적었는데, 릴리스마다 여기를 고치는 걸 잊으면 옛 버전
 // 파일명으로 빌드되거나 낡은 번들이 패키지에 남았다(테스트가 그걸 잡아 왔다).
 const RELEASE_VERSION = String(require(path.join(packageDir, 'package.json')).version);

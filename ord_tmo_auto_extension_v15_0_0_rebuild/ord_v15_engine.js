@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='18.1.0';
+const VERSION='18.3.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -267,6 +267,12 @@ function nodeRank(model,node,initial){
   // 작동하는 하위 타이브레이크로 내린다.  story는 제거한다 — 스토리
   // 파괴 속도는 악몽 클리어 확률이 아니라고 등급표 스스로 선언했고,
   // 무엇을 실제로 만들지 정하는 이 축에 남아 있으면 안 된다.
+  // v18.2: 순위 벡터의 앞부분(회귀·체크포인트·막다른길·역할 전체)은
+  // "무엇을 닫는가"를 정하는 결정적 구간이고, 그 뒤(예비 선위·전투력·
+  // 커버리지·등급 소모 등)는 전부 동점일 때만 도는 타이브레이크다.
+  // 경계를 기록해 둔다 — 진행 중인 추천을 타이브레이크만으로 뒤집지
+  // 않기 위해 필요하다.
+  node.rankDecisiveLength=1+checkpoint.length+1+(node.assessment.fullVector||[]).length;
   node.rankVector=[node.regression].concat(checkpoint,[coverage.deadEnds.length],node.assessment.fullVector,[reserveGap,-num(node.combat),rareExcess,-coverage.affordableCount,num(node.resources.wisp),-num(tier.rare),-num(tier.special),-num(tier.uncommon),-num(tier.common),-node.completion]);return node.rankVector;
 }
 function compareNodes(a,b){const vector=P.compareVector(a.rankVector,b.rankVector);if(vector)return vector;const aid=(a.sequence||[]).map(step=>step.quote.targetId).join('|'),bid=(b.sequence||[]).map(step=>step.quote.targetId).join('|');return aid.localeCompare(bid);}
@@ -334,8 +340,29 @@ function recoveryPlan(model,route,locks,assessment,options){
   return targets.length?{basis:'nearest-closer-per-open-role',note:options&&options.note||'남은 필수 역할을 닫는 최근접 목표',targets}:null;
 }
 function expand(model,node,row,route,locks,initial){const quote=L.quote(model,row.unit,node.counts,{availableRound:model.round.value});if(!quote.feasible)return null;const before=ownedFinals(model,node.counts),after=ownedFinals(model,quote.after);if(introducesLineageConflict(model,before,after))return null;const next=nodeBase(model,quote.after,route,locks,initial,node.sequence.concat({quote}));return next;}
+// v18.2 — 직전에 추천하던 대상은 후보 목록에서 조용히 사라지지 않는다.
+//
+// 관성 장치를 넣고 실측해 보니 흔들림 79건 중 직전 대상이 이번 라운드
+// 후보 경로에 남아 있던 경우가 8건(10%)뿐이었다.  나머지 90%는 순위가
+// 밀린 게 아니라 후보 풀 자체에서 빠진 것이다 — candidatePool과 빔이
+// 매 라운드 상위 몇 개만 남기기 때문에, 선위가 0.5 늘거나 흔함 하나가
+// 드랍되는 것만으로도 어제의 1순위가 오늘 목록에 없다.
+//
+// 그러면 관성도 "계속 진행해도 된다"는 안내도 작동할 수 없다.  그래서
+// 직전 대상이 여전히 만들 수 있는 것이면 후보에 다시 넣어 준다.  순위를
+// 올려 주지는 않는다 — 평가를 받게만 해서, 이기면 유지되고 지면 최소한
+// "이것도 여전히 유효하다"고 말할 수 있게 한다.
+function withStickyCandidate(rows,rawPool,universe,model){
+  const id=String(model&&model.settings&&model.settings._stickyActionId||'');
+  if(!id)return rows;
+  if((rows||[]).some(row=>String(row&&row.unit&&row.unit.id||'')===id))return rows;
+  const found=(rawPool||[]).find(row=>String(row&&row.unit&&row.unit.id||'')===id)
+    ||(universe||[]).find(row=>String(row&&row.unit&&row.unit.id||'')===id);
+  if(!found)return rows;
+  return (rows||[]).concat([found]);
+}
 function search(model,route,locks){
-  const initialAssessment=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks}),initial=nodeBase(model,model.effective.counts,route,locks,initialAssessment,[]),universe=actionUniverse(model,route,locks,initialAssessment,model.effective.counts),rawPool=candidatePool(model,route,locks,initialAssessment,model.effective.counts,model.round.value,universe),budgetGuard=protectCriticalBudget(model,route,locks,initialAssessment,rawPool,model.effective.counts),basePool=budgetGuard.rows,candidateUnits=basePool.map(row=>row.unit),initialCoverage=futureCoverage(model,initial,route,locks,candidateUnits);initial.coverage=initialCoverage;nodeRank(model,initial,initialAssessment);
+  const initialAssessment=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks}),initial=nodeBase(model,model.effective.counts,route,locks,initialAssessment,[]),universe=actionUniverse(model,route,locks,initialAssessment,model.effective.counts),rawPool=candidatePool(model,route,locks,initialAssessment,model.effective.counts,model.round.value,universe),budgetGuard=protectCriticalBudget(model,route,locks,initialAssessment,rawPool,model.effective.counts),basePool=withStickyCandidate(budgetGuard.rows,rawPool,universe,model),candidateUnits=basePool.map(row=>row.unit),initialCoverage=futureCoverage(model,initial,route,locks,candidateUnits);initial.coverage=initialCoverage;nodeRank(model,initial,initialAssessment);
   // Coverage is an expensive exact re-quote. First rank all executable nodes
   // by the declarative role/checkpoint vector, then run coverage only for the
   // bounded finalists. This preserves role-diverse candidates from
@@ -934,6 +961,72 @@ function operationsNote(decision,recovery,roundNow,model){
   }
   return `${head} · 필수 구조는 정리됐습니다. ${reach} 남은 라운드는 배치와 컨트롤 문제입니다.`;
 }
+// v18.2 — 진행 중인 추천을 타이브레이크로 뒤집지 않는다.
+//
+// 사용자 신고: "만들고 있다가 갑자기 다른 걸로 바뀐다".  읽기 누락을
+// 고친 뒤에도 라운드 사이 교체가 판당 12~15회 남았고, 실측해 보면
+// 순환이 섞여 있었다 — 20260728_170254 r47~r50은 B30h→A30h→O30h→
+// B30h→A30h로 세 유닛을 돌았다.  이러면 아무것도 완성되지 않는다.
+//
+// 원인은 탐색이 라운드마다 백지에서 다시 도는 것이다.  후보 점수가
+// 앞부분에서 완전히 같으면 남는 것은 타이브레이크뿐이고, 선위 0.5
+// 증가 같은 미세한 변화로도 순서가 뒤집힌다.
+//
+// 그래서 관성은 "무조건 붙잡기"가 아니다.  직전 추천이 여전히 후보에
+// 있고, 결정적 구간(회귀·체크포인트·막다른길·역할 전체)에서 최선과
+// 완전히 동점일 때만 유지한다.  더 나은 후보가 실제로 나타나면 —
+// 결손을 더 닫거나 회귀가 적거나 — 그 즉시 바뀐다.  v17.22가 역할
+// 그룹 정렬에 넣은 스왑 마진과 같은 취지이고, 여기서는 마진을 임의로
+// 정하지 않아도 되도록 벡터 구조 자체를 기준으로 삼는다.
+function stickyPath(paths,best,stickyId){
+  if(!best||!stickyId)return best;
+  const id=String(stickyId);
+  if(String(best.sequence&&best.sequence[0]&&best.sequence[0].quote.targetId||'')===id)return best;
+  const held=(paths||[]).find(node=>String(node.sequence&&node.sequence[0]&&node.sequence[0].quote.targetId||'')===id);
+  if(!held)return best;
+  const length=Math.min(num(held.rankDecisiveLength)||0,num(best.rankDecisiveLength)||0);
+  if(length<=0)return best;
+  // ① 결정적 구간이 완전히 동점 — 남은 차이는 타이브레이크뿐이다.
+  if(P.compareVector(held.rankVector.slice(0,length),best.rankVector.slice(0,length))===0){held.stickyHold='tie';return held;}
+  // ② 동점은 아니지만 어느 필수 역할에서도 열등하지 않고 회귀도 더 크지
+  //    않으며 더 비싸지도 않다 — 바꿀 이유가 없다.
+  //
+  //    실측 근거(20260728_170254 r48): 코치가 r45~r47 내내 흰수염을
+  //    추천하다가 r48에 봉쿠레로 갈아탔는데, 흰수염이 그 라운드에도
+  //    선위 3에 방깎 +15 · 이감 +26.5를 닫을 수 있었고 봉쿠레는 선위 5에
+  //    방깎 +11 · 1.5스턴 +0.36이었다.  더 싸고 더 많이 닫는 쪽을 두고
+  //    바꾼 것이다.  그러면 사용자는 아무것도 완성하지 못한 채 카드만
+  //    바뀌는 것을 본다 — 실제로 r49에 다시 흰수염으로 돌아왔다.
+  if(!inferiorRequirements(held,best)&&num(held.regression)<=num(best.regression)&&stepCost(held)<=stepCost(best)){held.stickyHold='dominant';return held;}
+  return best;
+}
+// 직전에 제시하던 대상이 이번 라운드에도 여전히 만들 수 있고 필수 역할을
+// 실제로 닫는다면, 최선이 아니더라도 "계속 진행해도 된다"고 말해 준다.
+function continuableStep(paths,best,stickyId){
+  if(!stickyId)return null;
+  const id=String(stickyId);
+  if(String(best&&best.sequence&&best.sequence[0]&&best.sequence[0].quote.targetId||'')===id)return null;
+  const node=(paths||[]).find(item=>String(item.sequence&&item.sequence[0]&&item.sequence[0].quote.targetId||'')===id);
+  const step=node&&node.sequence&&node.sequence[0];
+  if(!step||!step.quote||!step.quote.feasible)return null;
+  // 필수 역할을 하나도 못 닫는 것이면 붙잡을 이유가 없다.
+  const before=new Map(((best.assessment||{}).requirements||[]).map(row=>[row.key,row]));
+  const closes=(((node.assessment||{}).requirements)||[]).filter(row=>row&&row.required!==false&&!row.waived&&num(row.gap)<num((before.get(row.key)||{}).gap||Infinity));
+  if(!closes.length)return null;
+  return{id,name:nameOf(step.quote.unit),wispCost:num(step.quote.wisp.cost),
+    closes:closes.slice(0,2).map(row=>({key:row.key,label:row.label,gap:round(num(row.gap))}))};
+}
+function stepCost(node){const step=node&&node.sequence&&node.sequence[0];return step?num(step.quote&&step.quote.wisp&&step.quote.wisp.cost):Infinity;}
+// held가 어떤 필수 역할에서든 best보다 결손이 크면 열등하다.
+function inferiorRequirements(held,best){
+  const target=new Map(((best.assessment||{}).requirements||[]).filter(row=>row&&row.required!==false&&!row.waived).map(row=>[row.key,num(row.gap)]));
+  for(const row of ((held.assessment||{}).requirements||[])){
+    if(!row||row.required===false||row.waived)continue;
+    if(!target.has(row.key))continue;
+    if(num(row.gap)>target.get(row.key)+1e-9)return true;
+  }
+  return false;
+}
 function buildDecision(input){
   if(!C||!M||!L||!P)throw new Error('ORDV15Engine requires ORDCore, model, ledger, and policy modules.');
   input=input||{};const model=input.model||M.build(input),locks=input.locks||[],roundNow=model.round.value,final=M.finalSummary(model,model.effective.counts),rareTotal=model.knowledge.db.rares.reduce((total,unit)=>total+Math.max(0,num(model.effective.counts[unit.id])),0),finalize=decision=>Object.assign(decision,{version:VERSION,authority:true,authorityEngine:AUTHORITY,inputFingerprint:model.fingerprint,model},coachGuidance(decision,model,roundNow));
@@ -965,7 +1058,13 @@ function buildDecision(input){
     upperFallback=committed;
     upperReserve={id:committed.blockedAction.id,name:committed.blockedAction.name,reservedUnits,wispCost:num(committedQuote.wisp.cost),wispBefore:num(committedQuote.wisp.before),wispShort,holdBand:Math.max(UPPER_HOLD_WISP_BAND,round(num(committedQuote.wisp.cost)*UPPER_HOLD_WISP_RATIO,1)),storyRewardNeeded:(committedQuote.blocked||[]).some(text=>/레일리|해적선/.test(String(text)))&&story10RewardOpen(model)};
   }}}
-  const searched=search(searchModel,route,locks),best=searched.best;
+  const searched=search(searchModel,route,locks),stickyId=model.settings&&model.settings._stickyActionId,best=stickyPath(searched.paths,searched.best,stickyId);
+  // v18.2: 관성으로 붙잡지 못한 경우 — 즉 직전 추천과 이번 최선이 서로
+  // 다른 역할을 닫는 진짜 교환일 때 — 엔진 판단을 덮어쓰지는 않는다.
+  // 대신 "시작한 것도 여전히 유효한가"를 따로 알려준다.  사용자가 겪는
+  // 문제는 순위가 바뀌는 것 자체가 아니라, 만들던 걸 버려야 하는지
+  // 모르는 것이다.
+  const continueOption=continuableStep(searched.paths,best,stickyId);
   if(!best){const rare=rareDisposition(searchModel,route,locks,searched),recovery=recoveryPlan(searchModel,route,locks,searched.initialAssessment);
     // With an upper reservation active, an empty search keeps the familiar
     // 재료 보호 authority instead of a generic hold, enriched with the
@@ -990,8 +1089,8 @@ function buildDecision(input){
   // 않아야 한다(충족 초과분 안에서의 소모는 허용).
   firepowerUpgrade=first.quote.feasible&&openRequiredKeys.size===0&&roundNow>=50&&noHarm&&equivalentGain>=0&&combatGain>0,
   commit=first.quote.feasible&&(best.regression===0&&(improves&&meaningfulProgress&&(!pathLoss||budgetProtected||freeRepair||requiredRepair)||surplusUpgrade)||firepowerUpgrade),reasonParts=deltas.filter(row=>row.gapGain>0).slice(0,3).map(row=>row.closed?`${row.label} 충족`:`${row.label} ${round(row.before)}→${round(row.after)}`),result=firstAssessment.structuralPass?'structural-only':'progress-only',guardReason=budgetProtected?`${searched.budgetGuard.reason} `:freeRepair&&pathLoss?'선택 위습을 쓰지 않고 필수 역할을 회귀 없이 보강합니다. ':'',reason=reasonParts.length?`${guardReason}${reasonParts.join(' · ')}. ${best.reserve.remaining}선위를 남겨 후속 필수 역할 경로를 보호합니다.`:firepowerUpgrade&&!improves&&!surplusUpgrade?`필수 역할은 모두 충족 — 검증된 전투 기여 점수 ${round(combatBefore,1)}→${round(combatAfter,1)}를 회귀 없이 올립니다. 실제 보스 DPS는 자동 측정하지 않으므로 화력 충분 판정은 하지 않습니다.`:surplusUpgrade&&!improves?`남은 필수 결손은 현재 패로 닫을 수 없습니다. 회귀 없이 스펙을 더 올리는 제작에 여유 자원을 씁니다.`:`${guardReason}현재 마감과 전체 필수 조건을 동시에 개선하는 현재 패 경로입니다.`,row=makeRow(searchModel,first.quote,firstAssessment,reason),action={id:first.quote.targetId,name:nameOf(first.quote.unit),unit:first.quote.unit,row,quote:first.quote,wispCost:first.quote.wisp.cost,wispAfter:first.quote.wisp.after,result,reason,deltas,stopCondition:`${Object.keys(first.quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${first.quote.wisp.cost}개 미만이면 만들지 말고 다시 동기화`,path:first.quote.targetId?best.sequence.map(step=>({id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost})):[]},rare=rareDisposition(searchModel,route,locks,searched),alternatives=searched.paths.slice(1,3).map(path=>{const step=path.sequence[0];return{id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost,reason:exclusionReason(best,path),residual:path.assessment.blockers.slice(0,3)};}),state=commit?'ACT_NOW':rare.safeReroll?'REROLL_ONE':'HOLD',compactGuard=searched.budgetGuard?{applied:!!searched.budgetGuard.applied,reason:searched.budgetGuard.reason||'',criticalIds:(searched.budgetGuard.criticalIds||[]).slice(),filteredIds:(searched.budgetGuard.filteredIds||[]).slice()}:null;
-  return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
+  return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};
+return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,stickyPath,continuableStep,withStickyCandidate,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};
 });
