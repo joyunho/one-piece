@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='18.0.0';
+const VERSION='18.1.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -783,6 +783,46 @@ function mergeLiveCatalog(catalog,snapshot){
   const out=[];for(const base of catalog||[]){const live=liveMap.get(base.id)||{},hasLiveAbilities=Object.prototype.hasOwnProperty.call(live,'abilities'),merged=Object.assign({},base,live,{abilities:hasLiveAbilities?Object.assign({},live.abilities||{}):Object.assign({},base.abilities||{})});merged.tmoPercent=live.tmoPercent!=null?num(live.tmoPercent):live.percent!=null?num(live.percent):num(base.percent);merged.count=live.count!=null?num(live.count):0;out.push(merged);}
   for(const [id,live] of liveMap){if(!out.some(u=>u.id===id))out.push(Object.assign({},live));}return out;
 }
+// v18.1 — TMO 읽기 누락 보정.
+//
+// 실전 로그 20260728_170254에서 사용자가 고정한 상위 (S)료쿠규가 스냅샷에서
+// **스무 번** 사라졌다 되돌아왔다.  같은 스냅샷에서 다른 유닛은 하나도
+// 바뀌지 않았고 관측 신뢰도는 0.998이었다 — 제작으로 소비된 것이 아니라
+// 그 유닛 하나만 목록에서 빠진 것이다.
+//
+// 소실 구간 길이는 스무 번 모두 읽기 1~3회였고 영구 소실은 0건이었다.
+// 그런데 한 번 빠질 때마다 역할표가 통째로 무너졌다: 상위 1→0, 방깎 92→57,
+// 이감 42.5→30.  판정은 그때마다 완전히 다른 판을 보고 다시 계산했고,
+// 그래서 화면의 "지금 할 일"이 만드는 도중에 바뀌었다.  같은 라운드 안에서
+// readiness가 76↔50을 네 번 오간 라운드도 있다(r45).
+//
+// 그래서 최종 등급 유닛(상위·전설급)은 근거 없이 사라지면 직전 값을
+// 잠시 유지한다.  실제로 소비된 경우는 그 소비를 설명하는 제작이 있고,
+// 진짜로 없어졌다면 몇 번 더 읽어도 돌아오지 않으므로 그때 받아들인다.
+// 흔함·안흔함·희귀는 제외한다 — 재료로 정상 소비되는 등급이라 유지하면
+// 오히려 장부가 틀어진다.
+const FINAL_UNIT_HOLD_READS=4;
+function stabilizeFinalUnits(previous,counts,db,options){
+  const prior=previous&&previous.counts||{},misses=Object.assign({},previous&&previous.misses||{});
+  const next=Object.assign({},counts||{}),held=[],released=[];
+  const explained=new Set((options&&options.consumed||[]).map(String));
+  const limit=Math.max(1,num(options&&options.maxHold)||FINAL_UNIT_HOLD_READS);
+  const ids=new Set([...Object.keys(prior),...Object.keys(next)]);
+  for(const id of ids){
+    const unit=db&&db.byId&&db.byId.get(id);
+    if(!unit||!(isUpper(unit)||isLegendish(unit)))continue;
+    const before=num(prior[id]),now=num(next[id]);
+    if(now>=before){delete misses[id];continue;}
+    // 제작이 이 유닛을 재료로 먹었다면 줄어드는 게 정상이다.
+    if(explained.has(id)){delete misses[id];continue;}
+    const seen=num(misses[id])+1;
+    if(seen>=limit){delete misses[id];released.push({id,name:displayNameOf(unit),from:before,to:now});continue;}
+    misses[id]=seen;
+    next[id]=before;
+    held.push({id,name:displayNameOf(unit),qty:before,observed:now,reads:seen,limit});
+  }
+  return{counts:next,misses,held,released};
+}
 function normalizeState(catalog,snapshot,settings){
   const merged=mergeLiveCatalog(catalog,snapshot||{}),db=buildDb(merged),rawCounts=Object.assign({},snapshot&&snapshot.counts||{});
   for(const u of merged){if(u.count!=null&&!Object.prototype.hasOwnProperty.call(rawCounts,u.id))rawCounts[u.id]=num(u.count);}const counts=Object.assign({},rawCounts),manual=settings&&settings.manualCounts||{};
@@ -1394,5 +1434,5 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);
