@@ -81,7 +81,7 @@ check('worker loads every planner dependency and ranks only two candidates per l
   const harness=workerHarness();
   assert.deepStrictEqual(harness.imports,[
     'ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js',
-    'ord_story_nonupper_data.js','ord_story_upper_data.js','ord_core.js','ord_squad_planner.js'
+    'ord_story_nonupper_data.js','ord_story_upper_data.js','ord_core.js','ord_meta_stats.js','ord_squad_planner.js'
   ]);
   harness.context.onmessage({data:{type:'rank-directions',requestId:7,key:'hand-a',payload:{snapshot:{counts:{a:1}},settings:{mode:'physical'}}}});
   assert.strictEqual(harness.calls.length,1);
@@ -102,7 +102,8 @@ check('worker returns a compact UI-only board and reports calculation errors',()
     assert(!serialized.includes(forbidden),`worker response leaked ${forbidden}`);
   }
   const row=result.board.lanes[0].rows[0];
-  assert.strictEqual(row.plan.finalLineup[0].unit.id,'fixture-upper');
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(row.plan.finalLineup[0])),{id:'fixture-upper',status:'owned'});
+  assert(!Object.prototype.hasOwnProperty.call(row.plan.finalLineup[0],'unit'),'compact worker lineup must not fabricate a partial unit object');
   assert.strictEqual(row.plan.handFit.tiers.rare.initial,6);
   assert.deepStrictEqual(JSON.parse(JSON.stringify(result.board.provisionalDirection)),{
     upperId:'fixture-upper',upperCanonicalId:'fixture-upper',upperName:'상위',routeKeys:['physical'],

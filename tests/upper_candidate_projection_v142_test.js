@@ -37,7 +37,50 @@ assert(roger.candidateProjection.spec.armor>katakuri.candidateProjection.spec.ar
 assert(roger.candidateProjection.spec.slow>katakuri.candidateProjection.spec.slow,'Roger slow was not projected');
 assert.notDeepStrictEqual(roger.requirementPriority,katakuri.requirementPriority,'distinct upper roles collapsed to one support-only rank vector');
 assert(katakuri.upperPreparation.wispCost<roger.upperPreparation.wispCost,'R30 preparation cost was not kept separate from role projection');
-assert.strictEqual(ranked[0].upperId,'I70h','the 52-wisp hypothetical route incorrectly displaced the near-ready upper');
+assert(roger.upperPreparation.wispCost>C.MAX_WISP_COST,'the fixture no longer reproduces a 24+ wisp fantasy');
+assert.strictEqual(roger.angleBand,0,'a 24+ wisp hypothetical route received a good-angle promotion');
+const angleFixture={
+  upperId:'I70h',
+  rareConflict:0,
+  lineagePairs:0,
+  controlCapOverflow:0,
+  readiness:75,
+  hardConflictTotal:0,
+  wispConflict:0,
+  upperPreparation:{
+    immediate:true,
+    materialReady:true,
+    rareUsed:1,
+    rareClearedTypes:1,
+    specialUsed:0,
+    wispCost:C.MAX_WISP_COST
+  },
+  safePrefix:{actions:[{id:'I70h'}]}
+};
+assert(P._test.upperAngleBand(angleFixture)>0,'23-wisp boundary was incorrectly excluded from angle evaluation');
+assert.strictEqual(P._test.upperAngleBand(Object.assign({},angleFixture,{
+  upperPreparation:Object.assign({},angleFixture.upperPreparation,{wispCost:C.MAX_WISP_COST+1})
+})),0,'24-wisp boundary leaked into a good angle');
+const rankAudit=ranked.map(row=>({
+  id:row.upperId,
+  tier:row.powerTier&&row.powerTier.letter,
+  effectiveTierRank:row.effectiveTierRank,
+  angle:row.angleLabel,
+  angleBand:row.angleBand,
+  guaranteed:row.guaranteed,
+  ownedRareUse:row.upperPreparation.rareUsed,
+  handFeasible:row.handFeasible,
+  wispFeasible:row.wispFeasible,
+  safetyBand:row.safetyBand,
+  readiness:row.readiness,
+  wispShortage:row.wispShortage,
+  futureDependencyCount:row.futureDependencyCount,
+  materialReady:row.upperPreparation.materialReady,
+  wispCost:row.upperPreparation.wispCost,
+  wispGap:row.upperPreparation.wispGap,
+  prefixActions:row.prefixActionCount
+}));
+assert.strictEqual(ranked[0].upperId,'I70h',`the 52-wisp hypothetical route incorrectly displaced the near-ready upper: ${JSON.stringify(rankAudit)}`);
 
 const pool=P._test.directionUpperShortlist(state,'physical',8,{settings}),ids=new Set(pool.ids);
 assert(pool.deficitBest.length>0,'physical deficit coverage was not calculated');

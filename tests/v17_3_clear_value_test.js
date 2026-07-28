@@ -63,7 +63,10 @@ test('클리어 가치 부분점수는 남지만 최종 통합 순위를 지배�
   for(const row of rows){
     const value=row.clearValue;
     assert(value,`${row.name} clearValue 누락`);
-    for(const key of ['value','story','dpsCover','line','rareUtil','utility','deadlineFactor'])
+    // v17.26: story는 상위 점수에서 제거됐다(사용자 3회 확인).  되살아나면
+    // 여기서 잡는다 — 스토리 파괴 속도는 악몽 클리어 확률이 아니다.
+    assert(!('story' in value),`${row.name}: 상위 점수에 story가 되살아났다`);
+    for(const key of ['value','dpsCover','line','rareUtil','utility','deadlineFactor'])
       assert(typeof value[key]==='number'&&value[key]>=0,`${row.name}.${key} 이상`);
     assert(value.value<=1.2+1e-9,`${row.name} 가치 상한 초과`);
   }

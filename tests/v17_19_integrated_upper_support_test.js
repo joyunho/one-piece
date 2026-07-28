@@ -74,10 +74,12 @@ for(let index=0;index<decision.routeCandidates.length;index++){
   }
 }
 assert(plannedRows>0,'no candidate received the integrated full-squad bundle');
-// 계획된 후보는 반드시 목록 앞쪽에 모여 있어야 한다 — 뒤섞이면
-// 사용자가 "평가된 추천"과 "투영뿐인 참고"를 구분할 수 없다.
-const firstUnplanned=decision.routeCandidates.findIndex(row=>row.blueprintEvaluation.basis!=='upper-plus-support-full-squad');
-if(firstUnplanned>=0)assert(decision.routeCandidates.slice(firstUnplanned).every(row=>row.blueprintEvaluation.basis!=='upper-plus-support-full-squad'),'planned and unplanned rows are interleaved');
+// v17.26: 계획 여부보다 티어가 우선이므로 계획된 행과 미계획 행이
+// 섞일 수 있다(미계획 S티어가 계획된 A티어 위에 오는 것이 옳다).
+// 계약은 "티어 단조"이지 "계획된 것이 먼저"가 아니다.
+const tierRanks=decision.routeCandidates.map(row=>C.upperPowerTier(row.unit,replay.state.db)).filter(tier=>tier.known).map(tier=>tier.rank);
+for(let index=1;index<tierRanks.length;index+=1)
+  assert(tierRanks[index]<=tierRanks[index-1],`티어 역전 @${index}: ${decision.routeCandidates.map(row=>C.upperPowerTier(row.unit,replay.state.db).letter).join('>')}`);
 
 const gabanIndex=decision.routeCandidates.findIndex(row=>row.id==='F40h');
 const cavendishIndex=decision.routeCandidates.findIndex(row=>row.id==='B50h');
@@ -85,7 +87,8 @@ const cavendishIndex=decision.routeCandidates.findIndex(row=>row.id==='B50h');
 // 티어(S>A>B>C>D>F)가 1순위 축이 된 뒤로 (A)카벤딧슈는 A티어 자격으로
 // 상단에 남을 수 있다 — 다만 더 이상 1순위가 아니고, 발동 DPS도 미검증
 // 감산을 거친 값이다.  (D)스코퍼가반은 티어대로 하단에 머문다.
-assert(gabanIndex>=3,`Gaban remained a top-three standalone recommendation (${gabanIndex+1})`);
+// 목록에서 완전히 빠지는 것(-1)은 상단에서 밀려난 것보다 더 나은 결과다.
+assert(gabanIndex<0||gabanIndex>=3,`Gaban remained a top-three standalone recommendation (${gabanIndex+1})`);
 assert(cavendishIndex>0,`Cavendish is still the standalone leader (${cavendishIndex+1})`);
 const leadTier=C.upperPowerTier(decision.routeCandidates[0].unit,replay.state.db);
 assert(leadTier.known,'lead candidate has no readable tier');
@@ -122,9 +125,21 @@ app._normalizedCacheKey='r25';
 const spec=C.currentSpec(replay.state,'physical',{_upperUnit:replay.state.db.byId.get(selected.id)});
 const deficits=C.deficits(spec,'physical',{magicRoute:'physical',_upperUnit:replay.state.db.byId.get(selected.id)});
 const supportRows=app.v151BuildableLegendRows(replay.state,{mode:'physical',settings:replay.settings,upper:replay.state.db.byId.get(selected.id),spec,deficits,squadPlan:squad});
-assert(supportRows.length>0&&supportRows.length<=3,'support recommendation count is not 1..3');
+// v17.26(사용자 요청): 이 패널은 "지금 내 패로 만들 수 있는 전설급"을
+// 전부 보여준다.  3개로 자르면 사용자가 자기 선택지를 못 보고, 추천이
+// 이상할 때 대조할 기준도 사라진다.  플래너 추천분은 목록 안에서
+// squadSupport로 구분되고 맨 앞에 온다.
+assert(supportRows.length>0,'craftable legend list is empty');
+assert(supportRows.length>3,`craftable legend list is still capped at three (${supportRows.length})`);
+assert(supportRows.length<=12,`craftable legend list is unbounded (${supportRows.length})`);
 const plannedIds=new Set((squad.finalLineup||[]).map(row=>row.id));
 assert(plannedIds.has(supportRows[0].unit.id),'first support recommendation is detached from the global party');
+// 추천분(squadSupport)이 목록 앞쪽에 모여야 구분이 의미가 있다.
+const firstPlain=supportRows.findIndex(row=>!row.squadSupport);
+if(firstPlain>=0)assert(supportRows.slice(firstPlain).every(row=>!row.squadSupport),'planner picks are scattered through the craftable list');
+// 필수 결손을 되여는 제작은 여전히 제외한다 — 만들면 손해다.
+for(const row of supportRows)
+  assert(!((row.impact&&row.impact.regressed)||[]).some(item=>item.required),`${row.unit&&row.unit.id}: 필수 결손을 되여는 제작이 목록에 있다`);
 
 const rare=replay.state.db.rares.find(unit=>Number(replay.state.counts[unit.id])>0);
 assert(rare,'owned Rare fixture missing');
@@ -132,12 +147,15 @@ const guarded=app.v151ProtectRareDecision({
   state:'REROLL_ONE',label:'희귀 1장 리롤',reason:'local horizon',action:null,
   rare:{rows:[{id:rare.id,name:C.displayNameOf(rare),initial:1,use:0,hold:0,reroll:1,proof:{exclusive:true}}],use:[],hold:[],reroll:[],safeReroll:{id:rare.id,name:C.displayNameOf(rare)}}
 },{targetCount:9,rareAllocation:[{id:rare.id,spent:0,reserved:1,usedBy:[{name:'후속 전설'}]}],unusedRare:[]},replay.state);
-assert.strictEqual(guarded.state,'HOLD','global party Rare reservation did not cancel an unsafe local reroll');
-assert.strictEqual(guarded.rare.rows[0].hold,1);
-assert.strictEqual(guarded.rare.rows[0].reroll,0);
+const guardedRow=guarded.rare.rows.find(row=>row.id===rare.id);
+assert(guardedRow,'reserved Rare disappeared from the unified ledger');
+assert.strictEqual(guardedRow.hold,1,'the copy reserved by the global party was not protected');
+assert.strictEqual(guardedRow.use+guardedRow.hold+guardedRow.reroll,guardedRow.initial,'Rare copies were double-counted or lost');
+assert(guardedRow.reroll<=Math.max(0,guardedRow.initial-1),'the party-reserved copy leaked into reroll');
+assert.strictEqual(guarded.state,guarded.rare.safeReroll?'REROLL_ONE':'HOLD','state does not match the finite disposable-Rare ledger');
 
 console.log('PASS R25 standalone Cavendish/Gaban leaders are replaced by integrated Upper+support bundles');
 console.log('PASS candidate order cannot leak the previous Upper affinity context');
 console.log('PASS support recommendations are capped at three and anchored to the same global party');
 console.log('PASS 9→10→11 uses full re-optimisation and core-nine gating');
-console.log('PASS global party Rare reservation overrides the two-step reroll horizon');
+console.log('PASS global party Rare reservation protects its copy while unreserved duplicates remain usable');

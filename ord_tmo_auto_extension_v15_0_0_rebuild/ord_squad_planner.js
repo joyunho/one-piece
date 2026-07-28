@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='17.22.0';
+const VERSION='17.26.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -493,13 +493,18 @@ function commonPressure(solve,stock,policy){
 function roleVector(u,mode){
   const r=C.roleProfile(u),v=C.roleContribution?C.roleContribution(u,mode):{};
   const triggerWeight=num(C&&C.CONTROL_ENVELOPE&&C.CONTROL_ENVELOPE.triggerSafeWeightOne)||.5;
-  return Object.assign({},v,{stun:num(r.stun),slow:num(r.slow)+num(r.triggerSlow)*triggerWeight,armor:num(r.armor),triggerArmor:num(r.triggerArmor),finish:num(r.single)+num(r.end),toki:isToki(u)?1:0,boss:r.boss?1:0,frenzy:r.frenzy?1:0,main:C.isUpper(u)&&(unitFamily(u)===mode||unitFamily(u)==='neutral')?1:0});
+  // Keep the raw trigger axes.  A fixed `triggerSlow * .5` loses the value of
+  // adding a second proc source: Nami(42) + Maxim(30) changes the safe weight
+  // for the whole 72 from .5 to .65, so Maxim's real marginal gain is 25.8,
+  // not 15.  Search scoring resolves that marginal against each node below.
+  return Object.assign({},v,{stun:num(r.stun),staticSlow:num(r.slow),triggerSlow:num(r.triggerSlow),triggerSlowSources:num(r.triggerSlow)>0?1:0,slow:num(r.slow)+num(r.triggerSlow)*triggerWeight,armor:num(r.armor),triggerArmor:num(r.triggerArmor),finish:num(r.single)+num(r.end),toki:isToki(u)?1:0,boss:r.boss?1:0,frenzy:r.frenzy?1:0,main:C.isUpper(u)&&(unitFamily(u)===mode||unitFamily(u)==='neutral')?1:0});
 }
 
 function allowedCandidate(u,mode,route,settings,state,counts){
   if(!isFinalUnit(u))return false;if(C.isMystic&&C.isMystic(u)||C.isRandom&&C.isRandom(u)||C.isItem&&C.isItem(u))return false;
   const family=unitFamily(u);if(family!==mode&&family!=='neutral')return false;
-  if(C.isShip&&C.isShip(u)&&settings.currentRound<50&&!settings._deferredFuture)return false;
+  // v17.25: 해적선 재료 실보유 여부는 prerequisiteStatus가 엄격히
+  // 검사한다. 라운드 50 하드코드는 현재 패의 0선위 방주맥심까지 막았다.
   if(C.isChanged(u)&&settings.currentRound<50&&!settings.allowChangedEarly&&!settings._deferredFuture)return false;
   if(C.isTranscend(u)&&!settings.superKumaOwned)return false;
   if(C.isUpper(u)&&mode==='magic'&&route==='singleEnd'&&family!=='magic')return false;
@@ -524,12 +529,28 @@ function ruleBlocked(state,node,u,mode,route,settings,fixed){
   return'';
 }
 
+function triggerSlowWeight(sourceCount){
+  const envelope=C&&C.CONTROL_ENVELOPE||{};
+  return num(sourceCount)>=2?(num(envelope.triggerSafeWeightMulti)||.65):(num(envelope.triggerSafeWeightOne)||.5);
+}
+function creditedSlow(staticSlow,triggerSlow,sourceCount){
+  return round(Math.max(0,num(staticSlow))+Math.max(0,num(triggerSlow))*triggerSlowWeight(sourceCount),3);
+}
+function marginalSlow(vector,requirements){
+  const control=requirements&&requirements.control;
+  if(!control||!vector||!Object.prototype.hasOwnProperty.call(vector,'staticSlow')&&!Object.prototype.hasOwnProperty.call(vector,'triggerSlow'))return Math.max(0,num(vector&&vector.slow));
+  const beforeStatic=num(control.staticSlow),beforeTrigger=num(control.triggerSlow),beforeSources=Math.max(beforeTrigger>0?1:0,num(control.triggerSlowSources)),addStatic=num(vector&&vector.staticSlow),addTrigger=num(vector&&vector.triggerSlow),addSources=Math.max(addTrigger>0?1:0,num(vector&&vector.triggerSlowSources));
+  return round(Math.max(0,creditedSlow(beforeStatic+addStatic,beforeTrigger+addTrigger,beforeSources+addSources)-creditedSlow(beforeStatic,beforeTrigger,beforeSources)),3);
+}
+function requirementVectorValue(vector,key,requirements){
+  return key==='slow'?marginalSlow(vector,requirements):num(vector&&vector[key]);
+}
 function staticPotential(vector,requirements){
   // Score only the part of a role that closes a live gap. Once 1.5 stun or the
   // active slow ceiling is satisfied, another copy contributes exactly zero.
   // The slow ceiling is 102 normally and 117 for Nasjuro (the target carried by
   // the requirement row), so an arbitrary raw slow total never earns utility.
-  let score=0;for(const row of requirements.rows){if(num(row.gap)<=0)continue;const value=num(vector[row.key]);if(value>0)score+=row.weight*Math.min(1,value/Math.max(.01,row.gap))*(row.required?1:.65);}return score;
+  let score=0;for(const row of requirements.rows){if(num(row.gap)<=0)continue;const value=requirementVectorValue(vector,row.key,requirements);if(value>0)score+=row.weight*Math.min(1,value/Math.max(.01,row.gap))*(row.required?1:.65);}return score;
 }
 
 function excessStun(spec){return round(Math.max(0,num(spec&&spec.stun)-1.5),6);}
@@ -544,7 +565,7 @@ function incrementalStunPenalty(spec,vector){
   const before=num(spec&&spec.stun),value=Math.max(0,num(vector&&vector.stun)),after=before+value,rate=hasNonControlRole(vector)?SIDE_STUN_PENALTY:STUN_OVERSUPPLY_PENALTY,base=before<1.5?Math.max(0,after-1.5)*(hasNonControlRole(vector)?55:160):value*rate,capCross=Math.max(0,after-2.05)-Math.max(0,before-2.05);return base+capCross*800+(before<=2.05&&after>2.05?180:0);
 }
 function incrementalSlowPenalty(requirements,vector){
-  const row=slowRequirement(requirements),value=Math.max(0,num(vector&&vector.slow));if(!row||value<=0)return 0;const before=num(row.current),after=before+value,cap=num(row.target)+18,useful=Math.max(0,Math.min(value,num(row.gap))),over=Math.max(0,value-useful),rate=hasNonControlRole(vector)?SIDE_SLOW_PENALTY:SLOW_OVERSUPPLY_PENALTY,capCross=Math.max(0,after-cap)-Math.max(0,before-cap);return over*rate+capCross*8+(before<=cap&&after>cap?120:0);
+  const row=slowRequirement(requirements),value=marginalSlow(vector,requirements);if(!row||value<=0)return 0;const before=num(row.current),after=before+value,cap=num(row.target)+18,useful=Math.max(0,Math.min(value,num(row.gap))),over=Math.max(0,value-useful),rate=hasNonControlRole(vector)?SIDE_SLOW_PENALTY:SLOW_OVERSUPPLY_PENALTY,capCross=Math.max(0,after-cap)-Math.max(0,before-cap);return over*rate+capCross*8+(before<=cap&&after>cap?120:0);
 }
 
 function solveHandFit(state,stock,solve,policy){const pressure=commonPressure(solve,stock,policy),used=consumptionTotals([{solve,commonPressure:pressure}],state);return{pressure,fit:handFitMetrics(state,stock,solve.stockAfter,used),used};}
@@ -567,12 +588,12 @@ function buildStaticRows(state,mode,route,settings,policy,fixed,initialReq){
   // hands could keep only high-stun armor options and omit a buildable Caesar-
   // class armor finisher, making a valid lower-cost nine appear impossible.
   for(const req of initialReq.rows.filter(row=>row.required&&num(row.gap)>0&&row.key!=='main')){
-    const lean=rows.filter(row=>!C.isUpper(row.unit)&&num(row.vector[req.key])>0).sort((a,b)=>{
+    const lean=rows.filter(row=>!C.isUpper(row.unit)&&requirementVectorValue(row.vector,req.key,initialReq)>0).sort((a,b)=>{
       // Warped routes are always eligible, but never mandatory. Keep the
       // bounded lean quota useful by admitting cheaper specialists first;
       // warped rows still compete normally in generic score-ranked quotas.
       const aw=C.requiresWarpedCraft&&C.requiresWarpedCraft(state.db,a.unit,state.counts)?1:0,bw=C.requiresWarpedCraft&&C.requiresWarpedCraft(state.db,b.unit,state.counts)?1:0;if(aw!==bw)return aw-bw;
-      const useful=row=>Math.min(num(req.gap),num(row.vector[req.key])),au=useful(a),bu=useful(b);if(au!==bu)return bu-au;
+      const useful=row=>Math.min(num(req.gap),requirementVectorValue(row.vector,req.key,initialReq)),au=useful(a),bu=useful(b);if(au!==bu)return bu-au;
       const ac=num(a.vector.stun)+num(a.vector.slow)/102,bc=num(b.vector.stun)+num(b.vector.slow)/102;if(ac!==bc)return ac-bc;
       return num(b.resourceScore)-num(a.resourceScore)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id);
     });
@@ -581,7 +602,7 @@ function buildStaticRows(state,mode,route,settings,policy,fixed,initialReq){
   for(const row of rows.slice(0,10))push(row);
   // Guarantee candidates for every clear requirement before generic diversity
   // fills the cap; this is especially important for the 3~4 single/end units.
-  const orderedRequirements=initialReq.rows.slice().sort((a,b)=>(a.key==='singleEndExpected'?-1:0)-(b.key==='singleEndExpected'?-1:0));for(const req of orderedRequirements){const ranked=rows.filter(x=>num(x.vector[req.key])>0).sort((a,b)=>num(b.vector[req.key])-num(a.vector[req.key])||b.score-a.score),limit=req.key==='singleEndExpected'?8:3;if(req.key==='singleEndExpected')for(const row of ranked.filter(x=>!C.isUpper(x.unit)).slice(0,8))push(row);for(const row of ranked.slice(0,limit))push(row);}
+  const orderedRequirements=initialReq.rows.slice().sort((a,b)=>(a.key==='singleEndExpected'?-1:0)-(b.key==='singleEndExpected'?-1:0));for(const req of orderedRequirements){const ranked=rows.filter(x=>requirementVectorValue(x.vector,req.key,initialReq)>0).sort((a,b)=>requirementVectorValue(b.vector,req.key,initialReq)-requirementVectorValue(a.vector,req.key,initialReq)||b.score-a.score),limit=req.key==='singleEndExpected'?8:3;if(req.key==='singleEndExpected')for(const row of ranked.filter(x=>!C.isUpper(x.unit)).slice(0,8))push(row);for(const row of ranked.slice(0,limit))push(row);}
   // Keep low-stun role alternatives inside the bounded beam. Otherwise an
   // early 0.5-stun gap can fill the entire shortlist with stunners, leaving no
   // sensible damage/buffer/armor candidates for slots 6~9 after 1.5 is met.
@@ -679,9 +700,9 @@ function diverseBranchRows(ranked,requirements,baseLimit){
   // stun/slow load. This keeps a lean armor/support continuation alive after
   // the displayed requirements round to 100%, instead of filling every beam
   // lane with an expensive control-heavy Warped option.
-  let lean=null,leanControl=Infinity;for(const row of ranked){if(!hasNonControlRole(row.vector))continue;const control=num(row.vector.stun)*100+num(row.vector.slow);if(control<leanControl){lean=row;leanControl=control;}}push(lean);
+  let lean=null,leanControl=Infinity;for(const row of ranked){if(!hasNonControlRole(row.vector))continue;const control=num(row.vector.stun)*100+marginalSlow(row.vector,requirements);if(control<leanControl){lean=row;leanControl=control;}}push(lean);
   let lowPressure=null,pressure=Infinity;for(const row of ranked){const value=num(row.pressure&&row.pressure.penalty);if(value<pressure){lowPressure=row;pressure=value;}}push(lowPressure);
-  for(const req of requirements&&requirements.rows||[]){if(!req.required||num(req.gap)<=0)continue;let best=null,bestValue=0;for(const row of ranked){const value=Math.min(num(req.gap),Math.max(0,num(row.vector&&row.vector[req.key])));if(value>bestValue){best=row;bestValue=value;}}push(best);}
+  for(const req of requirements&&requirements.rows||[]){if(!req.required||num(req.gap)<=0)continue;let best=null,bestValue=0;for(const row of ranked){const value=Math.min(num(req.gap),Math.max(0,requirementVectorValue(row.vector,req.key,requirements)));if(value>bestValue){best=row;bestValue=value;}}push(best);}
   return chosen.slice(0,Math.max(baseLimit,8));
 }
 
@@ -897,10 +918,10 @@ function draftUpperBlueprintPlan(state,settings,policy,route,upper,staticData,la
   const upperPresent=lineup.some(u=>lineupKey(u)===lineupKey(upper)),upperPending=!upperPresent&&!add(upperRow),ownedUpperCount=new Set(lineup.filter(C.isUpper).map(canonicalUpper)).size,reservedUpperSlots=upperPending?Math.max(1,expectedUpperCount(mode,route)-ownedUpperCount):0,immediateTarget=Math.max(0,target-reservedUpperSlots);
   while(lineup.length<immediateTarget&&guard++<target*2){
     const currentIds=new Set(lineup.map(stableId)),currentKeys=new Set(lineup.map(lineupKey)),upperN=upperCount(state,working),changed=tierCount(state,working,C.isChanged),seraph=tierCount(state,working,C.isSeraph),trans=tierCount(state,working,C.isTranscend),maxUpper=mode==='magic'&&route==='dual'?2:1,missing=(requirements.rows||[]).filter(req=>req.required&&num(req.gap)>0),preCandidates=[],candidates=[];
-    for(const row of allRows){const u=row.unit;if(currentIds.has(u.id)||currentKeys.has(lineupKey(u))||builtIds.has(u.id))continue;if(upperPending&&C.isUpper(u))continue;if(C.isUpper(u)&&upperN>=maxUpper)continue;if(C.isSeraph(u)&&settings.seraphUsed+seraph>=1)continue;if(C.isTranscend(u)&&settings.transcendUsed+trans>=1)continue;if(C.isChanged(u)&&settings.changedUsed+changed>=2)continue;const claim=handClaimValue(state,row,working),roleGain=staticPotential(row.vector,requirements),closed=missing.filter(req=>num(row.vector&&row.vector[req.key])+1e-9>=num(req.gap)).length,covered=missing.filter(req=>num(row.vector&&row.vector[req.key])>0).length,controlPenalty=incrementalStunPenalty(plannedSpec,row.vector)+incrementalSlowPenalty(requirements,row.vector),projectedRows=(requirements.rows||[]).map(item=>{const current=num(item.current)+num(row.vector&&row.vector[item.key]),targetValue=num(item.target);return Object.assign({},item,{current,gap:Math.max(0,targetValue-current)});}),priority=requirementPriorityVector({rows:projectedRows,route:requirements.route}),memoAffinity=num(curatedSupportEvidence(u).affinity),score=roleGain*12+claim.rareScore*3+claim.lowerScore-controlPenalty+memoAffinity*12;preCandidates.push({row,score,roleGain,closed,covered,controlPenalty,priority,tierUse:claim.tierUse,wispCost:num(row.solve&&row.solve.wispCost),memoAffinity});}
+    for(const row of allRows){const u=row.unit;if(currentIds.has(u.id)||currentKeys.has(lineupKey(u))||builtIds.has(u.id))continue;if(upperPending&&C.isUpper(u))continue;if(C.isUpper(u)&&upperN>=maxUpper)continue;if(C.isSeraph(u)&&settings.seraphUsed+seraph>=1)continue;if(C.isTranscend(u)&&settings.transcendUsed+trans>=1)continue;if(C.isChanged(u)&&settings.changedUsed+changed>=2)continue;const claim=handClaimValue(state,row,working),roleGain=staticPotential(row.vector,requirements),closed=missing.filter(req=>requirementVectorValue(row.vector,req.key,requirements)+1e-9>=num(req.gap)).length,covered=missing.filter(req=>requirementVectorValue(row.vector,req.key,requirements)>0).length,controlPenalty=incrementalStunPenalty(plannedSpec,row.vector)+incrementalSlowPenalty(requirements,row.vector),projectedRows=(requirements.rows||[]).map(item=>{const current=num(item.current)+requirementVectorValue(row.vector,item.key,requirements),targetValue=num(item.target);return Object.assign({},item,{current,gap:Math.max(0,targetValue-current)});}),priority=requirementPriorityVector({rows:projectedRows,route:requirements.route}),memoAffinity=num(curatedSupportEvidence(u).affinity),score=roleGain*12+claim.rareScore*3+claim.lowerScore-controlPenalty+memoAffinity*12;preCandidates.push({row,score,roleGain,closed,covered,controlPenalty,priority,tierUse:claim.tierUse,wispCost:num(row.solve&&row.solve.wispCost),memoAffinity});}
     preCandidates.sort(candidateCompare);
     const probe=[],probeIds=new Set(),pushProbe=item=>{if(item&&!probeIds.has(item.row.unit.id)){probeIds.add(item.row.unit.id);probe.push(item);}},tryProbe=item=>{if(!item)return false;const row=item.row,u=row.unit;if(lineup.some(existing=>pairMaterialOverlap(state,existing,u).lineage))return false;const prerequisite=prerequisiteStatus(state,u,working),solve=effectiveSolve(C.recipeSolve(state.db,u.id,working),prerequisite);if(!prerequisite.allowed||missingNonWisp(solve,prerequisite)||solve.wispCost>wisp)return false;const pressure=commonPressure(solve,working,policy),dynamicRow=Object.assign({},row,{solve,pressure}),claim=handClaimValue(state,dynamicRow,working),score=item.roleGain*12+claim.rareScore*3+claim.lowerScore-item.controlPenalty+num(item.memoAffinity)*12-candidateOverlapPenalty(state,u,lineup,working)*OVERLAP_HEURISTIC_WEIGHT;candidates.push(Object.assign({},item,{score,tierUse:claim.tierUse,wispCost:solve.wispCost,prepared:{prerequisite,solve,pressure}}));return true;};
-    pushProbe(preCandidates[0]);pushProbe(preCandidates[1]);if(roleLane){pushProbe(preCandidates[2]);pushProbe(preCandidates[3]);for(const req of missing)pushProbe(preCandidates.slice().sort((a,b)=>Math.min(num(req.gap),num(b.row.vector&&b.row.vector[req.key]))-Math.min(num(req.gap),num(a.row.vector&&a.row.vector[req.key]))||candidateCompare(a,b))[0]);}pushProbe(preCandidates.slice().sort((a,b)=>a.controlPenalty-b.controlPenalty||compareTierBurn(a.tierUse,b.tierUse)||a.wispCost-b.wispCost||b.score-a.score)[0]);pushProbe(preCandidates.slice().sort((a,b)=>compareTierBurn(a.tierUse,b.tierUse)||a.wispCost-b.wispCost||candidateCompare(a,b))[0]);pushProbe(preCandidates.slice().sort((a,b)=>a.wispCost-b.wispCost||compareTierBurn(a.tierUse,b.tierUse)||b.score-a.score)[0]);for(const item of probe)tryProbe(item);
+    pushProbe(preCandidates[0]);pushProbe(preCandidates[1]);if(roleLane){pushProbe(preCandidates[2]);pushProbe(preCandidates[3]);for(const req of missing)pushProbe(preCandidates.slice().sort((a,b)=>Math.min(num(req.gap),requirementVectorValue(b.row.vector,req.key,requirements))-Math.min(num(req.gap),requirementVectorValue(a.row.vector,req.key,requirements))||candidateCompare(a,b))[0]);}pushProbe(preCandidates.slice().sort((a,b)=>a.controlPenalty-b.controlPenalty||compareTierBurn(a.tierUse,b.tierUse)||a.wispCost-b.wispCost||b.score-a.score)[0]);pushProbe(preCandidates.slice().sort((a,b)=>compareTierBurn(a.tierUse,b.tierUse)||a.wispCost-b.wispCost||candidateCompare(a,b))[0]);pushProbe(preCandidates.slice().sort((a,b)=>a.wispCost-b.wispCost||compareTierBurn(a.tierUse,b.tierUse)||b.score-a.score)[0]);for(const item of probe)tryProbe(item);
     // Shared materials can make all three static leaders stale. Only in that
     // case, walk the remaining static order until one current-stock solve works.
     if(!candidates.length)for(const item of preCandidates){if(probeIds.has(item.row.unit.id))continue;probeIds.add(item.row.unit.id);if(tryProbe(item))break;}
@@ -927,11 +948,12 @@ function repairDraftSingleSwap(state,settings,policy,route,upper,staticData,draf
   const planned=draft&&draft.roleCoverage&&draft.roleCoverage.planned;if(!draft||draft.plannedCount!==draft.targetCount)return draft;
   const alreadyComplete=!!(planned&&planned.complete),requiredMiss=(planned&&planned.rows||[]).filter(row=>row.required&&num(row.gap)>0),narrow=alreadyComplete||requiredMiss.length===1&&(requiredMiss[0].key==='armor'?num(requiredMiss[0].gap)<=2.5:num(requiredMiss[0].gap)<=Math.max(.15,num(requiredMiss[0].target)*.05)),draftOverflow=controlCapOverflow(excessStun(planned&&planned.spec),excessSlow(planned));if(!narrow||draftOverflow<=0)return draft;
   const base=(draft.finalLineup||[]).map(row=>row.unit||state.db.byId.get(row.id)).filter(Boolean),built=new Set((draft.actions||[]).map(action=>action.id)),currentIds=new Set(base.map(stableId)),fixedKey=lineupKey(upper),options=[];
+  const plannedRequirements={rows:planned&&planned.rows||[],control:C.controlState?C.controlState(planned&&planned.spec,settings.mode,Object.assign({},settings,{magicRoute:route,_resolvedMagicRoute:route,_upperUnit:upper})):null,route};
   const specFor=units=>{let spec=emptyFinalSpec(settings.mode);for(const unit of units){spec=addUnitRole(spec,unit,settings.mode);spec.total++;}return spec;};
   for(let index=0;index<base.length;index++){
     const removed=base[index];if(lineupKey(removed)===fixedKey||!built.has(removed.id))continue;const removedVector=roleVector(removed,settings.mode);
     for(const row of staticData.rows){const candidate=row.unit;if(C.isUpper(candidate)||currentIds.has(candidate.id)||!allowedCandidate(candidate,settings.mode,route,settings,state,state.counts))continue;
-      if(!alreadyComplete&&num(row.vector[requiredMiss[0].key])-num(removedVector[requiredMiss[0].key])+1e-9<num(requiredMiss[0].gap))continue;
+      if(!alreadyComplete&&requirementVectorValue(row.vector,requiredMiss[0].key,plannedRequirements)-requirementVectorValue(removedVector,requiredMiss[0].key,plannedRequirements)+1e-9<num(requiredMiss[0].gap))continue;
       if(base.some((existing,otherIndex)=>otherIndex!==index&&pairMaterialOverlap(state,existing,candidate).lineage))continue;
       const lineup=base.slice();lineup[index]=candidate;if(new Set(lineup.map(lineupKey)).size!==lineup.length)continue;
       if(lineup.filter(C.isSeraph).length+num(settings.seraphUsed)>1||lineup.filter(C.isTranscend).length+num(settings.transcendUsed)>1||lineup.filter(C.isChanged).length+num(settings.changedUsed)>2)continue;
@@ -1022,7 +1044,7 @@ function preserveCriticalSlowBudget(candidates,requirements,spec,availableWisp,m
 function buildDeferredLight(state,best,staticRows,mode,route,settings,fixed,target,policy){
   const builtIds=new Set(best.actions.map(x=>x.id)),entries=best.lineup.map(u=>({id:u.id,name:displayNameOf(u),groupName:groupOf(u),family:unitFamily(u),unit:u,status:builtIds.has(u.id)?'planned':'owned',role:C.summarizeRoles?C.summarizeRoles({role:C.roleProfile(u)},mode):''})),seen=new Set(entries.map(row=>row.id)),ownedBoard=ownedFinalBoardCount(state);let units=best.lineup.slice(),spec=Object.assign({},best.spec),main=best.mainUpper,requirements=best.requirements,stock=clone(best.counts),wisp=num(best.wisp),guard=0;const slotCap=num(settings&&settings.currentRound)>=40&&ownedBoard>=target&&!requirements.complete?entries.length+1:target,futureSettings=Object.assign({},settings,{_deferredFuture:true});
   while((entries.length<target||!requirements.complete)&&entries.length<slotCap&&guard++<slotCap*2){const upperN=new Set(units.filter(C.isUpper).map(canonicalUpper)).size,changed=units.filter(C.isChanged).length,seraph=units.filter(C.isSeraph).length,trans=units.filter(C.isTranscend).length,candidates=[];
-    for(const row of deferredCandidateRows(state,staticRows,fixed,24)){const u=row.unit;if(seen.has(u.id)||!allowedCandidate(u,mode,route,futureSettings,state,stock))continue;if(units.some(existing=>pairMaterialOverlap(state,existing,u).lineage))continue;if(C.isUpper(u)&&upperN>=(mode==='magic'&&route==='dual'?2:1))continue;if(C.isSeraph(u)&&settings.seraphUsed+seraph>=1)continue;if(C.isTranscend(u)&&settings.transcendUsed+trans>=1)continue;if(C.isChanged(u)&&settings.changedUsed+changed>=2)continue;const prerequisite=prerequisiteStatus(state,u,stock);if(!prerequisite.allowed)continue;const solve=effectiveSolve(C.recipeSolve(state.db,u.id,stock),prerequisite),charge=futureWispCharge(state,solve,prerequisite),chargedWisp=charge.required;if(chargedWisp>wisp)continue;const requiredGain=staticPotential(row.vector,requirements),projectedRows=(requirements.rows||[]).map(item=>{const current=num(item.current)+num(row.vector&&row.vector[item.key]),targetValue=num(item.target);return Object.assign({},item,{current,gap:Math.max(0,targetValue-current)});}),priority=requirementPriorityVector({rows:projectedRows,route:requirements.route}),controlPenalty=incrementalStunPenalty(spec,row.vector)+incrementalSlowPenalty(requirements,row.vector),tierUse=solveTierBurn(state,solve),memoAffinity=num(curatedSupportEvidence(u).affinity);candidates.push({row,prerequisite,solve,chargedWisp,requiredGain,priority,controlPenalty,tierUse,memoAffinity,hardBlocked:charge.dropPending,futureWispWorstCase:charge.worstCase});}
+    for(const row of deferredCandidateRows(state,staticRows,fixed,24)){const u=row.unit;if(seen.has(u.id)||!allowedCandidate(u,mode,route,futureSettings,state,stock))continue;if(units.some(existing=>pairMaterialOverlap(state,existing,u).lineage))continue;if(C.isUpper(u)&&upperN>=(mode==='magic'&&route==='dual'?2:1))continue;if(C.isSeraph(u)&&settings.seraphUsed+seraph>=1)continue;if(C.isTranscend(u)&&settings.transcendUsed+trans>=1)continue;if(C.isChanged(u)&&settings.changedUsed+changed>=2)continue;const prerequisite=prerequisiteStatus(state,u,stock);if(!prerequisite.allowed)continue;const solve=effectiveSolve(C.recipeSolve(state.db,u.id,stock),prerequisite),charge=futureWispCharge(state,solve,prerequisite),chargedWisp=charge.required;if(chargedWisp>wisp)continue;const requiredGain=staticPotential(row.vector,requirements),projectedRows=(requirements.rows||[]).map(item=>{const current=num(item.current)+requirementVectorValue(row.vector,item.key,requirements),targetValue=num(item.target);return Object.assign({},item,{current,gap:Math.max(0,targetValue-current)});}),priority=requirementPriorityVector({rows:projectedRows,route:requirements.route}),controlPenalty=incrementalStunPenalty(spec,row.vector)+incrementalSlowPenalty(requirements,row.vector),tierUse=solveTierBurn(state,solve),memoAffinity=num(curatedSupportEvidence(u).affinity);candidates.push({row,prerequisite,solve,chargedWisp,requiredGain,priority,controlPenalty,tierUse,memoAffinity,hardBlocked:charge.dropPending,futureWispWorstCase:charge.worstCase});}
     const guarded=preserveCriticalSlowBudget(candidates,requirements,spec,wisp,mode,settings);guarded.sort((a,b)=>Number((fixed||[]).includes(b.row.unit.id))-Number((fixed||[]).includes(a.row.unit.id))||num(b.row.mandatory)-num(a.row.mandatory)||comparePriorityVectors(a.priority,b.priority)||Number(a.hardBlocked)-Number(b.hardBlocked)||a.controlPenalty-b.controlPenalty||compareTierBurn(a.tierUse,b.tierUse)||num(a.chargedWisp)-num(b.chargedWisp)||b.requiredGain-a.requiredGain||num(b.memoAffinity)-num(a.memoAffinity)||compareText(a.row.unit.id,b.row.unit.id));const pick=guarded[0];if(!pick)break;const u=pick.row.unit,beforeWisp=wisp;wisp-=num(pick.chargedWisp);stock=clone(pick.solve.stockAfter);stock[C.WISP_ID]=wisp;units=units.concat(u);spec=addUnitRole(spec,u,mode);if(!main&&C.isUpper(u))main=u;requirements=requirementRows(spec,units,mode,route,settings,main);seen.add(u.id);entries.push({id:u.id,name:displayNameOf(u),groupName:groupOf(u),family:unitFamily(u),unit:u,status:'future',role:C.summarizeRoles?C.summarizeRoles({role:C.roleProfile(u)},mode):'',reason:deferredReason(state,Object.assign({},pick.row,{solve:pick.solve,prerequisite:pick.prerequisite}),{wisp:beforeWisp},settings),prerequisite:pick.prerequisite,futureDropPending:pick.hardBlocked,futureWispEstimate:num(pick.futureWispWorstCase),futureWispRequired:num(pick.chargedWisp)});
   }
   return entries;
@@ -1037,7 +1059,7 @@ function buildDeferred(state,best,staticRows,mode,route,settings,fixed,target,po
         // A future reward may fill a missing non-wisp material, but selection
         // wisps are a finite shared inventory. Never create a slot that spends
         // more than the pool left by every earlier slot.
-        const charge=futureWispCharge(state,solve,prerequisite),chargedWisp=charge.required;if(chargedWisp>num(node.wisp))continue;const requiredGain=staticPotential(row.vector,node.requirements),projectedRows=(node.requirements.rows||[]).map(item=>{const current=num(item.current)+num(row.vector&&row.vector[item.key]),targetValue=num(item.target);return Object.assign({},item,{current,gap:Math.max(0,targetValue-current)});}),requirementPriority=requirementPriorityVector({rows:projectedRows,route:node.requirements.route}),controlPenalty=incrementalStunPenalty(node.spec,row.vector)+incrementalSlowPenalty(node.requirements,row.vector),memoAffinity=num(curatedSupportEvidence(u).affinity),roleScore=num(row.mandatory)+((fixed||[]).includes(u.id)?1000:0)+num(row.blueprintBonus)+requiredGain-controlPenalty-candidateOverlapPenalty(state,u,node.units,node.stock)*OVERLAP_HEURISTIC_WEIGHT+memoAffinity*12,tierUse=solveTierBurn(state,solve);candidates.push({row,prerequisite,solve,chargedWisp,requiredGain,requirementPriority,controlPenalty,roleScore,tierUse,memoAffinity,hardBlocked:charge.dropPending,futureWispWorstCase:charge.worstCase});
+        const charge=futureWispCharge(state,solve,prerequisite),chargedWisp=charge.required;if(chargedWisp>num(node.wisp))continue;const requiredGain=staticPotential(row.vector,node.requirements),projectedRows=(node.requirements.rows||[]).map(item=>{const current=num(item.current)+requirementVectorValue(row.vector,item.key,node.requirements),targetValue=num(item.target);return Object.assign({},item,{current,gap:Math.max(0,targetValue-current)});}),requirementPriority=requirementPriorityVector({rows:projectedRows,route:node.requirements.route}),controlPenalty=incrementalStunPenalty(node.spec,row.vector)+incrementalSlowPenalty(node.requirements,row.vector),memoAffinity=num(curatedSupportEvidence(u).affinity),roleScore=num(row.mandatory)+((fixed||[]).includes(u.id)?1000:0)+num(row.blueprintBonus)+requiredGain-controlPenalty-candidateOverlapPenalty(state,u,node.units,node.stock)*OVERLAP_HEURISTIC_WEIGHT+memoAffinity*12,tierUse=solveTierBurn(state,solve);candidates.push({row,prerequisite,solve,chargedWisp,requiredGain,requirementPriority,controlPenalty,roleScore,tierUse,memoAffinity,hardBlocked:charge.dropPending,futureWispWorstCase:charge.worstCase});
       }
       const guarded=preserveCriticalSlowBudget(candidates,node.requirements,node.spec,node.wisp,mode,settings);guarded.sort((a,b)=>Number((fixed||[]).includes(b.row.unit.id))-Number((fixed||[]).includes(a.row.unit.id))||num(b.row.mandatory)-num(a.row.mandatory)||comparePriorityVectors(a.requirementPriority,b.requirementPriority)||Number(a.hardBlocked)-Number(b.hardBlocked)||num(a.controlPenalty)-num(b.controlPenalty)||compareTierBurn(a.tierUse,b.tierUse)||num(a.chargedWisp)-num(b.chargedWisp)||b.requiredGain-a.requiredGain||b.roleScore-a.roleScore||num(b.memoAffinity)-num(a.memoAffinity)||compareText(a.row.unit.id,b.row.unit.id));
       for(const pick of deferredBranchCandidates(guarded,node.requirements,branchLimit)){const row=pick.row,u=row.unit,beforeWisp=node.wisp,remaining=beforeWisp-num(pick.chargedWisp),after=clone(pick.solve.stockAfter);after[C.WISP_ID]=remaining;const nextSpec=addUnitRole(node.spec,u,mode),nextUnits=node.units.concat(u),nextMain=node.main||C.isUpper(u)&&u||null,nextRequirements=requirementRows(nextSpec,nextUnits,mode,route,settings,nextMain),pressure=commonPressure(pick.solve,node.stock,policy),action={order:node.futureActions.length+1,id:u.id,name:displayNameOf(u),unit:u,solve:pick.solve,wispCost:pick.chargedWisp,futureWispEstimate:num(pick.futureWispWorstCase),futureDropPending:pick.hardBlocked,remainingWisp:remaining,rareSpend:clone(pick.solve.rareUse),commonPressure:pressure},futureActions=node.futureActions.concat(action),hand=deferredHandStats(state,initialHand,after,futureActions),entry={id:u.id,name:displayNameOf(u),groupName:groupOf(u),family:unitFamily(u),unit:u,status:'future',role:C.summarizeRoles?C.summarizeRoles({role:C.roleProfile(u)},mode):'',reason:deferredReason(state,Object.assign({},row,{solve:pick.solve,prerequisite:pick.prerequisite}),{wisp:beforeWisp},settings),prerequisite:pick.prerequisite,futureDropPending:pick.hardBlocked,futureWispEstimate:num(pick.futureWispWorstCase),futureWispRequired:num(pick.chargedWisp)},hardMissingCount=num(node.hardMissingCount);children.push({state,fixed,entries:node.entries.concat(entry),units:nextUnits,seen:new Set([...node.seen,u.id]),spec:nextSpec,main:nextMain,requirements:nextRequirements,stock:after,wisp:remaining,futureActions,totalWispCost:num(best.used&&best.used.wisp)+num(best.wisp)-remaining,hand,fixedMissing:deferredFixedMissing(state,nextUnits,fixed),controlOverflow:controlCapOverflow(excessStun(nextSpec),excessSlow(nextRequirements)),overlapPenalty:num(lineupMaterialOverlap(state,nextUnits).penalty),memoSupport:curatedLineupEvidence(nextUnits),hardFeasible:node.hardFeasible,hardMissingCount});}
@@ -1137,7 +1159,7 @@ function finalPatchOptions(state,best,staticRows,mode,settings){
   const legend=state.db.legendish.filter(u=>!C.isUpper(u)&&!(C.isShip&&C.isShip(u))&&!(C.isChanged&&C.isChanged(u))),ships=state.db.legendish.filter(u=>C.isShip&&C.isShip(u)),changed=state.db.legendish.filter(u=>C.isChanged&&C.isChanged(u));
   const rares=state.db.rares.filter(familyOk),pairs=[];for(let i=0;i<rares.length;i++)for(let j=i;j<rares.length;j++){const a=rares[i],b=rares[j],va=roleVector(a,mode),vb=roleVector(b,mode),vector={};for(const key of new Set(Object.keys(va).concat(Object.keys(vb))))vector[key]=num(va[key])+num(vb[key]);pairs.push({a,b,gain:staticPotential(vector,best.requirements),vector});}
   pairs.sort((a,b)=>b.gain-a.gain||compareText(`${nameOf(a.a)}|${nameOf(a.b)}`,`${nameOf(b.a)}|${nameOf(b.b)}`));const pair=pairs[0],rarePair=pair?{kind:'rarePair',label:'희귀 2기 보강',availableRound:50,status:num(settings.currentRound)<50?'locked':'future',ids:[pair.a.id,pair.b.id],names:[displayNameOf(pair.a),displayNameOf(pair.b)],units:[pair.a,pair.b],roles:[pair.a,pair.b].map(u=>C.summarizeRoles?C.summarizeRoles({role:C.roleProfile(u)},mode):''),reason:`${deficitLabels.join(' · ')||'남은 자리'}에 가장 가까운 희귀 2기 조합 · 새 보상에서 확보 시 사용`}:{kind:'rarePair',label:'희귀 2기 보강',availableRound:50,status:'none',reason:'희귀 역할 후보가 없습니다.'};
-  return[option('legendHidden','전설·히든 1기',legend),option('ship','해적선 1기',ships,50),rarePair,option('changed','변화됨 1기',changed,50)];
+  return[option('legendHidden','전설·히든 1기',legend),option('ship','해적선 1기',ships,25),rarePair,option('changed','변화됨 1기',changed,50)];
 }
 
 function alternativeSummary(node,route){return{route,routeLabel:ROUTE_LABELS[route],score:node.score,projectedCount:node.projectedCount,readiness:node.requirements.readiness,wispCost:node.used.wisp,materialOverlap:node.materialOverlap,lineup:node.lineup.map(u=>({id:u.id,name:displayNameOf(u)})),actions:node.actions.map(x=>({id:x.id,name:x.name,wispCost:x.wispCost}))};}
@@ -1211,8 +1233,15 @@ function projectUpperCandidate(state,plan,upper,settings){
 }
 
 function upperPreparationFor(state,upper){
-  const prerequisite=prerequisiteStatus(state,upper,state.counts),solve=effectiveSolve(C.recipeSolve(state.db,upper.id,state.counts),prerequisite),direct=directOrdinaryStats(state,solve),ordinaryMissing=direct.missing+['rare','special','uncommon','other'].reduce((total,tier)=>total+sum(solve.missingByTier&&solve.missingByTier[tier]),0),wispCost=num(solve.wispCost),wispGap=ordinaryMissing<=0?Math.max(0,wispCost-num(state.wisp)):0,materialReady=prerequisite.allowed&&!missingNonWisp(solve,prerequisite)&&ordinaryMissing<=0,used=consumptionTotals([{solve}],state),fit=handFitMetrics(state,state.counts,solve.stockAfter,used),rare=fit.tiers&&fit.tiers.rare||{},special=fit.tiers&&fit.tiers.special||{};
-  return{recipeVerified:true,prerequisiteOwned:prerequisite.allowed,materialReady,immediate:materialReady&&wispGap<=0,ordinaryMissing,ordinaryOwned:num(direct.owned),wispCost,wispGap,rareUsed:num(rare.spent),rareUsedTypes:num(rare.usedTypes),rareClearedTypes:num(rare.clearedTypes),specialUsed:num(special.spent),specialUsedTypes:num(special.usedTypes),tierUse:solveTierBurn(state,solve)};
+  const prerequisite=prerequisiteStatus(state,upper,state.counts),solve=effectiveSolve(C.recipeSolve(state.db,upper.id,state.counts),prerequisite),direct=directOrdinaryStats(state,solve);
+  // `solve.direct[].owned` only describes already-completed direct ingredients.
+  // A missing direct Legend/Rare can still be built exactly from the current
+  // lower hand and selection wisps; adding `direct.missing` here labelled those
+  // fully quoted paths as future material debt.  R30 Kaido/Shiki/Sanji were in
+  // safePrefix and craftable now, yet all became "미래각".  The recursive
+  // solver's unresolved leaf ledger is the authority for material readiness.
+  const ordinaryMissing=['rare','special','uncommon','other'].reduce((total,tier)=>total+sum(solve.missingByTier&&solve.missingByTier[tier]),0),materialReady=prerequisite.allowed&&!missingNonWisp(solve,prerequisite)&&ordinaryMissing<=0,wispCost=num(solve.wispCost),wispGap=materialReady?Math.max(0,wispCost-num(state.wisp)):0,used=consumptionTotals([{solve}],state),fit=handFitMetrics(state,state.counts,solve.stockAfter,used),rare=fit.tiers&&fit.tiers.rare||{},special=fit.tiers&&fit.tiers.special||{};
+  return{recipeVerified:true,prerequisiteOwned:prerequisite.allowed,materialReady,immediate:materialReady&&wispGap<=0,ordinaryMissing,ordinaryOwned:num(direct.owned),wispCost,wispGap,rareInitial:num(rare.initial),rareUsed:num(rare.spent),rareUsedTypes:num(rare.usedTypes),rareClearedTypes:num(rare.clearedTypes),rareUtilization:num(rare.utilization),specialInitial:num(special.initial),specialUsed:num(special.spent),specialUsedTypes:num(special.usedTypes),specialClearedTypes:num(special.clearedTypes),specialUtilization:num(special.utilization),tierUse:solveTierBurn(state,solve)};
 }
 
 function curatedPackageEvidence(upper,lineup,supportMemo){
@@ -1247,11 +1276,25 @@ function angleHasPath(row){
   const target=num(row&&row.plan&&row.plan.targetCount)||9;
   return num(row&&row.prefixActionCount)>=2||num(row&&row.projectedCount)>=target;
 }
+function upperStartsPrefix(row){
+  const key=canonicalUpper({id:String(row&&row.upperId||'')});
+  return!!key&&(row&&row.safePrefix&&row.safePrefix.actions||[]).some(action=>canonicalUpper({id:String(action&&action.id||'')})===key);
+}
 function upperAngleBand(row){
   if(!row||num(row.rareConflict)>0||num(row.lineagePairs)>0||num(row.controlCapOverflow)>0)return 0;
   const prep=row.upperPreparation||{},prefix=row.safePrefix||{};
+  // 선택위습 24개 이상은 현재 패의 좋은 각이 아니다. 역할표가 좋아도
+  // 게임 내 후보 상한(23)을 넘긴 허상 경로를 티어 승격시키지 않는다.
+  if(num(prep.wispCost)>num(C.MAX_WISP_COST||23))return 0;
+  // "패만 봐도 각"의 실제 신호: 현재 보유 Rare를 직접 비우는 상위가
+  // 지금 선위로 제작되고, 그 상위가 검증 prefix 안에 있어야 한다.
+  // 미래에 만들 Rare나 랜덤 드랍은 여기서 세지 않는다.
+  const handAngle=prep.immediate&&num(prep.rareUsed)>0&&num(prep.rareClearedTypes)>0&&num(prep.wispCost)<=num(C.PREFERRED_WISP_COST||10)&&upperStartsPrefix(row);
   if(row.guaranteed&&row.clearComplete&&prep.immediate)return 3;
+  if(handAngle&&num(prep.rareClearedTypes)>=2&&row.roleComplete&&num(row.readiness)>=85&&num(row.wispShortage)<=0)return 3;
+  if(handAngle&&num(row.readiness)>=70&&num(row.hardConflictTotal)<=0&&num(row.wispConflict)<=0)return 2;
   if(prefix.checkpointPass&&row.roleComplete&&num(row.readiness)>=85&&angleHasPath(row)&&num(row.wispShortage)<=0&&num(row.futureDependencyCount)<=0)return 2;
+  if(prep.materialReady&&upperStartsPrefix(row)&&(num(prep.rareUsed)>0||num(prep.specialUsed)>0)&&num(row.readiness)>=60)return 1;
   if(prefix.checkpointPass&&num(row.projectedCount)>=6&&num(row.readiness)>=70&&angleHasPath(row))return 1;
   return 0;
 }
@@ -1270,6 +1313,11 @@ function upperBlueprintCompare(a,b){
   // "가반이 좋지도 않은데 계속 올라온다"와 같은 현상이다.
   const at=a.powerTier||{},bt=b.powerTier||{},ae=a.effectiveTierRank!=null&&num(a.effectiveTierRank)>=0?num(a.effectiveTierRank):at.known?num(at.rank):null,be=b.effectiveTierRank!=null&&num(b.effectiveTierRank)>=0?num(b.effectiveTierRank):bt.known?num(bt.rank):null;
   if(at.known&&bt.known&&ae!==be)return be-ae;
+  // 보유 희귀 소모는 실제 후보 상한(선위 23) 안에서만 현재 패 각으로
+  // 쓴다. 52위습 허상 상위가 희귀 1장을 태운다는 이유로 5위습 후보를
+  // 밀어내면, 아래의 wispGap 비교까지 도달하지 못한다.
+  const rareAngleUse=row=>num(row&&row.upperPreparation&&row.upperPreparation.wispCost)>num(C.MAX_WISP_COST||23)?0:num(row&&row.upperPreparation&&row.upperPreparation.rareUsed);
+  const aOwnedRare=rareAngleUse(a),bOwnedRare=rareAngleUse(b);if(aOwnedRare!==bOwnedRare)return bOwnedRare-aOwnedRare;
   if(!!a.handFeasible!==!!b.handFeasible)return Number(!!b.handFeasible)-Number(!!a.handFeasible);
   if(!!a.wispFeasible!==!!b.wispFeasible)return Number(!!b.wispFeasible)-Number(!!a.wispFeasible);
   const as=num(a.safetyBand!=null?a.safetyBand:upperSafetyBand(a)),bs=num(b.safetyBand!=null?b.safetyBand:upperSafetyBand(b));if(as!==bs)return bs-as;
@@ -1408,5 +1456,5 @@ function planAdaptiveFinalSquad(input,options){
   const result=selected||core;result.adaptiveTargets={minimum:minTarget,maximum:maxTarget,selected:num(result&&result.targetCount)||minTarget,attempts,basis:'full-reoptimization-per-legend-equivalent'};return result;
 }
 
-return{VERSION,planFinalSquad,planAdaptiveFinalSquad,rankUpperBlueprints,rankDeckDirections,_test:{clearAffinity,compareAffinity,metaGamesOf,setAffinityContext,pairGamesOf,resolveSupportMemo,supportRankAffinity,curatedSupportEvidence,curatedLineupEvidence,curatedPackageEvidence,compareCuratedSupport,normalizeSettings,normalizeCommonPolicy,normalizeBlueprint,requirementRows,routeEvaluationFor,commonPressure,finalEntries,finalOnlySpec,buildStaticRows,makeLightStaticData,routeFor,routeBoardTarget,settingsForRoute,finalWeight,legendEquivalentCount,decorateLegendEquivalent,squadDecisionSummary,finalStageSnapshot,strategyGateRows,stageGateSnapshot,rareDeadlineAssessment,timelineReadiness,exactPrefixStage,exactPrefixCheckpoint,exactPrefixMetrics,compareExactPrefixMetrics,exactPrefixPlan,finalPatchOptions,allowedCandidate,prerequisiteStatus,staticPotential,excessStun,excessSlow,hasNonControlRole,incrementalStunPenalty,incrementalSlowPenalty,recipeProfile,pairMaterialOverlap,lineupMaterialOverlap,introducesLineageConflict,candidateOverlapPenalty,consumptionTotals,tierBurnVector,compareTierBurn,handFitMetrics,compareHandFit,fullHandAllocation,wispBudgetSummary,futureWispCharge,deferredFutureFeasibility,compareDeferredSwaps,buildDeferred,requirementPriorityVector,comparePriorityVectors,nodeCompare,compareRoutePlans,searchExactBlueprint,searchRouteLight,draftUpperBlueprintPlan,repairDraftSingleSwap,blueprintMetadata,projectUpperCandidate,upperPreparationFor,upperSafetyBand,upperAngleBand,decorateUpperStrategy,upperBlueprintCompare,directionRow,uniqueDirectionRows,directionUpperShortlist,adaptivePlanReady}};
+return{VERSION,planFinalSquad,planAdaptiveFinalSquad,rankUpperBlueprints,rankDeckDirections,_test:{clearAffinity,compareAffinity,metaGamesOf,setAffinityContext,pairGamesOf,resolveSupportMemo,supportRankAffinity,curatedSupportEvidence,curatedLineupEvidence,curatedPackageEvidence,compareCuratedSupport,normalizeSettings,normalizeCommonPolicy,normalizeBlueprint,requirementRows,routeEvaluationFor,commonPressure,finalEntries,finalOnlySpec,buildStaticRows,makeLightStaticData,routeFor,routeBoardTarget,settingsForRoute,finalWeight,legendEquivalentCount,decorateLegendEquivalent,squadDecisionSummary,finalStageSnapshot,strategyGateRows,stageGateSnapshot,rareDeadlineAssessment,timelineReadiness,exactPrefixStage,exactPrefixCheckpoint,exactPrefixMetrics,compareExactPrefixMetrics,exactPrefixPlan,finalPatchOptions,allowedCandidate,prerequisiteStatus,triggerSlowWeight,creditedSlow,marginalSlow,requirementVectorValue,staticPotential,excessStun,excessSlow,hasNonControlRole,incrementalStunPenalty,incrementalSlowPenalty,recipeProfile,pairMaterialOverlap,lineupMaterialOverlap,introducesLineageConflict,candidateOverlapPenalty,consumptionTotals,tierBurnVector,compareTierBurn,handFitMetrics,compareHandFit,fullHandAllocation,wispBudgetSummary,futureWispCharge,deferredFutureFeasibility,compareDeferredSwaps,buildDeferred,requirementPriorityVector,comparePriorityVectors,nodeCompare,compareRoutePlans,searchExactBlueprint,searchRouteLight,draftUpperBlueprintPlan,repairDraftSingleSwap,blueprintMetadata,projectUpperCandidate,upperPreparationFor,upperSafetyBand,upperAngleBand,decorateUpperStrategy,upperBlueprintCompare,directionRow,uniqueDirectionRows,directionUpperShortlist,adaptivePlanReady}};
 });

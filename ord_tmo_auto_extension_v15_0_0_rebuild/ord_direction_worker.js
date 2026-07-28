@@ -8,6 +8,7 @@ importScripts(
   'ord_story_nonupper_data.js',
   'ord_story_upper_data.js',
   'ord_core.js',
+  'ord_meta_stats.js',
   'ord_squad_planner.js'
 );
 
@@ -28,7 +29,9 @@ function compactSafePrefix(prefix){
 function compactPlan(plan){
   plan=plan||{};const planned=plan.roleCoverage&&plan.roleCoverage.planned||{},tiers=plan.handFit&&plan.handFit.tiers||{},tierInitial={};for(const key of ['rare','special','uncommon','common'])tierInitial[key]={initial:number(tiers[key]&&tiers[key].initial)};
   return Object.assign(pick(plan,['version','mode','magicRoute','routeLabel','targetCount','projectedCount','plannedCount','targetBoardCount','projectedBoardCount','plannedBoardCount','complete','draftClearComplete']),{
-    finalLineup:(plan.finalLineup||[]).map(item=>({id:String(item&&item.id||item&&item.unit&&item.unit.id||''),status:String(item&&item.status||''),unit:{id:String(item&&item.unit&&item.unit.id||item&&item.id||'')}})).filter(item=>item.id),
+    // Keep ids only.  A truthy `{unit:{id}}` stub was mistaken for a complete
+    // catalog unit after the result crossed back to the main thread.
+    finalLineup:(plan.finalLineup||[]).map(item=>({id:String(item&&item.id||item&&item.unit&&item.unit.id||''),status:String(item&&item.status||'')})).filter(item=>item.id),
     roleCoverage:{planned:{complete:planned.complete===true,readiness:number(planned.readiness)}},
     handFit:{feasible:!plan.handFit||plan.handFit.feasible!==false,tiers:tierInitial,futurePending:Array.isArray(plan.handFit&&plan.handFit.futurePending)?plan.handFit.futurePending.map(item=>pick(item,['id','name','tier','count','unitId','unitName'])):[]},
     wispBudget:pick(plan.wispBudget||{},['available','required','used','reserved','futureWorstCase','worstCaseRequired','remaining','shortage','withinBudget','fullPartyFeasible']),

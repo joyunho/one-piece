@@ -16,6 +16,7 @@
 const assert=require('assert');
 const fs=require('fs');
 const path=require('path');
+const vm=require('vm');
 const EXT=path.resolve(__dirname,'../ord_tmo_auto_extension_v15_0_0_rebuild');
 global.window=global;
 for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js'])require(path.join(EXT,file));
@@ -105,6 +106,54 @@ test('워커를 못 쓰는 환경에서는 인라인 계획으로 되돌아간�
   }finally{planner.rankUpperBlueprints=original;}
 });
 
+test('워커 왕복 후에도 지원 유닛은 실제 카탈로그 이름으로 복원된다',()=>{
+  const sourceModel=modelAt(27);
+  const messages=[];
+  const context={
+    console,
+    ORD_TMO_UNITS:catalog,
+    ORD_UPPER_MEMO:global.ORD_UPPER_MEMO,
+    ORD_SYNERGY_MEMO:global.ORD_SYNERGY_MEMO,
+    ORDCore:C,
+    ORDSquadPlanner:global.ORDSquadPlanner
+  };
+  context.self=context;
+  context.window=context;
+  context.importScripts=()=>{};
+  context.postMessage=message=>messages.push(message);
+  vm.createContext(context);
+  vm.runInContext(fs.readFileSync(path.join(EXT,'ord_direction_worker.js'),'utf8'),context,{filename:'ord_direction_worker.js'});
+  context.onmessage({data:{
+    type:'rank-upper-blueprints',
+    requestId:23,
+    key:'worker-roundtrip',
+    payload:{
+      snapshot:sourceModel.observed.snapshot,
+      settings:sourceModel.settings,
+      lanes:[{key:'physical',mode:'physical',route:'physical',candidateIds:['A90H']}]
+    }
+  }});
+
+  const response=messages[0];
+  assert(response&&response.type==='rank-upper-blueprints-result',response&&response.error||'워커 응답 없음');
+  const compact=response.rankings.physical.A90H;
+  assert(compact&&compact.plan&&compact.plan.finalLineup.length>1,'지원 유닛이 있는 전체 파티 계획을 못 만들었다');
+  for(const row of compact.plan.finalLineup){
+    assert.deepStrictEqual(Object.keys(row).sort(),['id','status'],'워커가 불완전한 unit 스텁을 다시 보냈다');
+  }
+
+  const injectedModel=modelAt(27,{_blueprintRankings:response.rankings});
+  const candidate=E._test.upperRouteCandidates(injectedModel,[]).find(row=>row.id==='A90H');
+  const supports=candidate&&candidate.blueprintEvaluation&&candidate.blueprintEvaluation.supports||[];
+  assert(supports.length>0,'워커 파티의 지원 유닛을 엔진이 복원하지 못했다');
+  for(const support of supports){
+    const unit=injectedModel.knowledge.db.byId.get(support.id);
+    assert(unit,`지원 유닛 ${support.id}가 실제 카탈로그에 없다`);
+    assert(support.name&&support.name!==support.id,`지원 유닛 ${support.id} 이름이 비었다`);
+    assert(!C.isUpper(unit),`상위 ${support.id}가 전설급 지원 목록에 섞였다`);
+  }
+});
+
 test('앱·워커 배선',()=>{
   const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
   const worker=fs.readFileSync(path.join(EXT,'ord_direction_worker.js'),'utf8');
@@ -116,4 +165,4 @@ test('앱·워커 배선',()=>{
   assert(/_blueprintPlanSync:!workerReady/.test(app),'폴백 조건이 워커 가용성과 연결되지 않았다');
 });
 
-console.log(`V17_22_BLUEPRINT_WORKER ${passed}/5 passed`);
+console.log(`V17_22_BLUEPRINT_WORKER ${passed}/6 passed`);
