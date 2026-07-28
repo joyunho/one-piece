@@ -1071,3 +1071,9 @@
 .v151-continue b{font-size:13.5px}
 .v151-continue i{color:#9FB6E4;font-size:10.5px;font-style:normal;font-weight:800}
 .v151-continue span{grid-column:1/-1;color:#8CA2BE;font-size:10.5px;line-height:1.45}
+
+/* v18.4: 50라 마감을 넘겨 도달하는 상위 후보 — 선위 수입(0.5/라)으로 계산한
+   예상 완성 라운드가 생존 마감을 넘으면 카드에 경고색을 준다. 순위에서는
+   이미 deadlineFactor 로 할인되지만, 왜 밀렸는지 화면에서 보이게 한다. */
+.v15-route-card.overdue{border-color:rgba(217,131,36,.55);}
+.v15-route-card.overdue dd.overdue{color:#d98324;font-weight:600;}
