@@ -505,14 +505,22 @@ function clearValueScore(model,row){
   // 선위 부족 → 예상 라운드: 드랍이 트리 재료를 직접 채우므로 순수 선위
   // 구매 가정보다 훨씬 빠르다.  실측 로그 기준(예: 크로커다일 r33 선택 →
   // r38 완성, 선위환산 ~20/5라) 라운드당 4선위 환산으로 본다.
-  // v18.4(사용자 지적): 도달 라운드를 실측 수입으로 계산한다.  v17.3은 부족
-  // 선위를 4로 나눴는데(라운드당 4개 수입 가정) 근거가 없었고, 코어의 실측
-  // 상수는 라운드당 0.5다(3판 로그).  8배 낙관이라 "50라 안에 못 만드는 상위"가
-  // 할인 없이 1순위로 올라왔다 — 선위 10 부족이면 3라가 아니라 20라가 걸린다.
-  // 무작위 위습 2/라운드는 흔함만 채우므로(사용자 확인) 이 병목에 보태지 않는다.
-  const incomePerRound=Math.max(.01,num(C.SELECTION_WISP_INCOME_PER_ROUND)||.5);
-  const roundsToGo=row.feasible?0:Math.ceil(num(row.wispGap)/incomePerRound);
+  // v18.4(사용자 지적): 도달 라운드를 실측 수입으로 계산한다.
+  //
+  // v17.3은 부족 선위를 4로 나눴다(라운드당 4개 해소 가정). 근거가 커밋에
+  // 없고, 코어의 실측 상수로 만들 수 있는 가장 낙관적인 값보다도 크다:
+  //   선택위습 0.5/라(측정) — 어떤 최하위 재료든 대체
+  //   랜덤 위습 2/라       — 흔함만, 특정 1종은 2/9. 안흔함 이상은 안 온다.
+  // 그래서 해소율은 0.5(전부 안흔함+ 부족) ~ 2.5(전부 흔함 부족) 사이다.
+  //
+  // 할인은 벌점이므로 낙관 상한(2.5)으로 잰다 — 가장 좋은 경우에도 마감을
+  // 넘길 때만 깎는다. 비관 하한은 UI 가 범위로 함께 보여 준다.
+  const optimisticRate=Math.max(.01,(num(C.SELECTION_WISP_INCOME_PER_ROUND)||.5)+(num(C.RANDOM_WISP_PER_ROUND)||0));
+  const pessimisticRate=Math.max(.01,num(C.SELECTION_WISP_INCOME_PER_ROUND)||.5);
+  const roundsToGo=row.feasible?0:Math.ceil(num(row.wispGap)/optimisticRate);
+  const roundsToGoSlow=row.feasible?0:Math.ceil(num(row.wispGap)/pessimisticRate);
   const eta=model.round.value+roundsToGo;
+  const etaSlow=model.round.value+roundsToGoSlow;
   const deadlineFactor=eta<=47?1:eta<=52?.6:eta<=58?.35:.15;
   // v17.26(사용자 재확인, 3회차): story를 상위 점수에서 뺀다.  스토리
   // 등급표 스스로 "스토리 파괴 속도 비교이지 악몽 클리어 확률이 아니다"
@@ -531,7 +539,7 @@ function clearValueScore(model,row){
   // 유지하면서 표본 크기에는 불변이 된다.
   const metaBonus=meta?Math.min(META_TIEBREAK_CAP,.004*Math.log10(1+meta.rate*META_REF_GAMES))*deadlineFactor:0;
   const value=base+metaBonus;
-  return{value:round(value,4),dpsCover:round(dpsCover,3),line:round(line,2),rareUtil:round(rareUtil,3),utility:round(utility,3),roundsToGo,eta,deadline:num(P.SURVIVAL_DEADLINE_ROUND)||50,overdue:eta>(num(P.SURVIVAL_DEADLINE_ROUND)||50),incomePerRound,deadlineFactor,metaGames:meta?meta.games:0,metaShare:meta?meta.share:0,metaBonus:round(metaBonus,4)};
+  return{value:round(value,4),dpsCover:round(dpsCover,3),line:round(line,2),rareUtil:round(rareUtil,3),utility:round(utility,3),roundsToGo,eta,etaSlow,deadline:num(P.SURVIVAL_DEADLINE_ROUND)||50,overdue:eta>(num(P.SURVIVAL_DEADLINE_ROUND)||50),optimisticRate,pessimisticRate,deadlineFactor,metaGames:meta?meta.games:0,metaShare:meta?meta.share:0,metaBonus:round(metaBonus,4)};
 }
 function clearValueCompare(left,right){
   const delta=num(right.clearValue&&right.clearValue.value)-num(left.clearValue&&left.clearValue.value);
