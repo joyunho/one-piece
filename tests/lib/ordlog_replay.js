@@ -47,7 +47,10 @@ const RUNS=Object.freeze([
   {key:'0724', file:'ORD_2305_20260724_160110_active.ordlog.json',outcome:'loss'},
   {key:'0725', file:'ORD_2305_20260725_120442_active.ordlog.json',outcome:'loss'},
   {key:'0728a',file:'ORD_2305_20260728_053445_active.ordlog.json',outcome:'loss'},
-  {key:'0728c',file:'ORD_2305_20260728_081549_clear.ordlog.json',  outcome:'clear'}
+  {key:'0728c',file:'ORD_2305_20260728_081549_clear.ordlog.json',  outcome:'clear'},
+  // v18.0.0으로 실제 플레이한 첫 판.  53라에 죽었고, 고정한 상위가 TMO
+  // 읽기에서 20번 빠지면서 역할표가 계속 무너진 것이 원인이었다.
+  {key:'0728d',file:'ORD_2305_20260728_170254_active.ordlog.json',outcome:'loss'}
 ]);
 
 function num(value){const n=Number(value);return Number.isFinite(n)?n:0;}
@@ -65,6 +68,12 @@ function loadRun(fileOrKey){
   let baseline=null;
   let gorosei='none';
   const byRound=new Map();
+  // v18.1: 실전에서 TMO가 최종 등급 유닛 하나를 읽기에서 빠뜨리는 일이
+  // 있다.  라이브 앱이 그걸 보정하므로 재생도 같은 보정을 거쳐야 실제로
+  // 사용자가 본 판단을 재현한다.  보정 전 원본은 rawCounts로 남긴다.
+  const engineForDb=loadEngine&&loadEngine();
+  const db=global.ORDCore&&global.ORD_TMO_UNITS?global.ORDCore.buildDb(global.ORD_TMO_UNITS):null;
+  let guard=null;
 
   for(const event of events){
     if(event.type==='snapshot'){
@@ -80,7 +89,13 @@ function loadRun(fileOrKey){
     const payload=event.payload||{};
     const round=Math.max(1,num(payload.round)||num(event.round));
     const input=payload.input||{};
-    const counts=Object.assign({},baseline.counts);
+    const rawCounts=Object.assign({},baseline.counts);
+    let counts=rawCounts,held=[];
+    if(db&&global.ORDCore&&global.ORDCore.stabilizeFinalUnits){
+      const fixed=global.ORDCore.stabilizeFinalUnits(guard,rawCounts,db,{});
+      guard={counts:Object.assign({},fixed.counts),misses:fixed.misses};
+      counts=fixed.counts;held=fixed.held;
+    }
     const progress=Object.assign({},baseline.progress);
     const ids=new Set([...Object.keys(counts),...Object.keys(progress)]);
     byRound.set(round,{
@@ -111,6 +126,7 @@ function loadRun(fileOrKey){
       locks:(input.locks||[]).map(lock=>({stage:String(lock.stage||'upper'),id:String(lock.id||''),name:String(lock.name||''),source:String(lock.source||'v15-exact-route')})),
       // 기록된 판단.  현재 엔진의 출력과 비교해 "무엇이 달라졌나"를
       // 볼 때만 쓴다 — 판정 기준으로는 쓰지 않는다.
+      heldFinalUnits:held,
       recorded:payload.v15||null
     });
   }
@@ -128,12 +144,14 @@ function loadRun(fileOrKey){
 // 라운드 하나를 현재 엔진에 먹인다.  엔진이 던지면 그 라운드는
 // throw로 표시하고 계속 간다 — 한 라운드의 예외가 판 전체 측정을
 // 못 하게 만들면 하니스로서 쓸모가 없다.
-function decideRound(engine,catalog,step,extraSettings){
+function decideRound(engine,catalog,step,extraSettings,sticky){
   try{
     const decision=engine.decide({
       catalog,
       snapshot:step.snapshot,
-      settings:Object.assign({},step.settings,extraSettings||{}),
+      // v18.2: 라이브 앱은 직전 추천을 다음 라운드로 넘긴다(관성).
+      // 재생도 같은 실을 이어야 실제 화면을 재현한다.
+      settings:Object.assign({_stickyActionId:sticky||''},step.settings,extraSettings||{}),
       locks:step.locks
     });
     return {decision,error:null};
@@ -195,8 +213,11 @@ function replayRun(runOrKey,options){
   const to=num(options&&options.toRound)||Infinity;
   const steps=run.rounds.filter(step=>step.round>=from&&step.round<=to);
   const rows=[];
+  let sticky='';
   for(const step of steps){
-    const {decision,error}=decideRound(engine,catalog,step,options&&options.settings);
+    const {decision,error}=decideRound(engine,catalog,step,options&&options.settings,sticky);
+    const proposed=decision&&(decision.action||decision.blockedAction);
+    if(proposed&&proposed.id)sticky=String(proposed.id);
     rows.push(Object.assign({round:step.round,error},summarize(decision)||{},{decision:options&&options.keepDecisions?decision:null}));
   }
   const counted=rows.filter(row=>!row.error);
