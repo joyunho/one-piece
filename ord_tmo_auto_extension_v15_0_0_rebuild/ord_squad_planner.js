@@ -14,15 +14,22 @@ const SLOW_OVERSUPPLY_PENALTY=4;
 const SIDE_STUN_PENALTY=100;
 const SIDE_SLOW_PENALTY=.9;
 // v17.17(사용자 요청): "클리어에 더 도움되는" 파티 — 유계 타이브레이크.
-// clearAffinity = 스토리 실측 점수(0~1)×0.8 + 상위권 실측 픽 log 스케일(상한 0.2).
+// v18.1: clearAffinity = 기준 상위와의 동반 조건부 확률 P(보조|상위) log 스케일
+// (상한 0.8). 동반 기록이 없는 보조는 전체 픽률로 그 아래에서만 줄 세운다.
 // 사전식 비교의 최말단(기존 id 사전순 자리)에서만 쓰여, 필수 요구·비용·패
 // 소모가 같은 후보끼리의 순서만 바꾼다. 게이트·필터·점수 가산에는 절대
 // 쓰지 않으며(usage.gate=false), 다이제스트가 없으면 0으로 조용히 무해하다.
 const META_STATS=(typeof window!=='undefined'&&window.ORD_META_STATS)||(typeof globalThis!=='undefined'&&globalThis.ORD_META_STATS)||null;
+// v18.1: 판수가 아니라 픽률(0~1)을 돌려준다 — 표본이 8배가 돼도 값이 같아야 한다.
+// 구버전 다이제스트(rate 없음)는 판수/총판수로 환산해 물러난다.
 function metaGamesOf(unit){
   if(!META_STATS||!META_STATS.usage||META_STATS.usage.softTiebreak!==true)return 0;
-  const byCode=META_STATS.byCode||{};let best=0;
-  for(const code of unit&&unit.codes||[]){const entry=byCode[String(code).toLowerCase()];if(entry&&num(entry.games)>best)best=num(entry.games);}
+  const byCode=META_STATS.byCode||{},total=Math.max(1,num(META_STATS.gameCount));let best=0;
+  for(const code of unit&&unit.codes||[]){
+    const entry=byCode[String(code).toLowerCase()];if(!entry)continue;
+    const rate=entry.rate!=null?num(entry.rate):num(entry.games)/total;
+    if(rate>best)best=rate;
+  }
   return best;
 }
 // v17.18(사용자 교정): 최종 파티에서 스토리 랭크는 중요치 않다 — 스토리
@@ -51,7 +58,16 @@ function setAffinityContext(upperUnits,supportMemo){
     for(const upper of upperUnits||[]){
       for(const code of upper&&upper.codes||[]){
         const list=(META_STATS.upperPairs||{})[String(code).toLowerCase()]||[];
-        for(const entry of list){const key=String(entry[0]).toLowerCase(),games=num(entry[1]);if(games>num(pairGames.get(key)))pairGames.set(key,games);}
+        // v18.1: 3번째 원소가 조건부 확률 P(보조|상위). 원시 판수(2번째)는 표본
+        // 크기에 딸려 다녀서, 표본이 커지면 코드 변경 없이 가중치가 올라갔다.
+        // 구버전 다이제스트(2원소)는 판수/상위판수로 환산해 물러난다.
+        const upperN=num((META_STATS.upperGames||{})[String(code).toLowerCase()])
+          ||num(((META_STATS.byCode||{})[String(code).toLowerCase()]||{}).games);
+        for(const entry of list){
+          const key=String(entry[0]).toLowerCase();
+          const cond=entry.length>2?num(entry[2]):(upperN>0?num(entry[1])/upperN:0);
+          if(cond>num(pairGames.get(key)))pairGames.set(key,cond);
+        }
       }
     }
   }
@@ -71,13 +87,26 @@ function pairGamesOf(unit){
   for(const code of unit&&unit.codes||[]){const games=num(AFFINITY_CONTEXT.pairGames.get(String(code).toLowerCase()));if(games>best)best=games;}
   return best;
 }
+// v18.1: 동반 성분을 조건부 확률로 바꾸고, 전체 픽 성분을 "더하는" 대신
+// "동반 기록이 없는 보조끼리만 줄 세우는" 대체값으로 내렸다.
+//
+// 근거는 실측이다 — tools/tmo_backtest.js 로 6월 학습 → 7월 평가(top-8 recall,
+// 전설급 보조):  인기순 24.86% < 기존 pair+pick 43.62% < 이 배치 44.70%.
+// 픽을 더하면 동반 신호가 있는 보조들의 순위를 흔들어 0.66p를 깎아먹었다.
+// 상한 0.8/0.2와 log 스케일은 그대로다 — clearAffinity 는 비교뿐 아니라
+// storyProxy 합산에도 들어가므로 출력 범위가 바뀌면 다른 성분과의 균형이 흔들린다.
+// REF_PAIR 은 조건부(0~1)를 기존 수치대로 되돌리는 환산 상수일 뿐, 순위에는
+// 영향이 없다(log 는 단조).
+const REF_PAIR=1300;
+const PAIR_FLOOR=Math.min(.8,.16*Math.log10(1+REF_PAIR/20000));
 function clearAffinity(unit){
   if(!unit||typeof unit!=='object')return 0;
   const memoKey=String(unit.id||'');
   if(memoKey&&AFFINITY_MEMO.has(memoKey))return AFFINITY_MEMO.get(memoKey);
-  const pair=Math.min(.8,.16*Math.log10(1+pairGamesOf(unit)));
-  const pick=Math.min(.2,.04*Math.log10(1+metaGamesOf(unit)));
-  const value=Math.round((pair+pick)*10000)/10000;
+  const cond=pairGamesOf(unit);
+  const value=cond>0
+    ?Math.round(Math.min(.8,.16*Math.log10(1+cond*REF_PAIR))*10000)/10000
+    :Math.round(Math.min(PAIR_FLOOR,.2*metaGamesOf(unit)*PAIR_FLOOR)*10000)/10000;
   if(memoKey)AFFINITY_MEMO.set(memoKey,value);
   return value;
 }

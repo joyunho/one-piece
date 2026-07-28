@@ -812,7 +812,7 @@ class App{
     return`<section class="v15-route-board"><header><div><small>첫 전설·히든 완성 확인</small><h2>다음 한 갈래만 선택하세요</h2><p>지금 선택은 최종 9기를 고정하지 않습니다. 한 번 제작하거나 상위를 올리면 현재 패로 다시 판단합니다.</p></div></header><div class="v15-route-cards"><article class="v15-route-card"><h3>전설·히든 한 기 더</h3><p>모든 전설·히든 중 TMO 완성도가 가장 높은 한 기만 추천합니다.</p><div class="v15-route-actions"><button class="primary" data-act="post-legend-route" data-value="legend">이 경로 선택</button></div></article><article class="v15-route-card recommended"><h3>메인 상위 준비</h3><p>25라 전후 희귀·특별·안흔 패와 선위를 보고 상위 후보를 비교합니다.</p><div class="v15-route-actions"><button class="primary" data-act="post-legend-route" data-value="upper">이 경로 선택</button></div></article></div></section>`;
   }
   renderV15RouteChoice(state,plan){
-    const decision=plan.v15Decision||{},candidates=(decision.routeCandidates||[]).slice(0,6),detailChoice=decision.routeChoiceKind==='locked-magic-detail',roundReady=this.actualRound()>=25,cards=candidates.map((row,index)=>{const selected=this.state.directionKey===row.routeKey&&C.canonicalUpperId(this.state.directionUpperId)===C.canonicalUpperId(row.id),evaluated=routeCandidateReady(row),canConfirm=roundReady&&evaluated,tiers=row.tiers||{},availability=row.tierAvailable||{},exact=!!(row.projectedSupport&&row.projectedSupport.exactPrefix),tierLabel=exact?'소비':'상위 필요',status=row.locked?'고정 상위 유지':!evaluated?'상위+보조 파티 평가 중':row.feasible?'현재 패 제작 가능':`선위 ${C.num(row.wispGap)} 부족`,wisp=row.locked?'소모 없음':`${C.num(row.wispCost)}${row.feasible&&row.wispAfter!=null?` · 후 ${C.num(row.wispAfter)}`:''}`,steps=row.projectedSupport&&row.projectedSupport.steps||[],path=steps.map(step=>`${step.order}. ${step.name} (선위 ${C.num(step.wispCost)})`).join(' → '),buttonText=!roundReady?'25라부터 확정':!evaluated?'파티 평가 중':selected?'선택 유지':row.locked?'세부 경로 확정':'상위 방향 확정';return`<article class="v15-route-card ${index===0?'recommended':''} ${selected?'selected':''}"><header><small>${index+1}순위 · ${C.esc(row.routeLabel||'')}</small><h3>${C.esc(row.name||'상위 후보')}</h3><em>${C.esc(status)}</em></header><p>${C.esc(row.reason||'현재 패의 정확 원장으로 비교했습니다.')}</p>${path?`<div class="v15-route-prefix"><small>상위 + 확정 보조 경로</small><b>${C.esc(path)}</b><span>미래 드랍·최종 9기 가정 없음</span></div>`:''}<dl><dt>TMO 완성도</dt><dd>${fmt(row.completion)}%</dd><dt>누적 선택위습</dt><dd>${C.esc(wisp)}</dd>${C.num(row.clearValue&&row.clearValue.metaGames)>0?`<dt>상위권 실측</dt><dd>${C.num(row.clearValue.metaGames)}판 (${row.clearValue.metaShare}%)</dd>`:''}${row.locked?'':`<dt>희귀 ${tierLabel}</dt><dd>${C.num(tiers.rare)}/${C.num(availability.rare)}</dd><dt>특별·안흔 ${tierLabel}</dt><dd>${C.num(tiers.special)}/${C.num(availability.special)} · ${C.num(tiers.uncommon)}/${C.num(availability.uncommon)}</dd>`}</dl>${row.warped&&row.warped.required?'<span class="v15-route-warped">왜곡 제작 비용이 위 선위에 포함됨</span>':''}<div class="v15-route-actions"><button data-act="detail" data-id="${C.esc(row.id)}">상위 재료</button><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${canConfirm?'':'disabled aria-disabled="true"'}>${buttonText}</button></div></article>`;}).join('');
+    const decision=plan.v15Decision||{},candidates=(decision.routeCandidates||[]).slice(0,6),detailChoice=decision.routeChoiceKind==='locked-magic-detail',roundReady=this.actualRound()>=25,cards=candidates.map((row,index)=>{const selected=this.state.directionKey===row.routeKey&&C.canonicalUpperId(this.state.directionUpperId)===C.canonicalUpperId(row.id),evaluated=routeCandidateReady(row),canConfirm=roundReady&&evaluated,tiers=row.tiers||{},availability=row.tierAvailable||{},exact=!!(row.projectedSupport&&row.projectedSupport.exactPrefix),tierLabel=exact?'소비':'상위 필요',status=row.locked?'고정 상위 유지':!evaluated?'상위+보조 파티 평가 중':row.feasible?'현재 패 제작 가능':`선위 ${C.num(row.wispGap)} 부족`,wisp=row.locked?'소모 없음':`${C.num(row.wispCost)}${row.feasible&&row.wispAfter!=null?` · 후 ${C.num(row.wispAfter)}`:''}`,steps=row.projectedSupport&&row.projectedSupport.steps||[],path=steps.map(step=>`${step.order}. ${step.name} (선위 ${C.num(step.wispCost)})`).join(' → '),buttonText=!roundReady?'25라부터 확정':!evaluated?'파티 평가 중':selected?'선택 유지':row.locked?'세부 경로 확정':'상위 방향 확정';return`<article class="v15-route-card ${index===0?'recommended':''} ${selected?'selected':''}"><header><small>${index+1}순위 · ${C.esc(row.routeLabel||'')}</small><h3>${C.esc(row.name||'상위 후보')}</h3><em>${C.esc(status)}</em></header><p>${C.esc(row.reason||'현재 패의 정확 원장으로 비교했습니다.')}</p>${path?`<div class="v15-route-prefix"><small>상위 + 확정 보조 경로</small><b>${C.esc(path)}</b><span>미래 드랍·최종 9기 가정 없음</span></div>`:''}<dl><dt>TMO 완성도</dt><dd>${fmt(row.completion)}%</dd><dt>누적 선택위습</dt><dd>${C.esc(wisp)}</dd>${C.num(row.clearValue&&row.clearValue.metaGames)>0?`<dt>전체 실측</dt><dd>${C.num(row.clearValue.metaGames)}판 (${row.clearValue.metaShare}%)</dd>`:''}${row.locked?'':`<dt>희귀 ${tierLabel}</dt><dd>${C.num(tiers.rare)}/${C.num(availability.rare)}</dd><dt>특별·안흔 ${tierLabel}</dt><dd>${C.num(tiers.special)}/${C.num(availability.special)} · ${C.num(tiers.uncommon)}/${C.num(availability.uncommon)}</dd>`}</dl>${row.warped&&row.warped.required?'<span class="v15-route-warped">왜곡 제작 비용이 위 선위에 포함됨</span>':''}<div class="v15-route-actions"><button data-act="detail" data-id="${C.esc(row.id)}">상위 재료</button><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${canConfirm?'':'disabled aria-disabled="true"'}>${buttonText}</button></div></article>`;}).join('');
     return`<section class="v15-route-board"><header><div><small>${detailChoice?'자동 감지 상위 보호':'v15 단일 판단 엔진 · 최대 6개'}</small><h2>${detailChoice?'메인 상위는 그대로, 마딜 경로만 선택':'현재 패에서 이어갈 상위'}</h2><p>${C.esc(decision.reason||'상위는 전설 3기분으로 계산하며 보조 조합은 매 패 다시 계산합니다.')}</p></div><div class="damage-mode-switch"><button class="${this.state.mode==='physical'?'on':''}" data-act="mode" data-value="physical" ${detailChoice?'disabled':''}>물딜</button><button class="${this.state.mode==='magic'?'on':''}" data-act="mode" data-value="magic">마딜</button></div></header><div class="v15-route-cards">${cards||'<article class="v15-route-card"><h3>현재 검증 가능한 후보 없음</h3><p>특수 선행재료와 실제 TMO 패를 다시 확인하세요. 희귀는 리롤하지 않고 보류합니다.</p></article>'}</div></section>`;
   }
   renderV15Decision(plan){
@@ -1319,8 +1319,9 @@ class App{
     const dpsPct=Math.round(C.num(value.dpsCover)*100);
     const meta=[];
     if(dpsPct>0)meta.push(`보스 화력 하한 ${dpsPct}%`);
-    // v17.13: 상위권 실측 근거 칩 — 표시 전용, 순위는 원장 판단이 결정.
-    if(C.num(value.metaGames)>0)meta.push(`상위권 실측 ${C.num(value.metaGames)}판 (${value.metaShare}%)`);
+    // v17.13: 실측 근거 칩 — 표시 전용, 순위는 원장 판단이 결정.
+    // v18.1: 표본이 상위권 55인에서 전수(4,863명)로 바뀌어 라벨도 "전체 실측".
+    if(C.num(value.metaGames)>0)meta.push(`전체 실측 ${C.num(value.metaGames)}판 (${value.metaShare}%)`);
     if(strategy.lineSelf==='support')meta.push('라인딜 부족 — 보조딜 필수(파티에 자동 반영)');
     if(row.storyReward)meta.push('스토리 10 보상(레일리+해적선) 선택 전제');
     if(row.specialGate)meta.push(`${row.specialGate.items.map(item=>item.name).join('·')} 확보 전제`);
@@ -1515,12 +1516,12 @@ class App{
     const squad=this.v151ComputeParty(state,plan,id);
     const party=squad?this.v151ClearParty(state,plan,squad,id):null;
     const body=party?this.renderV151ClearParty(party):`<div class="v151-empty"><b>파티 계산 불가</b><span>${C.esc(squad&&squad.error||'현재 패로는 이 상위 기준 파티를 아직 구성하지 못했습니다. 패가 늘면 다시 열어 보세요.')}</span></div>`;
-    // v17.14: 상위권 실측에서 이 상위와 함께 쓰인 전설급 — 표시 전용 근거.
+    // v17.14: 실측에서 이 상위와 함께 쓰인 전설급 — 표시 전용 근거.
     // 파티 구성 계산에는 쓰지 않는다(원장·역할표가 결정).
     const pairsHtml=this.renderV151MetaPairs(state,unit);
     return`<div class="modal-back" data-act="party-close"><article class="detail-modal party-modal" role="dialog" aria-modal="true" aria-label="${C.esc(displayNameOf(unit))} 클리어 파티 미리보기"><button class="modal-x" data-act="party-close" aria-label="닫기">×</button><header>${unit.image?`<img src="${C.esc(unit.image)}" alt="">`:''}<div><h2>${C.esc(displayNameOf(unit))} 기준 클리어 파티</h2><p>내 패 + 50라까지 위습 수입 전제 · 참고 계획(확정 게이트는 현재 패 검증만)</p></div></header>${pairsHtml}${body}</article></div>`;
   }
-  // v17.14: 상위권 실측(55인)에서 이 상위와 함께 쓰인 전설급 상위 5개.
+  // v17.14: 실측(전수)에서 이 상위와 함께 쓰인 전설급 상위 5개.
   // 내 패에 이미 있는 유닛은 '보유' 표시.  표시 전용 — 순위·게이트·파티
   // 구성에는 관여하지 않는다.
   renderV151MetaPairs(state,unit){
@@ -1537,7 +1538,7 @@ class App{
       const owned=ownedId&&C.num(state.counts[ownedId])>0;
       return`<span class="${owned?'owned':''}"><b>${C.esc(pair.name)}</b><i>${C.num(pair.games)}판${owned?' · 보유':''}</i></span>`;
     }).join('');
-    return`<div class="v151-meta-pairs"><small>상위권 실측 ${C.num(evidence.games)}판에서 함께 쓴 전설급 — 표시 전용, 파티 계산은 원장 기준</small><div>${chips}</div></div>`;
+    return`<div class="v151-meta-pairs"><small>전체 실측 ${C.num(evidence.games)}판에서 함께 쓴 전설급 — 표시 전용, 파티 계산은 원장 기준</small><div>${chips}</div></div>`;
   }
   // v17.12(사용자 요청 2): 해적선 사용처 전체 비교 모달 — 2번 패널에는
   // 추천 한 줄만 남는다.

@@ -35,12 +35,15 @@ const COMPLETION_MILESTONES=Object.freeze({
 // are reserved and the survival search keeps running.
 const UPPER_HOLD_WISP_BAND=4;
 const UPPER_HOLD_WISP_RATIO=.15;
-// v17.13: 상위권 실측 다이제스트(ord_meta_stats.js, 55인·12,035판).  용도는
+// v17.13: 실측 다이제스트(ord_meta_stats.js).  v18.1부터 전수 표본(4,863명·96,627판).  용도는
 // 캘리브레이션 원칙 그대로 — 근거 칩 표시 + clearValue 동률 근처 보조
 // 타이브레이크(로그 스케일, 상한 소폭)뿐.  게이트·킬 판정에는 절대 쓰지
 // 않으며, 모듈이 없으면(구버전 수동판·일부 테스트) 조용히 0으로 동작한다.
 const META_STATS=(typeof window!=='undefined'&&window.ORD_META_STATS)||(typeof globalThis!=='undefined'&&globalThis.ORD_META_STATS)||null;
 const META_TIEBREAK_CAP=.02;
+// 픽률(0~1)을 기존 판수 스케일로 되돌리는 환산 기준. v17.13 표본 크기로 고정해
+// 두면 표본이 커져도 보너스 수치가 그대로다(순위는 log 단조라 영향 없음).
+const META_REF_GAMES=12035;
 function metaEvidence(unit){
   if(!META_STATS||!META_STATS.usage||META_STATS.usage.softTiebreak!==true)return null;
   const byCode=META_STATS.byCode||{};
@@ -51,7 +54,9 @@ function metaEvidence(unit){
   }
   if(!best)return null;
   const games=num(best.games),total=Math.max(1,num(META_STATS.gameCount));
-  return{games,share:round(games/total*100,1)};
+  // rate 는 표본 불변 가중치용, games/share 는 근거 칩 표시용.
+  const rate=best.rate!=null?num(best.rate):games/total;
+  return{games,rate,share:round(rate*100,1)};
 }
 // v17.14: 이 상위와 함께 쓰인 전설급 실측(upperPairs) — 미리 파티 모달의
 // 표시 전용 근거.  변신 상태 코드가 여럿이면 표본이 가장 큰 코드의 동반
@@ -457,7 +462,11 @@ function clearValueScore(model,row){
   // 기반 부분점수(story 0.3 등)의 1/15 수준이라 동률 근처에서만 순서를
   // 바꿀 수 있다.  실측이 없거나 모듈이 없으면 0.
   const meta=metaEvidence(unit);
-  const metaBonus=meta?Math.min(META_TIEBREAK_CAP,.004*Math.log10(1+meta.games))*deadlineFactor:0;
+  // v18.1: 판수가 아니라 픽률로 계산한다. 판수를 쓰면 표본을 12,035판에서
+  // 96,627판으로 늘리는 것만으로 모든 후보의 보너스가 일괄 올라, 데이터 수집이
+  // 곧 가중치 상향이 돼 버린다. META_REF_GAMES 로 환산해 현재 수치대를 그대로
+  // 유지하면서 표본 크기에는 불변이 된다.
+  const metaBonus=meta?Math.min(META_TIEBREAK_CAP,.004*Math.log10(1+meta.rate*META_REF_GAMES))*deadlineFactor:0;
   const value=base+metaBonus;
   return{value:round(value,4),dpsCover:round(dpsCover,3),line:round(line,2),rareUtil:round(rareUtil,3),utility:round(utility,3),roundsToGo,deadlineFactor,metaGames:meta?meta.games:0,metaShare:meta?meta.share:0,metaBonus:round(metaBonus,4)};
 }

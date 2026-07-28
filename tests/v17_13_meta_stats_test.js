@@ -66,6 +66,29 @@ test('byCode 항목은 전부 최소 표본 이상 + upperPairs 참조 무결성
   }
 });
 
+test('v18.1 표본 크기 불변: 다이제스트가 비율을 싣는다', () => {
+  assert.strictEqual(META.rateBased, true, '비율 기반 표시가 없음 — 엔진이 판수를 읽을 위험');
+  for (const [code, entry] of Object.entries(META.byCode)) {
+    assert(typeof entry.rate === 'number' && entry.rate > 0 && entry.rate <= 1,
+      `픽률이 0~1 범위가 아님: ${code} ${entry.rate}`);
+    // rate 는 games/gameCount 와 일치해야 한다(반올림 오차 허용).
+    assert(Math.abs(entry.rate - entry.games / META.gameCount) < 1e-3,
+      `픽률과 판수가 어긋남: ${code}`);
+  }
+  const uppers = Object.keys(META.upperPairs);
+  assert(uppers.length > 0, 'upperPairs가 비어 있음');
+  for (const upper of uppers) {
+    const upperN = META.upperGames[upper];
+    assert(upperN > 0, `조건부 분모(upperGames)가 없음: ${upper}`);
+    for (const entry of META.upperPairs[upper]) {
+      assert.strictEqual(entry.length, 3, `동반 원소가 [코드,판수,조건부] 3원소가 아님: ${upper}`);
+      const [, games, cond] = entry;
+      assert(cond > 0 && cond <= 1, `조건부 확률이 0~1 범위가 아님: ${upper} ${cond}`);
+      assert(Math.abs(cond - games / upperN) < 1e-3, `조건부가 판수/상위판수와 어긋남: ${upper}`);
+    }
+  }
+});
+
 test('metaEvidence: 코드 조인·대소문자 정규화·부재 시 null', () => {
   const toki = global.ORD_TMO_UNITS.find(unit => (unit.codes || []).some(code => code.toLowerCase() === '780h'));
   assert(toki, '토키(780h)가 카탈로그에 없음');
@@ -78,8 +101,10 @@ test('metaEvidence: 코드 조인·대소문자 정규화·부재 시 null', () 
 });
 
 test('보조 타이브레이크 상한: 최대 표본에서도 0.02 미만·원장 부분점수의 소폭', () => {
-  const maxGames = Math.max(...Object.values(META.byCode).map(entry => entry.games));
-  const maxBonus = Math.min(0.02, 0.004 * Math.log10(1 + maxGames));
+  // v18.1: 엔진이 실제로 쓰는 식(픽률 × 기준 판수)으로 검증한다. 판수를 그대로
+  // 넣으면 표본이 커질수록 보너스가 오르는 옛 식을 테스트하게 된다.
+  const maxRate = Math.max(...Object.values(META.byCode).map(entry => entry.rate));
+  const maxBonus = Math.min(0.02, 0.004 * Math.log10(1 + maxRate * 12035));
   assert(maxBonus < 0.02, `보너스가 상한에 닿음(로그 스케일 붕괴): ${maxBonus}`);
   // clearValue 가중치 최소축(rareUtil 0.12)의 1/6 이하 — 동률 근처에서만 작동.
   assert(maxBonus <= 0.12 / 6, `보너스가 원장 부분점수 대비 과대: ${maxBonus}`);
@@ -88,15 +113,21 @@ test('보조 타이브레이크 상한: 최대 표본에서도 0.02 미만·원�
 test('엔진 배선(소스 검증): 캡 상수·deadlineFactor 할인·usage 게이트', () => {
   const engine = fs.readFileSync(path.join(ext, 'ord_v15_engine.js'), 'utf8');
   assert(engine.includes('META_TIEBREAK_CAP=.02'), '타이브레이크 캡 상수가 사라짐');
-  assert(/metaBonus=meta\?Math\.min\(META_TIEBREAK_CAP,\.004\*Math\.log10\(1\+meta\.games\)\)\*deadlineFactor:0/.test(engine),
+  // v18.1: 표본 크기 불변성 — 판수(meta.games)가 아니라 픽률(meta.rate)을 쓴다.
+  // 판수를 쓰면 데이터를 더 모으는 것만으로 실측 가중치가 올라간다(코드 변경 없이).
+  assert(engine.includes('META_REF_GAMES=12035'), '픽률 환산 기준 상수가 사라짐');
+  assert(/metaBonus=meta\?Math\.min\(META_TIEBREAK_CAP,\.004\*Math\.log10\(1\+meta\.rate\*META_REF_GAMES\)\)\*deadlineFactor:0/.test(engine),
     '로그 스케일 + deadlineFactor 할인 공식이 변경됨');
+  assert(!/Math\.log10\(1\+meta\.games\)/.test(engine), '판수 기반 보너스가 남아 있음 — 표본 크기에 딸려 간다');
   assert(engine.includes("usage.softTiebreak!==true)return null"), 'usage.softTiebreak 게이트가 사라짐');
 });
 
 test('UI 배선(소스 검증): 근거 칩은 표시 전용', () => {
   const app = fs.readFileSync(path.join(ext, 'ord_app.js'), 'utf8');
-  assert(app.includes('상위권 실측 ${C.num(value.metaGames)}판'), '후보 이유줄 실측 칩이 사라짐');
-  assert(app.includes('<dt>상위권 실측</dt>'), 'ROUTE_CHOICE 카드 실측 항목이 사라짐');
+  // v18.1: 표본이 상위권 55인 → 전수라 라벨도 '전체 실측'.
+  assert(app.includes('전체 실측 ${C.num(value.metaGames)}판'), '후보 이유줄 실측 칩이 사라짐');
+  assert(app.includes('<dt>전체 실측</dt>'), 'ROUTE_CHOICE 카드 실측 항목이 사라짐');
+  assert(!app.includes('상위권 실측'), '표본이 전수인데 상위권 라벨이 남아 있음');
 });
 
 test('데이터 패치 codes: 특수함 3종이 실측 조인 키를 가짐', () => {
