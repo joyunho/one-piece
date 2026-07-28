@@ -14,8 +14,15 @@
 
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 
 const ROOT = path.join(__dirname, '..');
+
+// 전수 원본은 70MB급이라 저장소에는 .gz로 둔다 — 확장자에 따라 알아서 푼다.
+function readJson(file) {
+  const buf = fs.readFileSync(file);
+  return JSON.parse(/\.gz$/.test(file) ? zlib.gunzipSync(buf) : buf);
+}
 const EXT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild');
 
 function arg(name, fallback) {
@@ -25,7 +32,7 @@ function arg(name, fallback) {
 
 function latestInput() {
   const dir = path.join(ROOT, 'data');
-  const names = fs.readdirSync(dir).filter((n) => /^tmo_nightmare_all_\d{8}\.json$/.test(n)).sort();
+  const names = fs.readdirSync(dir).filter((n) => /^tmo_nightmare_all_\d{8}\.json(\.gz)?$/.test(n)).sort();
   if (!names.length) throw new Error('data/tmo_nightmare_all_*.json 이 없습니다 — tools/tmo_nightmare_collect_all.js 먼저 실행');
   return path.join(dir, names[names.length - 1]);
 }
@@ -71,7 +78,7 @@ function quantiles(sortedArr) {
   return {
     n: sortedArr.length,
     mean: sortedArr.length ? sum / sortedArr.length : 0,
-    p10: q(0.1), p25: q(0.25), median: q(0.5), p75: q(0.75), p90: q(0.9), p99: q(0.99),
+    p10: q(0.1), p25: q(0.25), median: q(0.5), p75: q(0.75), p90: q(0.9), p99: q(0.99), p999: q(0.999),
     min: sortedArr[0] || 0, max: sortedArr[sortedArr.length - 1] || 0,
   };
 }
@@ -88,7 +95,7 @@ function sortedCounts(map, limit) {
 }
 
 // ── 입력 ───────────────────────────────────────────────────────────────────
-const payload = JSON.parse(fs.readFileSync(INPUT, 'utf8'));
+const payload = readJson(INPUT);
 const cutoffMs = Date.parse(payload.cutoff);
 const allPlayers = payload.players || [];
 const okPlayers = allPlayers.filter((p) => p && !p.error);
@@ -102,6 +109,7 @@ const players = okPlayers.filter((p) => nightmareOf(p).length > 0);
 const MIN_GAMES_UNIT = 30; // 유닛 표에 올릴 최소 표본(극소 표본 오독 방지)
 const FARM_UNITCOUNT = 26; // 잔존 유닛 26+ = 파밍 판으로 간주(기존 분석 p90 기준)
 const BIG_SCORE = 1000;    // nightmare-score 규모 분기점(수십 vs 수만)
+const OVERSIZE_PARTY = 60; // 이 이상은 하급 유닛 대량 축적 판(p999=32 기준 바깥)
 
 const bigScores = [];
 const smallScores = [];
@@ -305,6 +313,13 @@ const digest = {
   perPlayer: quantiles(perPlayerSorted),
   topPlayers: perPlayerGames.slice(0, 30).map((p) => ({ nickname: p.nickname, games: p.games })),
   partySize: quantiles(partySizes),
+  // 파티 꼬리: 하급 유닛을 수십 종 쌓은 극단 파밍 판. 최대값만 보면 오독되므로
+  // 비중을 함께 남긴다.
+  partyOversize: (() => {
+    const t = OVERSIZE_PARTY;
+    const n = partySizes.filter((v) => v > t).length;
+    return { threshold: t, games: n, rate: Number(fx(pct(n, totalGames), 3)) };
+  })(),
   unitCount: { ...quantiles(unitCounts), farmRate: Number(fx(pct(farmGames, totalGames), 1)), farmThreshold: FARM_UNITCOUNT },
   score: {
     all: quantiles(scores),
@@ -411,7 +426,9 @@ line();
 line('3. 파티 크기 / 잔존 유닛 / 점수');
 line('-------------------------------');
 const ps = digest.partySize, ucq = digest.unitCount, scq = digest.score;
-line(`- 파티 크기: 중앙 ${ps.median} (p10 ${ps.p10} · p25 ${ps.p25} · p75 ${ps.p75} · p90 ${ps.p90} · 최대 ${ps.max}, 평균 ${fx(ps.mean)})`);
+line(`- 파티 크기: 중앙 ${ps.median} (p10 ${ps.p10} · p25 ${ps.p25} · p75 ${ps.p75} · p90 ${ps.p90} · p99 ${ps.p99} · p999 ${ps.p999}, 평균 ${fx(ps.mean)})`);
+line(`  · 최대 ${ps.max} — 하급 유닛을 수십 종 쌓은 극단 파밍 판이 실재한다(꼬리가 길다). ` +
+     `${digest.partyOversize.threshold}기 초과가 ${digest.partyOversize.games}판(${digest.partyOversize.rate}%)뿐이라 중앙값은 흔들리지 않는다.`);
 line(`- 잔존 유닛(unitCount, 클리어 후 남은 수): 중앙 ${ucq.median} (p10 ${ucq.p10} · p90 ${ucq.p90} · 최대 ${ucq.max})`);
 line(`  · ${FARM_UNITCOUNT}기 이상 = ${ucq.farmRate}% — 파밍 판으로 추정(효율 지표로 쓸 때 분리 필요)`);
 line(`- 악몽 점수(nightmare-score): 두 규모가 섞여 있어 나눠 본다 — 정의 미확인, 지표로 쓰지 말 것`);

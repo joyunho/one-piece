@@ -25,6 +25,7 @@
 
 const fs = require('fs');
 const path = require('path');
+const zlib = require('zlib');
 
 const BASE = 'https://api.tmo.gg';
 const RANK_ID = 'ordr2';
@@ -188,7 +189,8 @@ async function main() {
   const stamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
   // 파일명을 tmo_api_histories_* 와 다르게 둔다 — build_meta_stats.js 의 "최신 파일"
   // 자동 선택이 상위권 표본에서 전수 표본으로 조용히 바뀌지 않게 하기 위함.
-  const out = arg('--out', path.join(__dirname, '..', 'data', `tmo_nightmare_all_${stamp}.json`));
+  // 전수 원본은 70MB급이라 기본 출력은 .gz(약 5MB) — 통계 도구가 그대로 읽는다.
+  const out = arg('--out', path.join(__dirname, '..', 'data', `tmo_nightmare_all_${stamp}.json.gz`));
 
   const seasons = seasonsSince(cutoff, Date.now());
   console.log(`수집 기준: ${CATEGORY}, 컷오프 ${cutoff}, 시즌 ${seasons.join('/')}, 동시성 ${concurrency}`);
@@ -273,7 +275,8 @@ async function main() {
     players,
   };
   fs.mkdirSync(path.dirname(out), { recursive: true });
-  fs.writeFileSync(out, JSON.stringify(payload));
+  const body = JSON.stringify(payload);
+  fs.writeFileSync(out, /\.gz$/.test(out) ? zlib.gzipSync(body, { level: 6 }) : body);
   const mb = (fs.statSync(out).size / 1024 / 1024).toFixed(1);
   console.log(`저장: ${out} (${mb}MB, ${payload.playerCount}명 ${totalGames}판, 요청 ${requestCount}회/재시도 ${retryCount}회)`);
 }
