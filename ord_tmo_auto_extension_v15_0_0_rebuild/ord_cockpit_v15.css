@@ -789,6 +789,9 @@
 .v151-action.choice.urgent .v151-state{color:#FFD887}
 
 /* v17.14: 미리 파티 모달 — 실측 동반 전설급(표시 전용) */
+/* v18.1: 낡은 다이제스트 경보 — 근거 스트립을 주의색으로 표시 */
+.party-modal .v151-meta-pairs.stale small{color:var(--warn,#d98324);}
+
 .party-modal .v151-meta-pairs{margin:0 18px;padding:10px 12px;border:1px solid rgba(120,150,210,.22);border-radius:10px;background:rgba(40,58,96,.28)}
 .party-modal .v151-meta-pairs>small{display:block;margin-bottom:6px;color:#9fb2d8;font-size:11px}
 .party-modal .v151-meta-pairs>div{display:flex;flex-wrap:wrap;gap:6px}

@@ -81,12 +81,50 @@ test('v18.1 표본 크기 불변: 다이제스트가 비율을 싣는다', () =>
     const upperN = META.upperGames[upper];
     assert(upperN > 0, `조건부 분모(upperGames)가 없음: ${upper}`);
     for (const entry of META.upperPairs[upper]) {
-      assert.strictEqual(entry.length, 3, `동반 원소가 [코드,판수,조건부] 3원소가 아님: ${upper}`);
-      const [, games, cond] = entry;
+      // v18.1: [코드, 동반판수, 조건부확률, 신뢰구간반폭%p]
+      assert.strictEqual(entry.length, 4, `동반 원소가 4원소가 아님: ${upper}`);
+      const [, games, cond, ci] = entry;
+      assert(typeof ci === 'number' && ci >= 0, `동반 신뢰구간이 없음: ${upper}`);
       assert(cond > 0 && cond <= 1, `조건부 확률이 0~1 범위가 아님: ${upper} ${cond}`);
       assert(Math.abs(cond - games / upperN) < 1e-3, `조건부가 판수/상위판수와 어긋남: ${upper}`);
     }
   }
+});
+
+test('v18.1 신뢰구간: 표본이 얇을수록 넓다(하드컷 대신 불확실성 표시)', () => {
+  for (const [code, entry] of Object.entries(META.byCode)) {
+    assert(typeof entry.ci === 'number' && entry.ci >= 0, `신뢰구간이 없음: ${code}`);
+  }
+  // 동반 신뢰구간의 분모는 상위 판수라 상위별로 크게 다르다 — 얇은 상위가 더 넓어야 한다.
+  const widths = Object.entries(META.upperPairs).map(([upper, pairs]) => ({
+    n: META.upperGames[upper],
+    ci: Math.max(...pairs.map(p => p[3])),
+  })).filter(row => row.n > 0);
+  assert(widths.length >= 5, '동반 표본이 너무 적어 검증 불가');
+  widths.sort((a, b) => a.n - b.n);
+  const thin = widths[0], thick = widths[widths.length - 1];
+  assert(thin.ci > thick.ci,
+    `얇은 표본(${thin.n}판, ±${thin.ci}p)이 두꺼운 표본(${thick.n}판, ±${thick.ci}p)보다 넓어야 함`);
+  // 순위는 점추정을 쓴다 — Wilson 하한을 순위 키로 바꾸면 백테스트가 나빠졌다(44.67 vs 44.70).
+  const planner = fs.readFileSync(path.join(ext, 'ord_squad_planner.js'), 'utf8');
+  assert(!/wilson/i.test(planner), '플래너가 신뢰구간을 순위 키로 쓰면 안 됨 — 표시 전용');
+});
+
+test('v18.1 노후 경보: 경과 개월과 예상 이동폭을 돌려준다', () => {
+  assert(META.drift, '드리프트 블록이 없음');
+  assert(Array.isArray(META.drift.months) && META.drift.months.length === 2, '비교 대상 두 달이 없음');
+  assert(META.drift.meanAbsShift > 0, '월 평균 픽률 이동폭이 없음');
+  assert(META.drift.staleAfterMonths > 0, '노후 기준 개월이 없음');
+  const collected = Date.parse(META.collectedAt);
+  const fresh = E.metaStaleness(collected + 24 * 3600 * 1000);
+  assert(fresh && fresh.stale === false, `수집 직후는 낡지 않아야 함: ${JSON.stringify(fresh)}`);
+  const old = E.metaStaleness(collected + (META.drift.staleAfterMonths + 1) * 31 * 24 * 3600 * 1000);
+  assert(old && old.stale === true, `기준 개월을 넘기면 낡아야 함: ${JSON.stringify(old)}`);
+  assert(old.expectedShift > fresh.expectedShift, '예상 이동폭이 시간에 따라 커져야 함');
+  // 앱이 그 경보를 실제로 표시하는지(소스 검증).
+  const app = fs.readFileSync(path.join(ext, 'ord_app.js'), 'utf8');
+  assert(app.includes('metaStaleness'), '앱이 노후 경보를 읽지 않음');
+  assert(app.includes('재수집 권고'), '노후 경보 문구가 없음');
 });
 
 test('metaEvidence: 코드 조인·대소문자 정규화·부재 시 null', () => {

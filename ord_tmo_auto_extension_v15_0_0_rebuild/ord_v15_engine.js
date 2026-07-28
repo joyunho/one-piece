@@ -73,9 +73,39 @@ function metaPairEvidence(unit){
   }
   if(!bestKey)return null;
   const total=Math.max(1,num(META_STATS.gameCount));
-  const pairs=pairsMap[bestKey].map(entry=>({code:String(entry[0]),games:num(entry[1]),name:byCode[entry[0]]?String(byCode[entry[0]].name):String(entry[0])}));
+  // v18.1: 조건부 확률(3번째)과 95% 신뢰구간 반폭(4번째)을 함께 넘긴다.
+  // "몇 판 함께 썼나"보다 "그 상위를 쓴 판의 몇 %에 있었나 ± 얼마나 확실한가"가
+  // 읽는 사람에게 쓸모 있다 — 상위 표본이 32판이면 ±16%p 로 드러난다.
+  const pairs=pairsMap[bestKey].map(entry=>({
+    code:String(entry[0]),
+    games:num(entry[1]),
+    conditional:entry.length>2?round(num(entry[2])*100,1):null,
+    ci:entry.length>3?num(entry[3]):null,
+    name:byCode[entry[0]]?String(byCode[entry[0]].name):String(entry[0]),
+  }));
   return{games:bestGames,share:round(bestGames/total*100,1),totalGames:total,pairs};
 }
+// v18.1: 다이제스트 노후 경보. 실측은 과거로 만들어 미래에 쓰는 물건이라 언젠가
+// 낡는다 — 6→7월 픽률이 평균 0.24%p, 최다 이동은 3.3%p 움직였다. 낡은 수치가
+// 조용히 근거 행세를 하지 않도록, 경과 개월과 예상 누적 이동폭을 함께 돌려준다.
+// now 를 인자로 받는 이유는 테스트 결정성 — 기본값만 시계를 읽는다.
+function metaStaleness(now){
+  if(!META_STATS||!META_STATS.collectedAt)return null;
+  const collected=Date.parse(META_STATS.collectedAt);
+  if(!Number.isFinite(collected))return null;
+  const nowMs=Number.isFinite(now)?now:Date.now();
+  const months=(nowMs-collected)/(1000*60*60*24*30.44);
+  const drift=META_STATS.drift||null;
+  const limit=drift&&num(drift.staleAfterMonths)>0?num(drift.staleAfterMonths):3;
+  return{
+    months:round(months,1),
+    stale:months>=limit,
+    staleAfterMonths:limit,
+    // 월 평균 이동폭 × 경과 개월 = 지금쯤 어긋나 있을 픽률(대략).
+    expectedShift:drift?round(num(drift.meanAbsShift)*Math.max(0,months),2):null,
+  };
+}
+
 const RECIPE_PROFILE_CACHE=new WeakMap();
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function round(value,digits=3){const p=Math.pow(10,digits);return Math.round(num(value)*p)/p;}
@@ -963,5 +993,5 @@ function buildDecision(input){
   return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
+return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};
 });

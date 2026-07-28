@@ -14,7 +14,16 @@ const assert=require('assert');
 const fs=require('fs');
 const path=require('path');
 process.env.PW_TEST_SCREENSHOT_NO_FONTS_READY='1';
-const {chromium}=require('playwright');
+// playwright 는 devDependency 라 npm install 전 컨테이너에는 없다.  모듈 로드
+// 시점에 그냥 throw 하면 run_all 의 SKIP 규약(브라우저 없는 환경용)을 타지
+// 못하고 FAIL 로 집계돼, 환경 미비가 회귀처럼 보인다.  ORD_REQUIRE_ALL=1 이면
+// 여전히 실패로 처리된다(run_all 이 SKIP 을 실패로 승격).
+let chromium;
+try{({chromium}=require('playwright'));}
+catch(error){
+  console.log('SKIP ui_smoke: playwright 미설치 — `npm install` 후 다시 실행하세요');
+  process.exit(0);
+}
 
 (async()=>{
   // Resolution order: explicit override → Playwright's own registry (covers

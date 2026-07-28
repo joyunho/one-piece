@@ -59,6 +59,14 @@ for (const p of payload.players || []) {
 }
 if (!games.length) throw new Error('악몽 기록이 없습니다: ' + INPUT);
 
+// v18.1: 메타 드리프트 감지 — 다이제스트는 과거로 만들어 미래에 쓰는 물건이라
+// 언젠가 낡는다. 마지막 두 달의 픽률을 비교해 "얼마나 움직였나"를 함께 실어,
+// 낡은 다이제스트가 조용히 근거 행세를 하지 않게 한다.
+const KST_MS = 9 * 3600 * 1000;
+const monthOf = (iso) => new Date(Date.parse(iso) + KST_MS).toISOString().slice(0, 7);
+const monthGames = new Map();      // month -> 판수
+const monthUnitGames = new Map();  // month -> Map(code -> 판수)
+
 // 유닛별: 등장 판수(같은 판 중복 제거) + 대표 이름(최빈).
 const byCode = new Map();
 const upperPairCounts = new Map(); // upperCode -> Map(legendCode -> games)
@@ -67,6 +75,10 @@ const archetype = new Map();
 const partySizes = [];
 
 for (const r of games) {
+  const month = monthOf(r.createdAt);
+  monthGames.set(month, (monthGames.get(month) || 0) + 1);
+  if (!monthUnitGames.has(month)) monthUnitGames.set(month, new Map());
+  const mUnits = monthUnitGames.get(month);
   const seenCodes = new Set();
   const uppers = new Set(), legends = new Set();
   let upperUnits = 0;
@@ -82,6 +94,7 @@ for (const r of games) {
       if (!e) byCode.set(code, e = { games: 0, names: new Map() });
       e.games += 1;
       e.names.set(u.name, (e.names.get(u.name) || 0) + 1);
+      mUnits.set(code, (mUnits.get(code) || 0) + 1);
     }
     const g = groupOf(code);
     if (isUpperGroup(g)) {
@@ -110,14 +123,33 @@ for (const r of games) {
 partySizes.sort((a, b) => a - b);
 const q = (p) => partySizes[Math.min(partySizes.length - 1, Math.floor(partySizes.length * p))];
 
-const MIN_GAMES = 10; // 극소 표본은 근거 칩으로 오독될 수 있어 제외
+// v18.1: MIN_GAMES 는 이제 "오독 방지 컷"이 아니라 잡음 바닥이다. 표본이
+// 믿을 만한지는 신뢰구간(ci)이 말해 준다 — 10판짜리 30%는 ±16%p로 표시되어
+// 절벽 없이 불확실성이 드러난다.
+const MIN_GAMES = 5;
+const CI_Z = 1.96; // 95% Wilson 점수구간
+// Wilson 점수구간 반폭(%p). 정규근사(Wald)는 p가 0·1에 가까우면 구간이 음수로
+// 새거나 0폭이 되는데, 픽률은 대부분 그 근처라 Wilson 을 쓴다.
+function wilsonHalfWidth(k, n) {
+  if (!n) return 0;
+  const p = k / n, z2 = CI_Z * CI_Z;
+  const margin = (CI_Z * Math.sqrt((p * (1 - p)) / n + z2 / (4 * n * n))) / (1 + z2 / n);
+  return Math.round(margin * 1000) / 10; // %p, 소수 1자리
+}
 const byCodeOut = {};
 for (const code of [...byCode.keys()].sort()) {
   const e = byCode.get(code);
   if (e.games < MIN_GAMES) continue;
   const name = [...e.names.entries()].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0][0];
   // rate = 판당 등장률(0~1). games 는 근거 칩("N판")과 테스트 계약이라 함께 남긴다.
-  byCodeOut[code] = { name, games: e.games, rate: Math.round((e.games / games.length) * 10000) / 10000 };
+  // ci = 95% Wilson 신뢰구간 반폭(%p) — 표시 전용. 순위는 점추정을 쓴다
+  // (Wilson 하한을 순위 키로 쓰면 백테스트 44.67% vs 점추정 44.70% 로 이득 없음).
+  byCodeOut[code] = {
+    name,
+    games: e.games,
+    rate: Math.round((e.games / games.length) * 10000) / 10000,
+    ci: wilsonHalfWidth(e.games, games.length),
+  };
 }
 
 // v18.1: 동반은 원시 판수가 아니라 조건부 확률 P(보조|상위)로 싣는다.
@@ -140,8 +172,38 @@ for (const code of [...upperPairCounts.keys()].sort()) {
     .filter(([lg, n]) => n >= MIN_GAMES && byCodeOut[lg])
     .sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))
     .slice(0, 8)
-    .map(([lg, n]) => [lg, n, Math.round((n / upperN) * 10000) / 10000]);
+    // [코드, 동반판수, 조건부확률, 신뢰구간반폭%p]
+    .map(([lg, n]) => [lg, n, Math.round((n / upperN) * 10000) / 10000, wilsonHalfWidth(n, upperN)]);
   if (top.length) { upperPairsOut[code] = top; upperGamesOut[code] = upperN; }
+}
+
+// 마지막 두 달의 픽률 변화 — 다이제스트가 얼마나 빨리 낡는지를 스스로 증언한다.
+// meanAbsShift 는 "한 달에 픽률이 평균 몇 %p 움직이는가"이고, 여기에 경과 개월을
+// 곱하면 지금 다이제스트가 대략 얼마나 어긋나 있는지 가늠할 수 있다.
+function driftBlock() {
+  const months = [...monthGames.keys()].sort();
+  if (months.length < 2) return null;
+  const [from, to] = [months[months.length - 2], months[months.length - 1]];
+  const gFrom = monthGames.get(from), gTo = monthGames.get(to);
+  // 두 달 모두 표본이 얇으면 변화가 아니라 잡음이다.
+  if (gFrom < 500 || gTo < 500) return null;
+  const rows = [];
+  for (const code of Object.keys(byCodeOut)) {
+    const a = ((monthUnitGames.get(from) || new Map()).get(code) || 0) / gFrom * 100;
+    const b = ((monthUnitGames.get(to) || new Map()).get(code) || 0) / gTo * 100;
+    rows.push({ code, from: Math.round(a * 10) / 10, to: Math.round(b * 10) / 10, delta: Math.round((b - a) * 10) / 10 });
+  }
+  const meanAbs = rows.reduce((total, r) => total + Math.abs(r.delta), 0) / Math.max(1, rows.length);
+  rows.sort((x, y) => Math.abs(y.delta) - Math.abs(x.delta) || (x.code < y.code ? -1 : 1));
+  return {
+    months: [from, to],
+    monthGames: { [from]: gFrom, [to]: gTo },
+    meanAbsShift: Math.round(meanAbs * 100) / 100,
+    // 상위 이동 8종만 — 다이제스트 부피를 위해.
+    topMovers: rows.slice(0, 8).map((r) => [r.code, r.from, r.to, r.delta]),
+    // 이 개월수를 넘기면 재수집을 권고한다(월 평균 이동폭 × 3개월 ≈ 픽률 오차 한계).
+    staleAfterMonths: 3,
+  };
 }
 
 const sortedObj = (m, keyFn) => {
@@ -171,6 +233,7 @@ const digest = {
   partySize: { median: q(0.5), p10: q(0.1), p90: q(0.9) },
   upperCountDist: sortedObj(upperGameTotals, (a, b) => a - b),
   archetype: sortedObj(archetype),
+  drift: driftBlock(),
   byCode: byCodeOut,
   upperGames: upperGamesOut, // 조건부 확률의 분모 — 검산·재계산용
   upperPairs: upperPairsOut,

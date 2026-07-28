@@ -211,6 +211,29 @@ for (const pickCap of [0.2, 0.05, 0.02, 0]) {
     return out;
   };
 }
+// Wilson 점수구간 하한 — 표본이 작을수록 아래로 끌어내려 "12판 중 6판 = 50%"가
+// "1,200판 중 600판 = 50%"와 같은 대접을 받지 않게 한다. minGames 하드컷과 달리
+// 절벽이 없다(표본이 늘면 점점 점추정으로 수렴).
+function wilsonLower(k, n, z = 1.96) {
+  if (!n) return 0;
+  const p = k / n, z2 = z * z;
+  const center = (p + z2 / (2 * n)) / (1 + z2 / n);
+  const margin = (z * Math.sqrt((p * (1 - p)) / n + z2 / (4 * n * n))) / (1 + z2 / n);
+  return Math.max(0, center - margin);
+}
+models['조건부 Wilson 하한'] = (uppers) => {
+  const out = new Map();
+  for (const up of uppers) {
+    const n = upperGames.get(up) || 0;
+    if (!n) continue;
+    for (const [s, k] of pairGames.get(up) || []) {
+      const v = wilsonLower(k, n);
+      if (v > (out.get(s) || 0)) out.set(s, v);
+    }
+  }
+  return out;
+};
+
 // 최종 구현안 — pick 을 더하지 않고 "그 상위와 붙은 적 없는 보조"의 대체값으로만 쓴다.
 // 동반 신호가 있는 보조끼리는 순수 조건부 순서(측정상 최적)를 그대로 유지하고,
 // 동반 신호가 0인 보조들만 전체 픽률로 줄 세운다 — metaGamesOf 를 살려 두면서

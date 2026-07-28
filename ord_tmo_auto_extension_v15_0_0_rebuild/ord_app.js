@@ -1536,9 +1536,15 @@ class App{
     const chips=evidence.pairs.slice(0,5).map(pair=>{
       const ownedId=this._metaCodeIndex.get(String(pair.code).toLowerCase());
       const owned=ownedId&&C.num(state.counts[ownedId])>0;
-      return`<span class="${owned?'owned':''}"><b>${C.esc(pair.name)}</b><i>${C.num(pair.games)}판${owned?' · 보유':''}</i></span>`;
+      // v18.1: 조건부 확률 + 신뢰구간. 상위 표본이 얇으면 ±폭이 커져 바로 보인다.
+      const rate=pair.conditional!=null?`${pair.conditional}%${pair.ci?` ±${pair.ci}p`:''}`:`${C.num(pair.games)}판`;
+      return`<span class="${owned?'owned':''}"><b>${C.esc(pair.name)}</b><i>${C.esc(rate)}${owned?' · 보유':''}</i></span>`;
     }).join('');
-    return`<div class="v151-meta-pairs"><small>전체 실측 ${C.num(evidence.games)}판에서 함께 쓴 전설급 — 표시 전용, 파티 계산은 원장 기준</small><div>${chips}</div></div>`;
+    // v18.1: 다이제스트가 낡으면 그 사실을 근거 옆에 같이 적는다 — 조용히
+    // 낡은 수치가 근거 행세를 하지 않게.
+    const stale=engine&&engine.metaStaleness?engine.metaStaleness():null;
+    const staleNote=stale&&stale.stale?` · 수집 ${stale.months}개월 전 — 재수집 권고(픽률이 그동안 평균 ${stale.expectedShift}%p 움직였을 것)`:'';
+    return`<div class="v151-meta-pairs${staleNote?' stale':''}"><small>전체 실측 ${C.num(evidence.games)}판 중 함께 쓴 비율(±는 95% 신뢰구간) — 표시 전용, 파티 계산은 원장 기준${C.esc(staleNote)}</small><div>${chips}</div></div>`;
   }
   // v17.12(사용자 요청 2): 해적선 사용처 전체 비교 모달 — 2번 패널에는
   // 추천 한 줄만 남는다.
