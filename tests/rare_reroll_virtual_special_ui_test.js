@@ -69,7 +69,9 @@ check('the active v15.1 screen renders one 152 selector and no legacy Rare board
   assert(!coach.includes('renderV15RareBoard('),'legacy Rare board must not be reachable from the v15.1 screen');
   assert(!coach.includes('renderRareResolution('),'legacy Rare renderer must not be reachable from the v15 cockpit');
   assert(!coach.includes('data-region="kill-152"'),'standalone kill-152 panel must stay removed');
-  assert(coach.includes('data-region="rare-ledger"'));
+  // v18.4: 희귀 판단이 3번(만들 수 있는 전설급)·6번(안 쓰는 희귀)으로 갈렸다.
+  assert(coach.includes('data-region="craftable-legends"'));
+  assert(coach.includes('data-region="unused-rare"'));
   assert(source.includes('<details class="v153-tools">'),'152 selector must remain reachable from the tools drawer');
 });
 
