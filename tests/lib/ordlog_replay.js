@@ -144,12 +144,14 @@ function loadRun(fileOrKey){
 // 라운드 하나를 현재 엔진에 먹인다.  엔진이 던지면 그 라운드는
 // throw로 표시하고 계속 간다 — 한 라운드의 예외가 판 전체 측정을
 // 못 하게 만들면 하니스로서 쓸모가 없다.
-function decideRound(engine,catalog,step,extraSettings){
+function decideRound(engine,catalog,step,extraSettings,sticky){
   try{
     const decision=engine.decide({
       catalog,
       snapshot:step.snapshot,
-      settings:Object.assign({},step.settings,extraSettings||{}),
+      // v18.2: 라이브 앱은 직전 추천을 다음 라운드로 넘긴다(관성).
+      // 재생도 같은 실을 이어야 실제 화면을 재현한다.
+      settings:Object.assign({_stickyActionId:sticky||''},step.settings,extraSettings||{}),
       locks:step.locks
     });
     return {decision,error:null};
@@ -211,8 +213,11 @@ function replayRun(runOrKey,options){
   const to=num(options&&options.toRound)||Infinity;
   const steps=run.rounds.filter(step=>step.round>=from&&step.round<=to);
   const rows=[];
+  let sticky='';
   for(const step of steps){
-    const {decision,error}=decideRound(engine,catalog,step,options&&options.settings);
+    const {decision,error}=decideRound(engine,catalog,step,options&&options.settings,sticky);
+    const proposed=decision&&(decision.action||decision.blockedAction);
+    if(proposed&&proposed.id)sticky=String(proposed.id);
     rows.push(Object.assign({round:step.round,error},summarize(decision)||{},{decision:options&&options.keepDecisions?decision:null}));
   }
   const counted=rows.filter(row=>!row.error);
