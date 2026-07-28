@@ -11,9 +11,13 @@ if(!files.includes('story_group_ranking_v140_test.js'))throw new Error('v14.0.0 
 for(const file of ['run_log_v140_test.js','run_log_compactor_v141_test.js','run_log_app_integration_test.js']){
   if(!files.includes(file))throw new Error(`v14.0.0 run-log regression test is missing: ${file}`);
 }
+// v18: 실전 로그 6판을 통째로 재생하는 회귀 게이트는 살아 있는 엔진에
+// 350여 라운드를 먹이므로 기본 2분 안에 끝나지 않는다(실측 ~150초).
+// 느린 게 정상인 테스트와 멈춘 테스트를 구분하기 위해 파일별로 예산을 준다.
+const SLOW_TESTS=Object.freeze({'v18_replay_gate_test.js':600000});
 let failed=0,skipped=0;
 for(const file of files){
-  const result=childProcess.spawnSync(process.execPath,[path.join(__dirname,file)],{encoding:'utf8',timeout:120000});
+  const result=childProcess.spawnSync(process.execPath,[path.join(__dirname,file)],{encoding:'utf8',timeout:SLOW_TESTS[file]||120000});
   const ok=result.status===0;
   // v17.6(감사): 종료 코드 0이라도 SKIP을 선언한 테스트는 PASS로 위장
   // 집계하지 않는다 — 브라우저 없는 환경에서 76개 실검증이 77 PASS로

@@ -1,5 +1,10 @@
 'use strict';
 
+// v18: 버전 리터럴을 테스트에 박아 두면 릴리스마다 여기서 먼저 깨진다
+// (v17.20·v17.22·v18에서 세 번 반복됐다).  package.json 을 단일
+// 원천으로 읽어 '모듈들이 서로 같은 버전인가'만 검사한다.
+const RELEASE_VERSION=require('../package.json').version;
+
 const assert=require('assert');
 const path=require('path');
 const EXT=path.resolve(__dirname,'../ord_tmo_auto_extension_v15_0_0_rebuild');
@@ -23,7 +28,7 @@ function countsFor(predicate,n=5){const out={[C.WISP_ID]:90};for(const candidate
 function plan(state,locks,settings){return C.recommendationPlan(state,locks,baseSettings(settings),ORD_UPPER_MEMO,ORD_SYNERGY_MEMO);}
 
 test('v13 catalog and core exports are coherent',()=>{
-  assert.strictEqual(C.VERSION,'17.28.0');
+  assert.strictEqual(C.VERSION,RELEASE_VERSION);
   assert(units.length>=300);
   assert.strictEqual(new Set(units.map(candidate=>candidate.id)).size,units.length);
   assert.strictEqual(typeof C.gameFlow,'function');

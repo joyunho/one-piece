@@ -1,5 +1,10 @@
 'use strict';
 
+// v18: 버전 리터럴을 테스트에 박아 두면 릴리스마다 여기서 먼저 깨진다
+// (v17.20·v17.22·v18에서 세 번 반복됐다).  package.json 을 단일
+// 원천으로 읽어 '모듈들이 서로 같은 버전인가'만 검사한다.
+const RELEASE_VERSION=require('../package.json').version;
+
 const assert=require('assert');
 const path=require('path');
 const EXT=path.resolve(__dirname,'../ord_tmo_auto_extension_v15_0_0_rebuild');
@@ -33,9 +38,9 @@ function input({counts={},percent={},settings={},abilities={}}={}){
   return{catalog,snapshot:{source:'fixture',sessionId:'v15-test',seq:1,at:1000,dataChangedAt:1000,wispCountFound:true,wispCount:Number(counts[C.WISP_ID]||0),counts:Object.assign({},counts),currentAbilities:abilities,units:rows},settings:Object.assign({currentRound:25,mode:'physical',magicRoute:'physical',postLegendRoute:'',manualCounts:{},superKumaOwned:false,wispOverride:'',virtualSpecialId:'',gorosei:'none'},settings),locks:[]};
 }
 
-assert.strictEqual(M.VERSION,'17.28.0');
-assert.strictEqual(L.VERSION,'17.28.0');
-assert.strictEqual(P.VERSION,'17.28.0');
+assert.strictEqual(M.VERSION,RELEASE_VERSION);
+assert.strictEqual(L.VERSION,RELEASE_VERSION);
+assert.strictEqual(P.VERSION,RELEASE_VERSION);
 assert.strictEqual(E.AUTHORITY,'ord-v15-decision-engine');
 
 // Observed TMO counts remain immutable evidence; user corrections live only in

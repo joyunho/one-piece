@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='17.28.0';
+const VERSION='18.0.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -750,9 +750,154 @@ function reconcileSquadExecution(decision,squad,locks){
   return withEvidence({state:'ACT_NOW',label:'최종 파티 · 지금 제작',reason,action,blockedAction:null,assessment:before,afterAction:after,bestPath:{steps:path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]},rare:rareLedgerForQuote(model,quote,'ACT_NOW',`최종 파티 ${nameOf(unit)}`),alternatives:[]},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:false,plannedId,quotedId:String(quote.targetId||unit.id),rawActionId:String(rawAction&&rawAction.id||''),sourceFingerprint:String(model.fingerprint||''),rawActionReplaced:!!rawAction&&String(rawAction.id||'')!==plannedId});
 }
 
+// v18 — 침묵 금지.
+//
+// 첫 클리어 로그(68라운드)를 재생하면 47라운드가 action null이었다.  r16~r32는
+// 방향 선택 클릭을 기다리느라 17라운드 연속 무응답이었고, r55~r68은 HOLD
+// 상태로 "지금 증명되는 제작은 없습니다"만 14라운드 반복하면서 도달 불가능한
+// 목표(류마 · 조로 11장 부족)를 회복 목표로 내놓았다.  게임의 3분의 2에서
+// 코치가 아무 말도 하지 않은 셈이다.
+//
+// 그렇다고 승인 권한을 헐겁게 만들 수는 없다 — action은 "엔진이 증명한
+// 제작"이라는 뜻이고 그 의미는 v17.28에서 사용자가 직접 지킨 계약이다.
+// 그래서 승인(action)은 그대로 두고, 화면이 항상 읽을 수 있는 별도 필드를
+// 만든다: coachAction 은 비지 않는다.  대신 얼마나 확신하는지를 같이 낸다.
+//
+//   확정 — 엔진이 승인한 제작(action).  지금 눌러도 되는 것.
+//   유력 — 계산은 끝났지만 승인 조건을 못 넘긴 것(blockedAction·제안).
+//   차선 — 증명된 게 없을 때의 최선.  방향 미확정 1순위, 회복 목표 등.
+//   운영 — 만들 게 남지 않은 마감 구간에서 할 일.
+const COACH_LEVELS=Object.freeze({approved:'확정',likely:'유력',fallback:'차선',operations:'운영'});
+// 마감 국면 진입선.  50라 보스 구조 마감이 지나면 판단의 성격이 바뀐다 —
+// 제작 최적화 문제가 아니라 가진 것을 어떻게 쓰느냐의 문제가 된다.
+const OPERATIONS_ROUND=51;
+// 지목하는 목표에는 감당 가능 여부를 반드시 붙인다.
+//
+// 침묵을 없애다가 거짓말로 바꾸면 더 나쁘다.  실제로 그럴 뻔했다 —
+// 방향 미확정 구간에서 후보의 첫 스텝을 찾지 못하면 상위 유닛 자신으로
+// 폴백했는데, 첫 클리어 로그 r16~r23을 재생하면 선위 11을 들고 있는
+// 사용자에게 선위 32짜리 상위를 여덟 라운드 연속 "다음 행동"이라고
+// 내밀고 있었다.  못 하는 걸 하라고 하는 것은 안내가 아니다.
+function coachStep(row,wisp){
+  if(!row)return null;
+  const cost=num(row.wispCost),have=num(wisp);
+  return{id:String(row.id||''),name:String(row.name||row.label||''),wispCost:cost,unit:row.unit||null,
+    affordable:cost<=have,wispShort:Math.max(0,cost-have)};
+}
+function currentWisp(model){return num(model&&model.effective&&model.effective.counts&&model.effective.counts[C.WISP_ID]);}
+// 회복 목표 중 "지금 실제로 갈 수 있는 것"을 고른다.  재료가 11장 모자란
+// 목표를 14라운드 내내 붙잡고 있으면 안내가 아니라 소음이다.
+function reachableRecovery(recovery){
+  const targets=(recovery&&recovery.targets||[]).filter(Boolean);
+  if(!targets.length)return null;
+  const feasible=targets.filter(row=>row.feasible);
+  if(feasible.length)return feasible.sort((a,b)=>num(a.wispCost)-num(b.wispCost))[0];
+  // 아무것도 못 만들면 가장 가까운 것 하나만 남긴다 — 거리(부족 재료 수 +
+  // 위습 부족)를 기준으로 고른다.
+  const distance=row=>(row.missing||[]).reduce((total,item)=>total+num(item.count),0)+Math.max(0,num(row.wispGap));
+  return targets.slice().sort((a,b)=>distance(a)-distance(b))[0]||null;
+}
+// v18: 국면을 판단의 1급 필드로 만든다.
+//
+// 저장소에는 국면 분류가 이미 넷 있었다 — C.gameFlow().phase(9종, v15
+// 권위 경로에서 호출되지 않음), C.phaseForRound(라운드 산술, 표시 전용),
+// P.checkpointFor(권한은 있으나 late55/60/65가 값이 동일), 그리고
+// buildDecision의 관문 순서(실제 권위, 이름 없음).  넷 중 목적함수를
+// 가진 것은 하나도 없었고, 그래서 "마감 구간에 할 말이 없다"는 문제가
+// 생겼다 — 국면이 없으니 68라운드 내내 같은 목적함수로 말한 것이다.
+//
+// 진입은 라운드가 아니라 상태로 정한다.  첫 클리어 로그의 r51~r54는
+// 51라를 넘겼는데도 제작이 남아 있었다.
+function decisionPhase(decision,model,roundNow,confidenceKey){
+  const final=M.finalSummary(model,model.effective.counts);
+  if(num(final.legendEquivalent)<=0)return{key:'opening',label:'개설',objective:'첫 희귀·첫 전설까지 최단 경로'};
+  if(decision.state==='ROUTE_CHOICE')return{key:'direction',label:'방향',objective:'상위 방향 확정 — 후회 없는 제작만 진행'};
+  if(confidenceKey==='operations')return{key:'operations',label:'운영',objective:'제작이 아니라 배치·컨트롤·자원 처분'};
+  return{key:'build',label:'구축',objective:`생존 축을 ${P.SURVIVAL_DEADLINE_ROUND||50}라 전에 닫는다`};
+}
+function coachGuidance(decision,model,roundNow){
+  const wisp=currentWisp(model);
+  const level=(key,step,note)=>({
+    coachAction:step,
+    confidence:{level:COACH_LEVELS[key],key,note:String(note||'')},
+    phase:decisionPhase(decision,model,roundNow,key)
+  });
+  if(decision.action)return level('approved',coachStep(decision.action,wisp),decision.reason||'');
+  if(decision.blockedAction)return level('likely',coachStep(decision.blockedAction,wisp),decision.reason||'승인 조건을 아직 못 넘겼습니다.');
+  if(decision.proposed)return level('likely',coachStep(decision.proposed,wisp),decision.reason||'');
+  // 방향(상위) 미확정.  기다리지 말고 1순위 후보의 첫 제작을 보여준다.
+  // 그 사이 17라운드를 비워 두는 것보다 낫다.
+  //
+  // 다만 여기서 방향을 대신 골라 주지는 않는다.  첫 클리어 로그의
+  // 방향 미확정 구간 16라운드를 재보면 상위 3후보가 지목하는 다음 제작이
+  // 16번 다 서로 달랐다.  틀린 쪽 재료를 먼저 먹으면 되돌릴 수 없다.
+  // 그래서 후보들이 서로 다른 것을 가리킬 때는 그 사실을 같이 말한다.
+  const candidates=(decision.routeCandidates||[]).filter(Boolean);
+  const lead=candidates[0];
+  if(lead){
+    // 후보의 "첫 스텝"은 워커가 전체 파티 계획을 돌려 준 뒤에만 존재한다.
+    // 계획 전에는 prefix가 비어 있으므로, 없는 것을 있는 척하지 않는다.
+    const firstStep=row=>(row.prefix||[]).find(item=>item&&item.id&&num(item.wispCost)<=wisp)||null;
+    const heads=new Set(candidates.slice(0,3).map(row=>{const step=firstStep(row);return String(step?step.id:row.id||'');}));
+    const split=heads.size>1;
+    const divergence=split
+      ?` 상위 후보들이 서로 다른 것을 지목하고 있으니(${heads.size}종), 재료를 쓰기 전에 방향부터 고르는 편이 안전합니다.`
+      :' 상위 후보들이 모두 같은 것을 지목하므로 방향과 무관하게 진행해도 됩니다.';
+    const affordable=candidates.map(firstStep).find(Boolean);
+    if(affordable)return level('fallback',coachStep(affordable,wisp),`방향 미확정 · 지금 선위(${wisp})로 할 수 있는 공통 진행입니다.${divergence}`);
+    // 지금 선위로 할 수 있는 게 없으면 제작을 지목하지 않는다.  모으라고
+    // 말하는 것이 감당 못 할 목표를 내미는 것보다 정확하다.
+    const short=Math.max(0,num(lead.wispCost)-wisp);
+    return level('fallback',null,`방향 미확정 · 1순위는 ${lead.name}(선위 ${num(lead.wispCost)})인데 지금 선위가 ${wisp}입니다${short?` — ${short} 더 필요` : ''}. 지금은 선위를 모으는 구간입니다.${divergence}`);
+  }
+  const alternative=(decision.alternatives||[])[0];
+  if(alternative)return level('fallback',coachStep(alternative,wisp),alternative.reason||'승인된 제작은 없지만 이게 가장 낫습니다.');
+  const recovery=reachableRecovery(decision.recovery);
+  // 마감 국면 진입은 라운드가 아니라 "만들 게 남았는가"로 정한다.  첫
+  // 클리어 로그의 r51~r54는 51라를 넘겼는데도 도플라밍고·카쿠를 계속
+  // 제작했다 — 라운드로만 끊으면 그 넷을 운영 안내로 덮어버린다.
+  // 그래서 지금 만들 수 있는 목표가 있으면 라운드와 무관하게 그것을
+  // 먼저 말하고, 마감을 넘긴 뒤 닿지 않는 목표만 운영으로 넘긴다.
+  if(recovery&&(recovery.feasible||num(roundNow)<OPERATIONS_ROUND)){
+    const missing=(recovery.missing||[]).map(row=>`${row.name} ${row.count}`).join(' · ');
+    return level('fallback',coachStep(recovery,wisp),recovery.feasible?`${recovery.roleLabel||'남은 역할'}을 닫는 최근접 목표입니다.`:`${recovery.roleLabel||'남은 역할'} 목표 · 부족: ${missing||`위습 ${Math.max(0,num(recovery.wispGap))}`}`);
+  }
+  // 마감 구간.  더 만들 게 없으면 만들라는 말을 반복하지 않는다.
+  return level('operations',null,operationsNote(decision,recovery,roundNow,model));
+}
+// 마감 구간 안내.  같은 상태가 이어지면 문장이 반복되는 건 정상이지만,
+// 그 문장에 사용자가 실제로 판단에 쓰는 수치는 들어 있어야 한다 —
+// 지금 위습이 얼마고, 남은 목표까지 얼마가 모자라고, 모아서 닿기는 하는가.
+function operationsNote(decision,recovery,roundNow,model){
+  const assessment=decision.assessment||{};
+  const axes=assessment.axes||{};
+  const wisp=num(model&&model.effective&&model.effective.counts&&model.effective.counts[C.WISP_ID]);
+  const head=`${num(roundNow)}라 · 위습 ${wisp}`;
+  const survivalOpen=(axes.survival&&axes.survival.open)||[];
+  if(survivalOpen.length){
+    const row=survivalOpen[0];
+    return `${head} · ${row.label} ${row.current}/${row.target} — 생존 역할이 열린 채로 마감 구간입니다. 리롤로라도 이 행부터 닫으세요.`;
+  }
+  const firepowerOpen=(axes.firepower&&axes.firepower.open)||[];
+  const rare=(decision.rare&&decision.rare.safeReroll)||null;
+  const gap=recovery?Math.max(0,num(recovery.wispGap)):0;
+  // 모아서 닿는 목표가 남아 있는지를 분명히 말한다.  닿지 않는 목표를
+  // 붙잡고 위습을 아끼는 것이 이 구간의 가장 흔한 손해다.
+  const reach=recovery
+    ?(recovery.feasible?`${recovery.name}은 지금 만들 수 있습니다.`
+      :gap>0?`가장 가까운 ${recovery.name}까지 위습 ${gap} 부족${(recovery.missing||[]).length?` · 재료도 ${(recovery.missing||[]).map(row=>`${row.name} ${row.count}`).join('·')} 부족`:''}.`
+      :`가장 가까운 ${recovery.name}은 재료가 ${(recovery.missing||[]).map(row=>`${row.name} ${row.count}`).join('·')||'부족'}합니다.`)
+    :'남은 제작 목표가 없습니다.';
+  if(rare)return `${head} · ${reach} ${rare.name} 리롤로 남은 화력을 노려볼 수 있습니다.`;
+  if(firepowerOpen.length){
+    const row=firepowerOpen[0];
+    return `${head} · 생존 구조는 닫혔고 ${row.label} ${row.current}/${row.target}만 남았습니다. ${reach} 안 닿으면 배치와 끝딜 컨트롤로 메우세요.`;
+  }
+  return `${head} · 필수 구조는 정리됐습니다. ${reach} 남은 라운드는 배치와 컨트롤 문제입니다.`;
+}
 function buildDecision(input){
   if(!C||!M||!L||!P)throw new Error('ORDV15Engine requires ORDCore, model, ledger, and policy modules.');
-  input=input||{};const model=input.model||M.build(input),locks=input.locks||[],roundNow=model.round.value,final=M.finalSummary(model,model.effective.counts),rareTotal=model.knowledge.db.rares.reduce((total,unit)=>total+Math.max(0,num(model.effective.counts[unit.id])),0),finalize=decision=>Object.assign(decision,{version:VERSION,authority:true,authorityEngine:AUTHORITY,inputFingerprint:model.fingerprint,model});
+  input=input||{};const model=input.model||M.build(input),locks=input.locks||[],roundNow=model.round.value,final=M.finalSummary(model,model.effective.counts),rareTotal=model.knowledge.db.rares.reduce((total,unit)=>total+Math.max(0,num(model.effective.counts[unit.id])),0),finalize=decision=>Object.assign(decision,{version:VERSION,authority:true,authorityEngine:AUTHORITY,inputFingerprint:model.fingerprint,model},coachGuidance(decision,model,roundNow));
   // Milestones are inventory states, not date windows. Missing the nominal
   // deadline must not silently advance the user into upper planning.
   if(rareTotal<=0&&final.legendEquivalent<=0)return finalize(completionDecision(model,model.knowledge.db.rares.filter(unit=>intentFamilyOk(model,unit)),COMPLETION_MILESTONES.firstRare));
@@ -809,5 +954,5 @@ function buildDecision(input){
   return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,_test:{injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
+return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence}};
 });

@@ -113,8 +113,15 @@ test('live Rare combat roles are credited by the assessment (no durable-only bli
 
 test('policy evaluate publishes a concrete status/label (labeled-statement bug fixed)',()=>{
   const decision=decide(FIXTURES.r57);
-  assert(['structural','developing','unsafe'].includes(decision.assessment.status),`status was '${decision.assessment.status}'`);
+  // v18: 'unsafe' 하나였던 자리가 축별로 갈라졌다.  이 fixture(r57, 이감
+  // 65/102가 열려 있는 정지 상태)는 죽는 쪽 문제이므로 'survival-open'이
+  // 나와야 하고, 그건 옛 'unsafe'보다 더 구체적인 진술이다.
+  assert(['structural','developing','survival-open','firepower-open'].includes(decision.assessment.status),`status was '${decision.assessment.status}'`);
   assert(decision.assessment.label&&decision.assessment.label.length>0,'assessment label is empty');
+  // 이 판이 왜 위험한지가 축으로 드러나야 한다 — 화력이 아니라 생존이다.
+  assert.strictEqual(decision.assessment.status,'survival-open','이감이 뚫린 판을 화력 문제로 부르면 안 된다');
+  assert.strictEqual(decision.assessment.survivalPass,false);
+  assert(decision.assessment.axes.survival.open.some(row=>row.key==='slow'),'열린 생존 행에 이감이 없다');
 });
 
 test('recovery plan names nearest closers with wisp distance when crafting is blocked',()=>{

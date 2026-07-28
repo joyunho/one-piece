@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='17.28.0';
+const VERSION='18.0.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -254,7 +254,19 @@ function checkpointRequirementKeys(mode,route,dueRound){
   }
   if(dueRound<=40)return['main','bossFrenzy','stunBase'];
   if(dueRound<=45)return['main','bossFrenzy','stunBase','slow','stunFull'];
-  return['main','bossFrenzy','stunBase','slow','stunFull','singleEndStable'];
+  // v18: 마감 게이트에서 singleEndStable을 뺀다.
+  //
+  // 이 행은 core에서 required:false(권장)로 선언돼 있는데 여기서만 하드
+  // 게이트로 쓰이고 있었다.  그 불일치가 "좋은각·완벽각 실전 0건"의
+  // 마지막 자물쇠였다: 첫 클리어 보드는 생존 5행(main·광보잡·0.5스턴·
+  // 이감·1.5스턴)을 전부 닫았는데 singleEndStable만 1/3이라 checkpointPass가
+  // false였고, 그 하나 때문에 각 판정 전체가 잠겼다.
+  //
+  // 물딜·dual 게이트는 원래 생존 행만으로 구성돼 있다.  singleEnd만 화력
+  // 행을 하나 얹고 있던 것을 물딜과 같은 기준으로 맞춘다.  화력이 사라지는
+  // 것이 아니라 요구치 표(single·end·singleEndExpected·singleEndStable)에
+  // 그대로 남아 화력 축으로 따로 보고된다.
+  return['main','bossFrenzy','stunBase','slow','stunFull'];
 }
 function checkpointRequirementRows(stage,mode,route,dueRound){
   const rows=stage&&stage.requirements&&stage.requirements.rows||[],byKey=new Map(rows.map(row=>[row.key,row]));return checkpointRequirementKeys(mode,route,dueRound).map(key=>byKey.get(key)||{key,label:key,gap:Infinity});

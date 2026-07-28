@@ -1,5 +1,10 @@
 'use strict';
 
+// v18: 버전 리터럴을 테스트에 박아 두면 릴리스마다 여기서 먼저 깨진다
+// (v17.20·v17.22·v18에서 세 번 반복됐다).  package.json 을 단일
+// 원천으로 읽어 '모듈들이 서로 같은 버전인가'만 검사한다.
+const RELEASE_VERSION=require('../package.json').version;
+
 const assert=require('assert');
 const path=require('path');
 const EXT=path.resolve(__dirname,'../ord_tmo_auto_extension_v15_0_0_rebuild');
@@ -19,7 +24,7 @@ const tests=[];
 function test(name,fn){tests.push([name,fn]);}
 
 test('v13 exports state-aware flow and exact clear profiles',()=>{
-  assert.strictEqual(C.VERSION,'17.28.0');
+  assert.strictEqual(C.VERSION,RELEASE_VERSION);
   assert.strictEqual(typeof C.gameFlow,'function');
   assert.strictEqual(typeof C.clearProfileDetails,'function');
 });
