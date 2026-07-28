@@ -955,10 +955,60 @@
 .v153-panel>header{display:flex;gap:11px;align-items:center;margin-bottom:14px}
 .v153-panel>header>small{display:grid;flex:none;place-items:center;width:34px;height:34px;border-radius:11px;background:#173653;color:#83e5f6;font-size:16px;font-weight:950}
 .v153-panel>header h2{margin:0;color:white;font-size:22px;letter-spacing:-.35px;line-height:1.2}.v153-panel>header p{margin:3px 0 0;color:var(--v153-muted);font-size:13px}
+/* v18.4 UI 개편: 목업처럼 좌우가 독립된 2열이다. 자동 배치(span)로 두면
+   왼쪽 패널이 길어질 때 오른쪽 열이 통째로 비므로 열을 명시적으로 감싼다. */
+.v153-grid-6{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+.v153-grid-6>.v153-col{display:grid;gap:12px;align-content:start;min-width:0}
+.v153-grid-6>.v153-col>.v153-panel{grid-column:auto}
+
+/* v18.4 UI 개편: 6패널 2열.  왼쪽은 "무엇을 할까"(지금·다음·만들 수 있는 것),
+   오른쪽은 "지금 어디쯤인가"(스펙·최종 파티·남는 희귀).  패널마다 색을 달리해
+   눈이 번호를 세지 않고도 자리를 기억하게 한다. */
 .v153-next{grid-column:span 7;border-color:rgba(68,191,226,.48)}
+.v153-preview{grid-column:span 7;border-color:rgba(96,140,232,.42)}
+.v153-craft{grid-column:span 7;border-color:rgba(154,120,228,.42)}
 .v153-spec{grid-column:span 5;border-color:rgba(240,185,78,.38)}
+.v153-upper{grid-column:span 5;border-color:rgba(69,203,143,.36)}
+.v153-unused{grid-column:span 5;border-color:rgba(226,92,102,.40)}
 .v153-rare{grid-column:span 6;border-color:rgba(154,120,228,.42)}
-.v153-upper{grid-column:span 6;border-color:rgba(69,203,143,.36)}
+
+/* 2번 패널 — 다음 → 그다음 → 분기 흐름 */
+.v153-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.v153-flow article{flex:1 1 150px}
+.v153-flow article{display:grid;align-content:start;gap:3px;border:1px solid var(--v153-line);border-radius:12px;padding:9px 10px;background:rgba(9,20,39,.72)}
+.v153-flow article.branch{border-style:dashed;opacity:.88}
+.v153-flow article small{color:var(--v153-muted);font-size:10px}
+.v153-flow article b{font-size:13px;line-height:1.3}
+.v153-flow article span{color:var(--v153-muted);font-size:10px;line-height:1.45}
+.v153-flow article em{margin-top:4px;justify-self:start;font-style:normal;font-size:10px;font-weight:800;border:1px solid var(--v153-line);border-radius:999px;padding:2px 7px;color:#9fd2ff}
+.v153-flow-arrow{align-self:center;color:#4c6b93;font-style:normal;font-size:14px}
+.v153-flow-foot{margin:9px 0 0;color:var(--v153-muted);font-size:10px}
+
+/* 3번 패널 — 지금 만들 수 있는 전설급 */
+.v153-craft-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.v153-craft-cards button{position:relative;display:grid;justify-items:start;gap:3px;border:1px solid var(--v153-line);border-radius:12px;padding:9px;background:rgba(9,20,39,.72);text-align:left;color:inherit;cursor:pointer}
+.v153-craft-cards button.recommended{border-color:rgba(154,120,228,.75);box-shadow:inset 0 2px rgba(154,120,228,.8)}
+.v153-craft-cards button img{width:34px;height:34px;border-radius:9px;object-fit:cover}
+.v153-craft-cards button b{font-size:12px}
+.v153-craft-cards button small{color:var(--v153-muted);font-size:10px;line-height:1.4}
+.v153-craft-cards button em{font-style:normal;font-size:10px;font-weight:800;color:#9fd2ff}
+.v153-pick{position:absolute;top:7px;right:7px;font-style:normal;font-size:9px;font-weight:800;border-radius:999px;padding:1px 6px;background:rgba(154,120,228,.24);color:#cbb4ff}
+.v153-craft-more{width:100%;margin-top:8px;padding:7px;font-size:10px}
+
+/* 6번 패널 — 최종 파티에 안 쓰이는 희귀 */
+.v153-unused-chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.v153-unused-chips button{display:grid;grid-template-columns:28px minmax(0,1fr);gap:7px;align-items:center;border:1px solid rgba(226,92,102,.42);border-radius:12px;padding:8px;background:rgba(38,14,20,.55);color:inherit;text-align:left;cursor:pointer}
+.v153-unused-chips button img,.v153-unused-chips button i{width:28px;height:28px;border-radius:8px;object-fit:cover;display:grid;place-items:center;font-style:normal;background:#1d2c44}
+.v153-unused-chips button b{font-size:12px}
+.v153-unused-note{margin:8px 0 0;color:var(--v153-muted);font-size:10px}
+.v153-reroll-btn{width:100%;margin-top:8px;padding:8px;font-size:11px;font-weight:800;border-color:rgba(226,92,102,.5);color:#ffb3ba}
+.v153-rare-ledger-fold{margin-top:9px}
+.v153-rare-ledger-fold summary{cursor:pointer;color:var(--v153-muted);font-size:10px}
+.v153-rare-fold-body{display:grid;gap:5px;margin-top:6px}
+.v153-rare-fold-body>div{display:grid;gap:2px;border:1px solid var(--v153-line);border-radius:9px;padding:7px}
+.v153-rare-fold-body b{font-size:11px}
+.v153-rare-fold-body span{color:var(--v153-muted);font-size:10px;line-height:1.4}
+.v153-reroll-left{display:block;margin-top:7px;color:var(--v153-muted);font-size:10px}
 
 /* Existing authoritative action card, retuned for glance reading. */
 .v153-next .v151-action{gap:10px;overflow:visible}
@@ -998,13 +1048,14 @@
 
 @media(max-width:1180px){
   .v153-status{grid-template-columns:auto auto 1fr}.v153-main-tools{grid-column:1/-1;justify-content:flex-end}.v153-tools-pop{right:0}
-  .v153-next,.v153-spec,.v153-rare,.v153-upper{grid-column:1/-1}
+  .v153-next,.v153-preview,.v153-craft,.v153-spec,.v153-rare,.v153-upper,.v153-unused{grid-column:1/-1}
+  .v153-grid-6{display:block}.v153-grid-6>.v153-col{display:block}
 }
 @media(max-width:760px){
   .ord-app.v151-shell{padding:6px}.v153-screen{font-size:15px}.v153-status{position:static;grid-template-columns:1fr 1fr;padding:9px}.v153-round{grid-column:1/-1;justify-content:center}.v153-live{justify-self:start}.v153-resource{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}.v153-resource>span{display:grid;grid-template-columns:1fr;padding:6px}.v153-resource b{justify-self:start}.v153-main-tools{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr}.v153-tools>summary{justify-content:center}.v153-tools-pop{position:fixed;z-index:100;inset:70px 7px auto;width:auto;max-height:75vh;overflow:auto}
   .v153-grid{display:block}.v153-panel{margin-bottom:8px;padding:12px}.v153-panel>header h2{font-size:20px}
   .v153-next .v151-action-main{grid-template-columns:54px minmax(0,1fr)}.v153-next .v151-action-main>img,.v153-next .v151-action-main>i{width:54px;height:54px}.v153-next .v151-cost{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;text-align:left}.v153-next .v151-action-title{font-size:22px}.v153-next .v151-action-facts{grid-template-columns:1fr 1fr}.v153-next-candidates{grid-template-columns:1fr}
-  .v153-spec-summary,.v153-rare-columns,.v153-upper-list,.v153-rare-crafts>div{grid-template-columns:1fr}.v153-slow-pin b{font-size:20px}.v153-gap-grid{grid-template-columns:1fr}.v153-rare-columns>section{padding:9px}.v153-upper-main{grid-template-columns:54px minmax(0,1fr)}.v153-upper-main>img{width:54px;height:54px}.v153-upper-main>button{grid-column:1/-1}.v153-support-list>button{grid-template-columns:24px 38px minmax(0,1fr)}.v153-support-list button em{grid-column:3}
+  .v153-spec-summary,.v153-rare-columns,.v153-upper-list,.v153-rare-crafts>div,.v153-flow,.v153-craft-cards,.v153-unused-chips{grid-template-columns:1fr}.v153-flow-arrow{display:none}.v153-slow-pin b{font-size:20px}.v153-gap-grid{grid-template-columns:1fr}.v153-rare-columns>section{padding:9px}.v153-upper-main{grid-template-columns:54px minmax(0,1fr)}.v153-upper-main>img{width:54px;height:54px}.v153-upper-main>button{grid-column:1/-1}.v153-support-list>button{grid-template-columns:24px 38px minmax(0,1fr)}.v153-support-list button em{grid-column:3}
   .v153-setting-row,.v153-tool-actions{grid-template-columns:1fr}
 }
 

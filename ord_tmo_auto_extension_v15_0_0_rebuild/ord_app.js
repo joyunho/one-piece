@@ -1808,6 +1808,52 @@ class App{
     return Object.assign({},row,{shipPlan,shipSource:source,memoLabel:memo,roleLabel:role,rareLabel:rare.join(' · ')||'희귀 직접소모 없음',slackLabel:slack?`${slack.name} ${slack.have}장 여유`:'' ,tradeoffs});
   }
 
+  // v18.4 UI 개편: 목업 2번 패널 — 지금 할 일 다음에 무엇이 오는지.
+  // 데이터는 새로 만들지 않는다. 엔진이 이미 내는 후속 후보와 활성 마감을
+  // 흐름으로 배열만 바꿔 보여 준다("계획"이 아니라 "패가 바뀌면 재계산").
+  renderV153Preview(state,plan){
+    const decision=plan.v15Decision||{},assessment=decision.assessment||{};
+    const due=C.num(assessment.checkpoint&&assessment.checkpoint.dueRound),survival=C.num(assessment.survivalDeadline)||50;
+    const rows=(decision.nextCandidates||decision.routeCandidates||[]).slice(0,2);
+    const steps=rows.map((row,index)=>({
+      tag:index===0?'다음':'그다음',
+      name:row.name||'후속 후보',
+      note:row.roleLabel||row.reason||'패 변화 뒤 재평가',
+      due:index===0&&due?`${due}라 이전`:`${survival}라 이전`,
+    }));
+    // 분기: 패가 바뀌면 열리는 갈래. 지금 확정하지 않는다는 사실이 핵심이다.
+    steps.push({tag:'분기',name:'패 변화 시',note:'희귀·특별이 들어오면 이후 순서를 다시 계산',due:'패 변화 시',branch:true});
+    const cards=steps.map(step=>`<article class="${step.branch?'branch':''}"><small>${C.esc(step.tag)}</small><b>${C.esc(step.name)}</b><span>${C.esc(step.note)}</span><em>${C.esc(step.due)}</em></article>`).join('<i class="v153-flow-arrow" aria-hidden="true">→</i>');
+    return`<div class="v153-flow">${cards}</div><p class="v153-flow-foot">패가 바뀌면 이후 계획은 자동으로 다시 계산됩니다. 지금 확정하는 것은 1번 카드 하나뿐입니다.</p>`;
+  }
+
+  // v18.4 UI 개편: 목업 3번 패널 — 기존 희귀 장부에서 "만들 수 있는 전설급"만
+  // 떼어냈다. 첫 줄에는 추천 표시를 단다(엔진 순위 1위).
+  renderV153CraftableLegends(state,plan){
+    const rows=this.v153RareCraftRows(state,plan);
+    if(!rows.length)return`<div class="v153-no-crafts"><b>지금 보유 희귀로 바로 만들 전설급 없음</b><span>희귀를 쓰는 조합이 선택 위습이나 특수 선행재료로 막혀 있습니다. 재료가 들어오면 여기부터 다시 채워집니다.</span></div>`;
+    const cards=rows.slice(0,3).map((row,index)=>{
+      const rare=(row.rareSpend&&row.rareSpend.byId||[]).filter(item=>C.num(item.use)>0).slice(0,3).map(item=>`${item.name}${C.num(item.use)>1?`×${C.num(item.use)}`:''}`).join(' · ');
+      const covers=(row.covers||[]).slice(0,2).join(' · ');
+      return`<button class="${index===0?'recommended':''}" data-act="detail" data-id="${C.esc(row.unit.id)}">${index===0?'<i class="v153-pick">추천</i>':''}${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:''}<b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(covers||rare||'현재 패로 제작 가능')}</small><em>선위 ${C.num(row.solve&&row.solve.wispCost)}</em></button>`;
+    }).join('');
+    return`<div class="v153-craft-cards">${cards}</div>${rows.length>3?`<button class="v153-craft-more" data-act="tab" data-tab="deck">전체 제작 가능 유닛 보기 (${rows.length})</button>`:''}`;
+  }
+
+  // v18.4 UI 개편: 목업 6번 패널 — 최종 파티·상위 재료 어디에도 안 쓰이는 희귀.
+  // 사용·보류 장부는 버리지 않고 접어 둔다(목업에는 없지만 판단 근거라 유지).
+  renderV153UnusedRare(state,plan){
+    const decision=plan.v15Decision||{},ledger=decision.rare||{},rows=Array.isArray(ledger.rows)?ledger.rows:[];
+    const rerollRows=rows.filter(row=>C.num(row.reroll)>0),rerollLeft=Math.max(0,2-C.num(this.state.rerollsUsed)),upperChosen=!!this.upperLock();
+    const chip=row=>{const unit=row.unit||state&&state.db&&state.db.byId&&state.db.byId.get(String(row.id));return`<button data-act="detail" data-id="${C.esc(row.id)}">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>R</i>'}<b>${C.esc(row.name||'희귀')}${C.num(row.reroll)>1?` ×${C.num(row.reroll)}`:''}</b></button>`;};
+    const body=rerollRows.length
+      ?`<div class="v153-unused-chips">${rerollRows.map(chip).join('')}</div><p class="v153-unused-note">최종 파티·상위 재료에 사용하지 않습니다.</p><button class="v153-reroll-btn" data-act="tab" data-tab="deck">한 장씩 리롤</button>`
+      :`<div class="v153-reroll-safe"><b>${upperChosen?'현재 리롤할 희귀 없음':'상위 후보 재료는 전부 보류'}</b><span>${upperChosen?'확정 파티에서 사용처 없는 희귀가 생기면 표시합니다.':'후보 중 하나라도 사용하는 희귀는 돌리지 않습니다.'}</span></div>`;
+    const groups=[{key:'use',label:'사용'},{key:'hold',label:'보류'}];
+    const ledgerRows=groups.map(group=>{const list=rows.filter(row=>C.num(row[group.key])>0);return`<div class="${group.key}"><b>${group.label} ${list.reduce((sum,row)=>sum+C.num(row[group.key]),0)}장</b><span>${list.map(row=>C.esc(row.name||row.id)).join(' · ')||'없음'}</span></div>`;}).join('');
+    return`${ledger.conflict?'<div class="v153-ledger-warning">희귀 분류 충돌 — 제작·리롤을 멈추고 TMO를 다시 읽으세요.</div>':''}${body}<details class="v153-rare-ledger-fold"><summary>희귀 사용·보류 장부</summary><div class="v153-rare-fold-body">${ledgerRows}</div></details><small class="v153-reroll-left">남은 안전 리롤 ${rerollLeft}/2</small>`;
+  }
+
   renderV153UpperParty(state,plan){
     const decision=plan.v15Decision||{},lock=this.upperLock(),db=state&&state.db,upper=lock&&db&&db.byId.get(lock.id)||plan.upper||null,candidates=(decision.routeCandidates||[]).slice(0,3);
     if(!upper){
@@ -1823,7 +1869,7 @@ class App{
 
   renderCoach(state,plan,phase,clock,health){
     // v17.24: 상시 노출은 행동·결손·희귀 장부·상위 파티 네 가지뿐이다.
-    return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v153-grid"><section class="v153-panel v153-next" data-region="next-action"><header><small>1</small><div><h2>지금 할 일</h2><p>이 카드 한 장만 실행하세요</p></div></header>${this.renderV151NextAction(state,plan,health)}${this.renderV153NextCandidate(state,plan)}</section><section class="v153-panel v153-spec" data-region="clear-gaps"><header><small>2</small><div><h2>클리어 결손</h2><p>부족한 필수 역할만 표시</p></div></header>${this.renderV153Spec(state,plan)}</section><section class="v153-panel v153-rare" data-region="rare-ledger"><header><small>3</small><div><h2>희귀 판단</h2><p>사용 · 보류 · 리롤 단일 장부</p></div></header>${this.renderV153RareLedger(state,plan)}</section><section class="v153-panel v153-upper" data-region="upper-party"><header><small>4</small><div><h2>상위 · 보조 파티</h2><p>상위 3개 또는 보조·해적선 3개만</p></div></header>${this.renderV153UpperParty(state,plan)}</section></main></div>`;
+    return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v153-grid v153-grid-6"><div class="v153-col"><section class="v153-panel v153-next" data-region="next-action"><header><small>1</small><div><h2>지금 할 일</h2><p>이 카드 한 장만 실행하세요</p></div></header>${this.renderV151NextAction(state,plan,health)}</section><section class="v153-panel v153-preview" data-region="next-preview"><header><small>2</small><div><h2>할 일 미리보기</h2><p>지금 확정하지 않는 이후 순서</p></div></header>${this.renderV153Preview(state,plan)}</section><section class="v153-panel v153-craft" data-region="craftable-legends"><header><small>3</small><div><h2>현재 희귀함으로 만들 수 있는 전설급</h2><p>보유 희귀를 실제로 쓰는 조합만</p></div></header>${this.renderV153CraftableLegends(state,plan)}</section></div><div class="v153-col"><section class="v153-panel v153-spec" data-region="clear-gaps"><header><small>4</small><div><h2>현재 스펙</h2><p>부족한 필수 역할만 표시</p></div></header>${this.renderV153Spec(state,plan)}</section><section class="v153-panel v153-upper" data-region="upper-party"><header><small>5</small><div><h2>최종 파티 구성</h2><p>상위 3개 또는 보조·해적선 3개만</p></div></header>${this.renderV153UpperParty(state,plan)}</section><section class="v153-panel v153-unused" data-region="unused-rare"><header><small>6</small><div><h2>최종 파티에서 필요없는 희귀함</h2><p>안전 리롤 후보</p></div></header>${this.renderV153UnusedRare(state,plan)}</section></div></main></div>`;
   }
   renderCoachDetails(state,plan,open=false){
     const squad=plan.squadPlan,extraActions=(plan.actions||[]).slice(2),watch=(plan.watch||[]).slice(0,6);if(!squad&&!extraActions.length&&!watch.length)return'';

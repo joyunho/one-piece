@@ -46,7 +46,9 @@ catch(error){
   try{
     const context=await browser.newContext({viewport:{width:1920,height:1080}}),page=await context.newPage();
     await page.route('http*://**',route=>route.abort());
-    const REGIONS=['game-status','next-action','clear-gaps','rare-ledger','upper-party'];
+    // v18.4: 6패널 개편 — 희귀 장부가 "만들 수 있는 전설급"(3번)과 "필요없는
+// 희귀"(6번)로 나뉘고, "할 일 미리보기"(2번)가 새로 들어왔다.
+const REGIONS=['game-status','next-action','next-preview','craftable-legends','clear-gaps','upper-party','unused-rare'];
     for(const cfg of [{name:'desktop',width:1920,height:1080},{name:'laptop',width:1440,height:900},{name:'mobile',width:430,height:900}]){
       await page.setViewportSize({width:cfg.width,height:cfg.height});
       await page.goto('file://'+path.resolve(__dirname,'ui_fixture.html'),{waitUntil:'domcontentloaded'});
@@ -73,7 +75,9 @@ catch(error){
       assert.strictEqual(metrics.version,RELEASE_VERSION);
       assert.strictEqual(metrics.health.ready,true,`${cfg.name} fixture health blocked`);
       assert.deepStrictEqual(metrics.regions,REGIONS,`${cfg.name} region set/order changed`);
-      assert.strictEqual(metrics.panelCount,4,`${cfg.name} expected exactly four decision panels`);
+      // v18.4: 상시 노출이 4패널에서 6패널로 바뀌었다(지금 할 일 / 미리보기 /
+      // 제작 가능 전설급 / 현재 스펙 / 최종 파티 / 필요없는 희귀).
+      assert.strictEqual(metrics.panelCount,6,`${cfg.name} expected exactly six decision panels`);
       assert(metrics.gapCards<=4,`${cfg.name} clear gaps exceeded the four-card cap`);
       assert(metrics.hasAction||metrics.hasRecovery,`${cfg.name} replay of the recorded stall must show an action or recovery ladder (state=${metrics.decisionState})`);
       assert.strictEqual(metrics.legacyTabs,0,`${cfg.name} legacy tab bar returned`);
