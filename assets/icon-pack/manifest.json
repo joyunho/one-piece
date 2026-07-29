@@ -1,0 +1,336 @@
+{
+  "name": "ORD Nightmare Coach Icon Pack",
+  "version": "1.0.0",
+  "format": "transparent PNG",
+  "sizes": [
+    64,
+    256
+  ],
+  "variants": [
+    "white",
+    "colored"
+  ],
+  "icon_count": 32,
+  "icons": [
+    {
+      "name": "ui-round-clock",
+      "label_ko": "라운드 시계",
+      "category": "상태",
+      "color": "#22D3EE",
+      "colored_64": "icons/colored/64/ui-round-clock.png",
+      "colored_256": "icons/colored/256/ui-round-clock.png",
+      "white_64": "icons/white/64/ui-round-clock.png",
+      "white_256": "icons/white/256/ui-round-clock.png"
+    },
+    {
+      "name": "ui-phase-shield",
+      "label_ko": "국면·확정 방패",
+      "category": "상태",
+      "color": "#22D3EE",
+      "colored_64": "icons/colored/64/ui-phase-shield.png",
+      "colored_256": "icons/colored/256/ui-phase-shield.png",
+      "white_64": "icons/white/64/ui-phase-shield.png",
+      "white_256": "icons/white/256/ui-phase-shield.png"
+    },
+    {
+      "name": "ui-damage-swords",
+      "label_ko": "물딜·마딜 계통",
+      "category": "상태",
+      "color": "#22D3EE",
+      "colored_64": "icons/colored/64/ui-damage-swords.png",
+      "colored_256": "icons/colored/256/ui-damage-swords.png",
+      "white_64": "icons/white/64/ui-damage-swords.png",
+      "white_256": "icons/white/256/ui-damage-swords.png"
+    },
+    {
+      "name": "ui-wisp-spiral",
+      "label_ko": "선택위습",
+      "category": "상태",
+      "color": "#22D3EE",
+      "colored_64": "icons/colored/64/ui-wisp-spiral.png",
+      "colored_256": "icons/colored/256/ui-wisp-spiral.png",
+      "white_64": "icons/white/64/ui-wisp-spiral.png",
+      "white_256": "icons/white/256/ui-wisp-spiral.png"
+    },
+    {
+      "name": "ui-sync-check",
+      "label_ko": "TMO 동기화 완료",
+      "category": "상태",
+      "color": "#86EFAC",
+      "colored_64": "icons/colored/64/ui-sync-check.png",
+      "colored_256": "icons/colored/256/ui-sync-check.png",
+      "white_64": "icons/white/64/ui-sync-check.png",
+      "white_256": "icons/white/256/ui-sync-check.png"
+    },
+    {
+      "name": "spec-stun",
+      "label_ko": "범위 스턴",
+      "category": "스펙",
+      "color": "#FBBF24",
+      "colored_64": "icons/colored/64/spec-stun.png",
+      "colored_256": "icons/colored/256/spec-stun.png",
+      "white_64": "icons/white/64/spec-stun.png",
+      "white_256": "icons/white/256/spec-stun.png"
+    },
+    {
+      "name": "spec-slow",
+      "label_ko": "이동속도 감소",
+      "category": "스펙",
+      "color": "#FBBF24",
+      "colored_64": "icons/colored/64/spec-slow.png",
+      "colored_256": "icons/colored/256/spec-slow.png",
+      "white_64": "icons/white/64/spec-slow.png",
+      "white_256": "icons/white/256/spec-slow.png"
+    },
+    {
+      "name": "spec-boss",
+      "label_ko": "보스·광폭화",
+      "category": "스펙",
+      "color": "#F87171",
+      "colored_64": "icons/colored/64/spec-boss.png",
+      "colored_256": "icons/colored/256/spec-boss.png",
+      "white_64": "icons/white/64/spec-boss.png",
+      "white_256": "icons/white/256/spec-boss.png"
+    },
+    {
+      "name": "spec-single",
+      "label_ko": "단일 딜",
+      "category": "스펙",
+      "color": "#FBBF24",
+      "colored_64": "icons/colored/64/spec-single.png",
+      "colored_256": "icons/colored/256/spec-single.png",
+      "white_64": "icons/white/64/spec-single.png",
+      "white_256": "icons/white/256/spec-single.png"
+    },
+    {
+      "name": "spec-end-damage",
+      "label_ko": "끝딜",
+      "category": "스펙",
+      "color": "#F87171",
+      "colored_64": "icons/colored/64/spec-end-damage.png",
+      "colored_256": "icons/colored/256/spec-end-damage.png",
+      "white_64": "icons/white/64/spec-end-damage.png",
+      "white_256": "icons/white/256/spec-end-damage.png"
+    },
+    {
+      "name": "spec-magic-defense-break",
+      "label_ko": "마법 방어력 감소",
+      "category": "스펙",
+      "color": "#FBBF24",
+      "colored_64": "icons/colored/64/spec-magic-defense-break.png",
+      "colored_256": "icons/colored/256/spec-magic-defense-break.png",
+      "white_64": "icons/white/64/spec-magic-defense-break.png",
+      "white_256": "icons/white/256/spec-magic-defense-break.png"
+    },
+    {
+      "name": "ui-check-circle",
+      "label_ko": "완료",
+      "category": "컨트롤",
+      "color": "#86EFAC",
+      "colored_64": "icons/colored/64/ui-check-circle.png",
+      "colored_256": "icons/colored/256/ui-check-circle.png",
+      "white_64": "icons/white/64/ui-check-circle.png",
+      "white_256": "icons/white/256/ui-check-circle.png"
+    },
+    {
+      "name": "ui-warning",
+      "label_ko": "경고",
+      "category": "컨트롤",
+      "color": "#F87171",
+      "colored_64": "icons/colored/64/ui-warning.png",
+      "colored_256": "icons/colored/256/ui-warning.png",
+      "white_64": "icons/white/64/ui-warning.png",
+      "white_256": "icons/white/256/ui-warning.png"
+    },
+    {
+      "name": "ui-reroll",
+      "label_ko": "희귀 리롤",
+      "category": "컨트롤",
+      "color": "#F87171",
+      "colored_64": "icons/colored/64/ui-reroll.png",
+      "colored_256": "icons/colored/256/ui-reroll.png",
+      "white_64": "icons/white/64/ui-reroll.png",
+      "white_256": "icons/white/256/ui-reroll.png"
+    },
+    {
+      "name": "ui-branch",
+      "label_ko": "조건부 분기",
+      "category": "컨트롤",
+      "color": "#C084FC",
+      "colored_64": "icons/colored/64/ui-branch.png",
+      "colored_256": "icons/colored/256/ui-branch.png",
+      "white_64": "icons/white/64/ui-branch.png",
+      "white_256": "icons/white/256/ui-branch.png"
+    },
+    {
+      "name": "ui-chevron-right",
+      "label_ko": "상세 보기",
+      "category": "컨트롤",
+      "color": "#F8FAFC",
+      "colored_64": "icons/colored/64/ui-chevron-right.png",
+      "colored_256": "icons/colored/256/ui-chevron-right.png",
+      "white_64": "icons/white/64/ui-chevron-right.png",
+      "white_256": "icons/white/256/ui-chevron-right.png"
+    },
+    {
+      "name": "unit-maxim",
+      "label_ko": "방주맥심",
+      "category": "유닛",
+      "color": "#22D3EE",
+      "colored_64": "icons/colored/64/unit-maxim.png",
+      "colored_256": "icons/colored/256/unit-maxim.png",
+      "white_64": "icons/white/64/unit-maxim.png",
+      "white_256": "icons/white/256/unit-maxim.png"
+    },
+    {
+      "name": "unit-aokiji",
+      "label_ko": "아오키지",
+      "category": "유닛",
+      "color": "#60A5FA",
+      "colored_64": "icons/colored/64/unit-aokiji.png",
+      "colored_256": "icons/colored/256/unit-aokiji.png",
+      "white_64": "icons/white/64/unit-aokiji.png",
+      "white_256": "icons/white/256/unit-aokiji.png"
+    },
+    {
+      "name": "unit-nekomamushi",
+      "label_ko": "네코마무시",
+      "category": "유닛",
+      "color": "#C084FC",
+      "colored_64": "icons/colored/64/unit-nekomamushi.png",
+      "colored_256": "icons/colored/256/unit-nekomamushi.png",
+      "white_64": "icons/white/64/unit-nekomamushi.png",
+      "white_256": "icons/white/256/unit-nekomamushi.png"
+    },
+    {
+      "name": "unit-shiryu",
+      "label_ko": "시류",
+      "category": "유닛",
+      "color": "#C084FC",
+      "colored_64": "icons/colored/64/unit-shiryu.png",
+      "colored_256": "icons/colored/256/unit-shiryu.png",
+      "white_64": "icons/white/64/unit-shiryu.png",
+      "white_256": "icons/white/256/unit-shiryu.png"
+    },
+    {
+      "name": "unit-bigmom",
+      "label_ko": "빅맘",
+      "category": "유닛",
+      "color": "#FBBF24",
+      "colored_64": "icons/colored/64/unit-bigmom.png",
+      "colored_256": "icons/colored/256/unit-bigmom.png",
+      "white_64": "icons/white/64/unit-bigmom.png",
+      "white_256": "icons/white/256/unit-bigmom.png"
+    },
+    {
+      "name": "unit-s-snake",
+      "label_ko": "S-스네이크",
+      "category": "유닛",
+      "color": "#86EFAC",
+      "colored_64": "icons/colored/64/unit-s-snake.png",
+      "colored_256": "icons/colored/256/unit-s-snake.png",
+      "white_64": "icons/white/64/unit-s-snake.png",
+      "white_256": "icons/white/256/unit-s-snake.png"
+    },
+    {
+      "name": "rare-vanderdecken",
+      "label_ko": "반 더 데켄",
+      "category": "희귀",
+      "color": "#F87171",
+      "colored_64": "icons/colored/64/rare-vanderdecken.png",
+      "colored_256": "icons/colored/256/rare-vanderdecken.png",
+      "white_64": "icons/white/64/rare-vanderdecken.png",
+      "white_256": "icons/white/256/rare-vanderdecken.png"
+    },
+    {
+      "name": "rare-koby",
+      "label_ko": "코비",
+      "category": "희귀",
+      "color": "#F87171",
+      "colored_64": "icons/colored/64/rare-koby.png",
+      "colored_256": "icons/colored/256/rare-koby.png",
+      "white_64": "icons/white/64/rare-koby.png",
+      "white_256": "icons/white/256/rare-koby.png"
+    },
+    {
+      "name": "ui-unit-placeholder",
+      "label_ko": "유닛 기본 이미지",
+      "category": "공통",
+      "color": "#CBD5E1",
+      "colored_64": "icons/colored/64/ui-unit-placeholder.png",
+      "colored_256": "icons/colored/256/ui-unit-placeholder.png",
+      "white_64": "icons/white/64/ui-unit-placeholder.png",
+      "white_256": "icons/white/256/ui-unit-placeholder.png"
+    },
+    {
+      "name": "ui-party-group",
+      "label_ko": "최종 파티",
+      "category": "공통",
+      "color": "#86EFAC",
+      "colored_64": "icons/colored/64/ui-party-group.png",
+      "colored_256": "icons/colored/256/ui-party-group.png",
+      "white_64": "icons/white/64/ui-party-group.png",
+      "white_256": "icons/white/256/ui-party-group.png"
+    },
+    {
+      "name": "ui-rare-gem",
+      "label_ko": "희귀함",
+      "category": "공통",
+      "color": "#C084FC",
+      "colored_64": "icons/colored/64/ui-rare-gem.png",
+      "colored_256": "icons/colored/256/ui-rare-gem.png",
+      "white_64": "icons/white/64/ui-rare-gem.png",
+      "white_256": "icons/white/256/ui-rare-gem.png"
+    },
+    {
+      "name": "ui-material-cube",
+      "label_ko": "재료",
+      "category": "공통",
+      "color": "#60A5FA",
+      "colored_64": "icons/colored/64/ui-material-cube.png",
+      "colored_256": "icons/colored/256/ui-material-cube.png",
+      "white_64": "icons/white/64/ui-material-cube.png",
+      "white_256": "icons/white/256/ui-material-cube.png"
+    },
+    {
+      "name": "ui-recipe-book",
+      "label_ko": "조합식",
+      "category": "공통",
+      "color": "#22D3EE",
+      "colored_64": "icons/colored/64/ui-recipe-book.png",
+      "colored_256": "icons/colored/256/ui-recipe-book.png",
+      "white_64": "icons/white/64/ui-recipe-book.png",
+      "white_256": "icons/white/256/ui-recipe-book.png"
+    },
+    {
+      "name": "ui-protected-material",
+      "label_ko": "보존 재료",
+      "category": "공통",
+      "color": "#86EFAC",
+      "colored_64": "icons/colored/64/ui-protected-material.png",
+      "colored_256": "icons/colored/256/ui-protected-material.png",
+      "white_64": "icons/white/64/ui-protected-material.png",
+      "white_256": "icons/white/256/ui-protected-material.png"
+    },
+    {
+      "name": "ui-deadline-stopwatch",
+      "label_ko": "라운드 마감",
+      "category": "공통",
+      "color": "#FBBF24",
+      "colored_64": "icons/colored/64/ui-deadline-stopwatch.png",
+      "colored_256": "icons/colored/256/ui-deadline-stopwatch.png",
+      "white_64": "icons/white/64/ui-deadline-stopwatch.png",
+      "white_256": "icons/white/256/ui-deadline-stopwatch.png"
+    },
+    {
+      "name": "ui-settings-gear",
+      "label_ko": "설정",
+      "category": "공통",
+      "color": "#CBD5E1",
+      "colored_64": "icons/colored/64/ui-settings-gear.png",
+      "colored_256": "icons/colored/256/ui-settings-gear.png",
+      "white_64": "icons/white/64/ui-settings-gear.png",
+      "white_256": "icons/white/256/ui-settings-gear.png"
+    }
+  ]
+}

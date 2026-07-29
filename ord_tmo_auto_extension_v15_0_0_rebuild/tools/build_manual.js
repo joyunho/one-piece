@@ -21,6 +21,7 @@ const staleOutputs = fs.readdirSync(packageDir)
 const cssPath = path.join(extensionDir, 'ord_app.css');
 const cockpitCssPath = path.join(extensionDir, 'ord_cockpit_v15.css');
 const scriptFiles = [
+  'ord_icons.js',
   'ord_units_data.js',
   'ord_upper_memo.js',
   'ord_synergy_memo.js',

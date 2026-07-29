@@ -1730,7 +1730,7 @@ class App{
     health=health||{};clock=clock||{};
     const route=this.state.mode==='physical'?'물딜':this.state.mode==='magic'?(this.state.directionKey==='singleEnd'?'마딜 1상위·단끝':this.state.directionKey==='dual'?'마딜 2상위·토키':'마딜'):'방향 미정';
     const rerollLeft=Math.max(0,2-C.num(this.state.rerollsUsed)),age=C.num(health.ageSec)<999?`${C.num(health.ageSec)}초 전`:'수신 없음';
-    return`<section class="v153-status" data-region="game-status"><div class="v153-round"><button data-act="round-step" data-delta="-1" aria-label="라운드 내리기">−</button><strong>${this.actualRound()}라</strong><button data-act="round-step" data-delta="1" aria-label="라운드 올리기">＋</button><span data-clock>${C.esc(clock.label||'라운드 수동')}</span></div><div class="v153-live ${health.ready?'ok':'warn'}" data-sync-age><i></i><b>${C.esc(health.label||'연결 대기')}</b><span>${C.esc(age)}</span></div><div class="v153-resource"><span>${this.v153Icon('blade')}<small>방향</small><b>${C.esc(route)}</b></span><span>${this.v153Icon('spiral')}<small>선택 위습</small><b>${C.num(state&&state.wisp)}</b></span><span>${this.v153Icon('anchor')}<small>희귀 리롤</small><b>${rerollLeft}/2</b></span></div><div class="v153-main-tools"><button class="primary" data-act="connection">TMO 동기화</button><button class="new-game" data-act="new-game">새 게임</button><details class="v153-tools"><summary>설정·도구</summary><div class="v153-tools-pop">${this.renderV153Settings(state)}<div class="v153-tool-actions"><button data-act="run-log-open">기록 보기</button><button data-act="run-log-export">JSON 저장</button><button data-act="run-result-open">게임 결과</button><button type="button" data-act="tab" data-tab="deck">수동 패 보정</button><button type="button" data-act="tab" data-tab="data">연결 진단</button><button type="button" data-act="tab" data-tab="story">스토리 자료</button></div></div></details></div></section>`;
+    return`<section class="v153-status" data-region="game-status"><div class="v153-round">${this.v153Icon('clock')}<button data-act="round-step" data-delta="-1" aria-label="라운드 내리기">−</button><strong>${this.actualRound()}라</strong><button data-act="round-step" data-delta="1" aria-label="라운드 올리기">＋</button><span data-clock>${C.esc(clock.label||'라운드 수동')}</span></div><div class="v153-live ${health.ready?'ok':'warn'}" data-sync-age>${this.v153Icon(health.ready?'sync':'warn')}<b>${C.esc(health.label||'연결 대기')}</b><span>${C.esc(age)}</span></div><div class="v153-resource"><span>${this.v153Icon('blade')}<small>방향</small><b>${C.esc(route)}</b></span><span>${this.v153Icon('spiral')}<small>선택 위습</small><b>${C.num(state&&state.wisp)}</b></span><span>${this.v153Icon('anchor')}<small>희귀 리롤</small><b>${rerollLeft}/2</b></span></div><div class="v153-main-tools"><button class="primary" data-act="connection">TMO 동기화</button><button class="new-game" data-act="new-game">새 게임</button><details class="v153-tools"><summary>설정·도구</summary><div class="v153-tools-pop">${this.renderV153Settings(state)}<div class="v153-tool-actions"><button data-act="run-log-open">기록 보기</button><button data-act="run-log-export">JSON 저장</button><button data-act="run-result-open">게임 결과</button><button type="button" data-act="tab" data-tab="deck">수동 패 보정</button><button type="button" data-act="tab" data-tab="data">연결 진단</button><button type="button" data-act="tab" data-tab="story">스토리 자료</button></div></div></details></div></section>`;
   }
 
   // v18.4: 후속 후보 수집을 렌더러에서 분리한다 — 1번 카드(옛 배치)와 2번
@@ -1823,9 +1823,34 @@ class App{
   // v18.4 UI 개편: 목업 2번 패널 — 지금 할 일 다음에 무엇이 오는지.
   // 데이터는 새로 만들지 않는다. 엔진이 이미 내는 후속 후보와 활성 마감을
   // 흐름으로 배열만 바꿔 보여 준다("계획"이 아니라 "패가 바뀌면 재계산").
-  // v18.4 UI: 인라인 SVG 아이콘.  MV3 CSP 에서 외부 요청이 막히므로 파일·폰트
-  // 아이콘을 쓸 수 없다.  stroke=currentColor 라 패널 색을 그대로 따라간다.
+  // v18.5 UI: 아이콘 팩(ord_icons.js, 투명 PNG 64px)을 먼저 쓴다.  팩은
+  // base64 로 구워져 있어 확장·수동판 양쪽에서 네트워크 요청이 0 이다.
+  // 팩에 없는 이름은 아래 인라인 SVG 로 물러난다 — 팩 파일이 빠져도 화면이
+  // 비지 않게 하기 위한 안전망이다.
   v153Icon(name){
+    const pack=(typeof window!=='undefined'&&window.ORD_ICONS)||null;
+    const packName=this.v153IconName(name);
+    if(pack&&packName&&pack[packName])return`<img class="v153-ic v153-ic-img" src="${pack[packName]}" alt="" aria-hidden="true">`;
+    return this.v153IconSvg(name);
+  }
+
+  // 화면에서 쓰는 역할 이름 → 팩 파일명.  팩 이름을 코드 곳곳에 흩지 않고
+  // 여기 한 곳에서만 갈아끼우게 둔다.
+  v153IconName(name){
+    const MAP={
+      clock:'ui-round-clock',shield:'ui-phase-shield',blade:'ui-damage-swords',
+      spiral:'ui-wisp-spiral',sync:'ui-sync-check',target:'spec-slow',
+      skull:'spec-boss',single:'spec-single',end:'spec-end-damage',
+      snow:'spec-magic-defense-break',stun:'spec-stun',check:'ui-check-circle',
+      warn:'ui-warning',reroll:'ui-reroll',branch:'ui-branch',chevron:'ui-chevron-right',
+      party:'ui-party-group',gem:'ui-rare-gem',cube:'ui-material-cube',
+      recipe:'ui-recipe-book',lock:'ui-protected-material',deadline:'ui-deadline-stopwatch',
+      gear:'ui-settings-gear',anchor:'rare-koby',flag:'ui-branch',placeholder:'ui-unit-placeholder'
+    };
+    return MAP[name]||'';
+  }
+
+  v153IconSvg(name){
     const P={
       clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
       shield:'<path d="M12 3l7 3v6c0 4-3 7-7 9-4-2-7-5-7-9V6z"/>',
@@ -1856,7 +1881,7 @@ class App{
     }));
     // 분기: 패가 바뀌면 열리는 갈래. 지금 확정하지 않는다는 사실이 핵심이다.
     steps.push({tag:'분기',name:'패 변화 시',note:'희귀·특별이 들어오면 이후 순서를 다시 계산',due:'패 변화 시',branch:true});
-    const cards=steps.map(step=>`<article class="${step.branch?'branch':''}">${this.v153Icon(step.branch?'flag':'check')}<small>${C.esc(step.tag)}</small><b>${C.esc(step.name)}</b><span>${C.esc(step.note)}</span><em>${C.esc(step.due)}</em></article>`).join('<i class="v153-flow-arrow" aria-hidden="true">→</i>');
+    const cards=steps.map(step=>`<article class="${step.branch?'branch':''}">${this.v153Icon(step.branch?'branch':'check')}<small>${C.esc(step.tag)}</small><b>${C.esc(step.name)}</b><span>${C.esc(step.note)}</span><em>${this.v153Icon('deadline')}${C.esc(step.due)}</em></article>`).join(`<i class="v153-flow-arrow" aria-hidden="true">${this.v153Icon('chevron')}</i>`);
     return`<div class="v153-flow">${cards}</div><p class="v153-flow-foot">패가 바뀌면 이후 계획은 자동으로 다시 계산됩니다. 지금 확정하는 것은 1번 카드 하나뿐입니다.</p>`;
   }
 
@@ -1868,7 +1893,7 @@ class App{
     const cards=rows.slice(0,3).map((row,index)=>{
       const rare=(row.rareSpend&&row.rareSpend.byId||[]).filter(item=>C.num(item.use)>0).slice(0,3).map(item=>`${item.name}${C.num(item.use)>1?`×${C.num(item.use)}`:''}`).join(' · ');
       const covers=(row.covers||[]).slice(0,2).join(' · ');
-      return`<button class="${index===0?'recommended':''}" data-act="detail" data-id="${C.esc(row.unit.id)}">${index===0?'<i class="v153-pick">추천</i>':''}${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:''}<b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(covers||rare||'현재 패로 제작 가능')}</small><em>선위 ${C.num(row.solve&&row.solve.wispCost)}</em></button>`;
+      return`<button class="${index===0?'recommended':''}" data-act="detail" data-id="${C.esc(row.unit.id)}">${index===0?'<i class="v153-pick">추천</i>':''}${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:this.v153Icon('placeholder')}<b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(covers||rare||'현재 패로 제작 가능')}</small><em>${this.v153Icon('spiral')}선위 ${C.num(row.solve&&row.solve.wispCost)}</em></button>`;
     }).join('');
     return`<div class="v153-craft-cards">${cards}</div>${rows.length>3?`<button class="v153-craft-more" data-act="tab" data-tab="deck">전체 제작 가능 유닛 보기 (${rows.length})</button>`:''}`;
   }
@@ -1878,9 +1903,9 @@ class App{
   renderV153UnusedRare(state,plan){
     const decision=plan.v15Decision||{},ledger=decision.rare||{},rows=Array.isArray(ledger.rows)?ledger.rows:[];
     const rerollRows=rows.filter(row=>C.num(row.reroll)>0),rerollLeft=Math.max(0,2-C.num(this.state.rerollsUsed)),upperChosen=!!this.upperLock();
-    const chip=row=>{const unit=row.unit||state&&state.db&&state.db.byId&&state.db.byId.get(String(row.id));return`<button data-act="detail" data-id="${C.esc(row.id)}">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>R</i>'}<b>${C.esc(row.name||'희귀')}${C.num(row.reroll)>1?` ×${C.num(row.reroll)}`:''}</b></button>`;};
+    const chip=row=>{const unit=row.unit||state&&state.db&&state.db.byId&&state.db.byId.get(String(row.id));return`<button data-act="detail" data-id="${C.esc(row.id)}">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:this.v153Icon('gem')}<b>${C.esc(row.name||'희귀')}${C.num(row.reroll)>1?` ×${C.num(row.reroll)}`:''}</b></button>`;};
     const body=rerollRows.length
-      ?`<div class="v153-reroll-now"><span><small>${upperChosen?'안전 리롤':'상위 올리기 전 안전 리롤'}</small><b>${rerollRows.map(row=>C.esc(row.name)).join(' · ')}</b></span><em>남은 ${rerollLeft}/2 · 한 장씩</em></div><div class="v153-unused-chips">${rerollRows.map(chip).join('')}</div><p class="v153-unused-note">최종 파티·상위 재료에 사용하지 않습니다.</p><button class="v153-reroll-btn" data-act="tab" data-tab="deck">${this.v153Icon('warn')}한 장씩 리롤</button>`
+      ?`<div class="v153-reroll-now"><span><small>${upperChosen?'안전 리롤':'상위 올리기 전 안전 리롤'}</small><b>${rerollRows.map(row=>C.esc(row.name)).join(' · ')}</b></span><em>남은 ${rerollLeft}/2 · 한 장씩</em></div><div class="v153-unused-chips">${rerollRows.map(chip).join('')}</div><p class="v153-unused-note">최종 파티·상위 재료에 사용하지 않습니다.</p><button class="v153-reroll-btn" data-act="tab" data-tab="deck">${this.v153Icon('reroll')}한 장씩 리롤</button>`
       :`<div class="v153-reroll-safe"><b>${upperChosen?'현재 리롤할 희귀 없음':'상위 후보 재료는 전부 보류'}</b><span>${upperChosen?'확정 파티에서 사용처 없는 희귀가 생기면 표시합니다.':'후보 중 하나라도 사용하는 희귀는 돌리지 않습니다.'}</span></div>`;
     const groups=[{key:'use',label:'사용'},{key:'hold',label:'보류'}];
     const ledgerRows=groups.map(group=>{const list=rows.filter(row=>C.num(row[group.key])>0);return`<div class="${group.key}"><b>${group.label} ${list.reduce((sum,row)=>sum+C.num(row[group.key]),0)}장</b><span>${list.map(row=>C.esc(row.name||row.id)).join(' · ')||'없음'}</span></div>`;}).join('');
@@ -1909,12 +1934,12 @@ class App{
       if(!unit||!id)return'';
       const owned=C.num(counts[id])>0;
       const stage=owned?'보유':id===actionId?'지금':nextIds.has(id)?'다음':'예정';
-      return`<button class="stage-${stage==='보유'?'own':stage==='지금'?'now':stage==='다음'?'next':'plan'}" data-act="detail" data-id="${C.esc(id)}">${unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i></i>'}<b>${C.esc(displayNameOf(unit))}</b><em>${stage}</em></button>`;
+      return`<button class="stage-${stage==='보유'?'own':stage==='지금'?'now':stage==='다음'?'next':'plan'}" data-act="detail" data-id="${C.esc(id)}">${unit.image?`<img src="${C.esc(unit.image)}" alt="">`:this.v153Icon('placeholder')}<b>${C.esc(displayNameOf(unit))}</b><em>${stage}</em></button>`;
     };
     const chips=squadLineup.map(chipFor).join('');
     const emptySlots=Math.max(0,9-squadLineup.length);
-    const placeholders=emptySlots?Array.from({length:Math.min(3,emptySlots)},()=>`<span class="v153-party-slot"><i></i><b>미정</b><em>후보 대기</em></span>`).join(''):'';
-    const partyBoard=`<div class="v153-party"><header><b>9환산 계획</b><strong>${secured} / 9 확보</strong></header><div class="v153-party-chips">${chips}${placeholders}</div>${emptySlots?`<small>남은 자리 ${emptySlots}</small>`:''}</div>`;
+    const placeholders=emptySlots?Array.from({length:Math.min(3,emptySlots)},()=>`<span class="v153-party-slot">${this.v153Icon('placeholder')}<b>미정</b><em>후보 대기</em></span>`).join(''):'';
+    const partyBoard=`<div class="v153-party"><header>${this.v153Icon('party')}<b>9환산 계획</b><strong>${secured} / 9 확보</strong></header><div class="v153-party-chips">${chips}${placeholders}</div>${emptySlots?`<small>남은 자리 ${emptySlots}</small>`:''}</div>`;
     return`<div class="v153-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>확정 메인 상위${power&&power.known?` · ${C.esc(power.letter)}티어`:''}</small><b>${C.esc(displayNameOf(upper))}</b><em>${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="party-preview" data-id="${C.esc(upper.id)}">전체 파티 보기</button></div>${partyBoard}<div class="v153-upper-gaps"><small>이 파티에서 먼저 닫을 결손</small>${requirements.length?requirements.map(row=>`<span>${C.esc(row.label)} <b>부족 ${fmt(row.gap)}</b></span>`).join(''):'<span class="ok">필수 역할 합계 충족</span>'}</div><details class="v153-support-fold"><summary>다음 보조 전설급 ${supports.length}개 · 같은 최종 파티 기준</summary><div class="v153-support-list">${supportHtml||'<p>현재 패에서 확정할 보조 전설급을 계산 중입니다.</p>'}</div></details>`;
   }
 

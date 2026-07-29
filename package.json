@@ -7,7 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
-    "build": "node tools/build_meta_stats.js && node ord_tmo_auto_extension_v15_0_0_rebuild/tools/build_manual.js && node ord_tmo_auto_extension_v15_0_0_rebuild/tools/build_story_grade_table.js",
+    "build": "node tools/build_icon_pack.js && node tools/build_meta_stats.js && node ord_tmo_auto_extension_v15_0_0_rebuild/tools/build_manual.js && node ord_tmo_auto_extension_v15_0_0_rebuild/tools/build_story_grade_table.js",
     "test": "node tests/run_all.js",
     "test:strict": "ORD_REQUIRE_ALL=1 node tests/run_all.js",
     "verify:package": "node tests/package_validation.js"

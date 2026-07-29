@@ -1182,3 +1182,25 @@
 .v153-support-fold{margin-top:10px}
 .v153-support-fold>summary{cursor:pointer;color:var(--v153-muted);font-size:11px;padding:6px 0}
 .v153-support-fold[open]>summary{color:var(--v153-text)}
+
+/* v18.5: 아이콘 팩(PNG)은 이미 색이 입혀져 있다. SVG 는 currentColor 를 타지만
+   PNG 는 아니므로 색 지정 대신 크기·정렬만 준다.  기본 .v153-ic 의 15px·
+   opacity .9 를 그대로 두면 팩 아이콘이 흐리고 작게 보여 전부 덮어쓴다. */
+.v153-ic-img{object-fit:contain;opacity:1;width:20px;height:20px}
+.v153-round .v153-ic-img{width:22px;height:22px;margin-right:4px}
+.v153-live .v153-ic-img{width:18px;height:18px}
+.v153-resource .v153-ic-img{width:19px;height:19px}
+.v153-flow-arrow .v153-ic-img{width:16px;height:16px;opacity:.8}
+.v153-flow article>.v153-ic-img{position:absolute;left:8px;top:9px;width:17px;height:17px}
+.v153-flow article{padding-left:32px}
+.v153-flow article em .v153-ic-img{width:13px;height:13px;margin-right:4px;vertical-align:-2px}
+.v153-craft-cards button em .v153-ic-img{width:13px;height:13px;margin-right:4px;vertical-align:-2px}
+.v153-craft-cards button>.v153-ic-img{width:34px;height:34px;padding:3px;background:#16253c;border-radius:9px}
+.v153-party>header .v153-ic-img{width:18px;height:18px;margin-right:6px;vertical-align:-4px}
+.v153-party-chips>button>.v153-ic-img,.v153-party-slot>.v153-ic-img{grid-row:1/3;width:30px;height:30px;padding:5px;background:#16253c;border-radius:9px}
+.v153-unused-chips button>.v153-ic-img{width:28px;height:28px;padding:4px;background:#2a1420;border-radius:8px}
+.v153-reroll-btn .v153-ic-img{width:17px;height:17px}
+.v151-deltas .v153-ic-img{width:21px;height:21px}
+.v153-gap-grid article>.v153-ic-img{width:19px;height:19px;left:8px;top:9px}
+.v153-gap-grid article{padding-left:33px}
+.v153-slow-pin .v153-ic-img{width:22px;height:22px}
