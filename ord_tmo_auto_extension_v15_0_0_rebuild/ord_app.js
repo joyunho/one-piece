@@ -1750,37 +1750,66 @@ class App{
     return`<div class="v153-next-candidates"><small>그다음 후보 · 지금 고정하지 않음</small>${picked.map(row=>`<button data-act="detail" data-id="${C.esc(row.id)}"><b>${C.esc(row.name||'후속 후보')}</b><span>${C.esc(row.reason||row.roleLabel||'패 변화 뒤 재평가')}</span><em>선위 ${C.num(row.wispCost)}</em></button>`).join('')}</div>`;
   }
 
+  // v18.7(사용자 지적: "스펙 표기가 중구난방"): 같은 정보를 다섯 가지 형식으로
+  // 보여 주던 것을 한 가지 행 형식으로 통일한다.
+  //
+  // 전(前): 축 카드 3개("1개 미달" + "88% · 이감 102% 35/102") · 이감 전용 핀
+  // ("현재 35 / 목표 102" + 부족 배지) · 요약 3칸(맨숫자 8/9, 3, 5) · 결손
+  // 카드("0 / 2" + "부족 2").  이감은 축 카드와 핀에 두 번 나왔고, 축 단위
+  // ("2개 미달")와 항목 단위("단일딜 환산 2")가 한 화면에 섞여 있었다.
+  //
+  // 후(後): [아이콘] 역할명 ... 현재/목표 ... 부족 N — 모든 행이 같은 형식.
+  // 축은 행 형식을 바꾸는 대신 묶음 제목으로만 남긴다.  v18 이 축을 나눈 이유
+  // (생존은 뚫리면 그 라운드에 죽고, 화력은 밀릴 뿐)는 그대로 지킨다.
   renderV153Spec(state,plan){
-    const decision=plan.v15Decision||{},assessment=decision.assessment||{},source=assessment.requirements||plan.deficits&&plan.deficits.requirements||[],seen=new Set(),rows=[];
-    for(const row of source){if(!row||seen.has(row.key))continue;seen.add(row.key);rows.push(row);}
-    const severity=row=>{const target=Math.max(.0001,Math.abs(C.num(row.target)));return C.num(row.weight||1)*Math.min(1,Math.max(0,C.num(row.gap))/target);};
-    const open=rows.filter(row=>!row.waived&&C.num(row.gap)>0).sort((a,b)=>severity(b)-severity(a)),closed=rows.filter(row=>!row.waived&&C.num(row.gap)<=0);
-    const counts=state&&state.db&&C.progressionCounts?C.progressionCounts(state):null,equivalent=counts?C.num(counts.squad):0,magic=this.state.mode==='magic',route=magic?this.state.magicRoute:'physical';
+    const decision=plan.v15Decision||{},assessment=decision.assessment||{};
+    const source=assessment.requirements||plan.deficits&&plan.deficits.requirements||[];
+    const seen=new Set(),rows=[];
+    for(const row of source){if(!row||seen.has(row.key)||row.waived)continue;seen.add(row.key);rows.push(row);}
+    const magic=this.state.mode==='magic',route=magic?this.state.magicRoute:'physical';
     const modeControls=`<div class="v153-mode" role="group" aria-label="딜 계통 선택"><button class="${!this.state.mode?'on':''}" data-act="mode" data-value="">자동</button><button class="${this.state.mode==='physical'?'on':''}" data-act="mode" data-value="physical">물딜</button><button class="${magic?'on':''}" data-act="mode" data-value="magic">마딜</button>${magic?`<select data-opt="magicRoute" aria-label="마딜 경로"><option value="auto" ${route==='auto'?'selected':''}>자동 경로</option><option value="dual" ${route==='dual'?'selected':''}>2상위·토키</option><option value="singleEnd" ${route==='singleEnd'?'selected':''}>1상위·단끝</option></select>`:''}</div>`;
     if(!this.state.mode)return`${modeControls}<div class="v153-spec-wait"><b>상위 방향을 먼저 정하세요</b><span>방향이 정해지면 필요한 스턴·이감·방깎 또는 단일·끝딜만 표시합니다.</span></div>`;
-    // v17.25: 이감은 충족 여부와 무관하게 항상 보인다. v17.24는
-    // gap>0 카드만 그려 실제 116.8/102가 "확보한 조건" 숫자에 숨었다.
-    const gorosei=C.GOROSEI&&C.GOROSEI[this.state.gorosei]||C.GOROSEI&&C.GOROSEI.none||{},slowRow=rows.find(row=>row.key==='slow')||null,slowTarget=slowRow?C.num(slowRow.target):C.num(magic?gorosei.slowMagic:gorosei.slowPhysical)||102,slowGap=slowRow?Math.max(0,C.num(slowRow.gap)):null,slowTone=!slowRow?'wait':slowGap>0?'gap':'ok',slowStatus=!slowRow?'계산 대기':slowGap>0?`부족 ${fmt(slowGap)}`:'충족',slowBasis=gorosei.key==='nasjuro'?'나스쥬로 목표':'풀이감 목표';
-    // v18: 결손을 축으로 나눠 맨 위에 띄운다.
-    //
-    // 실전 6판을 재생해 보면 이 둘은 전혀 다른 문제다.  생존 축(이감·
-    // 스턴·방깎·광보잡·상위)이 뚫린 판은 5판 중 4판이 끝까지 못 닫고
-    // 졌고, 첫 클리어는 화력 축(단일·끝딜)이 미달인 채로 이겼다.
-    // 한 줄에 섞어 놓으면 "이감 10/102"와 "단일 0.5/2"가 같은 무게로
-    // 보인다 — 앞은 그 라운드에 죽는 사유고 뒤는 아니다.
-    const axes=assessment.axes||{},pace=assessment.survivalPace||null;
-    const axisCard=(key,label,hint)=>{
-      const axis=axes[key];
-      if(!axis||!axis.applicable)return `<span class="v153-axis na"><small>${C.esc(label)}</small><b>해당 없음</b><i>${C.esc(hint)}</i></span>`;
-      const tone=axis.pass?'ok':key==='survival'?'bad':'warn';
-      const lead=axis.open&&axis.open[0];
-      return `<span class="v153-axis ${tone}"><small>${C.esc(label)}</small><b>${axis.pass?'충족':`${axis.openCount}개 미달`}</b><i>${axis.readiness==null?'':`${axis.readiness}% · `}${C.esc(lead?`${lead.label} ${fmt(lead.current)}/${fmt(lead.target)}`:hint)}</i></span>`;
+
+    const ICON={main:'shield',toki:'shield',armor:'snow',magicSupport:'snow',
+      stunBase:'stun',stunFull:'stun',slow:'target',bossFrenzy:'skull',
+      single:'single',singleEndStable:'single',singleEndExpected:'single',singleEndMax:'single',end:'end'};
+    // 이감 목표의 근거(풀이감/나스쥬로)는 행 옆 주석으로 남긴다 — 전용 핀을
+    // 없앴다고 근거까지 사라지면 안 된다.
+    const gorosei=C.GOROSEI&&C.GOROSEI[this.state.gorosei]||{};
+    const noteFor=row=>row.key==='slow'?(gorosei.key==='nasjuro'?'나스쥬로 목표':'풀이감 목표'):'';
+    const severity=row=>{const t=Math.max(.0001,Math.abs(C.num(row.target)));return C.num(row.weight||1)*Math.min(1,Math.max(0,C.num(row.gap))/t);};
+    const openRows=rows.filter(r=>C.num(r.gap)>0).sort((a,b)=>severity(b)-severity(a));
+    const leadKey=openRows.length?openRows[0].key:'';
+
+    // v17.25 계약 유지: 이감은 충족이든 계산 대기든 항상 한 줄로 보인다.
+    // (v17.24 는 gap>0 인 카드만 그려 116.8/102 가 화면에서 사라졌었다.)
+    const line=row=>{
+      const waiting=row.waiting===true,gap=C.num(row.gap),ok=!waiting&&gap<=0,note=noteFor(row);
+      const tone=waiting?'wait':ok?'ok':row.status==='warn'?'warn':'bad';
+      return`<div class="v153-role ${tone} ${row.key===leadKey?'lead':''}" data-role="${C.esc(row.key)}">${this.v153Icon(ICON[row.key]||'gear')}<b>${C.esc(row.label)}${row.key===leadKey?'<i>최우선</i>':''}${note?`<small>${C.esc(note)}</small>`:''}</b><strong>${waiting?'현재 계산 대기':fmt(row.current)}<em>/ 목표 ${fmt(row.target)}</em></strong><span><strong>${waiting?'계산 대기':ok?'충족':`부족 ${fmt(gap)}`}</strong></span></div>`;
     };
-    const axisRow=Object.keys(axes).length?`<div class="v153-axis-row">${axisCard('survival','생존 구조','뚫리면 그 라운드에 죽습니다')}${axisCard('firepower','화력','부족하면 밀립니다 — 즉사는 아닙니다')}${pace?`<span class="v153-axis pace ${C.esc(pace.state)}"><small>생존 마감</small><b>${C.esc({'on-time':'마감 전 확보','held':'유지 중','overdue':'마감 초과','open':'진행 중'}[pace.state]||pace.state)}</b><i>${C.esc(pace.note)}</i></span>`:''}</div>`:'';
-    const slowPin=`<div class="v153-slow-pin ${slowTone}" data-role="slow">${this.v153Icon('target')}<span><small>이감 · ${C.esc(slowBasis)}</small><b>${slowRow?`현재 ${fmt(slowRow.current)}`:'현재 계산 대기'} <i>/ 목표 ${fmt(slowTarget)}</i></b></span><strong>${C.esc(slowStatus)}</strong></div>`;
-    const ROLE_ICON={stun:'blade',stunBase:'blade',stunFull:'blade',slow:'target',armor:'snow',bossFrenzy:'skull',single:'blade',end:'gear',toki:'flag',main:'shield'};
-    const visibleOpen=open.filter(row=>row.key!=='slow').slice(0,4),gapCards=visibleOpen.map((row,index)=>`<article class="${index===0?'lead':''}">${this.v153Icon(ROLE_ICON[row.key]||'gear')}<small>${index===0?'최우선':'결손'}</small><b>${C.esc(row.label)}</b><strong>${fmt(row.current)} <i>/ ${fmt(row.target)}</i></strong><span>부족 ${fmt(row.gap)}</span></article>`).join(''),gapBody=gapCards||(open.length?'':'<div class="v153-all-clear"><b>필수 역할 합계 충족</b><span>과잉 스턴·이감 대신 보스 화력과 업그레이드를 확인하세요.</span></div>');
-    return`${modeControls}${axisRow}${slowPin}<div class="v153-spec-summary"><span><small>전설급 환산</small><b>${equivalent}<i> / 9</i></b></span><span class="${open.length?'gap':'ok'}"><small>남은 필수 결손</small><b>${open.length}</b><i>${open[0]?C.esc(open[0].label):'역할 합계 충족'}</i></span><span><small>확보한 조건</small><b>${closed.length}</b><i>보스 화력 보장은 아님</i></span></div>${gapBody?`<div class="v153-gap-grid">${gapBody}</div>`:''}`;
+
+    if(!rows.some(r=>r.key==='slow')){
+      const target=C.num(magic?gorosei.slowMagic:gorosei.slowPhysical)||102;
+      rows.unshift({key:'slow',label:'이감',axis:'survival',current:0,target,gap:0,weight:1,status:'warn',waiting:true});
+    }
+    const axes=assessment.axes||{},pace=assessment.survivalPace||null;
+    const group=(key,label,hint)=>{
+      const list=rows.filter(r=>(r.axis||C.roleAxis&&C.roleAxis(r.key)||'firepower')===key);
+      if(!list.length)return'';
+      const axis=axes[key]||null,open=list.filter(r=>C.num(r.gap)>0).length;
+      // 묶음 제목은 "몇 개 미달인가"만 말한다. 수치 비교는 아래 행이 전부 같은
+      // 형식으로 한다 — 제목이 또 다른 형식으로 숫자를 말하면 그게 중구난방이다.
+      const state=open?`${open}개 미달`:'충족';
+      const sorted=list.slice().sort((a,b)=>(C.num(b.gap)>0)-(C.num(a.gap)>0)||severity(b)-severity(a));
+      return`<section class="v153-role-group ${open?(key==='survival'?'bad':'warn'):'ok'}"><header><b>${C.esc(label)}</b><em>${C.esc(state)}</em>${axis&&axis.readiness!=null?`<span>${axis.readiness}%</span>`:''}</header><p>${C.esc(hint)}</p>${sorted.map(line).join('')}</section>`;
+    };
+
+    const counts=state&&state.db&&C.progressionCounts?C.progressionCounts(state):null;
+    const equivalent=counts?C.num(counts.squad):0;
+    const paceLine=pace?`<div class="v153-pace ${C.esc(pace.state)}">${this.v153Icon('deadline')}<b>${C.esc({'on-time':'마감 전 확보','held':'유지 중','overdue':'마감 초과','open':'진행 중'}[pace.state]||pace.state)}</b><span>${C.esc(pace.note)}</span></div>`:'';
+    const head=`<div class="v153-spec-head"><span><small>전설급 환산</small><b>${equivalent}<i>/ 9</i></b></span><span><small>남은 필수 결손</small><b class="${openRows.length?'gap':'ok'}">${openRows.length}</b></span></div>`;
+    return`${modeControls}${head}${paceLine}${group('survival','생존 구조','뚫리면 그 라운드에 죽습니다')}${group('firepower','화력','부족하면 밀립니다 — 즉사는 아닙니다')}`;
   }
 
   renderV153RareLedger(state,plan){
@@ -1945,7 +1974,7 @@ class App{
 
   renderCoach(state,plan,phase,clock,health){
     // v17.24: 상시 노출은 행동·결손·희귀 장부·상위 파티 네 가지뿐이다.
-    return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v153-grid v153-grid-6"><section class="v153-panel v153-next" data-region="next-action"><header><small>1</small><div><h2>지금 할 일</h2><p>이 카드 한 장만 실행하세요</p></div></header>${this.renderV151NextAction(state,plan,health)}</section><section class="v153-panel v153-preview" data-region="next-preview"><header><small>2</small><div><h2>할 일 미리보기</h2><p>지금 확정하지 않는 이후 순서</p></div></header>${this.renderV153Preview(state,plan)}</section><section class="v153-panel v153-craft" data-region="craftable-legends"><header><small>3</small><div><h2>현재 희귀함으로 만들 수 있는 전설급</h2><p>보유 희귀를 실제로 쓰는 조합만</p></div></header>${this.renderV153CraftableLegends(state,plan)}</section><section class="v153-panel v153-spec" data-region="clear-gaps"><header><small>4</small><div><h2>현재 스펙</h2><p>부족한 필수 역할만 표시</p></div></header>${this.renderV153Spec(state,plan)}</section><section class="v153-panel v153-upper" data-region="upper-party"><header><small>5</small><div><h2>최종 파티 구성</h2><p>상위 3개 또는 보조·해적선 3개만</p></div></header>${this.renderV153UpperParty(state,plan)}</section><section class="v153-panel v153-unused" data-region="unused-rare"><header><small>6</small><div><h2>최종 파티에서 필요없는 희귀함</h2><p>안전 리롤 후보</p></div></header>${this.renderV153UnusedRare(state,plan)}</section></main></div>`;
+    return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v153-grid v153-grid-6"><section class="v153-panel v153-next" data-region="next-action"><header><small>1</small><div><h2>지금 할 일</h2><p>이 카드 한 장만 실행하세요</p></div></header>${this.renderV151NextAction(state,plan,health)}</section><section class="v153-panel v153-preview" data-region="next-preview"><header><small>2</small><div><h2>할 일 미리보기</h2><p>지금 확정하지 않는 이후 순서</p></div></header>${this.renderV153Preview(state,plan)}</section><section class="v153-panel v153-craft" data-region="craftable-legends"><header><small>3</small><div><h2>현재 희귀함으로 만들 수 있는 전설급</h2><p>보유 희귀를 실제로 쓰는 조합만</p></div></header>${this.renderV153CraftableLegends(state,plan)}</section><section class="v153-panel v153-spec" data-region="clear-gaps"><header><small>4</small><div><h2>현재 스펙</h2><p>필수 역할 현재 / 목표</p></div></header>${this.renderV153Spec(state,plan)}</section><section class="v153-panel v153-upper" data-region="upper-party"><header><small>5</small><div><h2>최종 파티 구성</h2><p>상위 3개 또는 보조·해적선 3개만</p></div></header>${this.renderV153UpperParty(state,plan)}</section><section class="v153-panel v153-unused" data-region="unused-rare"><header><small>6</small><div><h2>최종 파티에서 필요없는 희귀함</h2><p>안전 리롤 후보</p></div></header>${this.renderV153UnusedRare(state,plan)}</section></main></div>`;
   }
   renderCoachDetails(state,plan,open=false){
     const squad=plan.squadPlan,extraActions=(plan.actions||[]).slice(2),watch=(plan.watch||[]).slice(0,6);if(!squad&&!extraActions.length&&!watch.length)return'';

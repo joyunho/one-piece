@@ -203,8 +203,11 @@ test('compact UI는 충족 이감·나스쥬로 목표·계산 대기를 항상 
   const saturnHtml=appFor('saturn').renderV153Spec(saturn.state,{
     v15Decision:{assessment:{requirements:saturn.deficits.requirements}}
   });
+  // v18.7: 표기가 한 형식으로 통일되면서 "현재" 접두어가 빠졌다 — 열 위치가
+  // 이미 현재값을 뜻한다.  계약의 알맹이(충족이어도 이감 수치가 화면에 남는다)는
+  // 그대로다: v17.24 는 gap>0 인 카드만 그려 116.8/102 가 사라졌었다.
   assert(saturnHtml.includes('data-role="slow"'));
-  assert(saturnHtml.includes('현재 116.8'));
+  assert(saturnHtml.includes('116.8'));
   assert(saturnHtml.includes('/ 목표 102'));
   assert(saturnHtml.includes('충족'));
 
@@ -212,7 +215,7 @@ test('compact UI는 충족 이감·나스쥬로 목표·계산 대기를 항상 
   const nasjuroHtml=appFor('nasjuro').renderV153Spec(nasjuro.state,{
     v15Decision:{assessment:{requirements:nasjuro.deficits.requirements}}
   });
-  assert(nasjuroHtml.includes('현재 116.8'));
+  assert(nasjuroHtml.includes('116.8'));
   assert(nasjuroHtml.includes('/ 목표 117'));
   assert(nasjuroHtml.includes('부족 0.2'));
 

@@ -39,13 +39,22 @@ test('다음 행동은 확정 카드 하나와 후속 후보 최대 2개만 보�
   assert(candidate.includes('지금 확정하는 것은 1번 카드 하나뿐입니다.'));
 });
 
-test('클리어 결손은 전설 환산과 최우선 결손 최대 4개만 보여준다', () => {
-  const spec = slice('renderV153Spec(state,plan){', 'renderV153CraftableLegends(state,plan){');
+test('스펙은 한 가지 행 형식으로 통일되고 축으로만 묶인다', () => {
+  // v18.7(사용자 지적: "스펙 표기가 중구난방"): 같은 정보를 축 카드·이감 전용
+  // 핀·요약 3칸·결손 카드 네 형식으로 보여 주던 것을 한 행 형식으로 합쳤다.
+  //   [아이콘] 역할명 · 현재/목표 · 부족 N
+  // 축(생존/화력)은 행 형식을 바꾸지 않고 묶음 제목으로만 남는다 — v18 이 축을
+  // 나눈 이유(생존은 뚫리면 죽고 화력은 밀릴 뿐)는 계속 지킨다.
+  const spec = slice('renderV153Spec(state,plan){', 'renderV153RareLedger(state,plan){');
   assert(spec.includes('C.progressionCounts(state)'));
-  assert(spec.includes("open.filter(row=>row.key!=='slow').slice(0,4)"));
-  assert(spec.includes('v153-slow-pin'));
-  for (const marker of ['전설급 환산', '남은 필수 결손', '확보한 조건', '최우선']) {
+  assert(spec.includes('v153-role'), '통일 행 클래스가 없음');
+  assert(spec.includes("group('survival'") && spec.includes("group('firepower'"), '축 묶음이 사라짐');
+  for (const marker of ['전설급 환산', '남은 필수 결손', '최우선', '부족 ']) {
     assert(spec.includes(marker), marker);
+  }
+  // 옛 형식이 되살아나면 다시 중구난방이 된다.
+  for (const gone of ['v153-slow-pin', 'v153-axis-row', 'v153-spec-summary', 'v153-gap-grid']) {
+    assert(!spec.includes(gone), `옛 형식이 남아 있음: ${gone}`);
   }
   assert(!spec.includes('지금 내 파티'));
 });
