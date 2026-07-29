@@ -65,13 +65,14 @@ const r55=replay(55,eightCounts,{firstRareRewardClaimed:true});
 assert.deepStrictEqual([r55.phase,r55.purpose,r55.target,r55.stretchTarget],['final-patch','spec',9,11]);
 for(const phrase of ['전설·히든 1기','해적선 1기','희귀 2기','변화됨'])assert(r55.note.includes(phrase),`final patch option missing: ${phrase}`);
 
-// One upper plus seven final-grade units is eight board units and ten
-// equivalents. v17.7: full 1.5 stun is a required physical hard gate, so the
-// ready fixture includes Bartolomeo to close it alongside armor 194.
-const readyIds=['190H','830h','B30h','M30h','540h','Z20h','unit_1752903381904_1445','unit_1779015467592_9245'];
+// One upper plus final-grade units. v17.7: full 1.5 stun is a required physical
+// hard gate, so the ready fixture includes Bartolomeo to close it alongside
+// armor 194.  v18.8: 물딜 광보잡 기준이 2기가 되면서 킬러 하나로는 완성 파티가
+// 아니다 — 피셔타이거(보잡+광폭)를 넣어 보드 9 · 환산 11 이 된다.
+const readyIds=['190H','830h','B30h','M30h','540h','740h','Z20h','unit_1752903381904_1445','unit_1779015467592_9245'];
 for(const id of readyIds)assert(db.byId.has(id),`round replay final fixture missing: ${id}`);
 const nineCounts=Object.fromEntries(readyIds.map(id=>[id,1])),r55Ready=replay(55,nineCounts,{firstRareRewardClaimed:true});
-assert.deepStrictEqual([r55Ready.counts.board,r55Ready.counts.squad,r55Ready.squadReady,r55Ready.clearReady,r55Ready.phase],[8,10,true,true,'upgrade-control']);
+assert.deepStrictEqual([r55Ready.counts.board,r55Ready.counts.squad,r55Ready.squadReady,r55Ready.clearReady,r55Ready.phase],[9,11,true,true,'upgrade-control']);
 assert.deepStrictEqual([r55Ready.deficits.profile.armorCurrent,r55Ready.deficits.profile.armorTarget,r55Ready.deficits.profile.armorIdeal],[194,180,211]);
 const comfort=r55Ready.deficits.requirements.find(row=>row.key==='stunFull');
 assert(comfort&&comfort.required===true&&comfort.gap<=0);

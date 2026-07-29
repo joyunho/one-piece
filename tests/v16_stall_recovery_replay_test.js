@@ -231,12 +231,20 @@ function decideChopper(fixture,wispOverride){
   });
 }
 
-test('far-from-affordable upper lock no longer freezes the board (r45: 광보잡 closes)',()=>{
+test('far-from-affordable upper lock no longer freezes the board (r45)',()=>{
+  // v16 의 알맹이: 21라운드 연속 "재료 보호"로 판이 얼어붙던 것을 막는다.
+  //
+  // v18.8(사용자 교정) 이후 이 픽스처의 광보잡은 0/2 다 — 패에 보잡 유닛이
+  // 킬러 하나뿐이라 한 번의 행동으로 닫히지 않는다.  그래서 엔진은 한 수로
+  // 닫히는 다른 필수 결손(공증 버프)을 먼저 집는다.  검사도 "광보잡이 닫힌다"가
+  // 아니라 "열린 필수 결손 중 하나를 실제로 전진시킨다"로 고친다 — 얼어붙지
+  // 않는다는 원래 계약은 그대로다.
   const decision=decideChopper(CHOPPER_R45);
   assert.notStrictEqual(decision.state,'PREPARE',`21 recorded rounds of 재료 보호 must not recur: ${decision.state} ${decision.reason}`);
-  assert.strictEqual(decision.state,'ACT_NOW',`the r45 state has an affordable 광보잡 closer, got ${decision.state}`);
-  const repairs=(decision.action.deltas||[]).some(row=>['bossFrenzy','slow','armor','stunBase'].includes(row.key)&&(row.closed||row.gapGain>0));
-  assert(repairs,`the action must close an open survival deficit, got ${decision.action.name}`);
+  assert.strictEqual(decision.state,'ACT_NOW',`the r45 state must act, got ${decision.state}`);
+  const openKeys=new Set(((decision.assessment||{}).requirements||[]).filter(row=>row.required!==false&&Number(row.gap)>0).map(row=>row.key));
+  const repairs=(decision.action.deltas||[]).some(row=>openKeys.has(row.key)&&(row.closed||row.gapGain>0));
+  assert(repairs,`the action must advance an open required deficit, got ${decision.action.name}`);
   assert(decision.upperReserve&&decision.upperReserve.reservedUnits>0,'upper tree materials must stay reserved during the survival search');
   assert(Number(decision.upperReserve.wispShort)>0,'the reservation note must expose the wisp shortfall');
 });

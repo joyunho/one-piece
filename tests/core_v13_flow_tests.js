@@ -17,7 +17,9 @@ function makeState(counts={},abilities={}){
   return C.normalizeState(units,{at:Date.now(),units:[],counts,currentAbilities:abilities},baseSettings());
 }
 function first(pred,message){const unit=units.find(pred);assert(unit,message||'fixture unit missing');return unit;}
-function physicalSpec(extra={}){return Object.assign({source:'test',mode:'physical',main:1,stun:1.5,slow:102,triggerSlow:0,triggerSlowSources:0,armor:210,triggerArmor:0,boss:1,frenzy:1,attack:0,triggerAttack:0,speed:0,regen:0,mana:0,single:0,end:0,singleEnd:0,singleEndUnits:0,toki:0,magicDef:0,magicAmp:0,explosionAmp:0},extra);}
+// v18.8(사용자 교정): 물딜의 완성 기준이 광보잡 2기다. 이 픽스처는 '완성된
+// 물딜 스쿼드'를 뜻하므로 보잡·광폭을 2로 올린다(마딜 픽스처는 1 그대로).
+function physicalSpec(extra={}){return Object.assign({source:'test',mode:'physical',main:1,stun:1.5,slow:102,triggerSlow:0,triggerSlowSources:0,armor:210,triggerArmor:0,boss:2,frenzy:2,attack:0,triggerAttack:0,speed:0,regen:0,mana:0,single:0,end:0,singleEnd:0,singleEndUnits:0,toki:0,magicDef:0,magicAmp:0,explosionAmp:0},extra);}
 function magicSpec(extra={}){return Object.assign({source:'test',mode:'magic',main:2,stun:1.5,slow:102,triggerSlow:0,triggerSlowSources:0,armor:0,triggerArmor:0,boss:1,frenzy:1,toki:1,single:0,end:0,singleEnd:0,singleEndUnits:0,singleEndExpected:0,singleEndMax:0,singleEndLargest:0,singleEndStable:0,magicDef:0,magicAmp:0,explosionAmp:0},extra);}
 
 const tests=[];
@@ -91,13 +93,18 @@ test('round 30, round 50 and final 9-11 squad phases are explicit',()=>{
   assert.strictEqual(capped.target,11);
 });
 
-test('an eight-board physical squad counts as ten equivalents and clears the 1.5-stun hard gate (v17.7)',()=>{
+test('a complete physical squad counts its equivalents and clears the 1.5-stun hard gate (v17.7)',()=>{
   // v17.7: 물딜 1.5스턴이 필수 하드 게이트가 되면서, 0.5스턴 완료 픽스처를
   // 실제 1.5스턴을 채운 패(바르톨로메오 전설 추가)로 교체했다.
-  const ids=['190H','830h','B30h','M30h','540h','unit_1752903381904_1445','unit_1779015467592_9245','Z20h'];
+  // v18.8: 물딜 광보잡 기준이 2기가 되면서 킬러 하나로는 완성 파티가 아니다 —
+  // 피셔타이거(보잡+광폭)를 넣어 "완성된 물딜 스쿼드"라는 이 검사의 전제를 지킨다.
+  const ids=['190H','830h','B30h','M30h','540h','740h','unit_1752903381904_1445','unit_1779015467592_9245','Z20h'];
   for(const id of ids)assert(db.byId.has(id),`weighted final fixture missing: ${id}`);
   const counts=Object.fromEntries(ids.map(id=>[id,1])),flow=C.gameFlow(makeState(counts),[],baseSettings({currentRound:55,mode:'physical',targetSquadCount:9}));
-  assert.deepStrictEqual([flow.counts.board,flow.counts.squad,flow.squadReady,flow.clearReady,flow.phase],[8,10,true,true,'upgrade-control']);
+  // v18.8: 광보잡 2기 기준으로 보잡 유닛을 하나 더 넣어 보드 8→9, 환산 10→11.
+  // 이 검사의 알맹이는 크기가 아니라 "완성된 물딜 파티는 업그레이드·컨트롤
+  // 단계로 넘어가고 1.5스턴 게이트가 닫혀 있다"는 것이다.
+  assert.deepStrictEqual([flow.counts.board,flow.counts.squad,flow.squadReady,flow.clearReady,flow.phase],[9,11,true,true,'upgrade-control']);
   assert.deepStrictEqual([flow.deficits.profile.armorCurrent,flow.deficits.profile.armorTarget,flow.deficits.profile.armorIdeal],[194,180,211]);
   const stunGate=flow.deficits.requirements.find(row=>row.key==='stunFull');
   assert(stunGate&&stunGate.required===true&&stunGate.gap<=0,'1.5 stun hard gate must be required and closed in this fixture');

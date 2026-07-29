@@ -17,7 +17,10 @@ const SLOW={id:'trust-slow',name:'검증용 이감',groupName:'전설 [물딜]',
 const STUN_HALF={id:'trust-stun-half',name:'검증용 0.5 스턴',groupName:'전설 [스턴]',abilities:{스턴:.5},stuffs:[]};
 const STUN_FULL={id:'trust-stun-full',name:'검증용 1.5 스턴',groupName:'전설 [스턴]',abilities:{스턴:1.5},stuffs:[]};
 const BOSS_FRENZY={id:'trust-boss-frenzy',name:'검증용 광보잡',groupName:'전설 [물딜]',abilities:{'보스 잡기':true,광폭화:true},stuffs:[]};
-const FILLER_A={id:'trust-filler-a',name:'검증용 보강 A',groupName:'전설 [물딜]',abilities:{},stuffs:[]};
+// v18.8(사용자 교정): 물딜 완성 기준이 광보잡 2기가 되면서, 능력 없는 패딩이던
+// 보강 A 에 보잡·광폭을 준다. 환산 수(7/8/9)는 그대로 두면서 완성 파티 픽스처가
+// 새 기준을 만족하게 하는 최소 변경이다.
+const FILLER_A={id:'trust-filler-a',name:'검증용 광보잡 2',groupName:'전설 [물딜]',abilities:{'보스 잡기':true,광폭화:true},stuffs:[]};
 const FILLER_B={id:'trust-filler-b',name:'검증용 보강 B',groupName:'전설 [물딜]',abilities:{},stuffs:[]};
 const RARE={id:'trust-rare',name:'검증용 잔여 희귀',groupName:'희귀함',abilities:{},stuffs:[]};
 const CATALOG=[UPPER,ARMOR,SLOW,STUN_HALF,STUN_FULL,BOSS_FRENZY,FILLER_A,FILLER_B,RARE];

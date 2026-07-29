@@ -116,6 +116,9 @@ function firepowerFixture(round){
   for(const [n,c] of [['료쿠규 2',2],['에이스 (깍40 공증20 이감20)',2],['킹 3',1],['스모커 (이감50 암브)',1],['시키 (1스턴, 암브)',1],['바르톨로메오 (0.9스턴, 깍 12)',1],['킬러 (광보잡, 깍12)',1],['흰수염 (깍15 발동이감 보조딜)',1]]){
     const u=byName(n);assert(u,`픽스처 유닛 없음: ${n}`);picks[u.id]=(picks[u.id]||0)+c;
   }
+  // v18.8(사용자 교정): 물딜 광보잡 기준이 2기다 — 킬러 하나로는 "역할표 완성"
+  // 픽스처가 성립하지 않는다. 피셔타이거(보잡+광폭)를 넣어 전제를 지킨다.
+  picks['740h']=(picks['740h']||0)+1;
   const akainu=units.find(u=>u.id==='P10h');
   for(const s of akainu.stuffs)picks[s.id]=(picks[s.id]||0)+s.count;
   picks['810e']=3;

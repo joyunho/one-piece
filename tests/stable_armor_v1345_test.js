@@ -8,7 +8,9 @@ global.window=global;
 for(const file of ['ord_units_data.js','ord_data_patch.js','ord_core.js'])require(path.join(EXT,file));
 const C=global.ORDCore,units=global.ORD_TMO_UNITS;
 
-const baseSpec={main:1,stun:.5,slow:102,triggerSlow:0,armor:172,triggerArmor:15,boss:1,frenzy:1,attack:0,triggerAttack:0,speed:0};
+// v18.8(사용자 교정): 물딜 완성 기준이 광보잡 2기다 — 이 픽스처도 완성 파티를
+// 뜻하므로 보잡·광폭을 2로 올린다.
+const baseSpec={main:1,stun:.5,slow:102,triggerSlow:0,armor:172,triggerArmor:15,boss:2,frenzy:2,attack:0,triggerAttack:0,speed:0};
 const unsafe=C.clearProfileDetails(baseSpec,'physical',{gorosei:'none'}),unsafeArmor=unsafe.requirements.find(row=>row.key==='armor');
 assert.strictEqual(unsafeArmor.current,172,'발동 방깎이 상시 방깎 현재값에 합산되었습니다.');
 assert.strictEqual(unsafeArmor.target-unsafeArmor.current,8,'상시 172는 운영 하한 180에 8 부족이어야 합니다.');
@@ -26,13 +28,16 @@ assert.strictEqual(contribution.armor,0,'발동 방깎 후보가 하드 방깎 �
 assert.strictEqual(contribution.triggerArmor,20);
 
 // v17.7: 1.5스턴 필수 게이트에 맞춰 바르톨로메오 전설을 픽스처에 추가.
-const readyIds=['190H','830h','B30h','M30h','540h','unit_1752903381904_1445','unit_1779015467592_9245','Z20h'];
+// v18.8: 광보잡 2기 기준에 맞춰 피셔타이거(보잡+광폭)를 추가 — 킬러 하나로는
+// 완성 파티가 아니다. 보드 8→9, 환산 10→11 이 되지만 이 검사의 알맹이는
+// "상시 194와 1.5+ 스턴을 갖춘 완성 파티는 판매·강화 단계로 넘어간다"이다.
+const readyIds=['190H','830h','B30h','M30h','540h','740h','unit_1752903381904_1445','unit_1779015467592_9245','Z20h'];
 const db=C.buildDb(units);for(const id of readyIds)assert(db.byId.has(id),`stable armor fixture missing: ${id}`);
 const counts=Object.fromEntries(readyIds.map(id=>[id,1]));
 function state(extra={},base=counts){return C.normalizeState(units,{counts:Object.assign({},base,extra),currentAbilities:{}},{manualCounts:{},superKumaOwned:true});}
 const settings={currentRound:55,mode:'physical',targetSquadCount:9,gorosei:'none'};
 const ready=C.gameFlow(state(),[],settings);
-assert.deepStrictEqual([ready.counts.board,ready.counts.squad,ready.deficits.profile.armorCurrent],[8,10,194]);
+assert.deepStrictEqual([ready.counts.board,ready.counts.squad,ready.deficits.profile.armorCurrent],[9,11,194]);
 assert.strictEqual(ready.clearReady,true,'상시 194와 1.5+ 스턴을 갖춘 환산 10기는 판매·강화 단계로 넘어가야 합니다.');
 assert.strictEqual(ready.phase,'upgrade-control');
 

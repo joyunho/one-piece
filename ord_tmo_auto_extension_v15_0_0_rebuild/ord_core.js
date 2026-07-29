@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='18.7.0';
+const VERSION='18.8.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1029,10 +1029,20 @@ function clearProfileDetails(spec,mode,settings){
       {key:'armor',label:exceptionActive?'버프 예외 상시 방깎':'상시 풀방깎',current:armorCurrent,target:armorTarget,weight:110,meta:{floor:armorFloor,safe:armorIdeal,ideal:armorIdeal,range:exceptionActive?'120+':`${armorFloor}~${armorIdeal}`,static:round2(armorCurrent),trigger:round2(triggerArmor),expected:round2(armorExpected),maximum:round2(armorMaximum),conditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget}},
       {key:'stunBase',label:'최소 0.5 스턴',current:stunBase,target:.5,weight:110},
       {key:'slow',label:`이감 ${slowTarget}%`,current:ctl.slow,target:slowTarget,weight:95},
-      {key:'bossFrenzy',label:'광보잡',current:bossFrenzy,target:1,weight:95},
+      // v18.8(사용자 교정): 물딜은 광보잡이 2기 필요하다.
+      //
+      // 근거는 사용자 플레이 판단이다 — 로그만으로는 증명되지 않는다.  보유
+      // 로그 8건에서 물딜은 4판 전부 패했고 물딜 클리어 표본이 아예 없으며,
+      // 보잡 2였던 2판(0724 60라·0725 56라)도 졌다.  유일한 클리어(0728)는
+      // 마딜에 광보잡 1이었다.  그래서 마딜 목표는 1로 남긴다.
+      //
+      // bossFrenzy = min(boss, frenzy) 라 2를 요구하면 보잡 2기와 광폭 2기를
+      // 함께 요구한다.  0729 물딜 판(74라)이 정확히 여기 걸린다 — 보잡 1
+      // (S-호크) · 광폭 2(센고쿠+S-호크) 라 min=1 로 "충족"이 떴다.
+      {key:'bossFrenzy',label:'광보잡 2',current:bossFrenzy,target:2,weight:95},
       {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:35,meta:{lastPriority:true}}
     ];
-    return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorCurrent),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 0.5스턴과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
+    return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorCurrent),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 0.5스턴과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 2기 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
   }
   const singleEndExpected=spec.singleEndExpected!=null?num(spec.singleEndExpected):0,singleEndStable=spec.singleEndStable!=null?num(spec.singleEndStable):Math.max(0,singleEndExpected-num(spec.singleEndLargest)),singleEndMaximum=spec.singleEndMax!=null?num(spec.singleEndMax):singleEndExpected,dual=[
     {key:'main',label:'상위 딜러 2',current:num(spec.main),target:2,weight:110},
@@ -1090,7 +1100,9 @@ function deficits(spec,mode,settings){
   const ctl=controlState(spec,mode,settings),profile=clearProfileDetails(spec,mode,settings),req=[],upper=settings&&settings._upperUnit,strategy=upperStrategy(upper);
   const add=(key,label,current,target,weight,required=true,meta={})=>req.push(Object.assign({key,label,axis:roleAxis(key),current:round2(current),target:round2(target),gap:round2(Math.max(0,target-current)),weight,required,recommended:!required,status:current>=target?'ok':current>=target*.7?'warn':'bad'},meta));
   for(const r of profile.requirements)add(r.key,r.label,r.current,r.target,r.weight,r.required!==false,r.meta||{});
-  if(mode==='physical'&&!profile.requirements.some(r=>r.key==='bossFrenzy')){add('bossFrenzy','보스·광폭 보조',Math.min(num(spec.boss),num(spec.frenzy)),1,95,true);}
+  // v18.8: 물딜 폴백도 프로필과 같은 목표(2기)를 쓴다 — 한쪽만 1이면 경로에
+  // 따라 요구가 달라져 화면이 어긋난다.
+  if(mode==='physical'&&!profile.requirements.some(r=>r.key==='bossFrenzy')){add('bossFrenzy','보스·광폭 보조 2',Math.min(num(spec.boss),num(spec.frenzy)),2,95,true);}
   if(mode==='magic'){if(profile.key==='singleEnd')add('singleEndStable','한 기 누락 후 단일·끝딜 하한',num(spec.singleEndStable),3,34,false,{recommended:true,maximum:num(spec.singleEndMax)});add('magicSupport','마딜 증폭·마방깎',num(spec.magicDef)+num(spec.magicAmp)+num(spec.explosionAmp),1,32,false,{recommended:true});}
   for(const need of strategy.needs||[]){const current=num(spec[need.key]),existing=req.find(x=>x.key===need.key);
     // v17.6: 기본 경로 행이 이미 있으면 건너뛰지 말고 더 높은 목표로
