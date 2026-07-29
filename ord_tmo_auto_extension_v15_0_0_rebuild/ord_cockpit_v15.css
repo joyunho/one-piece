@@ -454,7 +454,16 @@
 .v151-action p{overflow:hidden;margin:3px 0 0;color:#9AAFC8;font-size:10.5px;line-height:1.4}
 .v151-cost{min-width:70px;border:1px solid rgba(240,185,78,.32);border-radius:10px;padding:6px 9px;background:rgba(240,185,78,.05);text-align:right}
 .v151-cost small,.v151-cost b,.v151-cost span{display:block}.v151-cost small,.v151-cost span{color:#8FA2B9;font-size:9.5px}.v151-cost b{color:#FFE09B;font-size:20px;line-height:1.1}
-.v151-deltas{display:flex;flex:0 0 auto;gap:4px;flex-wrap:wrap}.v151-deltas span{border:1px solid #274561;border-radius:999px;padding:3px 7px;background:#0A1A2E;color:#A7BBD0;font-size:9.5px}.v151-deltas b{color:#ECF8FF}
+/* v18.4(목업): 1번 카드의 "이 행동으로 무엇이 얼마나 오르는가" 타일.
+   알약 한 줄이던 걸 아이콘+라벨+before→after 로 키웠다 — 이 카드에서 가장
+   먼저 읽혀야 하는 정보라서다. */
+.v151-deltas{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));flex:0 0 auto;gap:6px}
+.v151-deltas span{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;gap:1px 6px;border:1px solid #274561;border-radius:11px;padding:7px 9px;background:linear-gradient(160deg,#102138,#0A1A2E);color:#A7BBD0;font-size:9.5px}
+.v151-deltas .v153-ic{grid-row:1/3;width:16px;height:16px;align-self:center;color:#7fd7ff}
+.v151-deltas small{font-size:9.5px;color:#8CA2BE}
+.v151-deltas b{color:#ECF8FF;font-size:15px;line-height:1.1;letter-spacing:-.01em}
+.v151-deltas b i{font-style:normal;margin:0 3px;color:#5f7ea3;font-size:12px}
+.v151-deltas .wisp .v153-ic{color:#ffd479}
 .v151-action-foot{display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;gap:8px;margin-top:auto}.v151-action-foot>small{overflow:hidden;color:#EFAAA5;font-size:9.5px;text-overflow:ellipsis;white-space:nowrap}.v151-action-foot>div{display:flex;gap:5px;flex:0 0 auto}
 .v151-action.blocked,.v151-action.choice{justify-content:center}.v151-action-copy{display:flex;gap:9px;align-items:center}.v151-action-copy>i{display:grid;flex:0 0 auto;place-items:center;width:36px;height:36px;border-radius:10px;background:#56242B;color:#FFB0AA;font-style:normal;font-weight:950}.v151-action-copy p{white-space:normal}.v151-inline-actions{display:grid;flex:0 0 auto;grid-template-columns:1fr 1fr;gap:6px;margin-top:5px}.v151-jump-note{display:block;margin-top:7px;color:#F0C978;font-size:10px;font-weight:850}
 /* Normalized skill profile rows in the unit detail modal (display only). */
@@ -511,7 +520,12 @@
 .v151-line-badge.support{border:1px solid rgba(240,153,120,.4);background:rgba(240,153,120,.1);color:#FFB99A}
 /* Panel-1 inline materials: direct recipe rows + lowest missing = wisp. */
 .v151-mats{display:grid;flex:0 0 auto;gap:4px;border-top:1px dashed #2A4059;padding-top:6px}
-.v151-mats>div{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.v151-mats>div{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+/* v18.4(목업): 재료를 체크리스트처럼 — 확보한 재료에 초록 점을 찍는다.
+   ok/gap 클래스는 이미 붙어 있었고 표시만 없었다. */
+.v151-mats>div>em{position:relative;padding-left:19px}
+.v151-mats>div>em::before{content:'';position:absolute;left:7px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:#2c445f}
+.v151-mats>div>em.ok::before{background:#6ee7a8;box-shadow:0 0 6px rgba(110,231,168,.55)}
 .v151-mats small{flex:1 1 100%;color:#8CA2BE;font-size:9px;font-weight:900}
 .v151-mats em{border:1px solid #274561;border-radius:7px;padding:2px 6px;background:#0A1A2E;color:#CFE1F5;font-size:9.5px;font-style:normal}
 .v151-mats em.ok{border-color:rgba(126,211,140,.4);color:#9FE8AC}
@@ -955,10 +969,60 @@
 .v153-panel>header{display:flex;gap:11px;align-items:center;margin-bottom:14px}
 .v153-panel>header>small{display:grid;flex:none;place-items:center;width:34px;height:34px;border-radius:11px;background:#173653;color:#83e5f6;font-size:16px;font-weight:950}
 .v153-panel>header h2{margin:0;color:white;font-size:22px;letter-spacing:-.35px;line-height:1.2}.v153-panel>header p{margin:3px 0 0;color:var(--v153-muted);font-size:13px}
+/* v18.4 UI 개편: 목업처럼 좌우가 독립된 2열이다. 자동 배치(span)로 두면
+   왼쪽 패널이 길어질 때 오른쪽 열이 통째로 비므로 열을 명시적으로 감싼다. */
+.v153-grid-6{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
+.v153-grid-6>.v153-col{display:grid;gap:12px;align-content:start;min-width:0}
+.v153-grid-6>.v153-col>.v153-panel{grid-column:auto}
+
+/* v18.4 UI 개편: 6패널 2열.  왼쪽은 "무엇을 할까"(지금·다음·만들 수 있는 것),
+   오른쪽은 "지금 어디쯤인가"(스펙·최종 파티·남는 희귀).  패널마다 색을 달리해
+   눈이 번호를 세지 않고도 자리를 기억하게 한다. */
 .v153-next{grid-column:span 7;border-color:rgba(68,191,226,.48)}
+.v153-preview{grid-column:span 7;border-color:rgba(96,140,232,.42)}
+.v153-craft{grid-column:span 7;border-color:rgba(154,120,228,.42)}
 .v153-spec{grid-column:span 5;border-color:rgba(240,185,78,.38)}
+.v153-upper{grid-column:span 5;border-color:rgba(69,203,143,.36)}
+.v153-unused{grid-column:span 5;border-color:rgba(226,92,102,.40)}
 .v153-rare{grid-column:span 6;border-color:rgba(154,120,228,.42)}
-.v153-upper{grid-column:span 6;border-color:rgba(69,203,143,.36)}
+
+/* 2번 패널 — 다음 → 그다음 → 분기 흐름 */
+.v153-flow{display:flex;flex-wrap:wrap;gap:8px;align-items:stretch}
+.v153-flow article{flex:1 1 150px}
+.v153-flow article{display:grid;align-content:start;gap:3px;border:1px solid var(--v153-line);border-radius:12px;padding:9px 10px;background:rgba(9,20,39,.72)}
+.v153-flow article.branch{border-style:dashed;opacity:.88}
+.v153-flow article small{color:var(--v153-muted);font-size:10px}
+.v153-flow article b{font-size:13px;line-height:1.3}
+.v153-flow article span{color:var(--v153-muted);font-size:10px;line-height:1.45}
+.v153-flow article em{margin-top:4px;justify-self:start;font-style:normal;font-size:10px;font-weight:800;border:1px solid var(--v153-line);border-radius:999px;padding:2px 7px;color:#9fd2ff}
+.v153-flow-arrow{align-self:center;color:#4c6b93;font-style:normal;font-size:14px}
+.v153-flow-foot{margin:9px 0 0;color:var(--v153-muted);font-size:10px}
+
+/* 3번 패널 — 지금 만들 수 있는 전설급 */
+.v153-craft-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.v153-craft-cards button{position:relative;display:grid;justify-items:start;gap:3px;border:1px solid var(--v153-line);border-radius:12px;padding:9px;background:rgba(9,20,39,.72);text-align:left;color:inherit;cursor:pointer}
+.v153-craft-cards button.recommended{border-color:rgba(154,120,228,.75);box-shadow:inset 0 2px rgba(154,120,228,.8)}
+.v153-craft-cards button img{width:34px;height:34px;border-radius:9px;object-fit:cover}
+.v153-craft-cards button b{font-size:12px}
+.v153-craft-cards button small{color:var(--v153-muted);font-size:10px;line-height:1.4}
+.v153-craft-cards button em{font-style:normal;font-size:10px;font-weight:800;color:#9fd2ff}
+.v153-pick{position:absolute;top:7px;right:7px;font-style:normal;font-size:9px;font-weight:800;border-radius:999px;padding:1px 6px;background:rgba(154,120,228,.24);color:#cbb4ff}
+.v153-craft-more{width:100%;margin-top:8px;padding:7px;font-size:10px}
+
+/* 6번 패널 — 최종 파티에 안 쓰이는 희귀 */
+.v153-unused-chips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.v153-unused-chips button{display:grid;grid-template-columns:28px minmax(0,1fr);gap:7px;align-items:center;border:1px solid rgba(226,92,102,.42);border-radius:12px;padding:8px;background:rgba(38,14,20,.55);color:inherit;text-align:left;cursor:pointer}
+.v153-unused-chips button img,.v153-unused-chips button i{width:28px;height:28px;border-radius:8px;object-fit:cover;display:grid;place-items:center;font-style:normal;background:#1d2c44}
+.v153-unused-chips button b{font-size:12px}
+.v153-unused-note{margin:8px 0 0;color:var(--v153-muted);font-size:10px}
+.v153-reroll-btn{width:100%;margin-top:8px;padding:8px;font-size:11px;font-weight:800;border-color:rgba(226,92,102,.5);color:#ffb3ba}
+.v153-rare-ledger-fold{margin-top:9px}
+.v153-rare-ledger-fold summary{cursor:pointer;color:var(--v153-muted);font-size:10px}
+.v153-rare-fold-body{display:grid;gap:5px;margin-top:6px}
+.v153-rare-fold-body>div{display:grid;gap:2px;border:1px solid var(--v153-line);border-radius:9px;padding:7px}
+.v153-rare-fold-body b{font-size:11px}
+.v153-rare-fold-body span{color:var(--v153-muted);font-size:10px;line-height:1.4}
+.v153-reroll-left{display:block;margin-top:7px;color:var(--v153-muted);font-size:10px}
 
 /* Existing authoritative action card, retuned for glance reading. */
 .v153-next .v151-action{gap:10px;overflow:visible}
@@ -998,13 +1062,14 @@
 
 @media(max-width:1180px){
   .v153-status{grid-template-columns:auto auto 1fr}.v153-main-tools{grid-column:1/-1;justify-content:flex-end}.v153-tools-pop{right:0}
-  .v153-next,.v153-spec,.v153-rare,.v153-upper{grid-column:1/-1}
+  .v153-next,.v153-preview,.v153-craft,.v153-spec,.v153-rare,.v153-upper,.v153-unused{grid-column:1/-1}
+  .v153-grid-6{display:block}.v153-grid-6>.v153-col{display:block}
 }
 @media(max-width:760px){
   .ord-app.v151-shell{padding:6px}.v153-screen{font-size:15px}.v153-status{position:static;grid-template-columns:1fr 1fr;padding:9px}.v153-round{grid-column:1/-1;justify-content:center}.v153-live{justify-self:start}.v153-resource{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}.v153-resource>span{display:grid;grid-template-columns:1fr;padding:6px}.v153-resource b{justify-self:start}.v153-main-tools{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr}.v153-tools>summary{justify-content:center}.v153-tools-pop{position:fixed;z-index:100;inset:70px 7px auto;width:auto;max-height:75vh;overflow:auto}
   .v153-grid{display:block}.v153-panel{margin-bottom:8px;padding:12px}.v153-panel>header h2{font-size:20px}
   .v153-next .v151-action-main{grid-template-columns:54px minmax(0,1fr)}.v153-next .v151-action-main>img,.v153-next .v151-action-main>i{width:54px;height:54px}.v153-next .v151-cost{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;text-align:left}.v153-next .v151-action-title{font-size:22px}.v153-next .v151-action-facts{grid-template-columns:1fr 1fr}.v153-next-candidates{grid-template-columns:1fr}
-  .v153-spec-summary,.v153-rare-columns,.v153-upper-list,.v153-rare-crafts>div{grid-template-columns:1fr}.v153-slow-pin b{font-size:20px}.v153-gap-grid{grid-template-columns:1fr}.v153-rare-columns>section{padding:9px}.v153-upper-main{grid-template-columns:54px minmax(0,1fr)}.v153-upper-main>img{width:54px;height:54px}.v153-upper-main>button{grid-column:1/-1}.v153-support-list>button{grid-template-columns:24px 38px minmax(0,1fr)}.v153-support-list button em{grid-column:3}
+  .v153-spec-summary,.v153-rare-columns,.v153-upper-list,.v153-rare-crafts>div,.v153-flow,.v153-craft-cards,.v153-unused-chips,.v153-party-chips{grid-template-columns:1fr}.v153-flow-arrow{display:none}.v153-slow-pin b{font-size:20px}.v153-gap-grid{grid-template-columns:1fr}.v153-rare-columns>section{padding:9px}.v153-upper-main{grid-template-columns:54px minmax(0,1fr)}.v153-upper-main>img{width:54px;height:54px}.v153-upper-main>button{grid-column:1/-1}.v153-support-list>button{grid-template-columns:24px 38px minmax(0,1fr)}.v153-support-list button em{grid-column:3}
   .v153-setting-row,.v153-tool-actions{grid-template-columns:1fr}
 }
 
@@ -1071,3 +1136,49 @@
 .v151-continue b{font-size:13.5px}
 .v151-continue i{color:#9FB6E4;font-size:10.5px;font-style:normal;font-weight:800}
 .v151-continue span{grid-column:1/-1;color:#8CA2BE;font-size:10.5px;line-height:1.45}
+
+/* v18.4: 50라 마감을 넘겨 도달하는 상위 후보 — 선위 수입(0.5/라)으로 계산한
+   예상 완성 라운드가 생존 마감을 넘으면 카드에 경고색을 준다. 순위에서는
+   이미 deadlineFactor 로 할인되지만, 왜 밀렸는지 화면에서 보이게 한다. */
+.v15-route-card.overdue{border-color:rgba(217,131,36,.55);}
+.v15-route-card.overdue dd.overdue{color:#d98324;font-weight:600;}
+
+/* v18.4 UI: 목업의 시각 요소 — 아이콘, 원형 유닛, 상태 배지.
+   외부 아이콘 폰트·이미지를 못 쓰므로(MV3 CSP) 전부 인라인 SVG + CSS 다. */
+.v153-ic{width:15px;height:15px;flex:0 0 auto;opacity:.9}
+.v153-resource span{display:flex;align-items:center;gap:6px}
+.v153-resource .v153-ic{width:14px;height:14px;color:#6fd0ff}
+.v153-slow-pin{display:flex;align-items:center;gap:9px}
+.v153-slow-pin .v153-ic{width:18px;height:18px;color:#7fd7ff}
+.v153-gap-grid article{position:relative;padding-left:30px}
+.v153-gap-grid article>.v153-ic{position:absolute;left:9px;top:10px;width:16px;height:16px;color:#8fb6e0}
+.v153-gap-grid article.lead>.v153-ic{color:#ffb45e}
+.v153-flow article{position:relative;padding-left:28px}
+.v153-flow article>.v153-ic{position:absolute;left:8px;top:10px;width:14px;height:14px;color:#7ba7dd}
+.v153-reroll-btn{display:flex;align-items:center;justify-content:center;gap:6px}
+.v153-reroll-btn .v153-ic{width:14px;height:14px}
+
+/* 5번 패널 — 9환산 진행과 자리별 단계 */
+.v153-party{margin-top:10px;border:1px solid var(--v153-line);border-radius:14px;padding:10px;background:rgba(9,20,39,.6)}
+.v153-party>header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
+.v153-party>header b{font-size:12px}
+.v153-party>header strong{font-size:15px;color:#6ee7a8}
+.v153-party-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
+.v153-party-chips>button,.v153-party-slot{display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;gap:2px 7px;align-items:center;border:1px solid var(--v153-line);border-radius:11px;padding:7px;background:rgba(11,23,44,.75);color:inherit;text-align:left;cursor:pointer}
+.v153-party-slot{cursor:default;border-style:dashed;opacity:.7}
+.v153-party-chips img,.v153-party-chips i,.v153-party-slot i{grid-row:1/3;width:30px;height:30px;border-radius:9px;object-fit:cover;background:#1b2b45;display:block}
+.v153-party-chips b,.v153-party-slot b{font-size:11px;line-height:1.25;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v153-party-chips em,.v153-party-slot em{font-style:normal;font-size:9px;font-weight:800;justify-self:start;border-radius:999px;padding:1px 6px}
+.v153-party-chips .stage-own em{background:rgba(110,231,168,.18);color:#6ee7a8}
+.v153-party-chips .stage-now em{background:rgba(56,198,232,.2);color:#7fe0ff}
+.v153-party-chips .stage-next em{background:rgba(120,150,240,.2);color:#a9bcff}
+.v153-party-chips .stage-plan em{background:rgba(154,120,228,.18);color:#cbb4ff}
+.v153-party-slot em{background:rgba(150,170,195,.14);color:var(--v153-muted)}
+.v153-party>small{display:block;margin-top:7px;color:var(--v153-muted);font-size:10px}
+
+/* v18.4(목업): 5번 패널의 주인공은 9환산 진행과 자리별 단계다. 보조 후보
+   목록은 목업에 없어 접어 두되, 판단에 필요하니 한 번의 클릭 거리로 남긴다.
+   좌우 열 높이도 이걸로 맞는다(오른쪽 1434 → 왼쪽 1009 에 근접). */
+.v153-support-fold{margin-top:10px}
+.v153-support-fold>summary{cursor:pointer;color:var(--v153-muted);font-size:11px;padding:6px 0}
+.v153-support-fold[open]>summary{color:var(--v153-text)}

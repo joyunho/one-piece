@@ -15,10 +15,11 @@ const tests = [];
 let failed = 0;
 function test(name, fn) { tests.push([name, fn]); }
 
-test('renderCoach는 상태와 4개 핵심 판단 영역만 배치한다', () => {
+test('renderCoach는 상태와 6개 핵심 판단 영역만 배치한다', () => {
   const coach = slice('renderCoach(state,plan,phase,clock,health){', 'renderCoachDetails(state,plan,open=false){');
   const regions = [...coach.matchAll(/data-region="([^"]+)"/g)].map(m => m[1]);
-  assert.deepStrictEqual(regions, ['next-action', 'clear-gaps', 'rare-ledger', 'upper-party']);
+  // v18.4(사용자 목업): 6개 판단 영역. 아래 이름 순서가 곧 화면 순서다.
+  assert.deepStrictEqual(regions, ['next-action', 'next-preview', 'craftable-legends', 'clear-gaps', 'upper-party', 'unused-rare']);
   assert(coach.includes('renderV153Status(state,clock,health)'));
   assert(!coach.includes('renderV151RunHeader'));
   assert(!coach.includes('renderV152RarePlan'));
@@ -26,15 +27,20 @@ test('renderCoach는 상태와 4개 핵심 판단 영역만 배치한다', () =>
 
 test('다음 행동은 확정 카드 하나와 후속 후보 최대 2개만 보인다', () => {
   const coach = slice('renderCoach(state,plan,phase,clock,health){', 'renderCoachDetails(state,plan,open=false){');
-  const candidate = slice('renderV153NextCandidate(state,plan){', 'renderV153Spec(state,plan){');
+  const candidate = slice('renderV153Preview(state,plan){', 'renderV153CraftableLegends(state,plan){');
   assert(coach.includes('renderV151NextAction(state,plan,health)'));
-  assert(coach.includes('renderV153NextCandidate(state,plan)'));
-  assert(candidate.includes('picked.length>=2'));
-  assert(candidate.includes('그다음 후보 · 지금 고정하지 않음'));
+  assert(coach.includes('renderV153Preview(state,plan)'));
+  // v18.4: 후속 후보 수집이 v153NextCandidateRows 로 빠졌다(1번 카드와 2번
+  // 패널이 같은 목록을 보게 하려고). 상한 계약은 그 헬퍼에서 지킨다.
+  const candidateRows = slice('v153NextCandidateRows(plan){', 'renderV153NextCandidate(state,plan){');
+  assert(candidateRows.includes('picked.length>=2'));
+  // v18.4: 문구가 2번 패널로 옮겨졌다. "지금 고정하지 않는다"는 계약은 유지 —
+  // 확정은 1번 카드 하나뿐이라는 말이 화면에 남아야 한다.
+  assert(candidate.includes('지금 확정하는 것은 1번 카드 하나뿐입니다.'));
 });
 
 test('클리어 결손은 전설 환산과 최우선 결손 최대 4개만 보여준다', () => {
-  const spec = slice('renderV153Spec(state,plan){', 'renderV153RareLedger(state,plan){');
+  const spec = slice('renderV153Spec(state,plan){', 'renderV153CraftableLegends(state,plan){');
   assert(spec.includes('C.progressionCounts(state)'));
   assert(spec.includes("open.filter(row=>row.key!=='slow').slice(0,4)"));
   assert(spec.includes('v153-slow-pin'));
@@ -44,18 +50,22 @@ test('클리어 결손은 전설 환산과 최우선 결손 최대 4개만 보�
   assert(!spec.includes('지금 내 파티'));
 });
 
-test('희귀 장부는 사용·보류·리롤과 즉시 제작 전설급을 함께 보여준다', () => {
-  const rare = slice('renderV153RareLedger(state,plan){', 'renderV153UpperParty(state,plan){');
-  for (const marker of ['상위 올리기 전 안전 리롤', "key:'use'", "key:'hold'", "key:'reroll'", '내 희귀함으로 만들 수 있는 전설급']) {
-    assert(rare.includes(marker), marker);
+test('희귀 판단은 만들 수 있는 전설급(3번)과 안 쓰는 희귀(6번)로 갈린다', () => {
+  // v18.4(사용자 목업): 한 칸에 뭉쳐 있던 희귀 판단을 둘로 나눴다. 나뉘어도
+  // 사용·보류 장부는 사라지지 않는다 — 6번 패널 안에 접어서 유지한다.
+  const rare = slice('renderV153CraftableLegends(state,plan){', 'renderV153UnusedRare(state,plan){');
+  const unused = slice('renderV153UnusedRare(state,plan){', 'renderV153UpperParty(state,plan){');
+  for (const marker of ['상위 올리기 전 안전 리롤', "key:'use'", "key:'hold'"]) {
+    assert(unused.includes(marker), marker);
   }
+  assert(unused.includes("row.reroll"), '리롤 후보 추출이 사라짐');
   // v17.28: 이 칸은 "내 희귀함으로 만들 수 있는" 목록이므로 보유 희귀를
   // 실제로 쓰는 조합만 실어야 한다(v153RareCraftRows → rareCraftableLegends).
   // 희귀 소모를 요구하지 않는 v151BuildableLegendRows를 쓰면 "희귀 직접
   // 소모 없음" 항목이 그대로 실린다.
   assert(rare.includes('this.v153RareCraftRows(state,plan)'));
   assert(!rare.includes('.filter(row=>row&&row.feasible).slice(0,3)'));
-  assert(rare.includes('후보 중 하나라도 사용하는 희귀는 돌리지 않습니다.'));
+  assert(unused.includes('후보 중 하나라도 사용하는 희귀는 돌리지 않습니다.'));
 });
 
 test('상위 후보와 확정 후 보조·해적선 후보는 각각 최대 3개다', () => {
@@ -69,7 +79,7 @@ test('상위 후보와 확정 후 보조·해적선 후보는 각각 최대 3개
 });
 
 test('설정·기록·진단은 상태 스트립의 기본 접힘 도구함에 남는다', () => {
-  const status = slice('renderV153Status(state,clock,health){', 'renderV153NextCandidate(state,plan){');
+  const status = slice('renderV153Status(state,clock,health){', 'renderV153Preview(state,plan){');
   const settings = slice('renderV153Settings(state){', 'renderV153Status(state,clock,health){');
   assert(status.includes('<details class="v153-tools">'));
   for (const marker of ['TMO 동기화', '기록 보기', 'JSON 저장', '게임 결과', '수동 패 보정', '연결 진단']) assert(status.includes(marker), marker);

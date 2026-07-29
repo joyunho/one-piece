@@ -195,7 +195,7 @@ test('current-stock guaranteed upper route outranks a zero-prefix-wisp speculati
 test('v15 trust UI exposes evidence boundaries and never paints advice as clear proof',()=>{
   const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8'),css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
   const decision=app.slice(app.indexOf('  renderV151NextAction('),app.indexOf('  renderV151Preparation('));
-  const gaps=app.slice(app.indexOf('  renderV153Spec('),app.indexOf('  renderV153RareLedger('));
+  const gaps=app.slice(app.indexOf('  renderV153Spec('),app.indexOf('  renderV153CraftableLegends('));
   const coach=app.slice(app.indexOf('  renderCoach(state'),app.indexOf('  renderCoachDetails('));
   for(const phrase of ['decision.reason','stopCondition','패가 바뀌면','TMO 확인'])assert(decision.includes(phrase),phrase);
   assert(decision.includes('wispCost'),'정확한 행동 선위가 사라짐');
@@ -206,7 +206,8 @@ test('v15 trust UI exposes evidence boundaries and never paints advice as clear 
   assert(coach.includes('renderV151NextAction(state,plan,health)'));
   assert(coach.includes('renderV153Spec(state,plan)'));
   assert(!coach.includes('renderV15RareBoard('));
-  assert.strictEqual((coach.match(/data-region=/g)||[]).length,4);
+  // v18.4(사용자 목업): 상시 판단 영역 6개.
+  assert.strictEqual((coach.match(/data-region=/g)||[]).length,6);
   assert(css.includes('--v15-calc:#38c6e8'),'계산 조언의 청록색 근거 범례가 사라짐');
   assert(css.includes('--v15-observed:#36d58a'),'TMO 관측의 녹색 근거 범례가 사라짐');
   assert(css.includes('.v151-sync.ok:before'),'TMO 관측 상태의 시각 구분이 사라짐');

@@ -73,15 +73,25 @@ test('클리어 가치 부분점수는 남지만 최종 통합 순위를 지배�
   assert(rows.some((row,index)=>index>0&&C.num(row.clearValue.value)>C.num(rows[index-1].clearValue.value)+1e-9),'clearValue가 아직 최종 내림차순 권위다');
 });
 
-test('선위→라운드 환산 4/라: 부족 61선위·r26이면 마감 할인 없이 비교된다',()=>{
+test('선위→라운드 환산: 실측 수입 상한(2.5/라)으로 재고 마감을 넘기면 할인한다',()=>{
+  // v18.4(사용자 지적): v17.3 은 4/라를 썼는데 근거가 커밋에 없고, 코어 실측
+  // 상수로 만들 수 있는 가장 낙관적인 값보다도 크다 — 선택위습 0.5/라(측정)
+  // + 랜덤 위습 2/라(흔함만) = 2.5/라가 상한이다.  할인은 벌점이므로 상한으로
+  // 재서 "가장 좋은 경우에도 늦을 때"만 깎는다.
   const model=friendModel();
   const han=units.find(u=>u.id==='C50h');
   const route=E._test.routeOptions(model).find(r=>r.mode==='magic');
   const row=E._test.upperRouteRow(model,han,route);
   assert(row,'핸콕 영원 행 생성 실패');
   const value=E._test.clearValueScore(model,row);
-  assert.strictEqual(value.roundsToGo,Math.ceil(C.num(row.wispGap)/4),'환산율 4선위/라');
-  assert.strictEqual(value.deadlineFactor,1,'r26+16=42라 도달은 50라 준비 창 안이다');
+  const optimistic=C.SELECTION_WISP_INCOME_PER_ROUND+C.RANDOM_WISP_PER_ROUND;
+  assert.strictEqual(value.optimisticRate,optimistic,'낙관 해소율 = 선택위습 + 랜덤 위습');
+  assert.strictEqual(value.pessimisticRate,C.SELECTION_WISP_INCOME_PER_ROUND,'비관 해소율 = 선택위습만');
+  assert.strictEqual(value.roundsToGo,Math.ceil(C.num(row.wispGap)/optimistic),'환산율은 실측 상한');
+  // 부족 61선위는 상한으로도 25라가 걸린다 — r26 기준 ETA 51 로 마감 창을 넘긴다.
+  assert(value.eta>C.num(model.round.value),'도달 라운드가 현재보다 뒤여야 함');
+  assert(value.deadlineFactor<1,`61선위 부족이 무할인으로 비교되면 안 됨: ${value.deadlineFactor}`);
+  assert(value.etaSlow>=value.eta,'비관 ETA 가 낙관보다 앞설 수 없음');
 });
 
 test('FSM 트레인: RNG 게이트만 포함되고 재진입은 지속시간 상한을 받는다',()=>{
