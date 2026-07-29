@@ -683,7 +683,16 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
 .v151-action p{overflow:hidden;margin:3px 0 0;color:#9AAFC8;font-size:10.5px;line-height:1.4}
 .v151-cost{min-width:70px;border:1px solid rgba(240,185,78,.32);border-radius:10px;padding:6px 9px;background:rgba(240,185,78,.05);text-align:right}
 .v151-cost small,.v151-cost b,.v151-cost span{display:block}.v151-cost small,.v151-cost span{color:#8FA2B9;font-size:9.5px}.v151-cost b{color:#FFE09B;font-size:20px;line-height:1.1}
-.v151-deltas{display:flex;flex:0 0 auto;gap:4px;flex-wrap:wrap}.v151-deltas span{border:1px solid #274561;border-radius:999px;padding:3px 7px;background:#0A1A2E;color:#A7BBD0;font-size:9.5px}.v151-deltas b{color:#ECF8FF}
+/* v18.4(목업): 1번 카드의 "이 행동으로 무엇이 얼마나 오르는가" 타일.
+   알약 한 줄이던 걸 아이콘+라벨+before→after 로 키웠다 — 이 카드에서 가장
+   먼저 읽혀야 하는 정보라서다. */
+.v151-deltas{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));flex:0 0 auto;gap:6px}
+.v151-deltas span{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;gap:1px 6px;border:1px solid #274561;border-radius:11px;padding:7px 9px;background:linear-gradient(160deg,#102138,#0A1A2E);color:#A7BBD0;font-size:9.5px}
+.v151-deltas .v153-ic{grid-row:1/3;width:16px;height:16px;align-self:center;color:#7fd7ff}
+.v151-deltas small{font-size:9.5px;color:#8CA2BE}
+.v151-deltas b{color:#ECF8FF;font-size:15px;line-height:1.1;letter-spacing:-.01em}
+.v151-deltas b i{font-style:normal;margin:0 3px;color:#5f7ea3;font-size:12px}
+.v151-deltas .wisp .v153-ic{color:#ffd479}
 .v151-action-foot{display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;gap:8px;margin-top:auto}.v151-action-foot>small{overflow:hidden;color:#EFAAA5;font-size:9.5px;text-overflow:ellipsis;white-space:nowrap}.v151-action-foot>div{display:flex;gap:5px;flex:0 0 auto}
 .v151-action.blocked,.v151-action.choice{justify-content:center}.v151-action-copy{display:flex;gap:9px;align-items:center}.v151-action-copy>i{display:grid;flex:0 0 auto;place-items:center;width:36px;height:36px;border-radius:10px;background:#56242B;color:#FFB0AA;font-style:normal;font-weight:950}.v151-action-copy p{white-space:normal}.v151-inline-actions{display:grid;flex:0 0 auto;grid-template-columns:1fr 1fr;gap:6px;margin-top:5px}.v151-jump-note{display:block;margin-top:7px;color:#F0C978;font-size:10px;font-weight:850}
 /* Normalized skill profile rows in the unit detail modal (display only). */
@@ -740,7 +749,12 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
 .v151-line-badge.support{border:1px solid rgba(240,153,120,.4);background:rgba(240,153,120,.1);color:#FFB99A}
 /* Panel-1 inline materials: direct recipe rows + lowest missing = wisp. */
 .v151-mats{display:grid;flex:0 0 auto;gap:4px;border-top:1px dashed #2A4059;padding-top:6px}
-.v151-mats>div{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.v151-mats>div{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+/* v18.4(목업): 재료를 체크리스트처럼 — 확보한 재료에 초록 점을 찍는다.
+   ok/gap 클래스는 이미 붙어 있었고 표시만 없었다. */
+.v151-mats>div>em{position:relative;padding-left:19px}
+.v151-mats>div>em::before{content:'';position:absolute;left:7px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:#2c445f}
+.v151-mats>div>em.ok::before{background:#6ee7a8;box-shadow:0 0 6px rgba(110,231,168,.55)}
 .v151-mats small{flex:1 1 100%;color:#8CA2BE;font-size:9px;font-weight:900}
 .v151-mats em{border:1px solid #274561;border-radius:7px;padding:2px 6px;background:#0A1A2E;color:#CFE1F5;font-size:9.5px;font-style:normal}
 .v151-mats em.ok{border-color:rgba(126,211,140,.4);color:#9FE8AC}
@@ -1390,6 +1404,13 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
 .v153-party-chips .stage-plan em{background:rgba(154,120,228,.18);color:#cbb4ff}
 .v153-party-slot em{background:rgba(150,170,195,.14);color:var(--v153-muted)}
 .v153-party>small{display:block;margin-top:7px;color:var(--v153-muted);font-size:10px}
+
+/* v18.4(목업): 5번 패널의 주인공은 9환산 진행과 자리별 단계다. 보조 후보
+   목록은 목업에 없어 접어 두되, 판단에 필요하니 한 번의 클릭 거리로 남긴다.
+   좌우 열 높이도 이걸로 맞는다(오른쪽 1434 → 왼쪽 1009 에 근접). */
+.v153-support-fold{margin-top:10px}
+.v153-support-fold>summary{cursor:pointer;color:var(--v153-muted);font-size:11px;padding:6px 0}
+.v153-support-fold[open]>summary{color:var(--v153-text)}
 
   </style>
 </head>
@@ -7748,7 +7769,11 @@ class App{
     // 아래에서 여전히 decision.action 에만 열리므로 승인 권한은 그대로다.
     const coach=decision.confidence||null,coachStep=decision.coachAction||null;
     const shown=decision.action||decision.blockedAction||coachStep||null,reroll=decision.rare&&decision.rare.safeReroll,unit=shown&&shown.unit||reroll&&reroll.unit||null,target=status==='REROLL_ONE'&&reroll?`${reroll.name} 1장 리롤`:shown&&shown.name||decision.label||'현재 패 소비 보류',waivedKeys=new Set(((decision.assessment||{}).requirements||[]).filter(row=>row.waived).map(row=>row.key)),deltas=(shown&&shown.deltas||[]).filter(row=>!waivedKeys.has(row.key)&&(Math.abs(C.num(row.delta))>.001||row.closed)).slice(0,3),cost=shown?C.num(shown.wispCost):0,after=shown&&shown.wispAfter!=null?C.num(shown.wispAfter):C.num(state.wisp),button=status==='ACT_NOW'&&decision.action?`<button class="primary" data-act="mark-made" data-step="0" data-id="${C.esc(decision.action.id)}">제작함 · TMO 확인</button>`:status==='REROLL_ONE'&&reroll?`<button class="primary danger" data-act="reroll-confirmed" data-id="${C.esc(reroll.id)}">1장 리롤함</button>`:status==='SYNC_BLOCKED'?`<button data-act="connection">TMO 다시 읽기</button>${this.state.pendingTransaction?'<button data-act="dismiss-transaction">거래 취소 · TMO 현재값 사용</button>':''}${this.state.pendingReroll?'<button data-act="cancel-reroll">리롤 대기 해제</button>':''}`:'<button disabled>지금은 재료 보존</button>',stop=shown&&shown.stopCondition?shown.stopCondition:status==='PREPARE'?'재료나 선위가 달라지면 실행하지 않습니다.':'패가 바뀌면 먼저 다시 읽습니다.';
-    return`<div class="v151-action ${C.esc(status.toLowerCase())}" data-state="${C.esc(status)}"><div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v151StoryTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}</div>${deltas.length?`<div class="v151-deltas">${deltas.map(row=>`<span>${C.esc(row.label)} <b>${fmt(row.before)}→${fmt(row.after)}</b></span>`).join('')}</div>`:''}${decision.upperReserve?`<div class="v151-upper-guard"><i>🔒</i>확정 상위 <b>${C.esc(decision.upperReserve.name)}</b> 트리 재료 ${C.num(decision.upperReserve.reservedUnits)}개 잠금 · 선위 ${C.num(decision.upperReserve.wispCost)} 필요(부족 ${C.num(decision.upperReserve.wispShort)}) — 잠긴 재료를 빼고 추천 중${decision.upperReserve.storyRewardNeeded?' · 스토리 10 보상에서 레일리+해적선을 선택해야 열립니다':''}</div>`:''}${(()=>{
+    return`<div class="v151-action ${C.esc(status.toLowerCase())}" data-state="${C.esc(status)}"><div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v151StoryTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}</div>${deltas.length?`<div class="v151-deltas">${deltas.map(row=>{
+      // v18.4(목업): 인라인 알약 대신 "무엇이 얼마나 오르는가" 타일.
+      const ic=/스턴/.test(row.label)?'blade':/이감|둔화/.test(row.label)?'target':/방깎|방어/.test(row.label)?'snow':/보잡|보스/.test(row.label)?'skull':'gear';
+      return`<span>${this.v153Icon(ic)}<small>${C.esc(row.label)}</small><b>${fmt(row.before)}<i>→</i>${fmt(row.after)}</b></span>`;
+    }).join('')}${shown?`<span class="wisp">${this.v153Icon('spiral')}<small>선위</small><b>${cost}</b></span>`:''}</div>`:''}${decision.upperReserve?`<div class="v151-upper-guard"><i>🔒</i>확정 상위 <b>${C.esc(decision.upperReserve.name)}</b> 트리 재료 ${C.num(decision.upperReserve.reservedUnits)}개 잠금 · 선위 ${C.num(decision.upperReserve.wispCost)} 필요(부족 ${C.num(decision.upperReserve.wispShort)}) — 잠긴 재료를 빼고 추천 중${decision.upperReserve.storyRewardNeeded?' · 스토리 10 보상에서 레일리+해적선을 선택해야 열립니다':''}</div>`:''}${(()=>{
       // v17.4: 55라 도플라밍고 2연속 사망 — 생존 조각은 닫히는데 보스
       // 화력 역할(단일·끝딜·1.5스턴·토키)이 열린 채 보스전에 들어가는
       // 것을 라운드 중에 경고한다.  46라부터 다음 보스와 열린 화력
@@ -8749,7 +8774,7 @@ class App{
     const emptySlots=Math.max(0,9-squadLineup.length);
     const placeholders=emptySlots?Array.from({length:Math.min(3,emptySlots)},()=>`<span class="v153-party-slot"><i></i><b>미정</b><em>후보 대기</em></span>`).join(''):'';
     const partyBoard=`<div class="v153-party"><header><b>9환산 계획</b><strong>${secured} / 9 확보</strong></header><div class="v153-party-chips">${chips}${placeholders}</div>${emptySlots?`<small>남은 자리 ${emptySlots}</small>`:''}</div>`;
-    return`<div class="v153-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>확정 메인 상위${power&&power.known?` · ${C.esc(power.letter)}티어`:''}</small><b>${C.esc(displayNameOf(upper))}</b><em>${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="party-preview" data-id="${C.esc(upper.id)}">전체 파티 보기</button></div>${partyBoard}<div class="v153-upper-gaps"><small>이 파티에서 먼저 닫을 결손</small>${requirements.length?requirements.map(row=>`<span>${C.esc(row.label)} <b>부족 ${fmt(row.gap)}</b></span>`).join(''):'<span class="ok">필수 역할 합계 충족</span>'}</div><div class="v153-support-list"><header><b>다음 보조 전설급</b><span>같은 최종 파티 기준 · 최대 3개</span></header>${supportHtml||'<p>현재 패에서 확정할 보조 전설급을 계산 중입니다.</p>'}</div>`;
+    return`<div class="v153-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>확정 메인 상위${power&&power.known?` · ${C.esc(power.letter)}티어`:''}</small><b>${C.esc(displayNameOf(upper))}</b><em>${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="party-preview" data-id="${C.esc(upper.id)}">전체 파티 보기</button></div>${partyBoard}<div class="v153-upper-gaps"><small>이 파티에서 먼저 닫을 결손</small>${requirements.length?requirements.map(row=>`<span>${C.esc(row.label)} <b>부족 ${fmt(row.gap)}</b></span>`).join(''):'<span class="ok">필수 역할 합계 충족</span>'}</div><details class="v153-support-fold"><summary>다음 보조 전설급 ${supports.length}개 · 같은 최종 파티 기준</summary><div class="v153-support-list">${supportHtml||'<p>현재 패에서 확정할 보조 전설급을 계산 중입니다.</p>'}</div></details>`;
   }
 
   renderCoach(state,plan,phase,clock,health){

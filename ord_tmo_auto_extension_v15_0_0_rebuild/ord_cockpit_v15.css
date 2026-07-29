@@ -454,7 +454,16 @@
 .v151-action p{overflow:hidden;margin:3px 0 0;color:#9AAFC8;font-size:10.5px;line-height:1.4}
 .v151-cost{min-width:70px;border:1px solid rgba(240,185,78,.32);border-radius:10px;padding:6px 9px;background:rgba(240,185,78,.05);text-align:right}
 .v151-cost small,.v151-cost b,.v151-cost span{display:block}.v151-cost small,.v151-cost span{color:#8FA2B9;font-size:9.5px}.v151-cost b{color:#FFE09B;font-size:20px;line-height:1.1}
-.v151-deltas{display:flex;flex:0 0 auto;gap:4px;flex-wrap:wrap}.v151-deltas span{border:1px solid #274561;border-radius:999px;padding:3px 7px;background:#0A1A2E;color:#A7BBD0;font-size:9.5px}.v151-deltas b{color:#ECF8FF}
+/* v18.4(목업): 1번 카드의 "이 행동으로 무엇이 얼마나 오르는가" 타일.
+   알약 한 줄이던 걸 아이콘+라벨+before→after 로 키웠다 — 이 카드에서 가장
+   먼저 읽혀야 하는 정보라서다. */
+.v151-deltas{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));flex:0 0 auto;gap:6px}
+.v151-deltas span{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;gap:1px 6px;border:1px solid #274561;border-radius:11px;padding:7px 9px;background:linear-gradient(160deg,#102138,#0A1A2E);color:#A7BBD0;font-size:9.5px}
+.v151-deltas .v153-ic{grid-row:1/3;width:16px;height:16px;align-self:center;color:#7fd7ff}
+.v151-deltas small{font-size:9.5px;color:#8CA2BE}
+.v151-deltas b{color:#ECF8FF;font-size:15px;line-height:1.1;letter-spacing:-.01em}
+.v151-deltas b i{font-style:normal;margin:0 3px;color:#5f7ea3;font-size:12px}
+.v151-deltas .wisp .v153-ic{color:#ffd479}
 .v151-action-foot{display:flex;flex:0 0 auto;align-items:center;justify-content:space-between;gap:8px;margin-top:auto}.v151-action-foot>small{overflow:hidden;color:#EFAAA5;font-size:9.5px;text-overflow:ellipsis;white-space:nowrap}.v151-action-foot>div{display:flex;gap:5px;flex:0 0 auto}
 .v151-action.blocked,.v151-action.choice{justify-content:center}.v151-action-copy{display:flex;gap:9px;align-items:center}.v151-action-copy>i{display:grid;flex:0 0 auto;place-items:center;width:36px;height:36px;border-radius:10px;background:#56242B;color:#FFB0AA;font-style:normal;font-weight:950}.v151-action-copy p{white-space:normal}.v151-inline-actions{display:grid;flex:0 0 auto;grid-template-columns:1fr 1fr;gap:6px;margin-top:5px}.v151-jump-note{display:block;margin-top:7px;color:#F0C978;font-size:10px;font-weight:850}
 /* Normalized skill profile rows in the unit detail modal (display only). */
@@ -511,7 +520,12 @@
 .v151-line-badge.support{border:1px solid rgba(240,153,120,.4);background:rgba(240,153,120,.1);color:#FFB99A}
 /* Panel-1 inline materials: direct recipe rows + lowest missing = wisp. */
 .v151-mats{display:grid;flex:0 0 auto;gap:4px;border-top:1px dashed #2A4059;padding-top:6px}
-.v151-mats>div{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.v151-mats>div{display:flex;gap:5px;align-items:center;flex-wrap:wrap}
+/* v18.4(목업): 재료를 체크리스트처럼 — 확보한 재료에 초록 점을 찍는다.
+   ok/gap 클래스는 이미 붙어 있었고 표시만 없었다. */
+.v151-mats>div>em{position:relative;padding-left:19px}
+.v151-mats>div>em::before{content:'';position:absolute;left:7px;top:50%;width:7px;height:7px;margin-top:-3.5px;border-radius:50%;background:#2c445f}
+.v151-mats>div>em.ok::before{background:#6ee7a8;box-shadow:0 0 6px rgba(110,231,168,.55)}
 .v151-mats small{flex:1 1 100%;color:#8CA2BE;font-size:9px;font-weight:900}
 .v151-mats em{border:1px solid #274561;border-radius:7px;padding:2px 6px;background:#0A1A2E;color:#CFE1F5;font-size:9.5px;font-style:normal}
 .v151-mats em.ok{border-color:rgba(126,211,140,.4);color:#9FE8AC}
@@ -1161,3 +1175,10 @@
 .v153-party-chips .stage-plan em{background:rgba(154,120,228,.18);color:#cbb4ff}
 .v153-party-slot em{background:rgba(150,170,195,.14);color:var(--v153-muted)}
 .v153-party>small{display:block;margin-top:7px;color:var(--v153-muted);font-size:10px}
+
+/* v18.4(목업): 5번 패널의 주인공은 9환산 진행과 자리별 단계다. 보조 후보
+   목록은 목업에 없어 접어 두되, 판단에 필요하니 한 번의 클릭 거리로 남긴다.
+   좌우 열 높이도 이걸로 맞는다(오른쪽 1434 → 왼쪽 1009 에 근접). */
+.v153-support-fold{margin-top:10px}
+.v153-support-fold>summary{cursor:pointer;color:var(--v153-muted);font-size:11px;padding:6px 0}
+.v153-support-fold[open]>summary{color:var(--v153-text)}
