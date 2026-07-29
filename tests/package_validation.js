@@ -135,7 +135,10 @@ for(const match of manual.matchAll(/<script data-source="([^"]+)">([\s\S]*?)<\/s
   embeddedScripts.set(match[1],match[2].trim());
   manualScripts++;
 }
-assert.strictEqual(manualScripts,20,'manual inline script count changed');
+// v18.5: 아이콘 팩(ord_icons.js)이 들어와 20 → 21.  이 수는 "번들에 들어갈
+// 스크립트가 조용히 늘거나 줄지 않았는가"를 지키는 계약이라, 바뀔 때마다
+// 이유를 남기고 갱신한다.
+assert.strictEqual(manualScripts,21,'manual inline script count changed');
 for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js']){
   assert.strictEqual(embeddedScripts.get(file),read(file).trim(),`manual bundle contains a stale ${file}`);
 }
