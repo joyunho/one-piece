@@ -897,7 +897,7 @@
  * Always visible: next action, clear gaps, Rare ledger, Upper/support party.
  * Everything else lives in the collapsed tools drawer.
  */
-.ord-app.v151-shell{max-width:1720px;padding:12px 14px 36px}
+.ord-app.v151-shell{max-width:1720px;padding:10px 14px 14px}
 .v153-screen{
   --v153-bg:#08111f;
   --v153-card:#0d1a2d;
@@ -961,19 +961,31 @@
 .v153-panel{
   min-width:0;
   border:1px solid var(--v153-line);
-  border-radius:20px;
-  padding:16px;
+  border-radius:18px;
+  /* v18.6: 4패널 시절의 16px 은 6패널에서 열당 최대 3번 곱해진다(≈96px).
+     한 화면 목표에서 그만큼이 그대로 스크롤이 된다. */
+  padding:12px 13px;
   background:linear-gradient(160deg,var(--v153-card-2),var(--v153-bg) 62%);
   box-shadow:0 15px 42px rgba(0,0,0,.24);
 }
-.v153-panel>header{display:flex;gap:11px;align-items:center;margin-bottom:14px}
-.v153-panel>header>small{display:grid;flex:none;place-items:center;width:34px;height:34px;border-radius:11px;background:#173653;color:#83e5f6;font-size:16px;font-weight:950}
-.v153-panel>header h2{margin:0;color:white;font-size:22px;letter-spacing:-.35px;line-height:1.2}.v153-panel>header p{margin:3px 0 0;color:var(--v153-muted);font-size:13px}
-/* v18.4 UI 개편: 목업처럼 좌우가 독립된 2열이다. 자동 배치(span)로 두면
-   왼쪽 패널이 길어질 때 오른쪽 열이 통째로 비므로 열을 명시적으로 감싼다. */
-.v153-grid-6{grid-template-columns:minmax(0,7fr) minmax(0,5fr)}
-.v153-grid-6>.v153-col{display:grid;gap:12px;align-content:start;min-width:0}
-.v153-grid-6>.v153-col>.v153-panel{grid-column:auto}
+/* v18.6: 헤더는 6패널에서 6번 반복된다. 4패널 시절 치수(34px 배지 + 22px 제목
+   + 설명줄 + 14px 여백)를 그대로 두면 헤더만 360px 로 한 화면을 못 맞춘다.
+   번호 배지와 제목은 자리 기억용이라 줄여도 읽히고, 설명줄은 한 줄로 눌렀다. */
+.v153-panel>header{display:flex;gap:9px;align-items:center;margin-bottom:10px}
+.v153-panel>header>small{display:grid;flex:none;place-items:center;width:26px;height:26px;border-radius:9px;background:#173653;color:#83e5f6;font-size:13px;font-weight:950}
+.v153-panel>header h2{margin:0;color:white;font-size:18px;letter-spacing:-.3px;line-height:1.2}
+.v153-panel>header p{margin:1px 0 0;overflow:hidden;color:var(--v153-muted);font-size:11.5px;text-overflow:ellipsis;white-space:nowrap}
+/* v18.6: 6패널을 한 화면에 — 다단(multicol)으로 바꿨다.
+   2열 고정 래퍼로는 못 맞춘다. 패널 높이 합이 2,239px 라 아무리 균형을 잡아도
+   한 열이 1,120px 이고 1080 뷰포트에 안 들어간다. 3열이면 열당 ~750px 이다.
+   래퍼를 직접 나누지 않고 multicol 을 쓰는 이유는 높이 균형을 브라우저가
+   맞춰 주기 때문이다 — 패널 내용은 상태마다 크기가 변해서 손으로 나누면
+   어떤 상태에서는 반드시 한쪽이 빈다(v18.4 가 그 실패였다). */
+.v153-grid-6{display:block;column-count:3;column-gap:10px;column-fill:balance}
+.v153-grid-6>.v153-panel{break-inside:avoid;-webkit-column-break-inside:avoid;display:block;margin:0 0 9px}
+/* 3열을 최대한 오래 유지한다 — 2열로 떨어지는 순간 한 화면에서 벗어난다.
+   1240px 아래는 열당 폭이 380px 미만이라 카드가 깨져 2열로 물러난다. */
+@media (max-width:1240px){.v153-grid-6{column-count:2}}
 
 /* v18.4 UI 개편: 6패널 2열.  왼쪽은 "무엇을 할까"(지금·다음·만들 수 있는 것),
    오른쪽은 "지금 어디쯤인가"(스펙·최종 파티·남는 희귀).  패널마다 색을 달리해
@@ -1063,7 +1075,7 @@
 @media(max-width:1180px){
   .v153-status{grid-template-columns:auto auto 1fr}.v153-main-tools{grid-column:1/-1;justify-content:flex-end}.v153-tools-pop{right:0}
   .v153-next,.v153-preview,.v153-craft,.v153-spec,.v153-rare,.v153-upper,.v153-unused{grid-column:1/-1}
-  .v153-grid-6{display:block}.v153-grid-6>.v153-col{display:block}
+  .v153-grid-6{column-count:1}
 }
 @media(max-width:760px){
   .ord-app.v151-shell{padding:6px}.v153-screen{font-size:15px}.v153-status{position:static;grid-template-columns:1fr 1fr;padding:9px}.v153-round{grid-column:1/-1;justify-content:center}.v153-live{justify-self:start}.v153-resource{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}.v153-resource>span{display:grid;grid-template-columns:1fr;padding:6px}.v153-resource b{justify-self:start}.v153-main-tools{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr}.v153-tools>summary{justify-content:center}.v153-tools-pop{position:fixed;z-index:100;inset:70px 7px auto;width:auto;max-height:75vh;overflow:auto}
@@ -1204,3 +1216,16 @@
 .v153-gap-grid article>.v153-ic-img{width:19px;height:19px;left:8px;top:9px}
 .v153-gap-grid article{padding-left:33px}
 .v153-slow-pin .v153-ic-img{width:22px;height:22px}
+
+/* v18.6: 세로가 짧은 화면(노트북 900px 급)에서 6패널을 한 화면에 넣기 위한
+   압축.  숨기는 것은 전부 다른 곳에 이미 있는 정보다 — 새 정보를 지우지 않는다.
+     v151-action-facts   국면·다음 보스·리롤 잔여·선택 위습 → 상태바에 있음
+     v153-spec-summary   환산·남은 결손·확보 조건 → 바로 위 축 카드에 있음
+     패널 부제            제목으로 충분
+   1366×768 같은 더 짧은 화면은 여전히 스크롤이 생긴다(내용 밀도상 불가피). */
+@media (max-height:1000px) and (min-width:1240px){
+  .v153-next .v151-action-facts,.v153-spec .v153-spec-summary{display:none}
+  .v153-panel>header p{display:none}
+  .v153-panel{padding:9px 11px}
+  .v153-panel>header{margin-bottom:8px}
+}

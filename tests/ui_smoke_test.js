@@ -69,6 +69,7 @@ const REGIONS=['game-status','next-action','next-preview','craftable-legends','c
           clientWidth:document.documentElement.clientWidth,
           viewportHeight:window.innerHeight,
           gridHeight:gridRect.height,
+          docHeight:document.documentElement.scrollHeight,
           legacyTabs:document.querySelectorAll('.ord-tabs').length
         };
       });
@@ -82,9 +83,16 @@ const REGIONS=['game-status','next-action','next-preview','craftable-legends','c
       assert(metrics.hasAction||metrics.hasRecovery,`${cfg.name} replay of the recorded stall must show an action or recovery ladder (state=${metrics.decisionState})`);
       assert.strictEqual(metrics.legacyTabs,0,`${cfg.name} legacy tab bar returned`);
       assert(metrics.scrollWidth<=metrics.clientWidth+1,`${cfg.name} horizontal overflow: ${metrics.scrollWidth-metrics.clientWidth}`);
-      if(cfg.width>=1440)assert(metrics.gridHeight>=metrics.viewportHeight*.8,`${cfg.name} cockpit leaves the bottom of the screen empty (grid ${Math.round(metrics.gridHeight)}px of ${metrics.viewportHeight}px)`);
+      // v18.6(사용자 요청): 계약이 뒤집혔다. 4패널 시절에는 "화면을 채울 것"이
+      // 목표라 grid >= 80vh 를 요구했는데, 6패널에서는 "6번까지 한 화면에
+      // 보일 것"이 목표다. 채우기를 강제하면 패널을 늘려 스크롤을 만들게 된다.
+      // 그래서 스크롤이 생기지 않는지를 잰다 — 이게 사용자가 요구한 것이다.
+      if(cfg.width>=1440){
+        assert(metrics.docHeight<=metrics.viewportHeight+8,
+          `${cfg.name} 6패널이 한 화면에 안 들어감: 문서 ${Math.round(metrics.docHeight)}px > 뷰포트 ${metrics.viewportHeight}px`);
+      }
       await page.screenshot({path:path.resolve(__dirname,`ui_${cfg.name}_v16.png`),fullPage:cfg.width<1440});
-      console.log(`PASS  ${cfg.name} state=${metrics.decisionState} panels=${metrics.panelCount} grid=${Math.round(metrics.gridHeight)}px/${metrics.viewportHeight}px`);
+      console.log(`PASS  ${cfg.name} state=${metrics.decisionState} panels=${metrics.panelCount} grid=${Math.round(metrics.gridHeight)}px 문서=${Math.round(metrics.docHeight)}px/${metrics.viewportHeight}px`);
     }
 
     await page.setViewportSize({width:1600,height:1000});
