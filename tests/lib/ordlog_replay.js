@@ -74,12 +74,24 @@ function loadRun(fileOrKey){
   const engineForDb=loadEngine&&loadEngine();
   const db=global.ORDCore&&global.ORD_TMO_UNITS?global.ORDCore.buildDb(global.ORD_TMO_UNITS):null;
   let guard=null;
+  // v19.3.1(감사 확정 결함): 0723b 로그는 게임종료 화면에서 라운드가
+  // 61→19 로 내려가는 역방향 스윕 꼬리(라운드당 ~150ms)를 가진다.  그
+  // 직전 스냅샷에서 판이 통째로 비므로(counts 0, 위습 행 소멸), '라운드마다
+  // 마지막 상태'를 취하는 byRound 가 r19~61 전부를 빈 판으로 덮어썼다 —
+  // 그 결과 다양성 측정에서 최장 연속 반복이 46으로 잡혔지만 실제(꼬리
+  // 절단 후)는 10 이었다.  판이 한 번 채워진 뒤 완전히 비면 게임이 끝난
+  // 것이므로 이후 이벤트는 소비하지 않는다.
+  let boardWasPopulated=false,gameEnded=false;
 
   for(const event of events){
     if(event.type==='snapshot'){
       baseline=Compactor.applySnapshotRecord(baseline,event.payload,{digest:false});
+      const populated=Object.values(baseline&&baseline.counts||{}).some(value=>num(value)>0);
+      if(populated)boardWasPopulated=true;
+      else if(boardWasPopulated)gameEnded=true;
       continue;
     }
+    if(gameEnded)continue;
     if(event.type==='user-action'){
       const payload=event.payload||{};
       if(payload.action==='setting-change'&&payload.key==='gorosei')gorosei=String(payload.after||'none');
@@ -109,7 +121,9 @@ function loadRun(fileOrKey){
         seq:num(event.seq),
         at:1,
         dataChangedAt:1,
-        wispCountFound:true,
+        // 위습 행이 로그에 실재할 때만 true — 라이브 엔진은 미확인 위습을
+        // '선택 위습 수량 미확인' 오류 경로로 보내므로 재생도 같은 길을 탄다.
+        wispCountFound:Object.prototype.hasOwnProperty.call(counts,WISP_ID),
         wispCount:num(counts[WISP_ID]),
         counts,
         currentAbilities:Object.assign({},baseline.currentAbilities),

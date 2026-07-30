@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.3.0';
+const VERSION='19.3.1';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -157,8 +157,14 @@ function lineupKey(u){return C&&C.isUpper&&C.isUpper(u)?`upper:${canonicalUpper(
 function upperRankFingerprint(state,settings,policy,candidateIds,supportMemo){
   const counts=Object.entries(state&&state.counts||{}).filter(([,value])=>num(value)!==0).sort((a,b)=>compareText(a[0],b[0])).map(([id,value])=>`${id}:${round(value,3)}`).join(','),percent=(candidateIds||[]).map(id=>`${id}:${round(state&&state.percent&&state.percent[id],2)}`).join(','),avoid=[...(policy&&policy.avoid||[])].sort(compareText).join(','),memoVersion=String(supportMemo&&supportMemo.version||''),
     // v19: 두 번째 상위 확정·관성은 순위를 바꾸므로 캐시 키에 들어가야 한다.
-    upperCommitment=[String(settings.secondUpperId||''),[].concat(settings.stickyUpperIds||[]).map(String).sort(compareText).join('+')].join('/');
-  return[settings.mode,settings.magicRoute,settings.targetSquadCount,settings.currentRound,settings.gorosei,settings.superKumaOwned?1:0,settings.changedUsed,settings.seraphUsed,settings.transcendUsed,upperCommitment,(candidateIds||[]).join(','),percent,avoid,memoVersion,counts].join('|');
+    upperCommitment=[String(settings.secondUpperId||''),[].concat(settings.stickyUpperIds||[]).map(String).sort(compareText).join('+')].join('/'),
+    // v19.3.1(감사 확정 결함): 연구소 체크·공업 레벨·TMO 원문 능력치도
+    // currentSpec 을 거쳐 순위 payload(currentStage·timelineReadiness)에
+    // 들어간다 — 키에 없으면 토글 후에도 이전 캐시 항목이 돌아온다
+    // (0728c r30 실측: 연구소 토글에도 반환 배열 참조 동일).
+    research=[JSON.stringify(settings.labResearch||null),String(settings.upperResearchLevel||'')].join('/'),
+    abilities=Object.entries(state&&state.currentAbilities||{}).sort((a,b)=>compareText(a[0],b[0])).map(([key,value])=>`${key}:${round(num(value),3)}`).join(',');
+  return[settings.mode,settings.magicRoute,settings.targetSquadCount,settings.currentRound,settings.gorosei,settings.superKumaOwned?1:0,settings.changedUsed,settings.seraphUsed,settings.transcendUsed,upperCommitment,research,abilities,(candidateIds||[]).join(','),percent,avoid,memoVersion,counts].join('|');
 }
 
 // Structural recipe demand is independent of the current hand. Using only a

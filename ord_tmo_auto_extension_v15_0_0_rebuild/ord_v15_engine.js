@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.3.0';
+const VERSION='19.3.1';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -1011,7 +1011,13 @@ function stickyPath(paths,best,stickyId){
   //    방깎 +11 · 1.5스턴 +0.36이었다.  더 싸고 더 많이 닫는 쪽을 두고
   //    바꾼 것이다.  그러면 사용자는 아무것도 완성하지 못한 채 카드만
   //    바뀌는 것을 본다 — 실제로 r49에 다시 흰수염으로 돌아왔다.
-  if(!inferiorRequirements(held,best)&&num(held.regression)<=num(best.regression)&&stepCost(held)<=stepCost(best)){held.stickyHold='dominant';return held;}
+  //    v19.3.1(감사 확정 결함): '지배' 판정이 결정적 벡터의 막다른길
+  //    (deadEnds) 성분을 안 봤다.  0725 r38·r39 실측 — held=블랙마리아
+  //    (왜곡, deadEnds 2)가 best=사보(히든, deadEnds 1, 선위 동일)를
+  //    'dominant'로 눌러, 현재 패로 닫을 수 없는 필수 역할 그룹을 하나 더
+  //    남기는 경로를 유지했다.  계약(위 주석)은 막다른길을 결정적 구간으로
+  //    명시하므로, 막다른길이 더 많은 held 는 지배가 아니다.
+  if(!inferiorRequirements(held,best)&&num(held.regression)<=num(best.regression)&&stepCost(held)<=stepCost(best)&&deadEndCount(held)<=deadEndCount(best)){held.stickyHold='dominant';return held;}
   return best;
 }
 // 직전에 제시하던 대상이 이번 라운드에도 여전히 만들 수 있고 필수 역할을
@@ -1031,6 +1037,14 @@ function continuableStep(paths,best,stickyId){
     closes:closes.slice(0,2).map(row=>({key:row.key,label:row.label,gap:round(num(row.gap))}))};
 }
 function stepCost(node){const step=node&&node.sequence&&node.sequence[0];return step?num(step.quote&&step.quote.wisp&&step.quote.wisp.cost):Infinity;}
+// 결정적 벡터에서 막다른길 성분을 읽는다.  nodeRank 가 만든 벡터 구조는
+// [regression, ...checkpoint, deadEnds, ...fullVector | 타이브레이크] 이고
+// rankDecisiveLength = 1 + checkpoint + 1 + fullVector 이므로 deadEnds 의
+// 인덱스는 rankDecisiveLength - 1 - fullVector.length 다.
+function deadEndCount(node){
+  const full=(node&&node.assessment&&node.assessment.fullVector||[]).length,length=num(node&&node.rankDecisiveLength),index=length-1-full;
+  return index>=0&&Array.isArray(node&&node.rankVector)?num(node.rankVector[index]):0;
+}
 // held가 어떤 필수 역할에서든 best보다 결손이 크면 열등하다.
 function inferiorRequirements(held,best){
   const target=new Map(((best.assessment||{}).requirements||[]).filter(row=>row&&row.required!==false&&!row.waived).map(row=>[row.key,num(row.gap)]));
