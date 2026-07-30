@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='18.9.0';
+const VERSION='19.0.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1025,9 +1025,16 @@ function clearProfileDetails(spec,mode,settings){
   if(mode==='physical'){
     const upper=settings._upperUnit||null,exceptionEligible=physicalArmorException(upper),buffReady=enoughPhysicalBuffs(spec,settings),exceptionActive=exceptionEligible&&buffReady,armorFloor=exceptionActive?120:g.armorSoft,armorIdeal=exceptionActive?120:g.armorSafe,armorTarget=armorFloor,armorCurrent=num(spec.armor),triggerArmor=Math.max(0,num(spec.triggerArmor)),armorExpected=armorCurrent+triggerArmor*.65,armorMaximum=armorCurrent+triggerArmor;
     // v18.9: 이감 충족 여부는 1.5스턴 필수 해제의 조건이다(사용자 교정).
-    const slowSatisfied=num(ctl.slow)>=num(slowTarget);
+    const slowSatisfied=num(ctl.slow)>=num(slowTarget),secondUpperCommitted=!!String(settings.secondUpperId||'');
     const requirements=[
-      {key:'main',label:'상위 딜러',current:num(spec.main),target:1,weight:120},
+      // v19(사용자 요청): "물딜도 2상위 각이 보이면 갈 수 있게".
+      //
+      // 물딜 2상위는 사용자가 두 번째 상위를 확정했을 때만 열린다.  상한만
+      // 열어 두면 아무 일도 일어나지 않는다 — main 목표가 1로 충족돼 있으면
+      // 탐색이 상위 한 기(전설 환산 3)를 더 넣을 이유가 없다.  그래서 확정이
+      // 있을 때 이 줄이 2를 요구하고, 보드 목표는 5기로 함께 줄어 9환산을
+      // 유지한다(ord_squad_planner: expectedUpperCount / routeBoardTarget).
+      {key:'main',label:secondUpperCommitted?'상위 딜러 2':'상위 딜러',current:num(spec.main),target:secondUpperCommitted?2:1,weight:120},
       {key:'armor',label:exceptionActive?'버프 예외 상시 방깎':'상시 풀방깎',current:armorCurrent,target:armorTarget,weight:110,meta:{floor:armorFloor,safe:armorIdeal,ideal:armorIdeal,range:exceptionActive?'120+':`${armorFloor}~${armorIdeal}`,static:round2(armorCurrent),trigger:round2(triggerArmor),expected:round2(armorExpected),maximum:round2(armorMaximum),conditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget}},
       {key:'stunBase',label:'최소 0.5 스턴',current:stunBase,target:.5,weight:110},
       {key:'slow',label:`이감 ${slowTarget}%`,current:ctl.slow,target:slowTarget,weight:95},

@@ -1188,6 +1188,28 @@
 .v153-party-slot em{background:rgba(150,170,195,.14);color:var(--v153-muted)}
 .v153-party>small{display:block;margin-top:7px;color:var(--v153-muted);font-size:10px}
 
+/* v19(사용자 요청): 두 번째 상위 확정.  확정 상태는 펼친 카드로, 미확정은
+   접힌 후보 목록으로 — 5번 패널이 한 화면 계약을 깨지 않게 기본은 접는다. */
+.v153-second{margin-top:9px;border:1px solid var(--v153-line);border-radius:13px;padding:9px;background:rgba(9,20,39,.55)}
+.v153-second.confirmed{border-color:rgba(154,120,228,.5);background:rgba(38,26,66,.5)}
+.v153-second>summary{cursor:pointer;color:var(--v153-muted);font-size:11px;list-style:none}
+.v153-second>summary::-webkit-details-marker{display:none}
+.v153-second>summary::before{content:'▸ ';color:#cbb4ff}
+.v153-second[open]>summary::before{content:'▾ '}
+.v153-second>header{display:flex;align-items:center;gap:7px;margin-bottom:6px}
+.v153-second>header b{font-size:12px}
+.v153-second>header img,.v153-second>header svg{width:20px;height:20px}
+.v153-second>div strong{display:block;font-size:14px}
+.v153-second>div small,.v153-second>small{display:block;color:var(--v153-muted);font-size:10px;line-height:1.45;margin-top:3px}
+.v153-second>footer{display:flex;gap:6px;margin-top:7px}
+.v153-second-list{display:grid;gap:6px;margin:7px 0}
+.v153-second-list>article{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;align-items:center;border:1px solid var(--v153-line);border-radius:11px;padding:7px;background:rgba(11,23,44,.7)}
+.v153-second-list b{display:block;font-size:12px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v153-second-list small{color:var(--v153-muted);font-size:10px}
+.v153-second-list>article>span:last-child{display:flex;gap:5px}
+.v153-second button{border:1px solid var(--v153-line);border-radius:9px;padding:4px 9px;font-size:10px;font-weight:800;background:rgba(20,34,58,.9);color:inherit;cursor:pointer}
+.v153-second button.primary{background:linear-gradient(135deg,#7a5cd6,#9a78e4);border-color:transparent;color:#fff}
+
 /* v18.4(목업): 5번 패널의 주인공은 9환산 진행과 자리별 단계다. 보조 후보
    목록은 목업에 없어 접어 두되, 판단에 필요하니 한 번의 클릭 거리로 남긴다.
    좌우 열 높이도 이걸로 맞는다(오른쪽 1434 → 왼쪽 1009 에 근접). */
