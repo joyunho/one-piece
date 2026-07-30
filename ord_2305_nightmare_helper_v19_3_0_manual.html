@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v19.2.0-decision-engine-manual">
+  <meta name="ord-helper" content="v19.3.0-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.305 악몽 수동 도우미">
-  <title>원랜디 2.305 악몽 실전 판단 코치 v19.2.0 · 수동 모드</title>
+  <title>원랜디 2.305 악몽 실전 판단 코치 v19.3.0 · 수동 모드</title>
   <style data-source="ord_app.css">
 :root{color-scheme:dark;--bg:#060b18;--panel:#0d162a;--panel2:#101d35;--line:#223454;--text:#eef5ff;--muted:#91a2bd;--blue:#4f7cff;--cyan:#25c2e7;--green:#27d17f;--amber:#f3b84b;--red:#ef6262;--violet:#8b67ff;--shadow:0 20px 55px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 10% 0,#122a5a 0,#060b18 35%,#040812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-break:keep-all;overflow-wrap:anywhere}button,input,select{font:inherit}button{cursor:pointer}.ord-app{min-height:100vh;padding:18px;max-width:1860px;margin:0 auto}.ord-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px;border:1px solid rgba(112,154,255,.26);border-radius:24px;background:linear-gradient(135deg,rgba(66,83,222,.34),rgba(17,64,94,.3));box-shadow:var(--shadow)}.ord-kicker{font-size:11px;letter-spacing:.14em;color:#9bb7ff;font-weight:900}.ord-header h1{margin:5px 0 3px;font-size:29px;line-height:1.15}.ord-header p{margin:0;color:var(--muted);font-size:13px}.ord-head-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:720px}.ord-head-status>*{border:1px solid var(--line);border-radius:999px;background:rgba(6,11,24,.7);color:#d9e8ff;padding:8px 12px;font-size:12px;font-weight:800;white-space:nowrap}.ord-head-status .good{border-color:rgba(39,209,127,.45);color:#a8f7ce}.ord-head-status .warn{border-color:rgba(243,184,75,.45);color:#ffe1a1}.ord-head-status button{background:#1b2b4d}.ord-tabs{display:flex;gap:8px;margin:14px 0}.ord-tabs button,.purpose-buttons button,.two-button button,.round-box button,.action-buttons button,.prep-list button,.mini-cards button,.ghost,.primary{border:1px solid var(--line);border-radius:11px;background:#111d32;color:#dce9ff;padding:9px 13px;font-weight:850}.ord-tabs button.on,.purpose-buttons button.on,.primary{border-color:transparent;background:linear-gradient(135deg,var(--violet),var(--blue));color:white}.ord-layout{display:grid;grid-template-columns:294px minmax(0,1fr);gap:14px;align-items:start}.ord-side{display:grid;gap:12px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;padding-right:3px;min-width:0}.side-card,.ord-panel{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(15,26,48,.96),rgba(9,16,31,.96));box-shadow:0 14px 38px rgba(0,0,0,.18);min-width:0}.side-card{padding:14px}.side-card b{font-size:14px}.side-title{display:flex;justify-content:space-between;gap:8px}.side-title span{font-size:11px;color:var(--cyan)}.side-card label{display:grid;gap:5px;color:var(--muted);font-size:11px;margin-top:11px}.side-card input,.side-card select,.form-grid input{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#071020;color:var(--text);padding:9px}.side-card small{display:block;color:var(--muted);font-size:10.5px;line-height:1.45;margin-top:6px}.round-box{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding:10px;border:1px solid rgba(37,194,231,.3);border-radius:13px;background:rgba(10,39,62,.35)}.round-box strong{font-size:13px;min-width:0}.round-box div{display:flex;gap:4px}.round-box button{padding:6px 8px;font-size:11px}.side-card details{margin-top:10px}.side-card summary,.detail-modal summary{cursor:pointer;color:#cbd9ef;font-size:11px;font-weight:800}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.two-button{display:flex;gap:6px;margin-top:10px}.two-button button{flex:1;font-size:11px;padding:8px}.two-button .on{border-color:var(--green);color:#c5ffe0;background:rgba(39,209,127,.1)}.two-button .danger.on{border-color:var(--red);color:#ffc1c1;background:rgba(239,98,98,.1)}.stat-row{display:flex;justify-content:space-between;align-items:center}.stat-row b{font-size:24px;color:#ffe7a3}.lock-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.lock-list>span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(139,103,255,.35);border-radius:999px;padding:5px 8px;background:rgba(139,103,255,.1);font-size:10px}.lock-list button{border:0;background:none;color:#ffaaaa;font-weight:900}.side-card.compact{padding-bottom:10px}.common-line{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;margin-top:7px;font-size:11px}.common-line i{width:8px;height:8px;border-radius:50%}.common-line b{font-size:11px}.ord-main{display:grid;gap:13px;min-width:0}.milestone{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 19px;border:1px solid rgba(37,194,231,.4);border-radius:21px;background:linear-gradient(135deg,rgba(6,47,78,.78),rgba(31,25,87,.56));min-width:0}.milestone small{color:#61daf5;font-weight:900}.milestone h2{margin:3px 0 5px;font-size:24px}.milestone p{margin:0;color:#abc0df;font-size:12px}.purpose-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.purpose-buttons button{font-size:11px}.top-two{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:13px}.ord-panel{padding:17px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px}.panel-head small{color:#72d8ef;font-size:10px;font-weight:900}.panel-head h2{margin:2px 0 4px;font-size:20px}.panel-head p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.45}.count-pill,.mode-pill,.control-badge{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;white-space:nowrap}.mode-pill.physical{color:#ffcb9a;border-color:#e48e45}.mode-pill.magic{color:#a9c9ff;border-color:#5c84d8}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.profile-grid>div,.spec-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px;min-width:0}.profile-grid small,.spec-grid small{display:block;color:var(--muted);font-size:10px}.profile-grid b{display:block;margin-top:5px;font-size:12px;line-height:1.45}.synergy-line{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.synergy-line small{width:100%;color:var(--muted)}.synergy-line span{border:1px solid rgba(39,209,127,.3);border-radius:999px;padding:5px 8px;font-size:10px;color:#b8f7d5}.upper-focus details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.upper-focus details p{color:#aebbd0;font-size:11px}.control-badge.safe{color:#a9f7cc;border-color:rgba(39,209,127,.45)}.control-badge.edge{color:#ffe2a4;border-color:rgba(243,184,75,.45)}.control-badge.danger{color:#ffb4b4;border-color:rgba(239,98,98,.45)}.spec-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.spec-grid b{display:block;font-size:21px;margin:4px 0}.spec-grid span{color:#8193ae;font-size:9.5px}.deficit-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}.deficit-line>b{font-size:11px}.deficit-line span{border:1px solid rgba(243,184,75,.32);border-radius:999px;padding:5px 8px;color:#ffd78d;font-size:10px}.deficit-line .ok{color:#a9f7cc;border-color:rgba(39,209,127,.3)}.state-intro{display:flex;justify-content:space-between;gap:15px;align-items:center}.state-intro h2{margin:4px 0}.state-intro p{color:var(--muted);margin:0;font-size:12px}.control{min-width:260px;border:1px solid var(--line);border-radius:15px;padding:12px}.control b,.control span{display:block}.control span{font-size:10px;color:var(--muted);margin-top:4px}.control.safe{border-color:rgba(39,209,127,.35)}.control.edge{border-color:rgba(243,184,75,.35)}.control.danger{border-color:rgba(239,98,98,.35)}.mini-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mini-cards article{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.mini-cards img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mini-cards b,.mini-cards span,.mini-cards small{display:block;min-width:0}.mini-cards b{font-size:12px}.mini-cards span{font-size:10px;color:#9fb1ca}.mini-cards small{font-size:9px;color:#7085a4}.mini-cards button{padding:7px;font-size:10px}.action-list{display:grid;gap:8px}.action-row{display:grid;grid-template-columns:42px 48px minmax(0,1fr) 124px auto;gap:11px;align-items:center;border:1px solid rgba(55,84,132,.8);border-radius:16px;padding:11px;background:linear-gradient(90deg,rgba(12,27,50,.95),rgba(8,17,33,.95));min-width:0}.action-row .rank{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));font-weight:950}.action-row>img{width:46px;height:46px;border-radius:12px;object-fit:cover}.action-main{min-width:0}.unit-title{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.unit-title b{font-size:14px}.unit-title span{font-size:10px;color:#8da1bd}.role-tags{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.role-tags>span,.role-tags i{border:1px solid #284266;border-radius:999px;padding:4px 7px;font-size:9.5px;font-style:normal;color:#bcd3f2}.role-tags i{border-color:color-mix(in srgb,var(--pc) 60%,#223454);box-shadow:inset 3px 0 var(--pc)}.action-main p{margin:0;color:#91a6c2;font-size:10.5px}.action-cost{border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}.action-cost b{display:block;font-size:22px;color:#ffe1a1}.action-cost small{display:block;color:#7f91ab;font-size:9px}.action-cost span{display:block;margin-top:4px;font-size:9px}.action-cost .good{color:#9ff1c5}.action-cost .warn{color:#ffd083}.action-cost .bad{color:#ffaaaa}.action-buttons{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.action-buttons button{font-size:10px;padding:8px}.empty{padding:20px;border:1px dashed #2c4266;border-radius:14px;text-align:center;color:#8193ad}.prep-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prep-list>div{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.prep-list img{width:38px;height:38px;border-radius:10px;object-fit:cover}.prep-list b,.prep-list small{display:block}.prep-list b{font-size:12px}.prep-list small{color:#8195b2;font-size:9.5px}.prep-list em{font-style:normal;color:#ffd587;font-size:9.5px}.prep-list button{font-size:9px;padding:6px}.rare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rare-columns>div{border:1px solid var(--line);border-radius:14px;padding:11px}.rare-columns h3{margin:0 0 8px;font-size:12px}.rare-columns .use{border-color:rgba(39,209,127,.3)}.rare-columns .hold{border-color:rgba(243,184,75,.3)}.rare-columns .reroll{border-color:rgba(239,98,98,.3)}.rare-columns>div>div{display:grid;grid-template-columns:28px 1fr auto;gap:7px;align-items:center;margin-top:6px;font-size:10px}.rare-columns img{width:28px;height:28px;border-radius:8px}.rare-panel>small{display:block;margin-top:9px;color:#7f91aa;font-size:9.5px}.owned-chips{display:flex;gap:7px;flex-wrap:wrap}.owned-chips button{display:flex;align-items:center;gap:7px;max-width:260px;border:1px solid var(--line);border-radius:12px;background:#091326;color:#dceaff;padding:7px 9px}.owned-chips img{width:30px;height:30px;border-radius:8px}.owned-chips span{font-size:10px;text-align:left}.deck-page,.data-page{display:grid;gap:13px}.raw-ability-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.raw-ability-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px;background:#091326;font-size:10px;min-width:0}.raw-ability-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.raw-ability-grid>div>b{flex:0 0 auto;white-space:nowrap}.raw-ability-grid b{color:#d9ecff}.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.owned-grid button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#091326;color:#e3efff;padding:9px;text-align:left}.owned-grid img{width:36px;height:36px;border-radius:9px}.owned-grid span,.owned-grid small{display:block}.owned-grid span{font-size:11px}.owned-grid small{font-size:9px;color:#8296b4}.owned-grid.small button{grid-template-columns:32px 1fr auto}.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.diag-grid>div{border:1px solid var(--line);border-radius:12px;padding:10px;background:#091326}.diag-grid small,.diag-grid b{display:block}.diag-grid small{color:#8395b0;font-size:9px}.diag-grid b{font-size:11px;margin-top:4px}.data-page pre{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#050b16;padding:11px;color:#9fb5d0;font-size:10px}.manual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.manual-grid label{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;font-size:10px}.manual-grid input{width:100%;border:1px solid var(--line);border-radius:8px;background:#050b16;color:white;padding:7px}.modal-back{position:fixed;inset:0;z-index:9999;background:rgba(1,4,12,.8);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px}.detail-modal{width:min(900px,96vw);max-height:92vh;overflow:auto;border:1px solid #30486f;border-radius:24px;background:#081121;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.65);position:relative}.modal-x{position:absolute;right:15px;top:15px;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#111d31;color:white;font-size:20px}.detail-modal header{display:flex;gap:12px;align-items:center;padding-right:50px}.detail-modal header img{width:54px;height:54px;border-radius:14px}.detail-modal h2{margin:0;font-size:19px}.detail-modal header p{margin:4px 0 0;color:#8ea4c1;font-size:10px}.detail-hero{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:15px 0}.detail-hero>div,.missing-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px}.detail-hero small,.detail-hero b,.detail-hero span{display:block}.detail-hero small{color:#8296b4;font-size:9px}.detail-hero b{margin:4px 0;font-size:16px}.detail-hero span{font-size:10px;color:#a9bad0}.detail-modal section{margin-top:14px}.detail-modal h3{font-size:12px}.direct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.direct-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:10px;min-width:0}.direct-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.direct-grid>div>b{flex:0 0 auto;white-space:nowrap}.missing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.missing-grid small,.missing-grid b{display:block}.missing-grid small{color:#8296b4;font-size:9px}.missing-grid b{font-size:10px;line-height:1.55;margin-top:5px}.detail-modal details{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px}.detail-modal details p{font-size:10px;color:#9cb0cb}.detail-modal .close{margin-top:14px}.ord-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;border-radius:14px;padding:11px 16px;background:linear-gradient(135deg,var(--violet),var(--blue));box-shadow:var(--shadow);font-weight:900;font-size:12px}
@@ -1127,60 +1127,111 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
  * Everything else lives in the collapsed tools drawer.
  */
 .ord-app.v151-shell{max-width:1720px;padding:10px 14px 14px}
+/* v19.3(사용자 요청): ORD COACH 전술판 목업 팔레트 — 오션 시안 + 브래스
+   골드 + 심해 남색.  변수 이름은 유지하고 값만 바꿔 기존 규칙 전부가
+   테마를 따라오게 한다. */
 .v153-screen{
-  --v153-bg:#08111f;
-  --v153-card:#0d1a2d;
-  --v153-card-2:#101f35;
-  --v153-line:#263c59;
-  --v153-text:#eef6ff;
-  --v153-muted:#98abc3;
+  --v153-bg:#0a1420;
+  --v153-deep:#050a12;
+  --v153-card:#0c1726;
+  --v153-card-2:#101f31;
+  --v153-surface-3:#142a40;
+  --v153-line:rgba(105,157,199,.22);
+  --v153-line-strong:rgba(105,175,222,.38);
+  --v153-text:#f4f7fb;
+  --v153-sub:#b5c2d3;
+  --v153-muted:#8494aa;
+  --v153-ocean:#37c8ff;
+  --v153-ocean-deep:#2385d6;
+  --v153-brass:#f2bb52;
+  --v153-violet:#9b87ff;
+  --v153-success:#47d7a2;
+  --v153-warning:#ffb45d;
+  --v153-danger:#ff6577;
+  position:relative;
   color:var(--v153-text);
   font-size:16px;
   line-height:1.45;
+  letter-spacing:-.015em;
+}
+/* 심해 배경 + 희미한 항해 격자.  cockpit css 가 ord_app.css 뒤에 로드되므로
+   body 배경을 여기서 덮는다. */
+body{background:
+  radial-gradient(900px 500px at 12% -10%,rgba(35,133,214,.18),transparent 62%),
+  radial-gradient(700px 420px at 88% 0%,rgba(155,135,255,.09),transparent 65%),
+  linear-gradient(180deg,#07111d 0%,#050a12 100%)}
+.v153-screen::before{
+  content:'';
+  position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.12;
+  background-image:
+    linear-gradient(rgba(104,158,202,.08) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(104,158,202,.08) 1px,transparent 1px);
+  background-size:52px 52px;
+  mask-image:linear-gradient(to bottom,transparent,black 20%,black 80%,transparent);
+  -webkit-mask-image:linear-gradient(to bottom,transparent,black 20%,black 80%,transparent);
 }
 .v153-status{
   position:sticky;
   z-index:80;
   top:8px;
   display:grid;
-  grid-template-columns:auto auto minmax(420px,1fr) auto;
-  gap:12px;
+  grid-template-columns:auto minmax(0,1fr) auto;
+  gap:16px;
   align-items:center;
   margin-bottom:12px;
-  border:1px solid rgba(101,144,196,.4);
+  border:1px solid var(--v153-line-strong);
   border-radius:18px;
-  padding:10px 12px;
-  background:rgba(7,16,30,.96);
-  box-shadow:0 16px 44px rgba(0,0,0,.38);
+  padding:9px 12px 9px 16px;
+  background:linear-gradient(180deg,rgba(12,25,42,.98),rgba(8,18,31,.98));
+  box-shadow:0 18px 42px rgba(0,0,0,.26),inset 0 1px rgba(255,255,255,.04);
   backdrop-filter:blur(14px);
 }
 .v153-status button,.v153-status select,.v153-panel button,.v153-panel select{
-  min-height:40px;
-  border:1px solid #315070;
+  min-height:38px;
+  border:1px solid var(--v153-line);
   border-radius:10px;
-  background:#10243c;
+  background:rgba(16,31,49,.82);
   color:#edf7ff;
   font:inherit;
-  font-size:14px;
-  font-weight:850;
+  font-size:13px;
+  font-weight:800;
 }
-.v153-status button,.v153-panel button{padding:8px 12px;cursor:pointer}
-.v153-status button:hover,.v153-panel button:hover{border-color:#62b9db;background:#15304d}
-.v153-status .primary,.v153-panel .primary{border-color:#40b8dc;background:linear-gradient(135deg,#1684ad,#5755c8);color:white}
+.v153-status button,.v153-panel button{padding:7px 12px;cursor:pointer}
+.v153-status button:hover,.v153-panel button:hover{border-color:rgba(55,200,255,.45);background:var(--v153-surface-3)}
+.v153-status .primary,.v153-panel .primary{border-color:transparent;background:linear-gradient(135deg,#159bcd,#3475da);color:white;box-shadow:0 5px 16px rgba(35,133,214,.24)}
 .v153-status button:disabled,.v153-panel button:disabled{cursor:not-allowed;opacity:.5}
-.v153-round{display:flex;gap:7px;align-items:center;white-space:nowrap}
-.v153-round strong{min-width:74px;color:white;font-size:26px;text-align:center}
-.v153-round button{width:38px;min-height:38px;padding:0;font-size:20px}
-.v153-round>span{color:var(--v153-muted);font-size:12px}
-.v153-live{display:grid;grid-template-columns:8px auto;gap:0 7px;align-items:center;min-width:132px}
-.v153-live i{grid-row:1/3;width:8px;height:8px;border-radius:50%;background:#f0b94e;box-shadow:0 0 10px currentColor}
-.v153-live.ok i{background:#36d58a}.v153-live b{font-size:14px}.v153-live span{color:var(--v153-muted);font-size:12px}
-.v153-resource{display:grid;grid-template-columns:repeat(3,minmax(120px,1fr));gap:7px}
-.v153-resource>span{display:grid;grid-template-columns:auto 1fr;gap:2px 8px;align-items:baseline;border:1px solid #203a57;border-radius:10px;padding:7px 10px;background:#0a1729}
-.v153-resource small{color:#8fa5bf;font-size:11px;font-weight:800}.v153-resource b{justify-self:end;overflow:hidden;font-size:15px;text-overflow:ellipsis;white-space:nowrap}
-.v153-main-tools{position:relative;display:flex;gap:6px;align-items:center}.v153-main-tools>.new-game{border-color:rgba(239,107,107,.5);color:#ffc0bc}
-.v153-tools{position:relative}.v153-tools>summary{display:flex;align-items:center;min-height:40px;border:1px solid #315070;border-radius:10px;padding:8px 12px;background:#10243c;font-size:14px;font-weight:850;cursor:pointer;list-style:none}
-.v153-tools>summary::-webkit-details-marker{display:none}.v153-tools>summary:after{content:'▾';margin-left:7px;color:#8fa5bf}.v153-tools[open]>summary:after{content:'▴'}
+/* 브랜드 — 나침반 마크 + 이름 */
+.v153-brand{display:flex;gap:12px;align-items:center;min-width:0;white-space:nowrap}
+.v153-brand-mark{position:relative;display:grid;place-items:center;width:38px;height:38px;flex:none;border:1px solid rgba(55,200,255,.45);border-radius:50%;color:var(--v153-ocean);font-size:17px;font-style:normal;box-shadow:inset 0 0 22px rgba(55,200,255,.08)}
+.v153-brand-mark::after{content:'';position:absolute;width:48px;height:1px;background:linear-gradient(90deg,transparent,var(--v153-ocean),transparent);transform:rotate(-38deg)}
+.v153-brand b{display:block;font-size:18px;font-weight:850;letter-spacing:.035em}
+.v153-brand small{display:block;margin-top:1px;color:var(--v153-muted);font-size:9.5px;font-weight:650;letter-spacing:.08em}
+/* 가운데 HUD — 라운드 · 계통 스위치 · 자원 필 */
+.v153-hud{display:flex;gap:9px;align-items:center;justify-content:center;min-width:0;flex-wrap:wrap}
+.v153-round{display:flex;gap:2px;align-items:center;white-space:nowrap;border:1px solid var(--v153-line);border-radius:11px;padding:2px 4px;background:rgba(16,31,49,.82)}
+.v153-round strong{min-width:64px;color:white;font-size:19px;font-weight:850;text-align:center;font-variant-numeric:tabular-nums}
+.v153-round button{width:30px;min-height:30px;padding:0;border:none;background:transparent;font-size:17px;color:var(--v153-sub)}
+.v153-round button:hover{background:var(--v153-surface-3);color:white}
+.v153-round>span{margin:0 6px 0 4px;color:var(--v153-muted);font-size:10.5px}
+.v153-mode{display:flex;gap:3px;border:1px solid var(--v153-line);border-radius:11px;padding:3px;background:rgba(7,17,29,.74)}
+.v153-mode button{min-height:30px;padding:0 12px;border:none;border-radius:8px;background:transparent;color:var(--v153-muted);font-size:12px;font-weight:750}
+.v153-mode button.on{color:white;background:linear-gradient(135deg,#159bcd,#3475da);box-shadow:0 5px 16px rgba(35,133,214,.24)}
+.v153-pill{display:flex;gap:7px;align-items:center;border:1px solid var(--v153-line);border-radius:11px;padding:0 12px;min-height:38px;background:rgba(16,31,49,.82);color:var(--v153-sub);font-size:12px;font-weight:700;white-space:nowrap}
+.v153-pill b{color:var(--v153-text);font-size:14px;font-variant-numeric:tabular-nums}
+.v153-pill .v153-ic,.v153-pill .v153-ic-img{width:15px;height:15px}
+.v153-pill.violet{color:#c8bcff}.v153-pill.violet .v153-ic{color:var(--v153-violet)}
+.v153-pill.coral{color:#ffd3a4}.v153-pill.coral .v153-ic{color:var(--v153-warning)}
+/* 우측 — 동기화 · 새 게임 · 설정 */
+.v153-main-tools{position:relative;display:flex;gap:7px;align-items:center}
+.v153-sync{display:flex;gap:8px;align-items:center;white-space:nowrap}
+.v153-sync-dot{width:8px;height:8px;flex:none;border-radius:50%;background:var(--v153-warning);box-shadow:0 0 0 4px rgba(255,180,93,.08),0 0 12px rgba(255,180,93,.4)}
+.v153-sync.ok .v153-sync-dot{background:var(--v153-success);box-shadow:0 0 0 4px rgba(71,215,162,.08),0 0 12px rgba(71,215,162,.4)}
+.v153-sync .sync-pill{color:var(--v153-sub);font-size:11.5px;font-weight:680}
+.v153-iconbtn{width:38px;padding:0!important;justify-content:center;display:grid;place-items:center;font-size:16px}
+.v153-main-tools>.new-game{border-color:rgba(255,101,119,.4);color:#ffc0bc}
+.v153-tools>summary{width:38px;display:grid;place-items:center;min-height:38px;border:1px solid var(--v153-line);border-radius:10px;padding:0;background:rgba(16,31,49,.82);font-size:16px;cursor:pointer;list-style:none}
+.v153-tools>summary::-webkit-details-marker{display:none}
+.v153-tools{position:relative}
 .v153-tools-pop{position:absolute;right:0;top:48px;width:min(760px,88vw);border:1px solid #355273;border-radius:15px;padding:12px;background:#091629;box-shadow:0 24px 70px rgba(0,0,0,.65)}
 .v153-setting-row{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.v153-setting-row label{display:grid;gap:4px}.v153-setting-row label>span,.v153-lab summary{color:#a9bad0;font-size:12px;font-weight:850}.v153-setting-row select{width:100%;padding:8px}
 .v153-lab{margin-top:9px;border-top:1px dashed #304660;padding-top:8px}.v153-lab summary{cursor:pointer}.v153-lab>div{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:8px}.v153-lab label{display:flex;gap:5px;align-items:center;color:#bfd0e3;font-size:13px}.v153-lab input[type=number]{width:56px;border:1px solid #315070;border-radius:8px;padding:6px;background:#081426;color:white}
@@ -1190,20 +1241,22 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
 .v153-panel{
   min-width:0;
   border:1px solid var(--v153-line);
-  border-radius:18px;
+  border-radius:16px;
   /* v18.6: 4패널 시절의 16px 은 6패널에서 열당 최대 3번 곱해진다(≈96px).
      한 화면 목표에서 그만큼이 그대로 스크롤이 된다. */
   padding:12px 13px;
-  background:linear-gradient(160deg,var(--v153-card-2),var(--v153-bg) 62%);
-  box-shadow:0 15px 42px rgba(0,0,0,.24);
+  background:linear-gradient(180deg,rgba(16,31,49,.97),rgba(10,20,34,.97));
+  box-shadow:0 12px 32px rgba(0,0,0,.22),inset 0 1px rgba(255,255,255,.035);
 }
 /* v18.6: 헤더는 6패널에서 6번 반복된다. 4패널 시절 치수(34px 배지 + 22px 제목
    + 설명줄 + 14px 여백)를 그대로 두면 헤더만 360px 로 한 화면을 못 맞춘다.
    번호 배지와 제목은 자리 기억용이라 줄여도 읽히고, 설명줄은 한 줄로 눌렀다. */
-.v153-panel>header{display:flex;gap:9px;align-items:center;margin-bottom:10px}
-.v153-panel>header>small{display:grid;flex:none;place-items:center;width:26px;height:26px;border-radius:9px;background:#173653;color:#83e5f6;font-size:13px;font-weight:950}
-.v153-panel>header h2{margin:0;color:white;font-size:18px;letter-spacing:-.3px;line-height:1.2}
-.v153-panel>header p{margin:1px 0 0;overflow:hidden;color:var(--v153-muted);font-size:11.5px;text-overflow:ellipsis;white-space:nowrap}
+/* v19.3(목업): 번호 배지는 아이콘 칩 룩으로, 부제는 헤더 오른쪽 노트로. */
+.v153-panel>header{display:flex;gap:9px;align-items:center;margin:-2px -2px 9px;padding-bottom:8px;border-bottom:1px solid rgba(105,157,199,.12)}
+.v153-panel>header>small{display:grid;flex:none;place-items:center;width:24px;height:24px;border-radius:7px;background:rgba(55,200,255,.09);color:var(--v153-ocean);font-size:12px;font-weight:900}
+.v153-panel>header>div{display:flex;flex:1;gap:10px;align-items:baseline;min-width:0}
+.v153-panel>header h2{margin:0;overflow:hidden;color:white;font-size:15.5px;font-weight:800;letter-spacing:-.025em;line-height:1.25;text-overflow:ellipsis;white-space:nowrap}
+.v153-panel>header p{flex:none;margin:0 0 0 auto;overflow:hidden;color:var(--v153-muted);font-size:10.5px;font-weight:650;text-overflow:ellipsis;white-space:nowrap;max-width:46%}
 /* v18.6: 6패널을 한 화면에 — 다단(multicol)으로 바꿨다.
    2열 고정 래퍼로는 못 맞춘다. 패널 높이 합이 2,239px 라 아무리 균형을 잡아도
    한 열이 1,120px 이고 1080 뷰포트에 안 들어간다. 3열이면 열당 ~750px 이다.
@@ -1219,7 +1272,15 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
 /* v18.4 UI 개편: 6패널 2열.  왼쪽은 "무엇을 할까"(지금·다음·만들 수 있는 것),
    오른쪽은 "지금 어디쯤인가"(스펙·최종 파티·남는 희귀).  패널마다 색을 달리해
    눈이 번호를 세지 않고도 자리를 기억하게 한다. */
-.v153-next{grid-column:span 7;border-color:rgba(68,191,226,.48)}
+/* v19.3(목업): 1번 패널은 황동(브래스) 명령 카드 — 왼쪽 골드 인셋 + 은은한
+   골드 글로우, 확정 버튼은 골드 그라데이션. */
+.v153-next{grid-column:span 7;border-color:rgba(242,187,82,.34);background:
+  radial-gradient(500px 220px at 20% 30%,rgba(242,187,82,.10),transparent 64%),
+  linear-gradient(180deg,rgba(20,31,44,.98),rgba(12,21,32,.98));
+  box-shadow:0 16px 40px rgba(0,0,0,.25),inset 3px 0 var(--v153-brass),inset 0 1px rgba(255,255,255,.04)}
+.v153-next>header>small{background:rgba(242,187,82,.10);color:var(--v153-brass)}
+.v153-next .primary,.v153-next button.primary{border-color:transparent;background:linear-gradient(135deg,#f0b645,#ffd474);color:#251a05;box-shadow:0 9px 22px rgba(242,187,82,.22),inset 0 1px rgba(255,255,255,.5)}
+.v153-next .primary:hover{filter:brightness(1.05)}
 .v153-preview{grid-column:span 7;border-color:rgba(96,140,232,.42)}
 .v153-craft{grid-column:span 7;border-color:rgba(154,120,228,.42)}
 .v153-spec{grid-column:span 5;border-color:rgba(240,185,78,.38)}
@@ -1307,7 +1368,7 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
   .v153-grid-6{column-count:1}
 }
 @media(max-width:760px){
-  .ord-app.v151-shell{padding:6px}.v153-screen{font-size:15px}.v153-status{position:static;grid-template-columns:1fr 1fr;padding:9px}.v153-round{grid-column:1/-1;justify-content:center}.v153-live{justify-self:start}.v153-resource{grid-column:1/-1;grid-template-columns:repeat(3,1fr)}.v153-resource>span{display:grid;grid-template-columns:1fr;padding:6px}.v153-resource b{justify-self:start}.v153-main-tools{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr}.v153-tools>summary{justify-content:center}.v153-tools-pop{position:fixed;z-index:100;inset:70px 7px auto;width:auto;max-height:75vh;overflow:auto}
+  .ord-app.v151-shell{padding:6px}.v153-screen{font-size:15px}.v153-status{position:static;grid-template-columns:1fr;padding:9px;gap:9px}.v153-brand{justify-content:center}.v153-hud{justify-content:center}.v153-main-tools{display:grid;grid-template-columns:minmax(0,1fr) auto auto}.v153-sync{min-width:0;overflow:hidden}.v153-tools-pop{position:fixed;z-index:100;inset:70px 7px auto;width:auto;max-height:75vh;overflow:auto}
   .v153-grid{display:block}.v153-panel{margin-bottom:8px;padding:12px}.v153-panel>header h2{font-size:20px}
   .v153-next .v151-action-main{grid-template-columns:54px minmax(0,1fr)}.v153-next .v151-action-main>img,.v153-next .v151-action-main>i{width:54px;height:54px}.v153-next .v151-cost{grid-column:1/-1;display:flex;justify-content:space-between;align-items:center;text-align:left}.v153-next .v151-action-title{font-size:22px}.v153-next .v151-action-facts{grid-template-columns:1fr 1fr}.v153-next-candidates{grid-template-columns:1fr}
   .v153-spec-summary,.v153-rare-columns,.v153-upper-list,.v153-rare-crafts>div,.v153-flow,.v153-craft-cards,.v153-unused-chips,.v153-party-chips{grid-template-columns:1fr}.v153-flow-arrow{display:none}.v153-slow-pin b{font-size:20px}.v153-gap-grid{grid-template-columns:1fr}.v153-rare-columns>section{padding:9px}.v153-upper-main{grid-template-columns:54px minmax(0,1fr)}.v153-upper-main>img{width:54px;height:54px}.v153-upper-main>button{grid-column:1/-1}.v153-support-list>button{grid-template-columns:24px 38px minmax(0,1fr)}.v153-support-list button em{grid-column:3}
@@ -1393,8 +1454,6 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
 /* v18.4 UI: 목업의 시각 요소 — 아이콘, 원형 유닛, 상태 배지.
    외부 아이콘 폰트·이미지를 못 쓰므로(MV3 CSP) 전부 인라인 SVG + CSS 다. */
 .v153-ic{width:15px;height:15px;flex:0 0 auto;opacity:.9}
-.v153-resource span{display:flex;align-items:center;gap:6px}
-.v153-resource .v153-ic{width:14px;height:14px;color:#6fd0ff}
 .v153-slow-pin{display:flex;align-items:center;gap:9px}
 .v153-slow-pin .v153-ic{width:18px;height:18px;color:#7fd7ff}
 .v153-gap-grid article{position:relative;padding-left:30px}
@@ -1456,6 +1515,25 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
 .v153-second button{border:1px solid var(--v153-line);border-radius:9px;padding:4px 9px;font-size:10px;font-weight:800;background:rgba(20,34,58,.9);color:inherit;cursor:pointer}
 .v153-second button.primary{background:linear-gradient(135deg,#7a5cd6,#9a78e4);border-color:transparent;color:#fff}
 
+/* v19.3(사용자 요청): 상위 저격 — 열기 버튼 + 검색 모달. */
+.v153-snipe-open{display:block;width:100%;margin-top:8px;border:1px dashed rgba(155,135,255,.4)!important;border-radius:11px;padding:8px;background:rgba(155,135,255,.06)!important;color:#c4b8ff!important;font-size:11.5px;font-weight:800;cursor:pointer}
+.v153-snipe-open:hover{border-style:solid!important;background:rgba(155,135,255,.12)!important}
+.snipe-modal{width:min(760px,96vw)}
+.snipe-search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin-top:13px}
+.snipe-search input{border:1px solid var(--v153-line);border-radius:11px;background:#071020;color:white;padding:10px 12px;font:inherit}
+.snipe-search .primary{border:none;border-radius:11px;padding:0 16px;background:linear-gradient(135deg,#159bcd,#3475da);color:white;font-weight:800;cursor:pointer}
+.snipe-list{display:grid;gap:6px;max-height:56vh;margin-top:12px;overflow-y:auto;scrollbar-width:thin;padding-right:3px}
+.snipe-group{color:var(--v153-muted);font-size:11px;font-weight:850;font-style:normal;margin:7px 0 1px}
+.snipe-list article{display:grid;grid-template-columns:40px minmax(0,1fr) auto;gap:10px;align-items:center;border:1px solid var(--v153-line);border-radius:12px;padding:7px 9px;background:rgba(7,17,29,.5)}
+.snipe-list article.current{border-color:rgba(71,215,162,.4)}
+.snipe-list img{width:40px;height:40px;border-radius:10px;object-fit:cover;background:#142a40}
+.snipe-list b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.snipe-list small{color:var(--v153-muted);font-size:10.5px}
+.snipe-list article>span:last-child{display:flex;gap:5px;align-items:center}
+.snipe-list button{border:1px solid var(--v153-line);border-radius:9px;padding:6px 10px;font-size:11px;font-weight:800;background:rgba(20,34,58,.9);color:inherit;cursor:pointer}
+.snipe-list button.primary{border-color:transparent;background:linear-gradient(135deg,#7a5cd6,#9a78e4);color:#fff}
+.snipe-now{color:#8be7b9;font-size:11px;font-weight:800;font-style:normal}
+
 /* v18.4(목업): 5번 패널의 주인공은 9환산 진행과 자리별 단계다. 보조 후보
    목록은 목업에 없어 접어 두되, 판단에 필요하니 한 번의 클릭 거리로 남긴다.
    좌우 열 높이도 이걸로 맞는다(오른쪽 1434 → 왼쪽 1009 에 근접). */
@@ -1468,8 +1546,6 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
    opacity .9 를 그대로 두면 팩 아이콘이 흐리고 작게 보여 전부 덮어쓴다. */
 .v153-ic-img{object-fit:contain;opacity:1;width:20px;height:20px}
 .v153-round .v153-ic-img{width:22px;height:22px;margin-right:4px}
-.v153-live .v153-ic-img{width:18px;height:18px}
-.v153-resource .v153-ic-img{width:19px;height:19px}
 .v153-flow-arrow .v153-ic-img{width:16px;height:16px;opacity:.8}
 .v153-flow article>.v153-ic-img{position:absolute;left:8px;top:9px;width:17px;height:17px}
 .v153-flow article{padding-left:32px}
@@ -1492,12 +1568,31 @@ textarea{font:inherit}.run-log-quick{display:grid;gap:8px;margin-top:9px;border:
      패널 부제            제목으로 충분
    1366×768 같은 더 짧은 화면은 여전히 스크롤이 생긴다(내용 밀도상 불가피). */
 @media (max-height:1000px) and (min-width:1240px){
+  .v153-brand small{display:none}
+  .v153-brand-mark{width:31px;height:31px;font-size:14px}
+  .v153-brand b{font-size:16px}
+  .v153-status{padding:6px 12px}
+  .v153-status button,.v153-status select,.v153-pill{min-height:33px}
+  .v153-round>span{display:none}
+  .v153-round strong{font-size:17px}
+  .v153-panel>header{margin:-2px -2px 7px;padding-bottom:0;border-bottom:none}
   .v153-next .v151-action-facts,.v153-spec .v153-spec-summary{display:none}
   .v153-panel>header p{display:none}
   .v153-panel{padding:9px 11px}
   .v153-panel>header{margin-bottom:8px}
   .v153-party-lock{padding:3px 7px;margin-bottom:5px}
   .v153-next .command-line{margin-top:3px}
+  /* v19.3: 새 테마의 헤더 구분선·탑바 만큼 5번 패널 내부에서 회수한다. */
+  .v153-grid-6>.v153-panel{margin-bottom:8px}
+  .v153-party{padding:8px;margin-top:8px}
+  .v153-party>header{margin-bottom:6px}
+  .v153-party-chips{gap:5px}
+  .v153-party-chips>button,.v153-party-slot{padding:5px 6px}
+  .v153-upper-main>img{width:54px;height:54px}
+  .v153-second{padding:7px;margin-top:7px}
+  .v153-upper-gaps{margin-top:7px}
+  .v153-support-fold{margin-top:7px}
+  .v153-support-fold>summary{padding:4px 0}
 }
 
 /* v18.7: 스펙 표기 통일 — 모든 역할이 같은 행 형식이다.
@@ -1865,7 +1960,7 @@ window.ORD_META_STATS={"schema":"ord-meta-stats-v1","source":"tmo_nightmare_all_
 (function(global){
 'use strict';
 
-const VERSION='19.2.0';
+const VERSION='19.3.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -3346,7 +3441,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.2.0';
+const VERSION='19.3.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -4953,7 +5048,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.2.0';
+const VERSION='19.3.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -5083,7 +5178,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.2.0';
+const VERSION='19.3.0';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -5157,7 +5252,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.2.0';
+const VERSION='19.3.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -5339,7 +5434,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.2.0';
+const VERSION='19.3.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -7155,7 +7250,7 @@ const COMMAND_INHERITANCE={
 // 상위 등급 공업 데이터 상한(ORD_2305C_upper_combat_raw maxLevel).
 const UPPER_RESEARCH_MAX=21;
 const DEFAULTS={
-  tab:'coach',mode:'',magicRoute:'auto',settingsRevision:178,modeExplicit:false,targetSquadCount:9,purpose:'',gorosei:'none',superKumaOwned:true,story10Reward:'',virtualSpecialId:'',virtualSpecialBaselineId:'',virtualSpecialBaselineCount:0,wispOverride:'',upperPreviewId:'',upperBlueprint:null,secondUpperId:'',
+  tab:'coach',mode:'',magicRoute:'auto',settingsRevision:178,modeExplicit:false,targetSquadCount:9,purpose:'',gorosei:'none',superKumaOwned:true,story10Reward:'',virtualSpecialId:'',virtualSpecialBaselineId:'',virtualSpecialBaselineCount:0,wispOverride:'',upperPreviewId:'',upperBlueprint:null,secondUpperId:'',snipeSearch:'',
   directionStatus:'open',directionKey:'',directionUpperId:'',directionHoldFingerprint:'',releasedUpperHint:null,
   postLegendRoute:'',postLegendObservedCount:0,postLegendBaseline:{},
   currentRound:1,roundStartedAt:0,roundPrepSeconds:10,roundNormalSeconds:35,roundBossSeconds:60,roundAutoGeneration:0,roundAutoSourceEpoch:0,manualCounts:{},pendingCounts:{},pendingAt:{},pendingTransaction:null,connectionDiagnostic:null,detailId:'',message:'',
@@ -7171,7 +7266,7 @@ const DEFAULTS={
 
 const REACHABLE_TABS=new Set(['coach','runlog','deck','data','story']);
 const REMOVED_SETTING_KEYS=['firstRareRewardClaimed','moneyRareReward','storyRareRewards','highGambleDone','highGambleRares','stunConditions','allowWarped','recommendWarped'];
-const RUN_LOG_ACTIONS=new Set(['post-legend-route','purpose','super-kuma','mark-made','reroll-confirmed','cancel-reroll','unit-adjust','clear-unit-override','preview-direction','choose-direction','hold-direction','select-upper','confirm-upper','party-preview','lock-legend','lock-rare','remove-lock','reset-route','round-reset','round-step','round-pause','round-start','reroll-step','new-game','dismiss-transaction','accept-snapshot','counter-step','clear-overrides','confirm-second-upper','release-second-upper','confirm-party','release-party','restore-released-upper']);
+const RUN_LOG_ACTIONS=new Set(['post-legend-route','purpose','super-kuma','mark-made','reroll-confirmed','cancel-reroll','unit-adjust','clear-unit-override','preview-direction','choose-direction','hold-direction','select-upper','confirm-upper','party-preview','lock-legend','lock-rare','remove-lock','reset-route','round-reset','round-step','round-pause','round-start','reroll-step','new-game','dismiss-transaction','accept-snapshot','counter-step','clear-overrides','confirm-second-upper','release-second-upper','confirm-party','release-party','restore-released-upper','snipe-upper']);
 const RUN_LOG_SETTING_KEYS=new Set(['mode','magicRoute','gorosei','story10Reward','currentRound','roundPrepSeconds','roundNormalSeconds','roundBossSeconds','wispOverride','virtualSpecialId','transcendUsed','seraphUsed','changedUsed']);
 const RUN_RESULT_DEFAULTS=Object.freeze({kind:'r50_failed',failureReason:'unknown',followedProgram:'unknown',round:'',bossHpPercent:'',attackUpgrade:'',slowUpgrade:'',hpRegenUpgrade:'',mpRegenUpgrade:'',helperUsed:false,note:''});
 const RUN_FAILURE_KINDS=new Set(['r50_failed','r51_65_failed']);
@@ -7393,7 +7488,7 @@ function transactionSourceMatches(snapshot,transaction){const tx=normalizeTransa
 class App{
   constructor(root,catalog,config){
     this.root=root;this.catalog=catalog||[];this.config=config||{};const stored=readStore();this.state=normalizeInitialState(stored);
-    this.state.manualCounts=Object.assign({},stored.manualCounts||{});this.state.pendingCounts={};this.state.pendingAt={};this.state.pendingTransaction=normalizeTransaction(stored.pendingTransaction);this.state.locks=Array.isArray(stored.locks)?stored.locks:[];this.state.upperBlueprint=normalizeUpperBlueprint(stored.upperBlueprint);this.state.secondUpperId=String(stored.secondUpperId||'');this.state.upperDetection=normalizeUpperDetection(stored.upperDetection);this.state.watchStability=normalizeWatchStability(stored.watchStability);this.onConnectionTest=null;this.onOpenTmo=null;this._renderedRound=1;this._squadCacheKey='';this._squadCache=null;this._v15CacheKey='';this._v15Cache=null;this._terminalCandidate=null;this._terminalWipeAt=0;this._lastVerdictReport=null;this._verdictCache=null;this._verdictCacheKey='';this._upperRankCacheKey='';this._upperRankCache=[];this._directionRankCacheKey='';this._directionRankCache=null;this._blueprintRankings=null;this._blueprintRankingsKey='';this._blueprintDesiredKey='';this._blueprintRankSeq=0;this._blueprintWorkerDisabled=false;this._directionDesiredKey='';this._directionRankSeq=0;this._directionRankTimer=0;this._directionWorker=null;this._directionInFlight=null;this._directionWorkerDisabled=false;this.runLog=null;this._runLogReady=false;this._runLogBaseline=null;this._runLogLastDecisionDigest='';this._runLogHistory=[];this._runLogSelectedRun=null;this._runLogSelectedId='';this._runLogFilter='all';this._runLogDeleteArmedAt=0;this._runResultOpen=false;this._runResultSaving=false;this._runResultDraft=Object.assign({},RUN_RESULT_DEFAULTS);this._clockTimer=setInterval(()=>this.updateClockOnly(),1000);this._onDocumentKeydown=e=>{if(e.key==='Escape'&&this.state.detailId){this.state.detailId='';this.render();}else if(e.key==='Escape'&&this._runResultOpen&&!this._runResultSaving){this._runResultOpen=false;this.render();}};document.addEventListener('keydown',this._onDocumentKeydown);this.bind();this.persist();this.render();this._runLogReadyPromise=this.initRunLog();
+    this.state.manualCounts=Object.assign({},stored.manualCounts||{});this.state.pendingCounts={};this.state.pendingAt={};this.state.pendingTransaction=normalizeTransaction(stored.pendingTransaction);this.state.locks=Array.isArray(stored.locks)?stored.locks:[];this.state.upperBlueprint=normalizeUpperBlueprint(stored.upperBlueprint);this.state.secondUpperId=String(stored.secondUpperId||'');this.state.upperDetection=normalizeUpperDetection(stored.upperDetection);this.state.watchStability=normalizeWatchStability(stored.watchStability);this.onConnectionTest=null;this.onOpenTmo=null;this._renderedRound=1;this._squadCacheKey='';this._squadCache=null;this._v15CacheKey='';this._v15Cache=null;this._terminalCandidate=null;this._terminalWipeAt=0;this._lastVerdictReport=null;this._verdictCache=null;this._verdictCacheKey='';this._upperRankCacheKey='';this._upperRankCache=[];this._directionRankCacheKey='';this._directionRankCache=null;this._blueprintRankings=null;this._blueprintRankingsKey='';this._blueprintDesiredKey='';this._blueprintRankSeq=0;this._blueprintWorkerDisabled=false;this._directionDesiredKey='';this._directionRankSeq=0;this._directionRankTimer=0;this._directionWorker=null;this._directionInFlight=null;this._directionWorkerDisabled=false;this.runLog=null;this._runLogReady=false;this._runLogBaseline=null;this._runLogLastDecisionDigest='';this._runLogHistory=[];this._runLogSelectedRun=null;this._runLogSelectedId='';this._runLogFilter='all';this._runLogDeleteArmedAt=0;this._runResultOpen=false;this._runResultSaving=false;this._runResultDraft=Object.assign({},RUN_RESULT_DEFAULTS);this._clockTimer=setInterval(()=>this.updateClockOnly(),1000);this._onDocumentKeydown=e=>{if(e.key==='Escape'&&this._snipeOpen){this._snipeOpen=false;this.render();}else if(e.key==='Escape'&&this.state.detailId){this.state.detailId='';this.render();}else if(e.key==='Escape'&&this._runResultOpen&&!this._runResultSaving){this._runResultOpen=false;this.render();}};document.addEventListener('keydown',this._onDocumentKeydown);this.bind();this.persist();this.render();this._runLogReadyPromise=this.initRunLog();
   }
   destroy(){clearInterval(this._clockTimer);clearTimeout(this._toastTimer);clearTimeout(this._directionRankTimer);this._directionRankSeq++;if(this._directionWorker)this._directionWorker.terminate();this._directionWorker=null;if(this.runLog)this.runLog.destroy().catch(()=>{});document.removeEventListener('keydown',this._onDocumentKeydown);}
   persist(){const copy=Object.assign({},this.state);for(const k of ['snapshot','liveAt','connectionDiagnostic','message','detailId','unitSearch','newGameArmedAt'])delete copy[k];writeStore(copy);}
@@ -7800,7 +7895,7 @@ class App{
     this.root.addEventListener('click',e=>{const b=e.target.closest('[data-act]');if(!b)return;if(b.classList.contains('modal-back')&&e.target!==b)return;const action=b.dataset.act;if(RUN_LOG_ACTIONS.has(action))this.recordAuditAction({actor:'user',action,targetId:String(b.dataset.id||''),value:String(b.dataset.value||''),key:String(b.dataset.key||''),delta:C.num(b.dataset.delta),stage:String(b.dataset.stage||'')});this.act(action,b);});
     this.root.addEventListener('change',e=>{const el=e.target;if(el.dataset.opt!==undefined)this.setOpt(el.dataset.opt,el.type==='checkbox'?el.checked:el.value);if(el.dataset.upg!==undefined){const key=el.dataset.upg;if(key==='upperLevel'){const before=this.state.upperResearchLevel,after=Math.max(1,Math.min(UPPER_RESEARCH_MAX,C.num(el.value)||1));this.state.upperResearchLevel=after;this.recordAuditAction({actor:'user',action:'manual-upgrade',key,before:C.num(before),after});}else{const before=!!(this.state.labResearch&&this.state.labResearch[key]),after=el.type==='checkbox'?!!el.checked:!!C.num(el.value);this.state.labResearch=Object.assign({},this.state.labResearch,{[key]:after,round:this.actualRound()});this.recordAuditAction({actor:'user',action:'lab-research',key,before,after});}this._squadCacheKey='';this._v15CacheKey='';this.persist();this.render();return;}if(el.dataset.count){if(this.state.pendingTransaction)this.rollbackTransaction();const before=C.num(this.normalized().counts[el.dataset.count]),after=Math.max(0,C.num(el.value));this.state.manualCounts[el.dataset.count]=after;delete this.state.pendingCounts[el.dataset.count];delete this.state.pendingAt[el.dataset.count];this.releaseDirectionHold();this._squadCacheKey='';this.recordAuditAction({actor:'user',action:'manual-count',targetId:String(el.dataset.count),before,after});this.persist();this.render();}});
     this.root.addEventListener('input',e=>{const el=e.target;if(el.dataset.liveOpt!==undefined)this.state[el.dataset.liveOpt]=el.value;if(el.dataset.runField!==undefined)this._runResultDraft[el.dataset.runField]=el.type==='checkbox'?el.checked:el.value;});
-    this.root.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.matches('[data-live-opt="unitSearch"]')){e.preventDefault();this.render();}});
+    this.root.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.matches('[data-live-opt="unitSearch"]')||e.target.matches('[data-live-opt="snipeSearch"]'))){e.preventDefault();this.render();}});
     this.root.addEventListener('focusout',()=>setTimeout(()=>this.flushDeferredExternalRender(),0));
   }
   selectDamageMode(value){
@@ -7857,7 +7952,7 @@ class App{
     if(a==='run-result-save'){this.saveRunOutcome();return;}
     if(a==='run-log-clear'){const now=Date.now();if(now-C.num(this._runLogDeleteArmedAt)>3500){this._runLogDeleteArmedAt=now;this.toast('진행 기록 전체 삭제를 한 번 더 누르면 되돌릴 수 없습니다.');return;}this._runLogDeleteArmedAt=0;this.clearRunLogs();return;}
     if(a==='post-legend-route'&&this.state.pendingTransaction){this.toast('TMO 제작 반영 확인 후 다음 경로를 선택할 수 있습니다.');return;}
-    if(this.state.pendingTransaction&&['purpose','select-upper','preview-direction','choose-direction','hold-direction','confirm-upper','restore-released-upper','lock-legend','lock-rare','remove-lock','reset-route','counter-step'].includes(a))this.rollbackTransaction();
+    if(this.state.pendingTransaction&&['purpose','select-upper','preview-direction','choose-direction','hold-direction','confirm-upper','restore-released-upper','snipe-upper','lock-legend','lock-rare','remove-lock','reset-route','counter-step'].includes(a))this.rollbackTransaction();
     if(a==='tab'){const tab=String(b.dataset.tab||'');if(!REACHABLE_TABS.has(tab))return;const previousTab=this.state.tab;this._focusAfterRender=tab==='coach'?(previousTab==='runlog'?'[data-act="run-log-open"]':`[data-act="tab"][data-tab="${previousTab}"]`):'.v151-aux-bar [data-act="tab"][data-tab="coach"]';this.state.tab=tab;if(tab==='runlog'){this._runLogSelectedId=this._runLogSelectedId||this.runLog&&this.runLog.currentRun&&this.runLog.currentRun.runId||'';this._runLogSelectedRun=this._runLogSelectedRun||this.runLog&&this.runLog.currentRun||null;this.refreshRunLogHistory(false);}this.persist();this.render();return;}
     if(a==='purpose'){this.state.purpose=b.dataset.value||'';this.persist();this.render();return;}
     if(a==='post-legend-route'){
@@ -7924,6 +8019,38 @@ class App{
       this.state.directionStatus='preview';this.state.directionKey=key;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';this.state.mode=key==='physical'?'physical':'magic';this.state.magicRoute=key==='physical'?'auto':key;this.state.upperPreviewId=id;this.state.postLegendRoute='upper';this.state.purpose='upper';this._squadCacheKey='';this.persist();this.render();return;
     }
     if(a==='hold-direction'){this.state.directionStatus='hold';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint=fingerprint(this.state.snapshot);this.state.upperPreviewId='';this.state.upperBlueprint=null;this.state.releasedUpperHint=null;this.state.purpose='upper';this._squadCacheKey='';this.persist();this.render();return;}
+    // v19.3(사용자 요청): "특정 상위를 저격해서 갈 수 있게 해줘. 브록 초월을
+    // 가고 싶으면 브록 초월 선택했을 때 강제로 갈 수 있도록."
+    //
+    // 저격은 기존 확정(confirm-upper)과 두 가지가 다르다.
+    //   · 25라 게이트를 우회한다 — "강제로"가 요점이다.  일찍 정하는 위험은
+    //     사용자가 지는 대신, 코치는 그 상위의 재료·선위를 처음부터 지킨다.
+    //   · 순위 목록에 없어도 된다 — 카탈로그의 어떤 상위든 검색해 고른다.
+    // 확정 뒤 동작은 기존 기계 그대로다: locks 의 upper 잠금이 fixedUpperIds
+    // 로 흘러 플래너가 그 상위를 최우선으로 만들고(ruleBlocked '확정 상위
+    // 우선'), 엔진은 upperReserve 로 그 트리 재료를 잠근다.
+    if(a==='snipe-open'){this._snipeOpen=true;this.render();return;}
+    if(a==='snipe-close'){this._snipeOpen=false;this.render();return;}
+    if(a==='snipe-search'){this.render();return;}
+    if(a==='snipe-upper'){
+      const db=this.normalized().db,unit=db.byId.get(id);
+      if(!unit||!C.isUpper(unit)){this.toast('상위 유닛이 아닙니다.');return;}
+      const family=C.familyOf(unit),mode=family==='magic'?'magic':'physical';
+      const route=mode==='physical'?'physical':['dual','singleEnd'].includes(this.state.magicRoute)?this.state.magicRoute:'singleEnd';
+      const routeFamily=upperRouteFamily(id);
+      this.state.locks=this.state.locks.filter(lock=>lock.stage!=='upper'&&lock.stage!=='legend');
+      this.state.locks.push({stage:'upper',id,source:'sniped',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:id,activeVariantId:id});
+      this.state.upperBlueprint=this.captureUpperCommitment(id,mode,route);
+      this.state.mode=mode;this.state.modeExplicit=true;this.state.magicRoute=mode==='magic'?route:'auto';
+      this.state.directionStatus='selected';this.state.directionKey=mode==='physical'?'physical':route;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';
+      this.state.releasedUpperHint=null;this.state.upperDetection=emptyUpperDetection();this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';
+      if(String(this.state.secondUpperId||'')&&C.canonicalUpperId(this.state.secondUpperId)===C.canonicalUpperId(id))this.state.secondUpperId='';
+      this._snipeOpen=false;
+      this._squadCacheKey='';this._v15CacheKey='';this._directionRankCacheKey='';this._blueprintRankingsKey='';this._upperRankCacheKey='';this._upperRankCache=[];
+      this.persist();
+      this.toast(`${displayNameOf(unit)} 저격 확정 — 이 상위를 최우선으로 준비합니다. 지금 재료가 부족해도 경로를 유지하고 트리 재료를 보호합니다.`);
+      return;
+    }
     // v19.2(사용자 요청): 방금 계통 전환으로 해제된 상위를 원클릭 복구.
     if(a==='restore-released-upper'){
       const active=this.activeReleasedUpperHint();
@@ -8023,7 +8150,7 @@ class App{
     const pack=this.plan(),state=pack.state,plan=pack.plan,settings=pack.settings,phase=phaseForPurpose(plan,settings.currentRound),clock=C.roundClock(settings,Date.now()),health=this.health();this._renderedRound=settings.currentRound;this._renderedHealthKey=health.key;this._deferredExternalRender=false;this.captureRunDecision(pack);
     const savedScroll=this.captureScrollPositions();
     const body=this.state.tab==='coach'?this.renderCoach(state,plan,phase,clock,health):this.renderAuxiliaryPage(this.state.tab,state,plan,health);
-    this.root.innerHTML=`<div class="ord-app v151-shell" data-view="${C.esc(this.state.tab)}">${body}${this.renderDetail(state,plan)}${this.renderV151PartyModal(state,plan)}${this.renderV151ShipModal(state)}${this.renderRunResultModal(health)}${this.state.message?`<div class="ord-toast" role="status">${C.esc(this.state.message)}</div>`:''}</div>`;
+    this.root.innerHTML=`<div class="ord-app v151-shell" data-view="${C.esc(this.state.tab)}">${body}${this.renderDetail(state,plan)}${this.renderV151PartyModal(state,plan)}${this.renderV151ShipModal(state)}${this.renderSnipeModal(state)}${this.renderRunResultModal(health)}${this.state.message?`<div class="ord-toast" role="status">${C.esc(this.state.message)}</div>`:''}</div>`;
     this.restoreScrollPositions(savedScroll);
     this.root.querySelectorAll('[data-act="confirm-upper"]').forEach(button=>{if(settings.currentRound>=25){button.disabled=false;button.removeAttribute('aria-disabled');button.title='상위 방향을 먼저 잠급니다. 보조 조합은 패가 바뀔 때마다 가변 재계산합니다.';return;}button.disabled=true;button.setAttribute('aria-disabled','true');button.title='상위·조합 방향 확정은 25라운드부터 가능합니다.';button.textContent='25라부터 확정';});
     const focusSelector=this._focusAfterRender;this._focusAfterRender='';if(focusSelector&&this.root.querySelector){const target=this.root.querySelector(focusSelector);if(target&&typeof target.focus==='function'){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}
@@ -9012,10 +9139,15 @@ class App{
   }
 
   renderV153Status(state,clock,health){
+    // v19.3(사용자 요청): ORD COACH 전술판 목업의 탑바로 개편.
+    // 브랜드 · 라운드 조절 · 계통 스위치 · 위습/리롤 HUD · 동기화 · 도구.
+    // data-clock / data-sync-age 는 updateClockOnly 가 텍스트만 갈아끼우는
+    // 훅이라 잎 노드(span)여야 한다 — data-sync-age 는 패처가 클래스도
+    // `sync-pill ${key}` 로 덮으므로 처음부터 그 클래스로 시작한다.
     health=health||{};clock=clock||{};
-    const route=this.state.mode==='physical'?'물딜':this.state.mode==='magic'?(this.state.directionKey==='singleEnd'?'마딜 1상위·단끝':this.state.directionKey==='dual'?'마딜 2상위·토키':'마딜'):'방향 미정';
     const rerollLeft=Math.max(0,2-C.num(this.state.rerollsUsed)),age=C.num(health.ageSec)<999?`${C.num(health.ageSec)}초 전`:'수신 없음';
-    return`<section class="v153-status" data-region="game-status"><div class="v153-round">${this.v153Icon('clock')}<button data-act="round-step" data-delta="-1" aria-label="라운드 내리기">−</button><strong>${this.actualRound()}라</strong><button data-act="round-step" data-delta="1" aria-label="라운드 올리기">＋</button><span data-clock>${C.esc(clock.label||'라운드 수동')}</span></div><div class="v153-live ${health.ready?'ok':'warn'}" data-sync-age>${this.v153Icon(health.ready?'sync':'warn')}<b>${C.esc(health.label||'연결 대기')}</b><span>${C.esc(age)}</span></div><div class="v153-resource"><span>${this.v153Icon('blade')}<small>방향</small><b>${C.esc(route)}</b></span><span>${this.v153Icon('spiral')}<small>선택 위습</small><b>${C.num(state&&state.wisp)}</b></span><span>${this.v153Icon('anchor')}<small>희귀 리롤</small><b>${rerollLeft}/2</b></span></div><div class="v153-main-tools"><button class="primary" data-act="connection">TMO 동기화</button><button class="new-game" data-act="new-game">새 게임</button><details class="v153-tools"><summary>설정·도구</summary><div class="v153-tools-pop">${this.renderV153Settings(state)}<div class="v153-tool-actions"><button data-act="run-log-open">기록 보기</button><button data-act="run-log-export">JSON 저장</button><button data-act="run-result-open">게임 결과</button><button type="button" data-act="tab" data-tab="deck">수동 패 보정</button><button type="button" data-act="tab" data-tab="data">연결 진단</button><button type="button" data-act="tab" data-tab="story">스토리 자료</button></div></div></details></div></section>`;
+    const modeButtons=[['','자동'],['physical','물딜'],['magic','마딜']].map(([value,label])=>`<button class="${this.state.mode===value?'on':''}" data-act="mode" data-value="${value}">${label}</button>`).join('');
+    return`<section class="v153-status" data-region="game-status"><div class="v153-brand"><i class="v153-brand-mark">✦</i><div><b>ORD COACH</b><small>NIGHTMARE TACTICAL BOARD · 2.305</small></div></div><div class="v153-hud"><div class="v153-round"><button data-act="round-step" data-delta="-1" aria-label="라운드 내리기">−</button><strong>${this.actualRound()}라</strong><button data-act="round-step" data-delta="1" aria-label="라운드 올리기">＋</button><span data-clock>${C.esc(clock.label||'라운드 수동')}</span></div><div class="v153-mode" role="group" aria-label="빌드 방향">${modeButtons}</div><span class="v153-pill violet">${this.v153Icon('spiral')}<small>선택 위습</small><b>${C.num(state&&state.wisp)}</b></span><span class="v153-pill coral">${this.v153Icon('reroll')}<small>희귀 리롤</small><b>${rerollLeft}/2</b></span></div><div class="v153-main-tools"><button class="v153-sync ${health.ready?'ok':'warn'}" data-act="connection" title="TMO 동기화 · 다시 읽기"><i class="v153-sync-dot"></i><span class="sync-pill ${C.esc(health.key||'ok')}" data-sync-age>${C.esc(health.label||'연결 대기')} · ${C.esc(age)}</span></button><button class="v153-iconbtn new-game" data-act="new-game" title="새 게임">↺</button><details class="v153-tools"><summary title="설정·도구">⚙</summary><div class="v153-tools-pop">${this.renderV153Settings(state)}<div class="v153-tool-actions"><button data-act="run-log-open">기록 보기</button><button data-act="run-log-export">JSON 저장</button><button data-act="run-result-open">게임 결과</button><button type="button" data-act="tab" data-tab="deck">수동 패 보정</button><button type="button" data-act="tab" data-tab="data">연결 진단</button><button type="button" data-act="tab" data-tab="story">스토리 자료</button></div></div></details></div></section>`;
   }
 
   // v18.4: 후속 후보 수집을 렌더러에서 분리한다 — 1번 카드(옛 배치)와 2번
@@ -9229,9 +9361,9 @@ class App{
   renderV153UpperParty(state,plan){
     const decision=plan.v15Decision||{},lock=this.upperLock(),db=state&&state.db,upper=lock&&db&&db.byId.get(lock.id)||plan.upper||null,candidates=(decision.routeCandidates||[]).slice(0,3);
     if(!upper){
-      if(!candidates.length)return`<div class="v153-upper-empty"><b>상위 후보 계산 대기</b><span>25라 전후 현재 희귀·특별 패에서 상위 3개만 비교합니다.</span></div>`;
+      if(!candidates.length)return`<div class="v153-upper-empty"><b>상위 후보 계산 대기</b><span>25라 전후 현재 희귀·특별 패에서 상위 3개만 비교합니다.</span></div><button class="v153-snipe-open" data-act="snipe-open">원하는 상위 직접 저격…</button>`;
       const canConfirm=this.actualRound()>=25;
-      return`<div class="v153-upper-list">${candidates.map((row,index)=>{const tier=row.powerTier&&row.powerTier.known?`${row.powerTier.letter}티어`:'티어 확인 중',ready=routeCandidateReady(row),enabled=canConfirm&&ready;return`<article class="${index===0?'best':''}"><header><span>${index+1}</span><div><b>${C.esc(row.name)}</b><small>${C.esc(tier)} · ${C.esc(row.angleLabel||'미평가')} · ${C.esc(row.routeLabel||'')}</small></div></header><div><strong>선위 ${C.num(row.wispCost)}</strong><span>${C.num(row.wispGap)>0?`현재 ${C.num(row.wispGap)}개 부족`:'현재 충당 가능'}</span></div><p>${C.esc(row.reason||'상위와 보조 전설급을 같은 파티로 평가합니다.')}</p><footer><button data-act="party-preview" data-id="${C.esc(row.id)}">파티 보기</button><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${enabled?'':'disabled aria-disabled="true"'}>${!canConfirm?'25라부터':ready?'상위 확정':'파티 평가 중'}</button></footer></article>`;}).join('')}</div>`;
+      return`<div class="v153-upper-list">${candidates.map((row,index)=>{const tier=row.powerTier&&row.powerTier.known?`${row.powerTier.letter}티어`:'티어 확인 중',ready=routeCandidateReady(row),enabled=canConfirm&&ready;return`<article class="${index===0?'best':''}"><header><span>${index+1}</span><div><b>${C.esc(row.name)}</b><small>${C.esc(tier)} · ${C.esc(row.angleLabel||'미평가')} · ${C.esc(row.routeLabel||'')}</small></div></header><div><strong>선위 ${C.num(row.wispCost)}</strong><span>${C.num(row.wispGap)>0?`현재 ${C.num(row.wispGap)}개 부족`:'현재 충당 가능'}</span></div><p>${C.esc(row.reason||'상위와 보조 전설급을 같은 파티로 평가합니다.')}</p><footer><button data-act="party-preview" data-id="${C.esc(row.id)}">파티 보기</button><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${enabled?'':'disabled aria-disabled="true"'}>${!canConfirm?'25라부터':ready?'상위 확정':'파티 평가 중'}</button></footer></article>`;}).join('')}</div><button class="v153-snipe-open" data-act="snipe-open">목록에 없는 상위 저격…</button>`;
     }
     const squad=plan.squadPlan||this.v151ComputeParty(state,plan,upper.id);if(squad&&!squad.error)plan.squadPlan=squad;
     const power=C.upperPowerTier?C.upperPowerTier(upper,db):null,requirements=(decision.assessment&&decision.assessment.requirements||[]).filter(row=>row.required!==false&&!row.waived&&C.num(row.gap)>0).slice(0,3),ship=this.v153ShipOpportunity(state,plan),baseSupports=this.v151BuildableLegendRows(state,plan).filter(row=>!ship||String(row.unit.id)!==String(ship.unit.id)),supports=ship?[baseSupports[0],ship,baseSupports[1]].filter(Boolean).slice(0,3):baseSupports.slice(0,3);
@@ -9279,7 +9411,7 @@ class App{
       for(const option of options){if(rows.length>=3)break;if(String(option.unit.id)===plannedId)continue;rows.push({unit:option.unit,label:option.feasible?'지금 제작 가능':`선위 ${option.wispCost}`,wispCost:option.wispCost});}
       secondBlock=rows.length?`<details class="v153-second"><summary>두 번째 상위 확정 · ${plannedSecond?`현재 계획 ${C.esc(displayNameOf(plannedSecond))}`:'계획에 두 번째 상위 없음'}</summary><div class="v153-second-list">${rows.map(row=>`<article><span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(secondTier(row.unit))} · ${C.esc(row.label)}</small></span><span><button data-act="detail" data-id="${C.esc(row.unit.id)}">상세</button><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}">2상위 확정</button></span></article>`).join('')}</div><small>확정하면 그 자리를 다른 상위에게 넘기지 않습니다. 물딜도 확정하면 2상위로 갑니다(보드 5기 + 상위 2기 = 9환산).</small></details>`:'';
     }
-    return`<div class="v153-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>확정 메인 상위${power&&power.known?` · ${C.esc(power.letter)}티어`:''}</small><b>${C.esc(displayNameOf(upper))}</b><em>${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="party-preview" data-id="${C.esc(upper.id)}">전체 파티 보기</button></div>${partyBoard}${secondBlock}<div class="v153-upper-gaps"><small>이 파티에서 먼저 닫을 결손</small>${requirements.length?requirements.map(row=>`<span>${C.esc(row.label)} <b>부족 ${fmt(row.gap)}</b></span>`).join(''):'<span class="ok">필수 역할 합계 충족</span>'}</div><details class="v153-support-fold"><summary>다음 보조 전설급 ${supports.length}개 · 같은 최종 파티 기준</summary><div class="v153-support-list">${supportHtml||'<p>현재 패에서 확정할 보조 전설급을 계산 중입니다.</p>'}</div></details>`;
+    return`<div class="v153-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>확정 메인 상위${power&&power.known?` · ${C.esc(power.letter)}티어`:''}</small><b>${C.esc(displayNameOf(upper))}</b><em>${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="party-preview" data-id="${C.esc(upper.id)}">전체 파티 보기</button><button data-act="snipe-open" title="다른 상위로 강제 변경">저격</button></div>${partyBoard}${secondBlock}<div class="v153-upper-gaps"><small>이 파티에서 먼저 닫을 결손</small>${requirements.length?requirements.map(row=>`<span>${C.esc(row.label)} <b>부족 ${fmt(row.gap)}</b></span>`).join(''):'<span class="ok">필수 역할 합계 충족</span>'}</div><details class="v153-support-fold"><summary>다음 보조 전설급 ${supports.length}개 · 같은 최종 파티 기준</summary><div class="v153-support-list">${supportHtml||'<p>현재 패에서 확정할 보조 전설급을 계산 중입니다.</p>'}</div></details>`;
   }
 
   renderCoach(state,plan,phase,clock,health){
@@ -9502,6 +9634,27 @@ class App{
       out.push({unit:upperUnit,uses,completion:C.num(C.completionPercent(state,upperUnit)),missingShort:missingRares.reduce((sum,row)=>sum+row.short,0),missingRares:missingRares.slice(0,3)});
     }
     return out.sort((a,b)=>b.completion-a.completion||a.missingShort-b.missingShort||C.nameOf(a.unit).localeCompare(C.nameOf(b.unit),'ko')).slice(0,8);
+  }
+  // v19.3(사용자 요청): 상위 저격 모달 — 카탈로그의 모든 상위를 검색해
+  // 순위와 무관하게 강제 확정한다.  현재 계통 우선으로 묶어 보여주되
+  // 반대 계통도 숨기지 않는다(저격하면 계통이 따라 바뀐다).
+  renderSnipeModal(state){
+    if(!this._snipeOpen||!state||!state.db)return'';
+    const search=String(this.state.snipeSearch||'').trim().toLowerCase();
+    const locked=this.upperLock(),lockedKey=locked?C.canonicalUpperId(locked.id):'';
+    const rows=(state.db.uppers||[])
+      .filter(unit=>!search||displayNameOf(unit).toLowerCase().includes(search)||String(unit.name||'').toLowerCase().includes(search))
+      .map(unit=>({unit,family:C.familyOf(unit),tier:C.upperPowerTier?C.upperPowerTier(unit,state.db):{known:false,rank:-1,letter:''},pct:C.completionPercent(state,unit)}))
+      .sort((a,b)=>C.num(b.tier.rank)-C.num(a.tier.rank)||C.num(b.pct)-C.num(a.pct)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko'));
+    const groups=[['physical','물딜 상위'],['magic','마딜 상위'],['neutral','중립']].map(([key,label])=>{
+      const members=rows.filter(row=>row.family===key);
+      if(!members.length)return'';
+      return`<em class="snipe-group">${label} · ${members.length}</em>${members.map(row=>{
+        const current=lockedKey&&C.canonicalUpperId(row.unit.id)===lockedKey;
+        return`<article class="${current?'current':''}"><img src="${C.esc(row.unit.image||'')}" alt="" loading="lazy"><span><b>${C.esc(displayNameOf(row.unit))}</b><small>${row.tier.known?`${C.esc(row.tier.letter)}티어`:'티어 미상'} · TMO ${pct(row.pct)}</small></span><span>${current?'<i class="snipe-now">현재 확정</i>':`<button data-act="detail" data-id="${C.esc(row.unit.id)}">상세</button><button class="primary" data-act="snipe-upper" data-id="${C.esc(row.unit.id)}">저격 확정</button>`}</span></article>`;
+      }).join('')}`;
+    }).join('');
+    return`<div class="modal-back" data-act="snipe-close"><article class="detail-modal snipe-modal" role="dialog" aria-modal="true" aria-label="상위 저격"><button class="modal-x" data-act="snipe-close" aria-label="닫기">×</button><header><div><h2>상위 저격</h2><p>순위와 무관하게 원하는 상위로 강제 확정합니다. 25라 전에도 가능하며, 확정 즉시 그 상위의 트리 재료를 보호하고 최우선으로 준비합니다.</p></div></header><div class="snipe-search"><input data-live-opt="snipeSearch" value="${C.esc(this.state.snipeSearch||'')}" placeholder="상위 이름 검색 (예: 브룩)"><button class="primary" data-act="snipe-search">검색</button></div><div class="snipe-list">${groups||'<div class="empty">검색 결과 없음</div>'}</div></article></div>`;
   }
   renderDetail(state,plan){
     const id=this.state.detailId;if(!id)return'';const u=state.db.byId.get(id);if(!u)return'';const linked=plan.actions.concat(plan.watch||[],plan.prep||[],plan.rows||[]).find(x=>x.unit.id===id),inspected=linked||C.candidateRow(state,u,{mode:plan.mode,spec:plan.spec,deficits:plan.deficits,settings:plan.settings||{},round:plan.round||1,purpose:plan.purpose,upper:plan.upper,stock:plan.reserved&&plan.reserved.stock||state.counts,ruleCounts:plan.reserved&&plan.reserved.stock||state.counts,availableWisp:plan.availableWisp,synergyMemo:global.ORD_SYNERGY_MEMO,costBasis:plan.reserved&&plan.reserved.reservedWispCost?'protected':'current'}),solve=inspected.solve,available=inspected.availableWisp,wisp=this.wispDisplay(state,inspected),role=C.roleProfile(u),sourceStory=inspected.story||C.storyGrade(u),story=C.storyLeagueGrade&&C.storyLeagueGrade(u,sourceStory)||sourceStory,facts=C.skillFacts?C.skillFacts(u):{always:[],trigger:[],research:[],researchVariants:[],penalties:[],mechanics:[]},status=inspected.blocked&&inspected.blocked.length?inspected.blocked.join(' · '):(solve.wispCost<=available?'지금 제작 가능':`선위 ${solve.wispCost-available}개 부족`),direct=solve.direct.map(x=>`<div><span>${C.esc(C.materialName(state.db,x.id))}</span><b>${x.owned}/${x.count}</b></div>`).join('')||'<small>직접 재료 없음</small>',command=this.commandInfo(u),impact=(inspected.impact&&inspected.impact.rows||[]).filter(x=>Math.abs(C.num(x.delta))>.005||x.closed||x.regressed),impactHtml=impact.map(x=>`<div class="${x.regressed?'bad':x.closed?'good':'warn'}"><span>${C.esc(x.label)}</span><b>${fmt(x.before)} → ${fmt(x.after)}</b><small>${x.closed?'조건 충족':x.regressed?'재료 소모로 감소':`목표 ${fmt(x.target)}`}</small></div>`).join(''),why=inspected.why||{},factHtml=(facts.always||[]).map(x=>`<span class="always">${C.esc(x.label)} <b>${x.key==='stun'?fmtStun(x.value):fmt(x.value)}</b></span>`).concat((facts.trigger||[]).map(x=>`<span class="trigger">${C.esc(x.label)} <b>${fmt(x.value)}</b></span>`),(facts.research||[]).map(x=>`<span class="research">${C.esc(x.label)} <b>${fmtStun(x.value)} · ${fmt(x.capture)}%</b></span>`),(facts.researchVariants||[]).map(x=>`<span class="research condition ${x.active?'active':''}">${C.esc(x.label)} <b>${fmtStun(x.value)} · ${fmt(x.capture)}%${x.active?' · 적용 중':''}</b></span>`),(facts.penalties||[]).map(x=>`<span class="penalty">${C.esc(x.label)} <b>${fmt(x.value)}</b></span>`),(facts.mechanics||[]).map(x=>`<span class="mechanic">${C.esc(x.label)}</span>`)).join('');
