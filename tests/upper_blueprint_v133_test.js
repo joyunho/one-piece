@@ -110,10 +110,14 @@ test('Absalom exception stays buildable in both rank and preview without showing
   assert(openRows.every(row=>row.gap>0),'열린 행은 실제로 부족해야 한다');
   assert.deepStrictEqual(ranked.plan.actions[0].solve.hardMissing,[]);
   const preview=P.planFinalSquad({state,settings:settings({upperPreviewId:'A50h'}),upperBlueprint:ranked.blueprint});
-  // A role-incomplete hand may not silently lock a full party: the blueprint
-  // must degrade to the fail-safe invalid status instead of claiming kept.
-  assert.strictEqual(preview.blueprint.status,'invalid');
-  assert.strictEqual(preview.wispBudget.evidence,'role-incomplete');
+  // 원래 계약: 역할표 미완성 패는 전체 파티를 조용히 잠그지 못하고 invalid 로
+  // 떨어져야 한다.  v18.9(사용자 교정) 이후 이 미리보기 계획은 이감을 채웠고
+  // 1.5스턴 필수가 해제돼 필수 역할을 실제로 모두 충족한다 — 그래서 kept 가
+  // 아닌 adapted(설계도를 조정해 성립) 로 올라간다.  "미완성인데 잠근다"가
+  // 아니라 "완성 기준이 바뀌어 실제로 완성됐다"이므로 안전장치는 그대로다.
+  assert.strictEqual(preview.blueprint.status,'adapted');
+  assert.notStrictEqual(preview.blueprint.status,'kept','조정 없이 잠근 것처럼 보고하면 안 된다');
+  assert.strictEqual(preview.wispBudget.roleComplete,true,'필수 역할이 실제로 충족돼야 adapted 다');
   assert.strictEqual(preview.targetBoardCount,7);assert.strictEqual(preview.finalLineup.length,7);assert.strictEqual(preview.plannedCount,9);assert(preview.finalLineup.some(row=>row.id==='A50h'));assert(!preview.blueprint.replacedIds.includes('A50h'),'Absalom upper itself was released');const absalomAction=preview.actions.find(action=>action.id==='A50h');assert(absalomAction);assert.deepStrictEqual(absalomAction.solve.hardMissing,[]);
 });
 

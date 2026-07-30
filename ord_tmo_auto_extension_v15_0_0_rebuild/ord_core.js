@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='18.8.0';
+const VERSION='18.9.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1024,6 +1024,8 @@ function clearProfileDetails(spec,mode,settings){
   spec=spec||{};settings=settings||{};mode=mode==='magic'?'magic':'physical';const g=GOROSEI[settings.gorosei]||GOROSEI.none,ctl=controlState(spec,mode,settings),slowTarget=mode==='magic'?g.slowMagic:g.slowPhysical,stun=num(spec.stun),stunBase=Math.min(.5,Math.max(0,stun)),stunFull=Math.max(0,stun),bossFrenzy=Math.min(num(spec.boss),num(spec.frenzy));
   if(mode==='physical'){
     const upper=settings._upperUnit||null,exceptionEligible=physicalArmorException(upper),buffReady=enoughPhysicalBuffs(spec,settings),exceptionActive=exceptionEligible&&buffReady,armorFloor=exceptionActive?120:g.armorSoft,armorIdeal=exceptionActive?120:g.armorSafe,armorTarget=armorFloor,armorCurrent=num(spec.armor),triggerArmor=Math.max(0,num(spec.triggerArmor)),armorExpected=armorCurrent+triggerArmor*.65,armorMaximum=armorCurrent+triggerArmor;
+    // v18.9: 이감 충족 여부는 1.5스턴 필수 해제의 조건이다(사용자 교정).
+    const slowSatisfied=num(ctl.slow)>=num(slowTarget);
     const requirements=[
       {key:'main',label:'상위 딜러',current:num(spec.main),target:1,weight:120},
       {key:'armor',label:exceptionActive?'버프 예외 상시 방깎':'상시 풀방깎',current:armorCurrent,target:armorTarget,weight:110,meta:{floor:armorFloor,safe:armorIdeal,ideal:armorIdeal,range:exceptionActive?'120+':`${armorFloor}~${armorIdeal}`,static:round2(armorCurrent),trigger:round2(triggerArmor),expected:round2(armorExpected),maximum:round2(armorMaximum),conditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget}},
@@ -1040,15 +1042,29 @@ function clearProfileDetails(spec,mode,settings){
       // 함께 요구한다.  0729 물딜 판(74라)이 정확히 여기 걸린다 — 보잡 1
       // (S-호크) · 광폭 2(센고쿠+S-호크) 라 min=1 로 "충족"이 떴다.
       {key:'bossFrenzy',label:'광보잡 2',current:bossFrenzy,target:2,weight:95},
-      {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:35,meta:{lastPriority:true}}
+      // v18.9(사용자 교정): 이감이 목표를 채웠으면 1.5스턴을 필수로 걸지 않는다.
+      //
+      // 사용자 판단: "이감이 빡이면 스턴을 굳이 1.5로 안 잡아도 된다.  유닛
+      // 카운트를 더 보기 위해 딜러를 더 추가하는 게 낫다."  0730 클리어 판에서
+      // 엔진이 1.5스턴을 우솝(0.2스턴)으로 채우려 해서 사용자가 도플·카쿠 변화를
+      // 강제로 만들었다 — 그 자리는 딜러가 더 낫다는 뜻이다.
+      //
+      // 0.5스턴 최소선은 그대로 필수다.  이감이 미달인 동안에도 1.5는 필수로
+      // 남는다(v17.7 이 실전 6판으로 세운 하드 게이트) — 이감이라는 다른 생존
+      // 축이 열려 있을 때 스턴까지 빠지면 둘 다 없는 판이 된다.
+      {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:35,required:slowSatisfied?false:true,recommended:slowSatisfied,meta:{lastPriority:true,relaxedBySlow:slowSatisfied}}
     ];
     return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorCurrent),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 0.5스턴과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 2기 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
   }
+  // v18.9: 마딜도 이감 충족 시 1.5스턴 필수를 해제한다.
+  const magicSlowSatisfied=num(ctl.slow)>=num(slowTarget);
   const singleEndExpected=spec.singleEndExpected!=null?num(spec.singleEndExpected):0,singleEndStable=spec.singleEndStable!=null?num(spec.singleEndStable):Math.max(0,singleEndExpected-num(spec.singleEndLargest)),singleEndMaximum=spec.singleEndMax!=null?num(spec.singleEndMax):singleEndExpected,dual=[
     {key:'main',label:'상위 딜러 2',current:num(spec.main),target:2,weight:110},
     {key:'stunBase',label:'최소 0.5 스턴',current:stunBase,target:.5,weight:110},
     {key:'slow',label:`이감 ${slowTarget}%`,current:ctl.slow,target:slowTarget,weight:95},
-    {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85},
+    // v18.9(사용자 교정): 이감이 목표를 채웠으면 1.5스턴은 권장으로 내린다 —
+    // 그 자리는 딜러가 낫다.  0.5스턴 최소선은 그대로 필수다.
+    {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85,required:magicSlowSatisfied?false:true,recommended:magicSlowSatisfied,meta:{relaxedBySlow:magicSlowSatisfied}},
     {key:'bossFrenzy',label:'광보잡',current:bossFrenzy,target:1,weight:70},
     {key:'toki',label:'토키',current:num(spec.toki),target:1,weight:70}
   ],singleEnd=[
@@ -1056,7 +1072,7 @@ function clearProfileDetails(spec,mode,settings){
     {key:'bossFrenzy',label:'광보잡',current:bossFrenzy,target:1,weight:110},
     {key:'stunBase',label:'최소 0.5 스턴',current:stunBase,target:.5,weight:110},
     {key:'slow',label:`이감 ${slowTarget}%`,current:ctl.slow,target:slowTarget,weight:95},
-    {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85},
+    {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85,required:magicSlowSatisfied?false:true,recommended:magicSlowSatisfied,meta:{relaxedBySlow:magicSlowSatisfied}},
     {key:'singleEndExpected',label:'검증된 보조 단일·끝딜',current:singleEndExpected,target:3,weight:70,meta:{stable:round2(singleEndStable),maximum:round2(singleEndMaximum),verifiedUnits:num(spec.singleEndUnits)}},
     // v17.6(감사 P0-3): 합산 환산만 검사하면 단일 전용 3기(끝딜 0)나
     // 끝딜 전용 3기도 통과한다.  사용자 기준 악몽 스펙(단일 2~3 ·

@@ -75,7 +75,10 @@ const nineCounts=Object.fromEntries(readyIds.map(id=>[id,1])),r55Ready=replay(55
 assert.deepStrictEqual([r55Ready.counts.board,r55Ready.counts.squad,r55Ready.squadReady,r55Ready.clearReady,r55Ready.phase],[9,11,true,true,'upgrade-control']);
 assert.deepStrictEqual([r55Ready.deficits.profile.armorCurrent,r55Ready.deficits.profile.armorTarget,r55Ready.deficits.profile.armorIdeal],[194,180,211]);
 const comfort=r55Ready.deficits.requirements.find(row=>row.key==='stunFull');
-assert(comfort&&comfort.required===true&&comfort.gap<=0);
+// v18.9(사용자 교정): 이감 충족 픽스처라 1.5스턴은 필수에서 권장으로 내려간다.
+// 스턴 자체는 여전히 닫혀 있어야 한다 — 게이트가 풀렸다고 스턴을 버리는 게
+// 아니라, 이감이 있으면 1.5까지 억지로 채우지 않는다는 뜻이다.
+assert(comfort&&comfort.required===false&&comfort.gap<=0);
 assert.match(r55Ready.note,/업그레이드와 컨트롤/);
 
 console.log('PASS  round replay 7→15→20→25 preserves TMO-count deadlines without reward history');
