@@ -118,26 +118,34 @@ function snapshot(helperId, overrides = {}) {
 }
 
 (async () => {
-  await test('manifest limits hosts to the two supported build-helper pages', () => {
+  await test('manifest stays scoped to tmo.gg build-helper pages (any helper number)', () => {
+    // v19.4(사용자 요청): 도우미 번호는 방마다 바뀐다 — 특정 번호 고정을
+    // 풀되, 여전히 tmo.gg 의 /build-helper/ 밖으로는 넓히지 않는다.
+    // "정말 ORD 도우미인가"는 background validSnapshot 의 내용 게이트가 판정.
     const manifest = JSON.parse(read('manifest.json'));
     assert.strictEqual(manifest.version, RELEASE_VERSION);
-    assert.deepStrictEqual(manifest.permissions.sort(), ['scripting', 'storage', 'tabs']);
+    assert.deepStrictEqual(manifest.permissions.sort(), ['alarms', 'scripting', 'storage', 'tabs']);
     const helperPermissions=manifest.host_permissions.filter(pattern=>pattern.includes('/build-helper/'));
-    assert.strictEqual(helperPermissions.length,8);
-    assert(helperPermissions.every(pattern => /build-helper\/(32172|34366)/.test(pattern)));
+    assert.strictEqual(helperPermissions.length,manifest.host_permissions.length,'build-helper 밖 host 권한이 생겼음');
+    assert(helperPermissions.length>=4);
+    assert(helperPermissions.every(pattern => /^https:\/\/(www\.)?tmo\.gg\//.test(pattern)),'tmo.gg 밖 호스트 권한');
+    assert(helperPermissions.every(pattern => /\/build-helper\/\*$/.test(pattern)),'build-helper 경로 밖으로 넓어짐');
     assert(!manifest.host_permissions.some(pattern=>/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(pattern)));
     assert(manifest.content_scripts[0].matches.every(pattern => pattern.includes('/build-helper/')));
-    assert(manifest.content_scripts[0].matches.every(pattern => /build-helper\/(32172|34366)/.test(pattern)));
+    assert(manifest.content_scripts[0].matches.every(pattern => /\/build-helper\/\*$/.test(pattern)));
     assert(!manifest.permissions.includes('webRequest'));
   });
 
-  await test('content parser has primary 32172 and compatibility 34366 adapters', () => {
+  await test('content parser: 지정 어댑터(32172/34366) + 임의 숫자 번호 범용 어댑터', () => {
     const source = read('content-tmo.js');
     assert(source.includes("'32172': Object.freeze"));
     assert(source.includes("id: 'tmo-32172-main'"));
     assert(source.includes("'34366': Object.freeze"));
     assert(source.includes("id: 'tmo-34366-compat'"));
     assert(source.indexOf("'32172': Object.freeze") < source.indexOf("'34366': Object.freeze"));
+    // v19.4: 새 번호(예: 51234)도 범용 어댑터로 인식돼야 한다.
+    assert(source.includes('tmo-${key}-auto'),'임의 번호 범용 어댑터가 없음');
+    assert(/\/\^\\d\{1,8\}\$\//.test(source)||source.includes('/^\\d{1,8}$/'),'숫자 id 검사 누락');
   });
 
   await test('count discovery exposes found confidence and errors instead of silent zero', () => {
@@ -199,12 +207,17 @@ function snapshot(helperId, overrides = {}) {
     assert(/const dueAt = force \? now \+ 90 : Math\.min\(now \+ 700, Math\.max\(now, dirtySince \+ UNSTABLE_FORCE_MS\)\)/.test(source));
     assert(source.includes("lastPublishedAt > 0 && Date.now() - lastPublishedAt >= UNSTABLE_FORCE_MS"));
     assert(source.includes("dispatch(snapshot, starved ? 'unstable-forced' : reason || 'data-change')"));
-    assert(source.includes('if (changed && !starved && pendingHash !== snapshot.dataHash)'));
+    assert(source.includes('if (changed && !starved && !hiddenTab && pendingHash !== snapshot.dataHash)'));
   });
 
-  await test('background accepts both helpers and rejects unsupported helper', async () => {
+  await test('background accepts any numeric helper and rejects non-numeric', async () => {
     const harness = createBackgroundHarness();
-    const bad = await harness.dispatch({type: 'ORD_PIN_SOURCE', tabId: 1, helperId: '99999', url: 'https://tmo.gg/ko/build-helper/99999'});
+    // v19.4: 번호가 달라도 인식 — 숫자 id 는 전부 허용된다.
+    const numbered = await harness.dispatch({type: 'ORD_PIN_SOURCE', tabId: 7, helperId: '99999', url: 'https://tmo.gg/ko/build-helper/99999'});
+    assert.strictEqual(numbered.ok, true);
+    const acceptedNumbered = await harness.dispatch({type: 'ORD_SNAPSHOT', snapshot: snapshot('99999', {url: 'https://tmo.gg/ko/build-helper/99999', adapterId: 'tmo-99999-auto'})}, {tab: {id: 7}});
+    assert.strictEqual(acceptedNumbered.changed, true, '새 번호 도우미의 스냅샷이 거부됨');
+    const bad = await harness.dispatch({type: 'ORD_PIN_SOURCE', tabId: 1, helperId: 'abc', url: 'https://tmo.gg/ko/build-helper/abc'});
     assert.strictEqual(bad.ok, false);
     assert.strictEqual(bad.error, 'unsupported-helper');
 
@@ -354,7 +367,9 @@ function snapshot(helperId, overrides = {}) {
   await test('dashboard boot prefers 32172 and never promotes heartbeat to a new observation', () => {
     const source = read('ord_boot_extension.js');
     assert(source.includes("const PRIMARY_HELPER_ID = '32172'"));
-    assert(source.includes("new Set([PRIMARY_HELPER_ID, '34366'])"));
+    // v19.4: 번호 집합 고정 대신 숫자 id 전반 허용 — 고정 집합이 되살아나면 잡는다.
+    assert(!source.includes("new Set([PRIMARY_HELPER_ID"),'boot 이 도우미 번호 집합을 다시 고정했음');
+    assert(/supported\(id\)\s*\{\s*return \/\^\\d\{1,8\}\$\/\.test/.test(source),'boot 의 숫자 id 허용이 사라짐');
     assert(source.includes('current.bridgeAt ='));
     assert(!source.includes("Object.assign({}, current, {at:"));
     assert(!source.includes('app.updateSnapshot(Object.assign({}, current'));

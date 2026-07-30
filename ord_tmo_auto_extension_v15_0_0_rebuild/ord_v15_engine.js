@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.3.1';
+const VERSION='19.4.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -1011,7 +1011,7 @@ function stickyPath(paths,best,stickyId){
   //    방깎 +11 · 1.5스턴 +0.36이었다.  더 싸고 더 많이 닫는 쪽을 두고
   //    바꾼 것이다.  그러면 사용자는 아무것도 완성하지 못한 채 카드만
   //    바뀌는 것을 본다 — 실제로 r49에 다시 흰수염으로 돌아왔다.
-  //    v19.3.1(감사 확정 결함): '지배' 판정이 결정적 벡터의 막다른길
+  //    v19.4.0(감사 확정 결함): '지배' 판정이 결정적 벡터의 막다른길
   //    (deadEnds) 성분을 안 봤다.  0725 r38·r39 실측 — held=블랙마리아
   //    (왜곡, deadEnds 2)가 best=사보(히든, deadEnds 1, 선위 동일)를
   //    'dominant'로 눌러, 현재 패로 닫을 수 없는 필수 역할 그룹을 하나 더

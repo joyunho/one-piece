@@ -3,7 +3,10 @@
 // v17.28.0 local decision runtime. The v13 parser identifier is retained for
 // stored-snapshot and connector protocol compatibility.
 const PARSER = 'ord-tmo-parser-v13-adapter';
-const SUPPORTED_HELPER_IDS = new Set(['32172', '34366']);
+// v19.4(사용자 요청): 도우미 번호는 방/시즌마다 바뀐다 — 숫자 id 전부 허용.
+// "이 페이지가 정말 ORD 2.305 도우미인가"는 번호가 아니라 validSnapshot 의
+// 내용 게이트(유닛 300~380종 · 수량 전량 파싱 · 신뢰도 0.72+)가 판정한다.
+const HELPER_ID_PATTERN = /^\d{1,8}$/;
 const SOURCE_KEY = 'ordPinnedTmoTabId';
 const HELPER_KEY = 'ordPinnedHelperId';
 const EPOCH_KEY = 'ordPinnedSourceEpoch';
@@ -20,7 +23,7 @@ function set(value) {
 }
 
 function supported(helperId) {
-  return SUPPORTED_HELPER_IDS.has(String(helperId || ''));
+  return HELPER_ID_PATTERN.test(String(helperId || ''));
 }
 
 function helperIdFromUrl(url) {
@@ -101,8 +104,35 @@ async function pinSource(tabId, helperId, url) {
     latestSeq.clear();
   }
   await set(update);
+  // v19.4(사용자 요청): 최소화된 TMO 탭이 메모리 절약 기능으로 폐기되면
+  // 콘텐츠 스크립트가 통째로 죽는다 — 고정된 소스 탭은 자동 폐기를 끈다.
+  if (tabId) {
+    try { chrome.tabs.update(tabId, {autoDiscardable: false}, () => void chrome.runtime.lastError); } catch (_) {}
+  }
   return {ok: true, tabId, helperId: id, sourceEpoch, changed};
 }
+
+// v19.4(사용자 요청): "티모지지 사이트를 최소화 해두면 데이터를 안받아오던데".
+// 숨김 탭에서는 크롬이 콘텐츠 스크립트의 타이머를 강하게 조인다(5분 뒤
+// 분당 1회).  메시지 전달은 조여지지 않으므로, 서비스 워커의 알람(30초)이
+// 고정된 소스 탭을 두드려 즉시 스캔·발행을 시킨다.  탭이 보일 때는 기존
+// 2초 폴링이 그대로 돌므로 이 알람은 사실상 숨김 탭 전용 보험이다.
+const SCAN_ALARM = 'ord-background-scan';
+function ensureScanAlarm() {
+  try { chrome.alarms.create(SCAN_ALARM, {periodInMinutes: 0.5}); } catch (_) {}
+}
+ensureScanAlarm();
+if (chrome.runtime.onInstalled) chrome.runtime.onInstalled.addListener(ensureScanAlarm);
+if (chrome.runtime.onStartup) chrome.runtime.onStartup.addListener(ensureScanAlarm);
+if (chrome.alarms && chrome.alarms.onAlarm) chrome.alarms.onAlarm.addListener(alarm => {
+  if (!alarm || alarm.name !== SCAN_ALARM) return;
+  enqueue(async () => {
+    const current = await get([SOURCE_KEY]);
+    const tabId = Number(current[SOURCE_KEY]) || 0;
+    if (!tabId) return;
+    chrome.tabs.sendMessage(tabId, {type: 'ORD_BACKGROUND_TICK'}, () => void chrome.runtime.lastError);
+  }).catch(() => {});
+});
 
 function enqueue(work) {
   const task = mutationQueue.then(work);

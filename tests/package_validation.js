@@ -26,16 +26,19 @@ const manifest=JSON.parse(read('manifest.json'));
 assert.strictEqual(manifest.manifest_version,3);
 assert.strictEqual(manifest.version,releaseVersion);
 assert.deepStrictEqual(manifest.background,{service_worker:'background.js'});
-assert.deepStrictEqual(new Set(manifest.permissions),new Set(['storage','tabs','scripting']));
+assert.deepStrictEqual(new Set(manifest.permissions),new Set(['storage','tabs','scripting','alarms']));
 assert(manifest.host_permissions.length>0,'build-helper permissions are missing');
+// v19.4(사용자 요청): 도우미 번호 고정 해제 — 대신 tmo.gg + /build-helper/
+// 밖으로는 절대 넓히지 않는다는 경계를 그대로 잰다.
 for(const pattern of manifest.host_permissions){
   assert(pattern.includes('/build-helper/'),'host permission is broader than build-helper');
-  assert(/build-helper\/(32172|34366)/.test(pattern),`unsupported helper permission: ${pattern}`);
+  assert(/^https:\/\/(www\.)?tmo\.gg\//.test(pattern),`tmo.gg 밖 호스트 권한: ${pattern}`);
+  assert(/\/build-helper\/\*$/.test(pattern),`build-helper 하위로 안 끝나는 권한: ${pattern}`);
 }
 assert(!manifest.host_permissions.some(pattern=>/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(pattern)),'local OpenAI bridge permission remains');
 for(const pattern of manifest.content_scripts[0].matches){
   assert(pattern.includes('/build-helper/'),'content script match is broader than build-helper');
-  assert(/build-helper\/(32172|34366)/.test(pattern),`unsupported content match: ${pattern}`);
+  assert(/\/build-helper\/\*$/.test(pattern),`build-helper 하위로 안 끝나는 매치: ${pattern}`);
 }
 
 for(const file of ['background.js','content-tmo.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_core.js','ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_boot_extension.js','popup.js']){
@@ -85,10 +88,11 @@ assert.deepStrictEqual(JSON.parse(JSON.stringify(storyLeagueCounts)),{rare:42,up
 
 const content=read('content-tmo.js'),background=read('background.js'),boot=read('ord_boot_extension.js');
 assert(content.indexOf("'32172': Object.freeze")<content.indexOf("'34366': Object.freeze"),'32172 is not the primary adapter');
-for(const source of [background,content,boot]){
-  assert(source.includes("'32172'"),'32172 primary helper missing');
-  assert(source.includes("'34366'"),'34366 compatibility helper missing');
-}
+// v19.4: 지정 어댑터는 content 에만 남고, background/boot 는 숫자 id 전반을
+// 받는다 — 번호 하드코딩이 되살아나면 여기서 잡는다.
+assert(content.includes("'32172'")&&content.includes("'34366'"),'named adapters missing');
+assert(content.includes('tmo-${key}-auto'),'generic numeric adapter missing');
+assert(!background.includes("'32172'")&&!background.includes("'34366'"),'background re-hardcodes helper ids');
 assert(!/unitCount\s*={2,3}\s*307/.test(background+boot),'connector still hard-codes a 307-row validity gate');
 assert(!/idSetHash\s*={2,3}\s*['\"]16e572cb/.test(background+boot),'connector still hard-codes an old fingerprint gate');
 for(const key of ['collection.confidence','countDiscovery','scanAt','dataChangedAt','bridgeAt'])assert((background+content+boot).includes(key),`connector contract missing ${key}`);

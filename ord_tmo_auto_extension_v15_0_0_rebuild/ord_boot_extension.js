@@ -1,20 +1,17 @@
 (function () {
   'use strict';
 
-  // v19.3.1 live cockpit bridge; connector protocol stays v13.
+  // v19.4.0 live cockpit bridge; connector protocol stays v13.
+  // v19.4(사용자 요청): 도우미 번호 무관 — 숫자 id 전부 후보. 여러 탭이면
+  // 주 도우미(32172) 우선.
   const PATTERNS = [
-    'https://tmo.gg/*/build-helper/32172*',
-    'https://www.tmo.gg/*/build-helper/32172*',
-    'https://tmo.gg/build-helper/32172*',
-    'https://www.tmo.gg/build-helper/32172*',
-    'https://tmo.gg/*/build-helper/34366*',
-    'https://www.tmo.gg/*/build-helper/34366*',
-    'https://tmo.gg/build-helper/34366*',
-    'https://www.tmo.gg/build-helper/34366*'
+    'https://tmo.gg/*/build-helper/*',
+    'https://www.tmo.gg/*/build-helper/*',
+    'https://tmo.gg/build-helper/*',
+    'https://www.tmo.gg/build-helper/*'
   ];
   const PARSER = 'ord-tmo-parser-v13-adapter';
   const PRIMARY_HELPER_ID = '32172';
-  const SUPPORTED_HELPER_IDS = new Set([PRIMARY_HELPER_ID, '34366']);
   const SOURCE_KEY = 'ordPinnedTmoTabId';
   const EPOCH_KEY = 'ordPinnedSourceEpoch';
   let monitorId = 0;
@@ -87,7 +84,7 @@
     const match = String(url || '').match(/\/build-helper\/(\d+)/);
     return match ? match[1] : '';
   }
-  function supported(id) { return SUPPORTED_HELPER_IDS.has(String(id || '')); }
+  function supported(id) { return /^\d{1,8}$/.test(String(id || '')); }
   function validSnapshot(snapshot) {
     const id = String(snapshot && snapshot.helperId || '');
     const collection = snapshot && snapshot.collection || {};

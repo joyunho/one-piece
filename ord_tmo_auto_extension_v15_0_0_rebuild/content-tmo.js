@@ -11,7 +11,7 @@
     return;
   }
 
-  const VERSION = '19.3.1';
+  const VERSION = '19.4.0';
   const PARSER = 'ord-tmo-parser-v13-adapter';
   const SESSION = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
   const HELPER_ADAPTERS = Object.freeze({
@@ -106,7 +106,24 @@
   let lastFullScanAt = 0;
   const persistentRowScopeCache = new WeakMap();
 
-  function adapterFor(id) { return HELPER_ADAPTERS[String(id || '')] || null; }
+  // v19.4(사용자 요청): 도우미 번호가 32172/34366 이 아니어도 인식한다.
+  // 알려진 번호는 지정 어댑터를, 그 외 숫자 번호는 범용 어댑터를 쓴다 —
+  // "정말 ORD 도우미인가"는 번호가 아니라 수집 게이트(유닛 300~380종 ·
+  // 수량 전량 파싱 · 신뢰도)가 판정한다.
+  const genericAdapters = {};
+  function adapterFor(id) {
+    const key = String(id || '');
+    if (HELPER_ADAPTERS[key]) return HELPER_ADAPTERS[key];
+    if (!/^\d{1,8}$/.test(key)) return null;
+    if (!genericAdapters[key]) genericAdapters[key] = Object.freeze({
+      id: `tmo-${key}-auto`,
+      label: `TMO ${key} 도우미(자동 인식)`,
+      priority: 2,
+      expectedUnitRange: [300, 380],
+      knownFingerprints: []
+    });
+    return genericAdapters[key];
+  }
   function helperId() {
     const match = location.pathname.match(/\/build-helper\/(\d+)/);
     return match ? match[1] : '';
@@ -772,7 +789,11 @@
     // still moving: a possibly-torn snapshot self-corrects on the next
     // stable pass, a frozen coach does not.
     const starved = changed && lastPublishedAt > 0 && Date.now() - lastPublishedAt >= UNSTABLE_FORCE_MS;
-    if (changed && !starved && pendingHash !== snapshot.dataHash) {
+    // v19.4(사용자 요청): 숨김 탭에서는 400ms 안정 확인 타이머 자체가 1초~
+    // 1분으로 조여진다.  숨김 상태에는 사용자 입력 churn 도 없으므로 확인
+    // 없이 즉시 발행한다 — 찢긴 스냅샷은 다음 스캔이 스스로 교정한다.
+    const hiddenTab = typeof document !== 'undefined' && document.visibilityState === 'hidden';
+    if (changed && !starved && !hiddenTab && pendingHash !== snapshot.dataHash) {
       pendingHash = snapshot.dataHash;
       pendingSnapshot = snapshot;
       pendingProbeHash = lastProbeHash;
@@ -847,7 +868,7 @@
     style.textContent = ':host{all:initial;position:fixed;right:14px;bottom:14px;z-index:2147483647;font-family:system-ui,sans-serif}.card{width:310px;padding:11px;border:1px solid #33476a;border-radius:15px;background:rgba(5,10,23,.94);color:#eaf3ff;box-shadow:0 18px 55px rgba(0,0,0,.45)}.top{display:flex;justify-content:space-between;align-items:center}.title{font-size:13px;font-weight:900}.dot{width:9px;height:9px;border-radius:50%;background:#f3b84b}.dot.ok{background:#27d17f;box-shadow:0 0 12px #27d17f}.meta{margin-top:5px;color:#8fa2bd;font-size:10px;line-height:1.45}.btn{margin-top:8px;width:100%;border:0;border-radius:10px;padding:8px;background:linear-gradient(135deg,#7b5fff,#25bfe6);color:white;font-weight:900;cursor:pointer}';
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = '<div class="top"><span class="title">ORD 실전 판단 코치 v19.3.1</span><span class="dot"></span></div><div class="meta">수집 대기 중 · TMO.GG 데스크톱 프로그램을 먼저 실행하세요</div><button class="btn">실전 코치 열기</button>';
+    card.innerHTML = '<div class="top"><span class="title">ORD 실전 판단 코치 v19.4.0</span><span class="dot"></span></div><div class="meta">수집 대기 중 · TMO.GG 데스크톱 프로그램을 먼저 실행하세요</div><button class="btn">실전 코치 열기</button>';
     card.querySelector('.btn').onclick = () => send({type: 'ORD_OPEN_DASHBOARD'});
     shadow.append(style, card);
     document.documentElement.appendChild(host);
@@ -877,6 +898,17 @@
     chrome.runtime.onMessage.addListener((message, sender, reply) => {
       if (message && message.type === 'ORD_PING') {
         reply({ok: true, parser: PARSER, sessionId: SESSION, helperId: helperId(), adapterId: adapterFor(helperId())?.id || ''});
+        return true;
+      }
+      if (message && message.type === 'ORD_BACKGROUND_TICK') {
+        // v19.4: 서비스 워커 알람이 숨김 탭을 두드리는 경로.  메시지 핸들러
+        // 실행은 타이머와 달리 조여지지 않으므로 즉시 스캔·발행한다.
+        if (!adapterFor(helperId())) {
+          reply({ok: false, error: 'unsupported-helper'});
+          return true;
+        }
+        try { publish(true, 'background-tick'); } catch (_) {}
+        reply({ok: true, hidden: typeof document !== 'undefined' && document.visibilityState === 'hidden'});
         return true;
       }
       if (message && message.type === 'ORD_COLLECT_NOW') {
@@ -910,6 +942,9 @@
 
   if (adapterFor(helperId())) ensureBadge();
   schedule(true, 'startup');
+  // v19.4: 숨김↔표시 전환 시 즉시 재스캔 — 숨김 직전 마지막 상태를 실어
+  // 보내고, 다시 보이면 조여졌던 타이머를 기다리지 않고 바로 따라잡는다.
+  document.addEventListener('visibilitychange', () => schedule(true, document.visibilityState === 'hidden' ? 'tab-hidden' : 'tab-visible'));
   document.addEventListener('input', event => {
     if (event.target && event.target.closest && !event.target.closest('#ord-tmo-sync-badge') && numericInput(event.target)) schedule(false, 'input');
   }, true);

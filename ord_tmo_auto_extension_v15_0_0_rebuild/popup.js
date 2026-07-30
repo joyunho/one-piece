@@ -1,28 +1,25 @@
 'use strict';
 
-// v19.3.1 compact popup; parser protocol remains v13-compatible.
+// v19.4.0 compact popup; parser protocol remains v13-compatible.
 const state = document.getElementById('state');
 const detail = document.getElementById('detail');
 const testButton = document.getElementById('test');
 const PARSER = 'ord-tmo-parser-v13-adapter';
+// v19.4(사용자 요청): 도우미 번호 무관 — 숫자 id 는 전부 후보로 본다.
+// 여러 탭이 열려 있으면 주 도우미(32172) → 활성 탭 순으로 고른다.
 const PRIMARY_HELPER_ID = '32172';
-const SUPPORTED_HELPER_IDS = new Set([PRIMARY_HELPER_ID, '34366']);
 const PATTERNS = [
-  'https://tmo.gg/*/build-helper/32172*',
-  'https://www.tmo.gg/*/build-helper/32172*',
-  'https://tmo.gg/build-helper/32172*',
-  'https://www.tmo.gg/build-helper/32172*',
-  'https://tmo.gg/*/build-helper/34366*',
-  'https://www.tmo.gg/*/build-helper/34366*',
-  'https://tmo.gg/build-helper/34366*',
-  'https://www.tmo.gg/build-helper/34366*'
+  'https://tmo.gg/*/build-helper/*',
+  'https://www.tmo.gg/*/build-helper/*',
+  'https://tmo.gg/build-helper/*',
+  'https://www.tmo.gg/build-helper/*'
 ];
 
 function helperId(url) {
   const match = String(url || '').match(/\/build-helper\/(\d+)/);
   return match ? match[1] : '';
 }
-function supported(id) { return SUPPORTED_HELPER_IDS.has(String(id || '')); }
+function supported(id) { return /^\d{1,8}$/.test(String(id || '')); }
 function runtime(message) {
   return new Promise(resolve => chrome.runtime.sendMessage(message, response => {
     const error = chrome.runtime.lastError;
@@ -78,7 +75,7 @@ function renderStored(value) {
     const confidence = Number(diagnostic.confidence) || 0;
     state.textContent = diagnostic.reason === 'invalid-snapshot'
       ? `수집 불완전 · 신뢰 ${(confidence * 100).toFixed(0)}% · 수량을 0으로 임의 처리하지 않음`
-      : '아직 유효한 TMO 32172/34366 수신 데이터가 없습니다.';
+      : '아직 유효한 TMO 조합도우미 수신 데이터가 없습니다.';
     detail.textContent = (diagnostic.errors || []).slice(0, 3).join(' · ');
     return;
   }
@@ -115,7 +112,7 @@ testButton.onclick = async () => {
     const all = await queryTabs({url: PATTERNS});
     const tab = selectPreferred(all);
     if (!tab) {
-      state.textContent = 'TMO 32172/34366 조합도우미 탭이 없습니다. 먼저 열어주세요.';
+      state.textContent = 'TMO 조합도우미 탭이 없습니다. 먼저 열어주세요.';
       return;
     }
     const id = helperId(tab.url);
