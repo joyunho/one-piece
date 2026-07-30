@@ -23,7 +23,7 @@ const COMMAND_INHERITANCE={
 const UPPER_RESEARCH_MAX=21;
 const DEFAULTS={
   tab:'coach',mode:'',magicRoute:'auto',settingsRevision:178,modeExplicit:false,targetSquadCount:9,purpose:'',gorosei:'none',superKumaOwned:true,story10Reward:'',virtualSpecialId:'',virtualSpecialBaselineId:'',virtualSpecialBaselineCount:0,wispOverride:'',upperPreviewId:'',upperBlueprint:null,secondUpperId:'',
-  directionStatus:'open',directionKey:'',directionUpperId:'',directionHoldFingerprint:'',
+  directionStatus:'open',directionKey:'',directionUpperId:'',directionHoldFingerprint:'',releasedUpperHint:null,
   postLegendRoute:'',postLegendObservedCount:0,postLegendBaseline:{},
   currentRound:1,roundStartedAt:0,roundPrepSeconds:10,roundNormalSeconds:35,roundBossSeconds:60,roundAutoGeneration:0,roundAutoSourceEpoch:0,manualCounts:{},pendingCounts:{},pendingAt:{},pendingTransaction:null,connectionDiagnostic:null,detailId:'',message:'',
   locks:[],upperDetection:{candidateId:'',streak:0,lastSnapshotKey:'',lastSeenAt:0},watchStability:{context:'',stableIds:[],pendingIds:[],pendingStreak:0,lastObservationKey:''},rerollsUsed:0,pendingReroll:null,awaitingNewGameFingerprint:'',
@@ -38,7 +38,7 @@ const DEFAULTS={
 
 const REACHABLE_TABS=new Set(['coach','runlog','deck','data','story']);
 const REMOVED_SETTING_KEYS=['firstRareRewardClaimed','moneyRareReward','storyRareRewards','highGambleDone','highGambleRares','stunConditions','allowWarped','recommendWarped'];
-const RUN_LOG_ACTIONS=new Set(['post-legend-route','purpose','super-kuma','mark-made','reroll-confirmed','cancel-reroll','unit-adjust','clear-unit-override','preview-direction','choose-direction','hold-direction','select-upper','confirm-upper','party-preview','lock-legend','lock-rare','remove-lock','reset-route','round-reset','round-step','round-pause','round-start','reroll-step','new-game','dismiss-transaction','accept-snapshot','counter-step','clear-overrides','confirm-second-upper','release-second-upper','confirm-party','release-party']);
+const RUN_LOG_ACTIONS=new Set(['post-legend-route','purpose','super-kuma','mark-made','reroll-confirmed','cancel-reroll','unit-adjust','clear-unit-override','preview-direction','choose-direction','hold-direction','select-upper','confirm-upper','party-preview','lock-legend','lock-rare','remove-lock','reset-route','round-reset','round-step','round-pause','round-start','reroll-step','new-game','dismiss-transaction','accept-snapshot','counter-step','clear-overrides','confirm-second-upper','release-second-upper','confirm-party','release-party','restore-released-upper']);
 const RUN_LOG_SETTING_KEYS=new Set(['mode','magicRoute','gorosei','story10Reward','currentRound','roundPrepSeconds','roundNormalSeconds','roundBossSeconds','wispOverride','virtualSpecialId','transcendUsed','seraphUsed','changedUsed']);
 const RUN_RESULT_DEFAULTS=Object.freeze({kind:'r50_failed',failureReason:'unknown',followedProgram:'unknown',round:'',bossHpPercent:'',attackUpgrade:'',slowUpgrade:'',hpRegenUpgrade:'',mpRegenUpgrade:'',helperUsed:false,note:''});
 const RUN_FAILURE_KINDS=new Set(['r50_failed','r51_65_failed']);
@@ -78,6 +78,7 @@ function normalizeInitialState(stored){
   // v19: 두 번째 상위 확정.  존재 검사는 렌더·플래너 쪽에서 하고, 여기서는
   // 문자열만 정리한다(카탈로그는 이 시점에 아직 없다).
   state.secondUpperId=String(state.secondUpperId||'');
+  state.releasedUpperHint=normalizeReleasedUpperHint(state.releasedUpperHint);
   state.postLegendRoute=['legend','upper'].includes(state.postLegendRoute)?state.postLegendRoute:'';
   state.postLegendObservedCount=Math.max(0,C.num(state.postLegendObservedCount));
   state.postLegendBaseline=state.postLegendBaseline&&typeof state.postLegendBaseline==='object'?Object.fromEntries(Object.entries(state.postLegendBaseline).map(([id,count])=>[String(id),Math.max(0,C.num(count))])):{};
@@ -123,6 +124,19 @@ function normalizeUpperBlueprint(value){
   const lineupIds=ids(v.lineupIds),buildOrderIds=ids(v.buildOrderIds||v.actionIds);
   const fullPartyVerified=v.fullPartyVerified===true||v.fullPartyVerified==null&&lineupIds.length>1,commitment=fullPartyVerified?'full-party':'upper-route';
   return{upperId:String(v.upperId),lineupIds:lineupIds.length?lineupIds:[String(v.upperId)],buildOrderIds,mode:v.mode==='magic'?'magic':'physical',magicRoute:['dual','singleEnd','physical'].includes(v.magicRoute)?v.magicRoute:'physical',revision:Math.max(1,C.num(v.revision)||1),capturedFingerprint:String(v.capturedFingerprint||''),capturedAt:C.num(v.capturedAt)||0,fullPartyVerified,commitment,adaptiveSupports:v.adaptiveSupports!==false};
+}
+// v19.2(사용자 요청): "물딜 가려다가 마딜로 바꿔서" — 계통 전환이 확정
+// 상위를 해제한다(의도된 동작).  문제는 원래 계통으로 되돌아왔을 때 그
+// 해제를 아무도 알려 주지 않아, 사용자가 다시 확정을 누르지 않으면 그
+// 라운드부터 게임이 끝날 때까지 추천이 완전히 멈춘다는 것이다(0730 판:
+// 24라운드 무응답).  해제 시점을 기억해 뒀다가 같은 계통으로 돌아오면
+// 원클릭 복구를 보여준다.  너무 오래된 힌트는 쓸모가 없어 라운드 창을
+// 둔다 — 40라에 해제된 걸 90라에 "복구"하자고 뜨면 그게 더 헷갈린다.
+const RELEASED_UPPER_HINT_ROUND_WINDOW=15;
+function normalizeReleasedUpperHint(value){
+  const v=value&&typeof value==='object'?value:null;if(!v||!v.id)return null;
+  const mode=v.mode==='magic'?'magic':'physical';
+  return{id:String(v.id),mode,routeKey:['dual','singleEnd','physical'].includes(v.routeKey)?v.routeKey:(mode==='magic'?'dual':'physical'),releasedAt:C.num(v.releasedAt)||0,releasedRound:Math.max(0,C.num(v.releasedRound))};
 }
 function upperRouteFamily(id){return UPPER_ROUTE_FAMILIES.find(family=>family.includes(String(id||'')))||null;}
 function activeUpperVariant(family,counts){if(!family)return'';for(let i=family.length-1;i>=0;i--)if(C.num(counts&&counts[family[i]])>0)return family[i];return'';}
@@ -511,6 +525,16 @@ class App{
   }
   health(){const base=C.snapshotHealth(this.state.snapshot,Date.now()),waiting=this.state.awaitingNewGameFingerprint;if(waiting&&fingerprint(this.state.snapshot)===waiting)return Object.assign({},base,{key:'waiting',label:'새 게임 패 확인 중',ready:false,note:'이전 게임 패로 추천하지 않도록 잠갔습니다. TMO에서 새 게임 패로 초기화한 뒤 지금 동기화를 누르세요.'});return base;}
   upperLock(){return(this.state.locks||[]).find(x=>x&&x.stage==='upper')||null;}
+  // v19.2: 지금 계통으로 돌아왔고, 창 안이고, 유닛이 여전히 존재할 때만
+  // 복구 힌트를 유효로 본다.  조건 밖이면 화면에 아무것도 안 뜨는 게
+  // 맞다 — 오래되거나 계통이 다른 힌트를 들이밀면 더 헷갈린다.
+  activeReleasedUpperHint(){
+    const hint=this.state.releasedUpperHint;if(!hint||!hint.id)return null;
+    if(hint.mode!==this.state.mode)return null;
+    if(this.actualRound()-C.num(hint.releasedRound)>RELEASED_UPPER_HINT_ROUND_WINDOW)return null;
+    const unit=this.normalized().db.byId.get(hint.id);if(!unit||!C.isUpper(unit)||C.familyOf(unit)!==hint.mode)return null;
+    return{hint,unit};
+  }
   applyMagicRouteSelection(value,upperId=''){
     const route=['dual','singleEnd'].includes(value)?value:'auto',locked=this.upperLock(),blueprint=normalizeUpperBlueprint(this.state.upperBlueprint),committedId=String(upperId||locked&&locked.id||blueprint&&blueprint.upperId||''),sameUpper=blueprint&&committedId&&C.canonicalUpperId(blueprint.upperId)===C.canonicalUpperId(committedId);let changed=false;
     if(this.state.magicRoute!==route){this.state.magicRoute=route;changed=true;}
@@ -650,9 +674,14 @@ class App{
     const mode=['physical','magic'].includes(value)?value:'',before=this.state.mode,wasExplicit=this.state.modeExplicit===true,locked=this.upperLock(),lockedUnit=locked&&this.normalized().db.byId.get(locked.id),lockedFamily=lockedUnit&&C.familyOf(lockedUnit),conflict=locked&&mode&&['physical','magic'].includes(lockedFamily)&&lockedFamily!==mode;
     this.state.modeExplicit=true;
     if(before===mode&&!conflict){if(!wasExplicit)this.persist();return false;}
-    if(conflict){this.state.locks=this.state.locks.filter(lock=>lock.stage!=='upper');this.state.upperBlueprint=null;this.state.postLegendRoute='upper';}
+    if(conflict){
+      // v19.2(사용자 요청): "물딜 가려다가 마딜로 바꿔서" — 계통을 되돌아왔을
+      // 때 원클릭으로 복구할 수 있도록 해제 시점의 상위를 기억해 둔다.
+      this.state.releasedUpperHint={id:locked.id,mode:lockedFamily,routeKey:lockedFamily==='magic'?(['dual','singleEnd'].includes(this.state.magicRoute)?this.state.magicRoute:'dual'):'physical',releasedAt:Date.now(),releasedRound:this.actualRound()};
+      this.state.locks=this.state.locks.filter(lock=>lock.stage!=='upper');this.state.upperBlueprint=null;this.state.postLegendRoute='upper';
+    }
     this.state.mode=mode;if(mode==='physical')this.state.magicRoute='auto';this.state.directionStatus='open';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint='';this.state.upperPreviewId='';this.state.purpose='';this.state.watchStability=normalizeWatchStability(null);this._squadCacheKey='';this._upperRankCacheKey='';this._upperRankCache=[];this._directionRankCacheKey='';this._directionDesiredKey='';this._deferredExternalRender=false;
-    this.recordAuditAction({actor:'user',action:'setting-change',key:'mode',before:before===''?null:before,after:mode===''?null:mode,conflictingUpperReleased:!!conflict});if(conflict)this.setMessage(`${modeLabel(mode)} 선택을 적용하기 위해 반대 계통의 확정 상위 경로를 해제했습니다.`);this.persist();this.render();return true;
+    this.recordAuditAction({actor:'user',action:'setting-change',key:'mode',before:before===''?null:before,after:mode===''?null:mode,conflictingUpperReleased:!!conflict});if(conflict)this.setMessage(`${modeLabel(mode)} 선택을 적용하기 위해 ${displayNameOf(lockedUnit)} 확정을 해제했습니다. ${modeLabel(lockedFamily)}로 돌아오면 원클릭으로 다시 확정할 수 있습니다.`);this.persist();this.render();return true;
   }
   setOpt(key,val){const before=this.state[key];if(key==='mode'){this.selectDamageMode(val);return;}if(['currentRound','roundPrepSeconds','roundNormalSeconds','roundBossSeconds','transcendUsed','seraphUsed','changedUsed'].includes(key))val=Math.max(0,C.num(val));if(key==='wispOverride'&&this.state.pendingTransaction)this.rollbackTransaction();if(key==='virtualSpecialId'){val=String(val||'');if(val!==String(before||'')){this.state.virtualSpecialBaselineId=val;this.state.virtualSpecialBaselineCount=val?rawSnapshotCount(this.state.snapshot,val):0;}else if(!val){this.state.virtualSpecialBaselineId='';this.state.virtualSpecialBaselineCount=0;}}if(key==='magicRoute'){val=['dual','singleEnd'].includes(val)?val:'auto';this.applyMagicRouteSelection(val);}else this.state[key]=val;if(['wispOverride','virtualSpecialId'].includes(key))this.releaseDirectionHold();if(key==='virtualSpecialId'){this._upperRankCacheKey='';this._upperRankCache=[];}this._squadCacheKey='';this._deferredExternalRender=false;if(RUN_LOG_SETTING_KEYS.has(key))this.recordAuditAction({actor:'user',action:'setting-change',key:String(key),before:before===''?null:before,after:val===''?null:val});this.persist();this.render();}
   commandInfo(unit){
@@ -695,7 +724,7 @@ class App{
     if(a==='run-result-save'){this.saveRunOutcome();return;}
     if(a==='run-log-clear'){const now=Date.now();if(now-C.num(this._runLogDeleteArmedAt)>3500){this._runLogDeleteArmedAt=now;this.toast('진행 기록 전체 삭제를 한 번 더 누르면 되돌릴 수 없습니다.');return;}this._runLogDeleteArmedAt=0;this.clearRunLogs();return;}
     if(a==='post-legend-route'&&this.state.pendingTransaction){this.toast('TMO 제작 반영 확인 후 다음 경로를 선택할 수 있습니다.');return;}
-    if(this.state.pendingTransaction&&['purpose','select-upper','preview-direction','choose-direction','hold-direction','confirm-upper','lock-legend','lock-rare','remove-lock','reset-route','counter-step'].includes(a))this.rollbackTransaction();
+    if(this.state.pendingTransaction&&['purpose','select-upper','preview-direction','choose-direction','hold-direction','confirm-upper','restore-released-upper','lock-legend','lock-rare','remove-lock','reset-route','counter-step'].includes(a))this.rollbackTransaction();
     if(a==='tab'){const tab=String(b.dataset.tab||'');if(!REACHABLE_TABS.has(tab))return;const previousTab=this.state.tab;this._focusAfterRender=tab==='coach'?(previousTab==='runlog'?'[data-act="run-log-open"]':`[data-act="tab"][data-tab="${previousTab}"]`):'.v151-aux-bar [data-act="tab"][data-tab="coach"]';this.state.tab=tab;if(tab==='runlog'){this._runLogSelectedId=this._runLogSelectedId||this.runLog&&this.runLog.currentRun&&this.runLog.currentRun.runId||'';this._runLogSelectedRun=this._runLogSelectedRun||this.runLog&&this.runLog.currentRun||null;this.refreshRunLogHistory(false);}this.persist();this.render();return;}
     if(a==='purpose'){this.state.purpose=b.dataset.value||'';this.persist();this.render();return;}
     if(a==='post-legend-route'){
@@ -750,18 +779,33 @@ class App{
           const unit=current.state&&current.state.db.byId.get(candidate.id);if(!unit||!C.isUpper(unit)){this.toast('현재 패에서 이 상위를 다시 찾지 못했습니다. TMO를 동기화해 주세요.');return;}
           const routeFamily=upperRouteFamily(candidate.id);this.state.locks=this.state.locks.filter(lock=>lock.stage!=='upper'&&lock.stage!=='legend');this.state.locks.push({stage:'upper',id:candidate.id,source:'v15-exact-route',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:candidate.id,activeVariantId:candidate.id});this.state.upperBlueprint=this.captureUpperCommitment(candidate.id,mode,key);
         }
-        this.state.directionStatus='selected';this.state.directionKey=key;this.state.directionUpperId=candidate.id;this.state.directionHoldFingerprint='';this.state.mode=mode;this.state.magicRoute=mode==='magic'?key:'auto';this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this._squadCacheKey='';this._directionRankCacheKey='';this._v15CacheKey='';this._v15Cache=null;this.persist();this.render();this.toast(candidate.keepUpper?`메인 상위는 유지하고 ${candidate.routeLabel} 경로만 확정했습니다.`:`${candidate.name} 상위 방향을 확정했습니다. 현재 조합 완성 여부와 관계없이 다음 행동을 다시 계산합니다.`);return;
+        this.state.directionStatus='selected';this.state.directionKey=key;this.state.directionUpperId=candidate.id;this.state.directionHoldFingerprint='';this.state.releasedUpperHint=null;this.state.mode=mode;this.state.magicRoute=mode==='magic'?key:'auto';this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this._squadCacheKey='';this._directionRankCacheKey='';this._v15CacheKey='';this._v15Cache=null;this.persist();this.render();this.toast(candidate.keepUpper?`메인 상위는 유지하고 ${candidate.routeLabel} 경로만 확정했습니다.`:`${candidate.name} 상위 방향을 확정했습니다. 현재 조합 완성 여부와 관계없이 다음 행동을 다시 계산합니다.`);return;
       }
     }
     if(a==='preview-direction'||a==='choose-direction'){
       const key=b.dataset.key,valid=['physical','dual','singleEnd'].includes(key),row=(this._upperRankCache||[]).find(item=>item.upperId===id&&item.directionKey===key);if(!valid||!row){this.toast('현재 패가 바뀌어 이 방향을 다시 계산해야 합니다.');return;}
       if(a==='choose-direction'){
         if(this.actualRound()<25){this.toast('상위·조합 방향 확정은 25라운드부터 가능합니다. 지금은 후보만 미리보세요.');return;}
-        const mode=key==='physical'?'physical':'magic',fullBlueprint=row.guaranteedComplete?this.captureUpperBlueprint(id,row.plan):null,blueprint=fullBlueprint||this.captureUpperCommitment(id,mode,key),routeFamily=upperRouteFamily(id);this.state.upperBlueprint=blueprint;this.state.locks=this.state.locks.filter(lock=>lock.stage!=='upper'&&lock.stage!=='legend');this.state.locks.push({stage:'upper',id,source:fullBlueprint?'manual-blueprint':'manual-route',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:id,activeVariantId:id});this.state.directionStatus='selected';this.state.directionKey=key;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';this.state.mode=mode;this.state.magicRoute=key==='physical'?'auto':key;this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this._squadCacheKey='';this._directionRankCacheKey='';this.persist();this.toast(fullBlueprint?'상위와 현재 보조 청사진을 잠갔습니다. 패가 바뀌면 보조 조합만 가변 재계산합니다.':'상위 방향을 잠갔습니다. 30라 전후에는 이 상위를 먼저 올리고, 보조 조합은 남은 패로 가변 재계산합니다.');return;
+        const mode=key==='physical'?'physical':'magic',fullBlueprint=row.guaranteedComplete?this.captureUpperBlueprint(id,row.plan):null,blueprint=fullBlueprint||this.captureUpperCommitment(id,mode,key),routeFamily=upperRouteFamily(id);this.state.upperBlueprint=blueprint;this.state.locks=this.state.locks.filter(lock=>lock.stage!=='upper'&&lock.stage!=='legend');this.state.locks.push({stage:'upper',id,source:fullBlueprint?'manual-blueprint':'manual-route',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:id,activeVariantId:id});this.state.directionStatus='selected';this.state.directionKey=key;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';this.state.releasedUpperHint=null;this.state.mode=mode;this.state.magicRoute=key==='physical'?'auto':key;this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this._squadCacheKey='';this._directionRankCacheKey='';this.persist();this.toast(fullBlueprint?'상위와 현재 보조 청사진을 잠갔습니다. 패가 바뀌면 보조 조합만 가변 재계산합니다.':'상위 방향을 잠갔습니다. 30라 전후에는 이 상위를 먼저 올리고, 보조 조합은 남은 패로 가변 재계산합니다.');return;
       }
       this.state.directionStatus='preview';this.state.directionKey=key;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';this.state.mode=key==='physical'?'physical':'magic';this.state.magicRoute=key==='physical'?'auto':key;this.state.upperPreviewId=id;this.state.postLegendRoute='upper';this.state.purpose='upper';this._squadCacheKey='';this.persist();this.render();return;
     }
-    if(a==='hold-direction'){this.state.directionStatus='hold';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint=fingerprint(this.state.snapshot);this.state.upperPreviewId='';this.state.upperBlueprint=null;this.state.purpose='upper';this._squadCacheKey='';this.persist();this.render();return;}
+    if(a==='hold-direction'){this.state.directionStatus='hold';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint=fingerprint(this.state.snapshot);this.state.upperPreviewId='';this.state.upperBlueprint=null;this.state.releasedUpperHint=null;this.state.purpose='upper';this._squadCacheKey='';this.persist();this.render();return;}
+    // v19.2(사용자 요청): 방금 계통 전환으로 해제된 상위를 원클릭 복구.
+    if(a==='restore-released-upper'){
+      const active=this.activeReleasedUpperHint();
+      if(!active){this.toast('복구할 확정이 없습니다 — 계통이 다르거나 너무 오래됐습니다.');return;}
+      const {hint,unit}=active,routeFamily=upperRouteFamily(unit.id);
+      this.state.locks=this.state.locks.filter(lock=>lock.stage!=='upper'&&lock.stage!=='legend');
+      this.state.locks.push({stage:'upper',id:unit.id,source:'restored-release',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:unit.id,activeVariantId:unit.id});
+      this.state.upperBlueprint=this.captureUpperCommitment(unit.id,hint.mode,hint.routeKey);
+      this.state.directionStatus='selected';this.state.directionKey=hint.mode==='physical'?'physical':hint.routeKey;this.state.directionUpperId=unit.id;this.state.directionHoldFingerprint='';
+      if(hint.mode==='magic'&&['dual','singleEnd'].includes(hint.routeKey))this.state.magicRoute=hint.routeKey;
+      this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this.state.releasedUpperHint=null;
+      this._squadCacheKey='';this._directionRankCacheKey='';this.persist();
+      this.toast(`${displayNameOf(unit)} 확정을 복구했습니다. 패가 바뀌면 보조 조합만 가변 재계산합니다.`);
+      return;
+    }
     // v19(사용자 요청): 두 번째 상위 확정/해제.  메인 상위와 같은 계열은
     // 거부한다 — 같은 상위를 두 번 세는 확정은 없다.
     if(a==='confirm-second-upper'){
@@ -802,12 +846,12 @@ class App{
       const locked=this.upperLock();if(locked&&C.canonicalUpperId(locked.id)!==C.canonicalUpperId(id)){const current=this.normalized().db.byId.get(locked.id);this.toast(`메인 상위 ${displayNameOf(current)}가 이미 고정돼 있습니다. 바꾸려면 경로만 초기화하세요.`);return;}
       if(!locked&&this.actualRound()<25){this.toast('상위·조합 방향 확정은 25라운드부터 가능합니다. 지금은 후보만 미리보세요.');return;}
       const reusePreview=this.state.upperPreviewId===id&&!!this._squadCacheKey&&!!this._squadCache;this.state.upperPreviewId=id;this.state.purpose='upper';if(!reusePreview)this._squadCacheKey='';const preview=this.plan(),ranked=(preview.plan.upperRankings||[]).find(item=>item.upperId===id),squad=preview.plan.squadPlan||ranked&&ranked.plan,blueprint=this.captureUpperBlueprint(id,squad),unit=preview.state&&preview.state.db.byId.get(id);if(!unit||!C.isUpper(unit)){this.toast('현재 패에서 이 상위를 다시 찾지 못했습니다. TMO를 동기화해 주세요.');return;}
-      const suggestedMode=squad&&squad.mode||ranked&&ranked.mode,mode=['physical','magic'].includes(suggestedMode)?suggestedMode:C.familyOf(unit)==='magic'?'magic':'physical',routeHint=ranked&&ranked.directionKey||squad&&squad.magicRoute||this.state.directionKey||this.state.magicRoute,route=mode==='physical'?'physical':['dual','singleEnd'].includes(routeHint)?routeHint:'singleEnd',fullBlueprint=blueprint,commitment=fullBlueprint||this.captureUpperCommitment(id,mode,route);this.state.upperBlueprint=commitment;this.state.mode=mode;if(mode==='magic'&&['dual','singleEnd'].includes(route))this.state.magicRoute=route;this.state.directionStatus='selected';this.state.directionKey=mode==='physical'?'physical':route;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';if(!locked){const routeFamily=upperRouteFamily(id);this.state.locks=[{stage:'upper',id,source:fullBlueprint?'manual-blueprint':'manual-route',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:id,activeVariantId:id}];}this.state.upperDetection=emptyUpperDetection();this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this._squadCacheKey='';this.persist();this.toast(fullBlueprint?'상위와 현재 보조 청사진을 잠갔습니다. 패가 막히면 보조 자리만 가변 재계산합니다.':'상위 방향을 잠갔습니다. 30라 전후에는 이 상위를 먼저 올리고, 보조 조합은 남은 패로 가변 재계산합니다.');return;
+      const suggestedMode=squad&&squad.mode||ranked&&ranked.mode,mode=['physical','magic'].includes(suggestedMode)?suggestedMode:C.familyOf(unit)==='magic'?'magic':'physical',routeHint=ranked&&ranked.directionKey||squad&&squad.magicRoute||this.state.directionKey||this.state.magicRoute,route=mode==='physical'?'physical':['dual','singleEnd'].includes(routeHint)?routeHint:'singleEnd',fullBlueprint=blueprint,commitment=fullBlueprint||this.captureUpperCommitment(id,mode,route);this.state.upperBlueprint=commitment;this.state.mode=mode;if(mode==='magic'&&['dual','singleEnd'].includes(route))this.state.magicRoute=route;this.state.directionStatus='selected';this.state.directionKey=mode==='physical'?'physical':route;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';this.state.releasedUpperHint=null;if(!locked){const routeFamily=upperRouteFamily(id);this.state.locks=[{stage:'upper',id,source:fullBlueprint?'manual-blueprint':'manual-route',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:id,activeVariantId:id}];}this.state.upperDetection=emptyUpperDetection();this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this._squadCacheKey='';this.persist();this.toast(fullBlueprint?'상위와 현재 보조 청사진을 잠갔습니다. 패가 막히면 보조 자리만 가변 재계산합니다.':'상위 방향을 잠갔습니다. 30라 전후에는 이 상위를 먼저 올리고, 보조 조합은 남은 패로 가변 재계산합니다.');return;
     }
     if(a==='lock-legend'){this.state.locks=this.state.locks.filter(x=>x.stage!=='legend');this.state.locks.push({stage:'legend',id});this.persist();this.toast('전설·히든 경로 재료와 선위를 예약했습니다.');return;}
     if(a==='lock-rare'){this.state.locks=this.state.locks.filter(x=>x.stage!=='rare');this.state.locks.push({stage:'rare',id});this.persist();this.toast('첫 희귀 경로 재료와 선위를 예약했습니다.');return;}
     if(a==='remove-lock'){if(b.dataset.stage==='upper'){this.toast('메인 상위는 순간 누락으로 풀리지 않도록 고정됩니다. 바꾸려면 경로만 초기화하세요.');return;}this.state.locks=this.state.locks.filter(x=>!(x.stage===b.dataset.stage&&x.id===id));this.persist();this.render();return;}
-    if(a==='reset-route'){this.state.locks=[];this.state.upperBlueprint=null;this.state.upperDetection=emptyUpperDetection();this.state.upperPreviewId='';this.state.directionStatus='open';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint='';this.state.postLegendRoute='';const current=this.normalized();this.state.postLegendObservedCount=legendHiddenCount(current);this.state.postLegendBaseline=legendHiddenCounts(current);this.state.purpose='';this._squadCacheKey='';this._directionRankCacheKey='';this.persist();this.toast('확정 상위와 예상 파티를 초기화했습니다. 새 방향부터 다시 비교합니다.');return;}
+    if(a==='reset-route'){this.state.locks=[];this.state.upperBlueprint=null;this.state.upperDetection=emptyUpperDetection();this.state.upperPreviewId='';this.state.directionStatus='open';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint='';this.state.releasedUpperHint=null;this.state.postLegendRoute='';const current=this.normalized();this.state.postLegendObservedCount=legendHiddenCount(current);this.state.postLegendBaseline=legendHiddenCounts(current);this.state.purpose='';this._squadCacheKey='';this._directionRankCacheKey='';this.persist();this.toast('확정 상위와 예상 파티를 초기화했습니다. 새 방향부터 다시 비교합니다.');return;}
     if(a==='connection'){if(this.onConnectionTest)this.onConnectionTest();return;}
     if(a==='open-tmo'){if(this.onOpenTmo)this.onOpenTmo();return;}
     if(a==='round-reset'){this.state.roundStartedAt=0;this.state.currentRound=1;this.persist();this.render();return;}
@@ -958,6 +1002,10 @@ class App{
       // 대기 중에는 제작·리롤이 잠긴다는 비용을 명시하고, 상위 2개
       // 후보를 바로 이 자리에서 확정할 수 있게 한다.
       const quick=(decision.routeCandidates||[]).slice(0,2),canConfirm=this.actualRound()>=25;
+      // v19.2(사용자 요청): "물딜 가려다가 마딜로 바꿔서" — 계통 전환으로
+      // 해제된 확정 상위가 있고 지금 그 계통으로 돌아와 있으면, 후보를 다시
+      // 훑을 필요 없이 원클릭으로 되돌릴 수 있게 최상단에 보여준다.
+      const releasedActive=this.activeReleasedUpperHint(),restoreHtml=releasedActive?`<div class="v151-route-restore"><b>${C.esc(displayNameOf(releasedActive.unit))} 확정이 계통 전환으로 방금 해제됐습니다</b><small>${C.esc(modeLabel(this.state.mode))}로 돌아왔습니다 — 처음부터 다시 고르지 않아도 됩니다.</small><button class="primary" data-act="restore-released-upper">다시 확정</button></div>`:'';
       // v18: 방향 확정은 25라부터라는 규칙(v17.12)은 그대로 두되, 그
       // 전까지 화면을 비워 두지 않는다.  첫 클리어 로그에서 이 카드는
       // r16~r32 열일곱 라운드 동안 "상위 선택 필요"만 띄웠다 — 확정
@@ -968,7 +1016,7 @@ class App{
       const quickHtml=quick.length?`<div class="v151-route-quick">${quick.map((row,index)=>{const ready=routeCandidateReady(row),enabled=canConfirm&&ready;return`<div><span><b>${index+1}. ${C.esc(row.name)}</b><small>${C.esc(row.routeLabel||'')} · TMO ${fmt(row.completion)}% · 선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</small></span><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${enabled?'':'disabled aria-disabled="true"'}>${!canConfirm?'25라 이후':ready?'확정':'파티 평가 중'}</button></div>`;}).join('')}</div>`:'';
       // v17.12: 최근 3판 모두 방향 선택을 25라+ 미뤘다(마지막 판 25라 대기)
       // — 확정 가능 라운드부터는 대기 비용을 긴급 톤으로 명시한다.
-      return`<div class="v151-action choice${canConfirm?' urgent':''}"><span class="v151-state">상위 선택 필요${canConfirm?' · 지금 확정 가능':''}</span><b class="v151-action-title">${C.esc(decision.label||'메인 상위 방향 선택')}</b><p>${C.esc(decision.reason||'아래 상위 정보에서 현재 패 후보를 비교하세요.')} 선택 전에는 제작·리롤이 잠깁니다.${canConfirm?' 이미 확정 가능한 라운드입니다 — 미룰수록 잠금 비용만 쌓입니다.':''}</p>${waitCoach}${quickHtml}<span class="v151-jump-note">④ 상위·파티 특징에서 전체 후보를 비교할 수 있습니다.</span>${this.v151ActionFacts(state,decision)}</div>`;
+      return`<div class="v151-action choice${canConfirm?' urgent':''}"><span class="v151-state">상위 선택 필요${canConfirm?' · 지금 확정 가능':''}</span><b class="v151-action-title">${C.esc(decision.label||'메인 상위 방향 선택')}</b><p>${C.esc(decision.reason||'아래 상위 정보에서 현재 패 후보를 비교하세요.')} 선택 전에는 제작·리롤이 잠깁니다.${canConfirm?' 이미 확정 가능한 라운드입니다 — 미룰수록 잠금 비용만 쌓입니다.':''}</p>${restoreHtml}${waitCoach}${quickHtml}<span class="v151-jump-note">④ 상위·파티 특징에서 전체 후보를 비교할 수 있습니다.</span>${this.v151ActionFacts(state,decision)}</div>`;
     }
     // v18: 승인(action)이 없어도 카드는 비지 않는다.  엔진이 coachAction을
     // 항상 채우고 확신 등급을 같이 준다 — 확정/유력/차선/운영.  버튼은

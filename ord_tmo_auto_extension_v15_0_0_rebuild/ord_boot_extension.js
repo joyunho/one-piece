@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v19.1.0 live cockpit bridge; connector protocol stays v13.
+  // v19.2.0 live cockpit bridge; connector protocol stays v13.
   const PATTERNS = [
     'https://tmo.gg/*/build-helper/32172*',
     'https://www.tmo.gg/*/build-helper/32172*',

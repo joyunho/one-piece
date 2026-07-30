@@ -1117,6 +1117,12 @@
 .v151-route-wait b{font-size:14px}
 .v151-route-wait i{color:#9FB6E4;font-size:11px;font-style:normal;font-weight:800}
 .v151-route-wait small{grid-column:1/-1;color:#8CA2BE;font-size:10.5px;line-height:1.45}
+/* v19.2(사용자 요청): 계통 전환으로 해제된 상위 원클릭 복구 — 후보 목록보다
+   먼저, 눈에 띄게. */
+.v151-route-restore{display:grid;grid-template-columns:1fr auto;gap:2px 10px;align-items:center;margin-top:8px;border:1px solid rgba(243,184,75,.55);border-radius:12px;padding:9px 11px;background:rgba(96,67,13,.2)}
+.v151-route-restore b{font-size:12.5px;color:#ffe1a1}
+.v151-route-restore small{grid-column:1/2;color:#e3c98a;font-size:10.5px;line-height:1.4}
+.v151-route-restore button{grid-row:1/3;border:none;border-radius:9px;padding:8px 12px;font-size:11px;font-weight:900;background:linear-gradient(135deg,#f3b84b,#e58a3a);color:#221200;cursor:pointer}
 .v153-axis-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:7px;margin-bottom:9px}
 .v153-axis{display:grid;gap:2px;border:1px solid #35516F;border-radius:12px;padding:8px 10px;background:#0A1729}
 .v153-axis small{color:#91A7C0;font-size:10.5px;font-weight:900}
