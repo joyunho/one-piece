@@ -38,7 +38,7 @@ const DEFAULTS={
 
 const REACHABLE_TABS=new Set(['coach','runlog','deck','data','story']);
 const REMOVED_SETTING_KEYS=['firstRareRewardClaimed','moneyRareReward','storyRareRewards','highGambleDone','highGambleRares','stunConditions','allowWarped','recommendWarped'];
-const RUN_LOG_ACTIONS=new Set(['post-legend-route','purpose','super-kuma','mark-made','reroll-confirmed','cancel-reroll','unit-adjust','clear-unit-override','preview-direction','choose-direction','hold-direction','select-upper','confirm-upper','party-preview','lock-legend','lock-rare','remove-lock','reset-route','round-reset','round-step','round-pause','round-start','reroll-step','new-game','dismiss-transaction','accept-snapshot','counter-step','clear-overrides']);
+const RUN_LOG_ACTIONS=new Set(['post-legend-route','purpose','super-kuma','mark-made','reroll-confirmed','cancel-reroll','unit-adjust','clear-unit-override','preview-direction','choose-direction','hold-direction','select-upper','confirm-upper','party-preview','lock-legend','lock-rare','remove-lock','reset-route','round-reset','round-step','round-pause','round-start','reroll-step','new-game','dismiss-transaction','accept-snapshot','counter-step','clear-overrides','confirm-second-upper','release-second-upper','confirm-party','release-party']);
 const RUN_LOG_SETTING_KEYS=new Set(['mode','magicRoute','gorosei','story10Reward','currentRound','roundPrepSeconds','roundNormalSeconds','roundBossSeconds','wispOverride','virtualSpecialId','transcendUsed','seraphUsed','changedUsed']);
 const RUN_RESULT_DEFAULTS=Object.freeze({kind:'r50_failed',failureReason:'unknown',followedProgram:'unknown',round:'',bossHpPercent:'',attackUpgrade:'',slowUpgrade:'',hpRegenUpgrade:'',mpRegenUpgrade:'',helperUsed:false,note:''});
 const RUN_FAILURE_KINDS=new Set(['r50_failed','r51_65_failed']);
@@ -549,10 +549,32 @@ class App{
   releaseDirectionHold(){
     if(this.state.directionStatus!=='hold')return false;this.state.directionStatus='open';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint='';this._directionRankCacheKey='';return true;
   }
-  captureUpperBlueprint(id,squad){
-    if(!squad||squad.error)return null;const unitId=item=>String(item&&item.unit&&item.unit.id||item&&item.unit||item&&item.id||item||''),lineupIds=(squad.finalLineup||squad.lineup||[]).map(unitId).filter(Boolean).slice(0,11),buildOrderIds=(squad.actions||[]).map(unitId).filter(Boolean).slice(0,11),planned=squad.roleCoverage&&squad.roleCoverage.planned||squad.roleCoverage||{},targetBoard=Math.max(1,C.num(squad.targetBoardCount)||lineupIds.length),targetEquivalent=Math.max(9,C.num(squad.targetCount)||9),plannedEquivalent=C.num(squad.plannedCount)||lineupIds.reduce((sum,unitId)=>sum+(C.isUpper(this.normalized().db.byId.get(unitId))?3:1),0),routeConfirmable=!squad.routeEvaluation||squad.routeEvaluation.confirmable!==false,handFeasible=!squad.handFit||squad.handFit.feasible!==false,wispFeasible=!!squad.wispBudget&&squad.wispBudget.fullPartyFeasible===true,containsUpper=lineupIds.some(unitId=>C.canonicalUpperId(unitId)===C.canonicalUpperId(id));if(lineupIds.length<targetBoard||plannedEquivalent<targetEquivalent||!planned.complete||!routeConfirmable||!handFeasible||!wispFeasible||!containsUpper)return null;
+  // v19.1: 두 확정 버튼(자동·수동)이 같은 청사진 모양을 만든다 — 차이는
+  // "지금 패로 정확히 완성되는가"를 요구하느냐뿐이다.  자동(상위 확정 시
+  // guaranteedComplete)은 그 요구를 지키고, 수동(파티 확정 버튼)은 지금
+  // 보이는 구성을 그대로 목표로 찍는다 — 완성되지 않은 자리는
+  // searchExactBlueprint 가 스스로 가변 자리로 풀어 준다("preference,
+  // not brittle lock" — 위 searchExactBlueprint 주석).
+  buildPartyBlueprint(id,squad,options){
+    options=options||{};if(!squad||squad.error)return null;
+    const unitId=item=>String(item&&item.unit&&item.unit.id||item&&item.unit||item&&item.id||item||''),lineupIds=(squad.finalLineup||squad.lineup||[]).map(unitId).filter(Boolean).slice(0,11),buildOrderIds=(squad.actions||[]).map(unitId).filter(Boolean).slice(0,11),containsUpper=lineupIds.some(unitId=>C.canonicalUpperId(unitId)===C.canonicalUpperId(id));
+    if(lineupIds.length<2||!containsUpper)return null;
+    if(options.requireFeasible){
+      const planned=squad.roleCoverage&&squad.roleCoverage.planned||squad.roleCoverage||{},targetBoard=Math.max(1,C.num(squad.targetBoardCount)||lineupIds.length),targetEquivalent=Math.max(9,C.num(squad.targetCount)||9),plannedEquivalent=C.num(squad.plannedCount)||lineupIds.reduce((sum,unitId)=>sum+(C.isUpper(this.normalized().db.byId.get(unitId))?3:1),0),routeConfirmable=!squad.routeEvaluation||squad.routeEvaluation.confirmable!==false,handFeasible=!squad.handFit||squad.handFit.feasible!==false,wispFeasible=!!squad.wispBudget&&squad.wispBudget.fullPartyFeasible===true;
+      if(lineupIds.length<targetBoard||plannedEquivalent<targetEquivalent||!planned.complete||!routeConfirmable||!handFeasible||!wispFeasible)return null;
+    }
     const previous=normalizeUpperBlueprint(this.state.upperBlueprint);return normalizeUpperBlueprint({upperId:id,lineupIds,buildOrderIds,mode:squad.mode||this.state.mode,magicRoute:squad.magicRoute||'physical',revision:(previous?previous.revision:0)+1,capturedFingerprint:fingerprint(this.state.snapshot),capturedAt:Date.now(),fullPartyVerified:true,commitment:'full-party',adaptiveSupports:true});
   }
+  captureUpperBlueprint(id,squad){return this.buildPartyBlueprint(id,squad,{requireFeasible:true});}
+  // v19.1(사용자 요청): "내 파티에 확정 이런거 있으면 좋을듯? 내가 버튼
+  // 누르면 자꾸 사라지니까 짜증나네."
+  //
+  // 자동 확정(captureUpperBlueprint)은 지금 패로 9환산 전부가 정확히
+  // 완성될 때만 성공한다 — 그 조건은 중반 이후 거의 항상 거짓이라, 상위만
+  // 확정되고 화면에 보이던 나머지 자리는 계속 가변 재계산돼 사용자가 보던
+  // 구성이 다음 라운드에 바뀌어 보인다("사라진다").  수동 확정은 그 요구를
+  // 빼고 "지금 보이는 구성"을 그대로 목표로 찍는다.
+  captureCurrentParty(id,squad){return this.buildPartyBlueprint(id,squad,{requireFeasible:false});}
   captureUpperCommitment(id,mode,magicRoute){
     const previous=normalizeUpperBlueprint(this.state.upperBlueprint);return normalizeUpperBlueprint({upperId:id,lineupIds:[id],buildOrderIds:[id],mode:mode==='magic'?'magic':'physical',magicRoute:mode==='magic'&&['dual','singleEnd'].includes(magicRoute)?magicRoute:'physical',revision:(previous?previous.revision:0)+1,capturedFingerprint:fingerprint(this.state.snapshot),capturedAt:Date.now(),fullPartyVerified:false,commitment:'upper-route',adaptiveSupports:true});
   }
@@ -754,6 +776,25 @@ class App{
     if(a==='release-second-upper'){
       this.state.secondUpperId='';this._squadCacheKey='';this._v15CacheKey='';this._directionRankCacheKey='';this._blueprintRankingsKey='';this.persist();
       this.toast('두 번째 상위 확정을 해제했습니다. 다시 남은 패로 가변 재계산합니다.');
+      return;
+    }
+    // v19.1(사용자 요청): 파티 전체 확정 — 지금 계산된 최종 파티 구성을
+    // 그대로 목표로 찍는다.  못 만드는 자리만 자동으로 가변 교체된다.
+    if(a==='confirm-party'){
+      const locked=this.upperLock();if(!locked){this.toast('메인 상위를 먼저 확정해야 파티를 확정할 수 있습니다.');return;}
+      const pack=this.plan(),squad=pack.plan&&pack.plan.squadPlan;
+      if(!squad||squad.error||!(squad.finalLineup||[]).length){this.toast('지금 계산된 파티가 없어 확정할 수 없습니다. 잠시 뒤 다시 시도하세요.');return;}
+      const blueprint=this.captureCurrentParty(locked.id,squad);
+      if(!blueprint){this.toast('확정할 구성이 아직 없습니다 — 보조 전설급이 하나도 계획되지 않았습니다.');return;}
+      this.state.upperBlueprint=blueprint;this._squadCacheKey='';this.persist();
+      this.toast('지금 파티 구성을 확정했습니다. 만들 수 없는 자리만 자동으로 바뀝니다.');
+      return;
+    }
+    if(a==='release-party'){
+      const locked=this.upperLock();if(!locked){this.toast('확정된 파티가 없습니다.');return;}
+      this.state.upperBlueprint=this.captureUpperCommitment(locked.id,this.state.mode,this.state.magicRoute);
+      this._squadCacheKey='';this.persist();
+      this.toast('파티 확정을 해제했습니다. 상위만 유지하고 나머지는 다시 가변 계산합니다.');
       return;
     }
     if(a==='select-upper'){const row=(this._upperRankCache||[]).find(item=>item.upperId===id);if(row&&row.directionKey){this.state.directionStatus='preview';this.state.directionKey=row.directionKey;this.state.directionUpperId=id;this.state.mode=row.directionKey==='physical'?'physical':'magic';this.state.magicRoute=row.directionKey==='physical'?'auto':row.directionKey;}this.state.upperPreviewId=id;this.state.postLegendRoute='upper';this.state.purpose='upper';this._squadCacheKey='';this.persist();this.render();return;}
@@ -963,7 +1004,7 @@ class App{
       const lowest=(C.commonTop?C.commonTop(state.db,solve.lowestMissing||{},4):[]).map(item=>`<em>${C.esc(item.name)}×${C.num(item.count!=null?item.count:item.need)}</em>`).join('');
       if(!direct&&!lowest)return'';
       return`<div class="v151-mats">${direct?`<div><small>바로 필요한 조합 재료</small>${direct}</div>`:''}${lowest?`<div><small>부족 최하위 재료 = 선택위습 ${C.num(shown.quote.wisp.cost)}</small>${lowest}</div>`:''}</div>`;
-    })()}${this.renderV151Recovery(decision,status)}${this.v151ActionFacts(state,decision)}<div class="v151-action-foot"><small>${C.esc(stop)}</small><div>${shown?`<button data-act="detail" data-id="${C.esc(shown.id)}">재료</button>`:''}${button}</div></div></div>`;
+    })()}${unit&&this.commandInfo(unit).hasVerified?this.renderCommandLine(unit):''}${this.renderV151Recovery(decision,status)}${this.v151ActionFacts(state,decision)}<div class="v151-action-foot"><small>${C.esc(stop)}</small><div>${shown?`<button data-act="detail" data-id="${C.esc(shown.id)}">재료</button>`:''}${button}</div></div></div>`;
   }
 
   renderV151Recovery(decision,status){
@@ -1427,10 +1468,21 @@ class App{
     if(!unit||!C.isUpper(unit))return null;
     const mode=C.familyOf(unit)==='magic'?'magic':'physical';
     const baseSettings=plan&&plan.settings||{};
-    const plannerSettings=Object.assign({},baseSettings,{mode,upperPreviewId:upperId,preferredLineupIds:[],targetSquadCount:9});
+    // v19.1(버그 수정): 이 함수는 확정 상위의 진짜 파티(panel 5의
+    // squadPlan)와 결정 엔진의 livePlan.squadPlan을 모두 만드는 유일한
+    // 자리인데, 여기서 upperBlueprint·preferredLineupIds를 항상 비워
+    // 넘기고 있었다.  그래서 상위 확정 시 자동으로 잡히는 전체 파티
+    // 청사진(captureUpperBlueprint)도, 방금 추가한 수동 "파티 확정"
+    // 버튼(captureCurrentParty)도 실제로는 아무 효과가 없었다 — 확정은
+    // 상태에 저장되고 화면에 "확정됨"으로 뜨지만, 이 함수가 매번 새로
+    // 계산하는 파티에는 반영되지 않았다.  지금 미리보는 상위와 확정된
+    // 상위가 같을 때만 청사진을 넘긴다 — 다른 상위를 미리보는 중에 남의
+    // 청사진이 섞이면 안 된다.
+    const confirmed=normalizeUpperBlueprint(this.state.upperBlueprint),blueprintForPreview=confirmed&&C.canonicalUpperId(confirmed.upperId)===C.canonicalUpperId(upperId)?confirmed:null;
+    const plannerSettings=Object.assign({},baseSettings,{mode,upperPreviewId:upperId,preferredLineupIds:blueprintForPreview?blueprintForPreview.lineupIds:[],targetSquadCount:9});
     // 다른 상위 잠금은 프리뷰 계산에서만 제외한다(상태는 건드리지 않음).
     const locks=(this.state.locks||[]).filter(lock=>!(lock&&lock.stage==='upper'&&C.canonicalUpperId(lock.id)!==C.canonicalUpperId(upperId)));
-    const key=[fingerprint(this.state.snapshot),upperId,mode,String(plannerSettings.magicRoute||''),this.actualRound(),JSON.stringify(this.state.manualCounts||{}),locks.map(lock=>`${lock.stage}:${lock.id}`).join(','),String(this.state.gorosei||''),String(this.state.virtualSpecialId||'')].join('|');
+    const key=[fingerprint(this.state.snapshot),upperId,mode,String(plannerSettings.magicRoute||''),this.actualRound(),JSON.stringify(this.state.manualCounts||{}),locks.map(lock=>`${lock.stage}:${lock.id}`).join(','),String(this.state.gorosei||''),String(this.state.virtualSpecialId||''),blueprintForPreview?`${blueprintForPreview.revision}:${blueprintForPreview.commitment}`:''].join('|');
     // v17.15.1(감사): 단일 슬롯 캐시는 3번 패널 인라인 파티와 미리 파티
     // 모달이 서로 다른 상위일 때 렌더마다 서로를 축출해 플래너가 2회씩
     // 돌았다(렌더당 ~350ms) — LRU 4 Map으로 두 소비자가 공존한다.
@@ -1438,7 +1490,7 @@ class App{
     if(!this._partyCacheMap)this._partyCacheMap=new Map();
     if(this._partyCacheMap.has(key)){const hit=this._partyCacheMap.get(key);this._partyCacheMap.delete(key);this._partyCacheMap.set(key,hit);return hit;}
     let squad;
-    try{const run=typeof planner.planAdaptiveFinalSquad==='function'?planner.planAdaptiveFinalSquad:planner.planFinalSquad;squad=run({catalog:this.catalog,state,settings:plannerSettings,locks,upperBlueprint:null,corePlan:plan,upperMemo:global.ORD_UPPER_MEMO,synergyMemo:global.ORD_SYNERGY_MEMO},{minTarget:9,maxTarget:11});}
+    try{const run=typeof planner.planAdaptiveFinalSquad==='function'?planner.planAdaptiveFinalSquad:planner.planFinalSquad;squad=run({catalog:this.catalog,state,settings:plannerSettings,locks,upperBlueprint:blueprintForPreview,corePlan:plan,upperMemo:global.ORD_UPPER_MEMO,synergyMemo:global.ORD_SYNERGY_MEMO},{minTarget:9,maxTarget:11});}
     catch(error){squad={error:String(error&&error.message||error),finalLineup:[],actions:[]};}
     this._partyCacheMap.set(key,squad);
     while(this._partyCacheMap.size>4)this._partyCacheMap.delete(this._partyCacheMap.keys().next().value);
@@ -2020,7 +2072,13 @@ class App{
     const chips=squadLineup.map(chipFor).join('');
     const emptySlots=Math.max(0,9-squadLineup.length);
     const placeholders=emptySlots?Array.from({length:Math.min(3,emptySlots)},()=>`<span class="v153-party-slot">${this.v153Icon('placeholder')}<b>미정</b><em>후보 대기</em></span>`).join(''):'';
-    const partyBoard=`<div class="v153-party"><header>${this.v153Icon('party')}<b>9환산 계획</b><strong>${secured} / 9 확보</strong></header><div class="v153-party-chips">${chips}${placeholders}</div>${emptySlots?`<small>남은 자리 ${emptySlots}</small>`:''}</div>`;
+    // v19.1(사용자 요청): "내 파티에 확정 이런거 있으면 좋을듯? 내가 버튼
+    // 누르면 자꾸 사라지니까 짜증나네." — 상위만 확정해서는 나머지 자리가
+    // 계속 가변 재계산되어 화면에 보이던 구성이 바뀐다.  여기서 지금 보이는
+    // 구성 전체를 그대로 목표로 찍을 수 있게 한다.  못 만드는 자리는
+    // searchExactBlueprint 가 스스로 가변 자리로 풀어 준다.
+    const blueprintInfo=squad&&squad.blueprint||null,partyLockActive=!!(blueprintInfo&&blueprintInfo.active&&blueprintInfo.commitment==='full-party'),partyLockTone=partyLockActive?({kept:'ok',adapted:'warn',invalid:'bad'}[blueprintInfo.status]||'ok'):'off',partyLockLabel=partyLockActive?({kept:'그대로 유지',adapted:'일부만 가변 교체',invalid:'유지 불가 · 갱신 필요'}[blueprintInfo.status]||'확정됨'):'파티 미확정',partyLockHtml=`<div class="v153-party-lock ${partyLockTone}">${this.v153Icon('lock')}<b>파티 확정 · ${C.esc(partyLockLabel)}</b><div>${partyLockActive?`<button data-act="confirm-party">다시 확정</button><button data-act="release-party">해제</button>`:`<button class="primary" data-act="confirm-party">지금 구성 확정</button>`}</div></div>`;
+    const partyBoard=`<div class="v153-party"><header>${this.v153Icon('party')}<b>9환산 계획</b><strong>${secured} / 9 확보</strong></header>${partyLockHtml}<div class="v153-party-chips">${chips}${placeholders}</div>${emptySlots?`<small>남은 자리 ${emptySlots}</small>`:''}</div>`;
     // v19(사용자 요청): 두 번째 상위 확정.
     //
     // "상위는 만드는데 시간이 걸려서 만들다가 바뀌면 곤란해지는경우가 있어."

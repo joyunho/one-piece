@@ -1174,6 +1174,17 @@
 .v153-party{margin-top:10px;border:1px solid var(--v153-line);border-radius:14px;padding:10px;background:rgba(9,20,39,.6)}
 .v153-party>header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
 .v153-party>header b{font-size:12px}
+/* v19.1(사용자 요청): 파티 전체 확정 — 상시 노출 한 줄 상태 · 버튼. */
+.v153-party-lock{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:5px 8px;border:1px solid var(--v153-line);border-radius:9px;background:rgba(11,23,44,.6);font-size:10px}
+.v153-party-lock img,.v153-party-lock svg{width:13px;height:13px;flex:0 0 auto}
+.v153-party-lock b{flex:1 1 auto;min-width:0;font-size:10.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v153-party-lock div{display:flex;gap:5px;flex:0 0 auto}
+.v153-party-lock button{border:1px solid var(--v153-line);border-radius:8px;padding:3px 8px;font-size:9.5px;font-weight:800;background:rgba(20,34,58,.9);color:inherit;cursor:pointer}
+.v153-party-lock button.primary{background:linear-gradient(135deg,#7a5cd6,#9a78e4);border-color:transparent;color:#fff}
+.v153-party-lock.ok{border-color:rgba(110,231,168,.4);color:#8be7b9}
+.v153-party-lock.warn{border-color:rgba(243,184,75,.4);color:#ffd587}
+.v153-party-lock.bad{border-color:rgba(239,98,98,.4);color:#ffaaaa}
+.v153-party-lock.off{color:var(--v153-muted)}
 .v153-party>header strong{font-size:15px;color:#6ee7a8}
 .v153-party-chips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
 .v153-party-chips>button,.v153-party-slot{display:grid;grid-template-columns:30px minmax(0,1fr);grid-template-rows:auto auto;gap:2px 7px;align-items:center;border:1px solid var(--v153-line);border-radius:11px;padding:7px;background:rgba(11,23,44,.75);color:inherit;text-align:left;cursor:pointer}
@@ -1250,6 +1261,8 @@
   .v153-panel>header p{display:none}
   .v153-panel{padding:9px 11px}
   .v153-panel>header{margin-bottom:8px}
+  .v153-party-lock{padding:3px 7px;margin-bottom:5px}
+  .v153-next .command-line{margin-top:3px}
 }
 
 /* v18.7: 스펙 표기 통일 — 모든 역할이 같은 행 형식이다.

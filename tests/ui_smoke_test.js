@@ -105,6 +105,41 @@ const REGIONS=['game-status','next-action','next-preview','craftable-legends','c
     await page.locator('.modal-x').click();
     assert.strictEqual(await page.locator('.detail-modal').count(),0);
     console.log('PASS  detail modal opens from the next-action panel and closes');
+
+    // v19.1(사용자 요청): "상위 만들 때 화면에 명령어 나오게 해줘 눌러서
+    // 들어가야 봐지는거 말고" — 1번 패널(지금 할 일)에 클릭 없이 채팅
+    // 명령어가 보여야 한다.  어떤 유닛이 추천될지는 픽스처마다 달라지므로,
+    // "검증된 명령어가 있으면 반드시 보이고 없으면 안 보인다"는 대응만 잰다.
+    const cmdCheck=await page.evaluate(()=>{
+      const app=window.TEST_APP,plan=app.plan().plan,decision=plan.v15Decision||{},
+        shown=decision.action||decision.blockedAction||decision.coachAction||null,unit=shown&&shown.unit||null,
+        verified=unit?app.commandInfo(unit).hasVerified:false,
+        hasCommandLine=!!document.querySelector('[data-region="next-action"] .command-line');
+      return{unitId:unit&&unit.id||'',verified,hasCommandLine};
+    });
+    if(cmdCheck.unitId){
+      assert.strictEqual(cmdCheck.hasCommandLine,cmdCheck.verified,
+        `${cmdCheck.unitId} 명령어 표시 불일치: 검증됨=${cmdCheck.verified} 화면표시=${cmdCheck.hasCommandLine}`);
+      console.log(`PASS  next-action 명령어 라인 ${cmdCheck.verified?'표시됨':'검증 없어 정상적으로 숨김'} (${cmdCheck.unitId})`);
+    }else{
+      console.log('INFO  이 픽스처 상태에는 next-action 대상 유닛이 없어 명령어 검사를 건너뜀');
+    }
+
+    // v19.1(사용자 요청): "내 파티에 확정 이런거 있으면 좋을듯? 내가 버튼
+    // 누르면 자꾸 사라지니까 짜증나네" — 5번 패널의 파티 확정 버튼이 실제로
+    // 상태를 뒤집는지 왕복으로 확인한다.
+    await page.waitForSelector('[data-region="upper-party"] .v153-party-lock');
+    const lockBefore=await page.evaluate(()=>document.querySelector('[data-region="upper-party"] .v153-party-lock').className);
+    assert(/\boff\b/.test(lockBefore),`파티 확정이 미확정 상태로 시작하지 않음: ${lockBefore}`);
+    assert.strictEqual(await page.locator('[data-region="upper-party"] [data-act="confirm-party"]').count(),1,'파티 확정 버튼이 없음');
+    await page.locator('[data-region="upper-party"] [data-act="confirm-party"]').click();
+    await page.waitForFunction(()=>{const el=document.querySelector('[data-region="upper-party"] .v153-party-lock');return el&&!el.className.includes('off');});
+    assert.strictEqual(await page.locator('[data-region="upper-party"] [data-act="release-party"]').count(),1,'확정 후 해제 버튼이 없음');
+    console.log('PASS  파티 확정 버튼이 잠금 줄을 미확정 상태에서 바꾼다');
+    await page.locator('[data-region="upper-party"] [data-act="release-party"]').click();
+    await page.waitForFunction(()=>{const el=document.querySelector('[data-region="upper-party"] .v153-party-lock');return el&&el.className.includes('off');});
+    console.log('PASS  파티 해제 버튼이 잠금 줄을 다시 미확정으로 되돌린다');
+
     await context.close();
   }finally{await browser.close();}
 })().catch(error=>{console.error(error.stack||error);process.exit(1);});
