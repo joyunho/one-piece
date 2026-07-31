@@ -1,0 +1,509 @@
+{
+  "metadata": {
+    "title": "원랜디 2.305 악몽 코치 공통 규칙·환경 데이터",
+    "game_version": "2.305",
+    "difficulty": "악몽",
+    "researched_at": "2026-07-31",
+    "language": "ko",
+    "evidence_policy": {
+      "verified": "ORDSearch 관리자 팁·개별 유닛 본문·버전 패치 기록에서 직접 확인",
+      "observed": "2.305 공개 클리어 기록에서 관찰했으나 인과관계나 승률은 보장하지 않음",
+      "user_rule": "사용자가 코치 프로그램에 고정한 운영 규칙",
+      "derived": "검증된 스킬 구조에서 도출한 조합 판단",
+      "unverified": "공개 자료만으로 정확한 판정을 못해 인게임 검증이 필요"
+    },
+    "source_precedence": [
+      "동일 수치가 충돌하면 목표 버전에 적용되는 최신 패치 노트를 기존 팁·공략보다 우선한다.",
+      "패치 이후 갱신된 ORDSearch 유닛·관리자 팁을 다음 순위로 사용한다.",
+      "공개 클리어 기록은 관찰 사례로만 사용하며 게임 규칙 수치를 덮어쓰지 않는다.",
+      "사용자 운영 규칙과 파생 전략은 검증된 게임 규칙과 별도 분류한다."
+    ],
+    "applied_version_override": {
+      "since_version": "2.303",
+      "rule": "악몽 공통 적 체력은 +1,000만, 워큐리 라인 체력은 +1,000만으로 적용한다. 기존 오로성 안내의 나머지 수치는 유지한다.",
+      "source_url": "https://m.dcinside.com/board/ordc1/189308",
+      "overrides_older_source": "https://ordsearch.net/posts/tips/43"
+    }
+  },
+  "global_rules": {
+    "final_round": {
+      "value": 65,
+      "evidence": "user_rule",
+      "note": "공개 2.305 클리어 메모에도 65라 보스·60라 투자 등의 표현이 반복되지만, 코치 엔진에서는 사용자 고정 규칙으로 취급한다."
+    },
+    "max_transcendent": {
+      "value": 1,
+      "evidence": "user_rule"
+    },
+    "recommended_max_upper": {
+      "value": 2,
+      "hard_limit": false,
+      "evidence": "user_rule",
+      "note": "비용과 보완 슬롯을 고려한 코치 추천 상한이며 맵의 절대 조합 제한을 뜻하지 않는다."
+    },
+    "upper_legend_equivalent": {
+      "value": 3,
+      "evidence": "user_rule",
+      "note": "최종 파티 완성도 계산에 사용하는 사용자 정의 환산값이다."
+    },
+    "exclude_categories": [
+      {
+        "category": "신비함",
+        "scope": "추천·분류 전반",
+        "evidence": "user_rule"
+      },
+      {
+        "category": "랜덤 결과",
+        "scope": "확정 추천 후보",
+        "evidence": "user_rule"
+      }
+    ]
+  },
+  "recommendation_fsm": {
+    "phases": [
+      {
+        "id": "BEFORE_8_RARE_PICK",
+        "deadline_round": 8,
+        "action": "선택위습 소모가 가장 적고 이후 상위·전설 경로를 덜 막는 희귀함 후보 2~3개 제시",
+        "evidence": "user_rule"
+      },
+      {
+        "id": "BEFORE_20_LEGEND_PICK",
+        "deadline_round": 20,
+        "action": "전설 또는 히든 후보 2~3개 제시. 왜곡·해적선·세라핌은 이 단계 추천에서 제외",
+        "evidence": "user_rule"
+      },
+      {
+        "id": "NAVIGATION_PICK",
+        "start_round": 21,
+        "deadline_round": 25,
+        "action": "현재 성장축·상위 수·특성포인트 수요에 맞는 항법 선택",
+        "evidence": "verified",
+        "source_url": "https://ordsearch.net/posts/tips/39"
+      },
+      {
+        "id": "UPPER_PICK",
+        "trigger": "상위 후보 완성도 80% 이상 또는 첫 상위 경로가 명확해짐",
+        "action": "물딜·마딜 계통을 고정하고 상위 후보 2~3개 제시",
+        "evidence": "user_rule"
+      },
+      {
+        "id": "SPEC_FILL",
+        "trigger": "첫 상위 확정",
+        "action": "두 번째 상위보다 부족한 핵심 스펙을 먼저 전설·히든·왜곡·세라핌·해적선으로 보완",
+        "evidence": "user_rule"
+      },
+      {
+        "id": "FINISH",
+        "trigger": "필수 클리어 슬롯 충족",
+        "action": "보스·광폭·끝딜과 65라 액티브 운용을 점검하고 불필요 희귀함을 표시",
+        "evidence": "derived"
+      }
+    ],
+    "rare_reward_rerolls": {
+      "value": 2,
+      "protect": [
+        "선택한 상위의 희귀 재료",
+        "확정 전설·히든의 희귀 재료",
+        "최종 파티 대체 경로에 공통으로 들어가는 희귀 재료"
+      ],
+      "evidence": "user_rule"
+    },
+    "selector_soft_cap": {
+      "value": 10,
+      "evidence": "user_rule",
+      "note": "10개 이내 후보 우선, 24개 이상 후보는 기본 추천에서 배제한다."
+    },
+    "score_formula": {
+      "positive": [
+        "부족 핵심 역할 보완",
+        "현재 재료 완성도",
+        "첫 상위와의 직접 시너지",
+        "최종 파티 재료 보존",
+        "공개 2.305 클리어 동반 관찰"
+      ],
+      "negative": [
+        "선택위습 비용",
+        "핵심 희귀함 소모",
+        "상위 경로 차단",
+        "이미 충분한 역할 중복",
+        "버프·디버프 중복 불가",
+        "아이템·해적선·특성포인트 미보유",
+        "성장 완료 시점 지연"
+      ],
+      "warning": "공개 성공 기록만으로는 승률을 산출할 수 없으므로 클리어 동반 관찰은 낮은 가중치의 근거로만 쓴다."
+    }
+  },
+  "clear_spec_templates": {
+    "physical": {
+      "required": [
+        "주딜러",
+        "범위 스턴",
+        "전체·범위 이감",
+        "범위 방어력 감소",
+        "보스·광폭 처리"
+      ],
+      "conditional": [
+        "아머브레이크",
+        "공격력 버프",
+        "공격속도 버프",
+        "보조딜",
+        "마나회복"
+      ],
+      "evidence": "user_rule"
+    },
+    "magic": {
+      "required": [
+        "주딜러",
+        "범위 스턴",
+        "전체·범위 이감",
+        "보스·광폭 처리",
+        "단일 2~3축",
+        "끝딜 1~2축",
+        "보조딜"
+      ],
+      "conditional": [
+        "마법방어력 감소",
+        "마법피해 증폭",
+        "폭발형 피해 증폭",
+        "마나회복"
+      ],
+      "evidence": "user_rule"
+    }
+  },
+  "effect_normalization": {
+    "required_fields": [
+      "effect_type",
+      "value",
+      "unit",
+      "scope",
+      "range",
+      "target_class",
+      "trigger",
+      "proc_chance",
+      "duration_seconds",
+      "cooldown_seconds",
+      "expected_uptime",
+      "boss_applies",
+      "stack_group",
+      "max_stack",
+      "reset_by",
+      "source_url",
+      "evidence",
+      "confidence"
+    ],
+    "scope_values": [
+      "single",
+      "area",
+      "aura",
+      "global",
+      "self"
+    ],
+    "target_class_values": [
+      "normal_line",
+      "boss",
+      "berserk",
+      "story",
+      "ally",
+      "all"
+    ],
+    "critical_distinctions": [
+      "단일 99% 이감은 전체 이감으로 합산하지 않는다.",
+      "범위 방깎·타격 대상 방깎·아머브레이크를 별도 효과로 센다.",
+      "마방깎·마뎀증·폭발형 증폭은 서로 대체하지 않는다.",
+      "현재체력·전체체력·잃은체력 피해를 별도 역할로 센다.",
+      "일반몹 즉사·처형은 보스 처리 능력으로 세지 않는다.",
+      "진입형 1회 패기와 중복 불가 스킬은 실제 중복 그룹을 기록한다."
+    ]
+  },
+  "nightmare_gorosei_debuffs": [
+    {
+      "name": "나스쥬로",
+      "enemy_move_speed_percent": 15,
+      "ally_attack_speed_percent": -15,
+      "boss_hp_flat": 15000000,
+      "common_enemy_hp_flat": 10000000,
+      "common_enemy_hp_regen_flat": 300000,
+      "strategy_effect": "공속 의존·최저 이속 조건 유닛의 요구 스펙을 악화시키며 보스 체력도 늘린다.",
+      "evidence": "verified",
+      "source_url": "https://m.dcinside.com/board/ordc1/189308",
+      "source_urls": [
+        "https://ordsearch.net/posts/tips/43",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": "2.303 패치가 공통 적 체력 수치를 덮어쓰며, 나머지 나스쥬로 수치는 기존 안내를 유지한다."
+    },
+    {
+      "name": "워큐리",
+      "enemy_armor_flat": 10,
+      "enemy_magic_resistance_percent": 10,
+      "line_monster_hp_flat": 10000000,
+      "common_enemy_hp_flat": 10000000,
+      "common_enemy_hp_regen_flat": 300000,
+      "strategy_effect": "물딜은 실효 방깎, 마딜은 마방깎·비저항 피해 비중을 추가 점검해야 한다.",
+      "evidence": "verified",
+      "source_url": "https://m.dcinside.com/board/ordc1/189308",
+      "source_urls": [
+        "https://ordsearch.net/posts/tips/43",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": "2.303 패치가 공통 적 체력과 워큐리 라인 체력 수치를 덮어쓰며, 방어력·마법방어력·체젠 수치는 기존 안내를 유지한다."
+    },
+    {
+      "name": "새턴",
+      "ally_attack_power_percent": -30,
+      "ally_explosive_damage_percent": -10,
+      "enemy_hp_regen_flat": 375000,
+      "common_enemy_hp_flat": 10000000,
+      "common_enemy_hp_regen_flat": 300000,
+      "strategy_effect": "공격력 계수 물딜과 폭발형 마딜을 직접 약화시키며 재생을 이길 지속 화력이 필요하다.",
+      "evidence": "verified",
+      "source_url": "https://m.dcinside.com/board/ordc1/189308",
+      "source_urls": [
+        "https://ordsearch.net/posts/tips/43",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": "2.303 패치가 공통 적 체력 수치를 덮어쓰며, 나머지 새턴 수치는 기존 안내를 유지한다."
+    }
+  ],
+  "navigation": {
+    "selection_window": {
+      "start_round": 21,
+      "end_round": 25,
+      "default_if_unselected": "연합세력-일석이조",
+      "evidence": "verified",
+      "source_url": "https://ordsearch.net/posts/tips/39"
+    },
+    "paths": [
+      {
+        "name": "연합세력",
+        "base": "전설·히든 등급 이상 유닛 조합 시 랜덤 위습 1개 지급",
+        "nodes": [
+          {
+            "name": "일석이조",
+            "effect": "기본 효과 발동 시 랜덤 위습 1개를 추가 지급"
+          },
+          {
+            "name": "긴급소집",
+            "effect": "특별함 선택 와일드카드 3개 지급",
+            "penalty": "항법 기본 효과 비활성화"
+          },
+          {
+            "name": "특성공학",
+            "effect": "기록지침에서 선택위습 2개+목재 1개로 특성포인트 구매, 특성포인트 1개 지급, 변화 가능 횟수 1회 추가",
+            "penalty": "도움소 선택위습 획득 불가"
+          }
+        ]
+      },
+      {
+        "name": "패왕의 길",
+        "base": "자기 라인 유닛 이동속도 7% 감소, 신세계 진입 전 보스 처치 시 목재 2개",
+        "base_penalty": "최상위 유닛 1기만 조합 가능",
+        "nodes": [
+          {
+            "name": "계엄령",
+            "effect": "클리어 시 세이브 포인트 2배",
+            "penalty": "최상위 유닛 조합 불가"
+          },
+          {
+            "name": "바운티헌터",
+            "effect": "라인몹 처치 시 낮은 확률로 재화 보물상자, 보물지도 5개 수집 시 낮은 확률로 원피스"
+          },
+          {
+            "name": "로얄로더",
+            "effect": "최상위 조합 시 기본 공속이 느릴수록 강해지는 8% 확률 400범위 고정 피해 추가",
+            "penalty": "세부 보상·리롤·도박 제한 문구는 사이트 본문과 인게임을 다시 대조해야 함",
+            "evidence": "unverified"
+          }
+        ]
+      },
+      {
+        "name": "최고의 도움",
+        "base": "도움소 초당 마나 회복 0.7 증가",
+        "nodes": [
+          {
+            "name": "최대 출력",
+            "effect": "도움소 공격 스킬 강화 및 마나포션 추가"
+          },
+          {
+            "name": "연금술",
+            "effect": "도움소 마나를 소비해 희귀함 이하 유닛 분해"
+          },
+          {
+            "name": "역발상",
+            "effect": "레일리 히든·희귀함 즉시 획득, 유니크 아이템 탐색 스택 1 획득",
+            "penalty": "항법 기본 효과 비활성화, 마나 150 이하 스킬만 사용 가능"
+          }
+        ]
+      }
+    ],
+    "source_url": "https://ordsearch.net/posts/tips/39"
+  },
+  "trait_point_sources": [
+    {
+      "source": "누적 세이브 15·20·25회",
+      "amount": "각 1, 최대 3",
+      "evidence": "verified"
+    },
+    {
+      "source": "에니에스 로비 파괴 뒤 해군대장 보스 처치",
+      "amount": "사이트 본문 수치 미표기",
+      "evidence": "verified"
+    },
+    {
+      "source": "50라운드 이후 미션 유닛 피카 처치",
+      "amount": "사이트 본문 수치 미표기",
+      "evidence": "verified"
+    },
+    {
+      "source": "스토리 마지막 홀케이크섬 파괴",
+      "amount": "사이트 본문 수치 미표기",
+      "evidence": "verified"
+    },
+    {
+      "source": "돈 도박 졸업 후 구매",
+      "cost_gold": 15000,
+      "limit": 1,
+      "evidence": "verified"
+    },
+    {
+      "source": "항법 특성공학",
+      "cost": {
+        "selector_wisp": 2,
+        "wood": 1
+      },
+      "evidence": "verified"
+    }
+  ],
+  "trait_point_source_url": "https://ordsearch.net/posts/tips/1",
+  "round_checkpoints": [
+    {
+      "round_or_trigger": "8라운드 이전",
+      "check": "희귀 선택 후보 2~3개와 상위 경로 보존",
+      "evidence": "user_rule"
+    },
+    {
+      "round_or_trigger": "20라운드 이전",
+      "check": "전설·히든 1차 방향 결정",
+      "evidence": "user_rule"
+    },
+    {
+      "round_or_trigger": "21~25라운드",
+      "check": "항법 선택",
+      "evidence": "verified",
+      "source_url": "https://ordsearch.net/posts/tips/39"
+    },
+    {
+      "round_or_trigger": "152킬",
+      "check": "특별 유닛 보상 선택 및 카운트",
+      "evidence": "user_rule",
+      "verification_status": "공개 검색 결과에서 2.305 공식 수치를 독립 확인하지 못함"
+    },
+    {
+      "round_or_trigger": "50라운드 이후",
+      "check": "피카 특성포인트 미션 가능 여부",
+      "evidence": "verified",
+      "source_url": "https://ordsearch.net/posts/tips/1"
+    },
+    {
+      "round_or_trigger": "60~65라운드",
+      "check": "성장 투자 중단 여부, 보스 액티브·삭제·단일/끝딜 준비",
+      "evidence": "derived",
+      "note": "정량 최소선은 충분한 시계열 로그가 없어 임의 숫자를 넣지 않는다."
+    }
+  ],
+  "known_conflict_rules": [
+    {
+      "id": "law_single_slow",
+      "rule": "로우의 핵심 99% 이감은 단일이며 전체 이감 슬롯을 채우지 않는다.",
+      "evidence": "verified"
+    },
+    {
+      "id": "ryuma_no_persistent_slow",
+      "rule": "류마 영원은 자체 지속 이감이 없다.",
+      "evidence": "verified"
+    },
+    {
+      "id": "crocodile_limited_physical",
+      "rule": "크로커다일 제한은 물딜 유틸·방깎·암브 축으로 분류한다.",
+      "evidence": "verified"
+    },
+    {
+      "id": "ain_reset",
+      "rule": "아인의 되감기는 대상의 방깎·암브·마방깎·증폭 누적을 초기화할 수 있다.",
+      "evidence": "verified"
+    },
+    {
+      "id": "koby_explosive_penalty",
+      "rule": "코비 초월은 자기 라인의 폭발형 피해 -10%를 조합 점수에 반영한다.",
+      "effect": {
+        "effect_type": "explosive_damage_modifier_percent",
+        "value": -10,
+        "unit": "percent",
+        "scope": "own_line",
+        "target_class": "ally"
+      },
+      "evidence": "verified"
+    },
+    {
+      "id": "fixed_attack_speed",
+      "rule": "알비다 제한은 고정 공격속도라 공속 버프 가치를 0으로 처리한다.",
+      "evidence": "verified"
+    },
+    {
+      "id": "entry_haki_nonstack",
+      "rule": "개체당 1회 진입형 패기는 중복 불가 그룹을 확인한다.",
+      "evidence": "verified"
+    }
+  ],
+  "unresolved_tests": [
+    "카이도 불멸 2,000범위 공격력 75% 감소의 정확한 적용 대상·자기 포함 여부",
+    "카이도 약육강식 스택과 단일 최대 방깎 계산",
+    "빅 맘 대자재천신 x6이 체력비례 피해에도 매회 적용되는지",
+    "드래곤 기본 용오름의 정확한 발동 조건",
+    "거프가 버프로 계산하는 오라 종류와 동일 계열 중복 카운트",
+    "제트 해군스승의 신념 단일 스턴 발동 주기",
+    "가반 도끼술 공격력 증가의 지속·중첩",
+    "로져 해적왕의 패기 틱 표기 합산",
+    "시키 폐함대선 마뎀증의 지속·중첩 상한"
+  ],
+  "sources": [
+    {
+      "title": "ORDSearch 전체 유닛·조합식·스킬 필터",
+      "url": "https://ordsearch.net/characters"
+    },
+    {
+      "title": "ORDSearch 조합표",
+      "url": "https://ordsearch.net/mix"
+    },
+    {
+      "title": "ORDSearch 조합도우미 역할 필터",
+      "url": "https://ordsearch.net/mix/helper"
+    },
+    {
+      "title": "오로성 디버프",
+      "url": "https://ordsearch.net/posts/tips/43"
+    },
+    {
+      "title": "2.303~2.305 패치 기록",
+      "url": "https://m.dcinside.com/board/ordc1/189308",
+      "use": "2.303 이후 악몽 공통 적 체력·워큐리 라인 체력 변경을 기존 오로성 안내보다 우선 적용"
+    },
+    {
+      "title": "항법 정보 시즌2",
+      "url": "https://ordsearch.net/posts/tips/39"
+    },
+    {
+      "title": "특성포인트 얻기",
+      "url": "https://ordsearch.net/posts/tips/1"
+    },
+    {
+      "title": "TMO 랭킹",
+      "url": "https://tmo.gg/ko/ranking"
+    },
+    {
+      "title": "TMO 클리어 기록",
+      "url": "https://tmo.gg/ko/clear"
+    }
+  ]
+}

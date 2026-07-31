@@ -1,0 +1,2346 @@
+{
+  "meta": {
+    "game": "원랜디 시즌2",
+    "target_version": "2.305",
+    "compiled_at": "2026-07-31",
+    "patch_audited_at": "2026-07-31",
+    "scope": "상위 유닛을 보완하는 전설/히든/왜곡/변화/세라핌/해적선, 아이템, 오로성, TP·목재·골드·레일리·선박 조건",
+    "source_policy": {
+      "fact": "ORDSearch의 현재 유닛 상세/조합식/팁 페이지에서 직접 확인한 내용. 다만 2.300~2.305 누적 패치노트와 수치가 충돌하면 더 최신 패치 적용값을 우선한다.",
+      "coach_interpretation": "사실을 사용자 지정 역할 분류에 맞춰 조합 판단용으로 해석한 내용",
+      "user_override": "사용자가 직접 지정한 코칭 규칙이며, 사이트 자동 태그보다 우선 적용",
+      "unverified": "페이지 간 표기 충돌 또는 현재 버전에서 효과를 직접 확인하지 못한 내용"
+    },
+    "role_taxonomy": {
+      "physical": [
+        "방깎",
+        "스턴",
+        "광보잡",
+        "유틸",
+        "보조딜"
+      ],
+      "magic": [
+        "단일",
+        "끝딜",
+        "광보잡",
+        "스턴",
+        "유틸",
+        "보조딜"
+      ]
+    },
+    "hard_overrides": [
+      "신비함·랜덤전용은 추천 풀에서 제외",
+      "조로 전설·시노부 전설·써니호는 광보잡으로 세지 않음",
+      "S-베어는 마딜 끝딜이며 스턴 기여는 짤스턴 0.2~0.3으로만 계산",
+      "코비 전설은 마나젠으로 세지 않음",
+      "레드포스호는 코칭상 스턴 없음으로 계산",
+      "방주맥심은 마방깎 10%·발동 이감 30%·폭발형 증폭 10% 묶음으로 평가",
+      "써니호는 코칭상 광폭화 전용 자원으로 평가",
+      "바제스 왜곡은 마딜 단일 1로 고정"
+    ],
+    "important_count_note": "현재 조합식 페이지의 제작 가능한 히든은 22종이다. '히든조합' 텍스트 검색은 초월 아라마키와 희귀 히든 레일리 같은 태그성 결과까지 포함해 25건으로 보이므로 제작 히든 개수와 같지 않다."
+  },
+  "source_index": [
+    {
+      "name": "ORDR 2.300~2.305 누적 패치노트",
+      "url": "https://m.dcinside.com/board/ordc1/189308",
+      "use": "2.305 최종 수치 확정. 개별 상세 페이지 캐시와 충돌할 때 패치 적용 순서(2.300→2.305)를 우선"
+    },
+    {
+      "name": "ORDSearch 전체 조합식",
+      "url": "https://ordsearch.net/mix/ddaro",
+      "use": "히든 22종, 왜곡 6종, 상위 재료와 자원 조건, 왜곡 목재 누적"
+    },
+    {
+      "name": "ORDSearch 전설 1~41",
+      "urls": [
+        "https://ordsearch.net/characters?level=5",
+        "https://ordsearch.net/characters?level=5&page=2",
+        "https://ordsearch.net/characters?level=5&page=3",
+        "https://ordsearch.net/characters?level=5&page=4",
+        "https://ordsearch.net/characters?level=5&page=5"
+      ],
+      "use": "전설 조합식과 스킬 수치"
+    },
+    {
+      "name": "ORDSearch 변화된 5종",
+      "url": "https://ordsearch.net/characters?level=8",
+      "use": "변화된 조합식과 스킬"
+    },
+    {
+      "name": "ORDSearch 왜곡 6종",
+      "url": "https://ordsearch.net/characters?query=%EC%99%9C%EA%B3%A1%EB%90%A8",
+      "use": "왜곡 스킬과 기본 목재"
+    },
+    {
+      "name": "ORDSearch 오로성 디버프",
+      "url": "https://ordsearch.net/posts/tips/43",
+      "use": "신·악몽 오로성별 디버프"
+    },
+    {
+      "name": "ORDSearch 특성포인트",
+      "url": "https://ordsearch.net/posts/tips/1",
+      "use": "현행 TP 획득법과 폐기된 획득법"
+    },
+    {
+      "name": "ORDSearch 기타 재료 (2020 historical)",
+      "url": "https://ordsearch.net/posts/tips/2",
+      "use": "히든 레일리·고대의 배·해적선 획득 경로의 확인 후보만 제공; 2.305 현행 확정 출처로 사용하지 않음"
+    },
+    {
+      "name": "TMO 아이템 코드",
+      "url": "https://tmo.gg/en/posts/3296",
+      "use": "아이템 코드와 일부 단순 효과"
+    }
+  ],
+  "resource_gates": {
+    "gorosei": {
+      "fact_source": "https://m.dcinside.com/board/ordc1/189308",
+      "secondary_source": "https://ordsearch.net/posts/tips/43",
+      "nightmare": [
+        {
+          "name": "나스쥬로",
+          "effects": [
+            "모든 적 이동속도 15% 증가",
+            "모든 아군 공격속도 15% 감소",
+            "보스 체력 1,500만 증가"
+          ],
+          "coach_interpretation": "공속 의존 딜러와 이감 여유가 낮은 조합에 가장 거슬린다. 공속 오라·가속과 추가 이감을 우선 보완한다.",
+          "confidence": "high"
+        },
+        {
+          "name": "워큐리",
+          "effects": [
+            "모든 적 방어력 10 증가",
+            "모든 적 마법방어력 10% 증가",
+            "라인 몬스터 체력 1,000만 증가"
+          ],
+          "coach_interpretation": "물딜은 방깎/아머브레이크, 마딜은 마방깎/증폭이 빈약하면 손해가 직접 커진다. 라인딜 부족도 동시에 점검한다.",
+          "confidence": "high"
+        },
+        {
+          "name": "새턴",
+          "effects": [
+            "모든 아군 공격력 30% 감소",
+            "아군 폭발형 데미지 10% 감소",
+            "모든 적 체력 재생 37만 5,000 증가"
+          ],
+          "coach_interpretation": "공격력 계수와 폭발형 끝딜 의존 조합이 불리하다. 공격력 버프, 재생을 넘어서는 끝딜, 비폭발형 보조딜을 보강한다.",
+          "confidence": "high"
+        }
+      ],
+      "nightmare_common": [
+        "모든 적 체력 1,000만 증가",
+        "모든 적 체력 재생 30만 증가"
+      ],
+      "god_mode": {
+        "nasujuro": "적 이속 +10%, 아군 공속 -10%, 보스 체력 +1,000만",
+        "warcury": "적 방어력 +7, 마방 +7%, 라인 체력 +700만",
+        "saturn": "아군 공격력 -20%, 폭발형 -7%, 적 재생 +25만",
+        "common": "적 체력 +500만, 적 재생 +15만"
+      }
+    },
+    "green_blood": {
+      "fact_source": "https://m.dcinside.com/board/ordc1/189308",
+      "acquisition": "신·악몽에서 에그헤드 스토리 격파 시 플레이어 전체에게 기록지침 :: 그린 블러드 지급",
+      "base_effect_final_2_305": "전설/히든 유닛에 부여하는 기록지침 피해: 40만 + 대상 전체체력 0.4%",
+      "patch_lineage": [
+        "2.301: 75만+0.75% → 55만+0.55%",
+        "2.302: 55만+0.55% → 40만+0.4%"
+      ],
+      "conversion_use": "특정 전설/히든을 세라핌으로 변경하는 1회성 핵심 자원"
+    },
+    "trait_points": {
+      "fact_source": "https://ordsearch.net/posts/tips/1",
+      "verified_current_sources": [
+        "누적 세이브 15/20/25회에서 각 1, 최대 3TP; 시작 시 -load 필요",
+        "에니에스 로비 폐문 뒤 아카이누·아오키지·키자루 보스 처치",
+        "50라운드 이후 미션 유닛 피카 처치",
+        "스토리 마지막 홀케이크섬 파괴",
+        "돈 도박 누적 획득 35,000골드로 졸업한 뒤 15,000골드에 TP 구매, 1회",
+        "항법 '특성공학' 선택 후 해당 스킬 사용"
+      ],
+      "deprecated_do_not_count": [
+        "고대의 배 판매 TP",
+        "히든 레일리 판매 TP"
+      ],
+      "coach_interpretation": [
+        "브륄레 전설 복사는 1TP를 먹으므로 주 딜러 특성 4TP 계획과 충돌할 수 있다.",
+        "알비다 제한은 조합 자체에 TP 4를 요구하므로 다른 특강 계획을 사실상 포기하는 선택지다.",
+        "TP가 확보되지 않은 덱 추천에서는 특강을 전제로 한 성능을 기본값으로 두지 않는다."
+      ]
+    },
+    "hidden_rayleigh": {
+      "historical_source": "https://ordsearch.net/posts/tips/2",
+      "source_age_warning": "이 글의 본문은 2020년 작성 자료다. 아래 획득법은 2.305 현행 확정값이 아니라 확인 후보(historical lead)로만 사용한다.",
+      "historical_acquisition_leads": [
+        "고급도박",
+        "고급 유닛 생성",
+        "고대의 배 레일리 도박",
+        "스토리 보상에서 초월 쿠마·목재 대신 레일리 선택"
+      ],
+      "hard_gated_recipes": [
+        "피셔 타이거 히든",
+        "캐럿 히든",
+        "레이리 전설",
+        "키자루 초월",
+        "우타 영원",
+        "일부 상위의 하위 재료"
+      ],
+      "tradeoff": "스토리 보상에서 레일리 경로를 고르면 초월 쿠마·목재 경로를 포기한다. 초월 중심 덱과 레일리 소재 덱 사이의 핵심 분기다.",
+      "recipe_gate_confidence": "high",
+      "acquisition_confidence": "low",
+      "current_status": "unverified",
+      "freshness_warning": "현재 조합식이 레일리 소모를 요구한다는 사실은 2026 수정 조합식으로 확인되지만, 획득 루트는 오래된 팁이라 게임 내 2.305에서 재확인이 필요하다. 현재 TP 팁에서 레일리 판매는 취소선 처리되어 있으므로 판매 TP는 현행으로 세지 않는다."
+    },
+    "ships": {
+      "historical_source": "https://ordsearch.net/posts/tips/2",
+      "current_patch_source": "https://m.dcinside.com/board/ordc1/189308",
+      "source_age_warning": "해적선 획득법 본문은 2020년 자료다. 아래 목록은 현행 확정이 아닌 historical lead이며 2.305 게임 내 확인이 필요하다.",
+      "verified_2_305_route": "고대의 배 해적선 도박: 목재 8, 성공확률 100%로 해적선 획득",
+      "historical_acquisition_leads": [
+        "도박",
+        "아이스버그 특수함 스킬",
+        "크립 2단계 보상에서 목재 7개 또는 목재 3개+해적선 중 무작위",
+        "스토리 보상 레일리+해적선 경로"
+      ],
+      "ship_gated_hidden": [
+        "반 더 데켄",
+        "써니호",
+        "모비딕호",
+        "발라티에",
+        "방주맥심",
+        "레드포스호"
+      ],
+      "other_ship_conflicts": [
+        "미호크 영원은 해적선 2기",
+        "에넬 제한은 방주맥심 외에 해적선 1기를 추가 요구",
+        "시노부 제한은 해적선 1기",
+        "킹 제한은 고대의 배"
+      ],
+      "recipe_gate_confidence": "high",
+      "acquisition_confidence": "고대의 배 도박 경로 high, 나머지 historical lead low",
+      "current_status": "고대의 배 도박 경로는 verified; 나머지 경로 unverified",
+      "coach_rule": "선박 미보유 시 선박 히든은 추천 후보에서 즉시 제외한다. 배가 1기뿐이면 광폭화 해결, 공속, 방깎·공증 중 가장 부족한 슬롯에 쓴다."
+    },
+    "wood_and_gold": {
+      "distortion_sequence": {
+        "fact_source": "https://ordsearch.net/mix/ddaro",
+        "formula": "왜곡 첫 1회는 목재 3, 이후 왜곡 조합마다 요구 목재가 5씩 증가",
+        "examples": [
+          "1번째 왜곡: 목재 3",
+          "2번째 왜곡: 목재 8",
+          "3번째 왜곡: 목재 13"
+        ],
+        "confidence": "high"
+      },
+      "changed": "변화된 5종은 각각 목재 10을 요구한다.",
+      "seraphim": "S-베어·S-샤크·S-스네이크는 표시상 목재 3을 포함하고, S-호크는 그린블러드와 검호 미호크를 요구하되 별도 목재 표시는 없다.",
+      "limited_common": "대부분 제한됨은 5,000골드+목재 5, 카타쿠리는 30,000골드+목재 5, 마르코는 불사조 깃털도 요구한다.",
+      "coach_rule": "두 번째 왜곡, 변화 1기, 영원/제한을 동시에 계획하면 목재가 급격히 마른다. 추천 순서는 주 딜러 완성에 필요한 고정 목재를 잠근 뒤 남은 목재로 보조 유닛을 고르는 방식이 안전하다."
+    }
+  },
+  "items": [
+    {
+      "name": "표식새김",
+      "roles": {
+        "physical": [
+          "방깎"
+        ],
+        "magic": []
+      },
+      "facts": [
+        "플레이어존 적 방어력 5 감소"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/342"
+      ],
+      "confidence": "high",
+      "note": "오래된 덱 캐시에는 -3으로 보이는 결과가 있으나, 현재 상세 페이지의 2024-11-18 수정 데이터는 -5이므로 -5를 우선한다."
+    },
+    {
+      "name": "둔화의 지팡이",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "자신의 플레이어존 적 이동속도 7% 감소"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/343"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "명검 흑도 슈스이",
+      "roles": {
+        "physical": [
+          "방깎",
+          "유틸"
+        ],
+        "magic": []
+      },
+      "facts": [
+        "적 방어력 6 감소",
+        "특강한 조로 초월에 사용 시 염왕 조로로 변경",
+        "류마 영원에 사용 시 일도양단이 일백삼정비룡사극으로 변경"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/322"
+      ],
+      "confidence": "high",
+      "conflict": "순수 -6 방깎 아이템으로 둘지 조로/류마 강화에 사용할지 결정해야 한다."
+    },
+    {
+      "name": "우타의 헤드셋",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "아군 공격속도 12% 증가",
+        "우타 영원 조합 필수 아이템"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters?query=%EC%9A%B0%EC%98%81",
+        "https://ordsearch.net/mix/ddaro"
+      ],
+      "confidence": "high",
+      "conflict": "공속 오라로 보유할지 우타 영원으로 소모할지 선택한다."
+    },
+    {
+      "name": "태양신의 흔적",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "보유 유닛 공격력 14% 증가",
+        "황금종 격파 시 추가 획득 기회 5%",
+        "니카 영원 두 조합 경로의 필수 아이템"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/mix/ddaro",
+        "https://tmo.gg/en/posts/3296",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "불사조의 깃털",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "마르코 제한 조합 필수 아이템"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/mix/ddaro",
+        "https://tmo.gg/en/posts/3296"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "거인족의 술잔",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "TMO 코드표에 마나젠 0.5로 표기"
+      ],
+      "source_urls": [
+        "https://tmo.gg/en/posts/3296"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "name": "하늘섬 전사의 창",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "TMO 코드표에 공격력 증가 12로 표기"
+      ],
+      "source_urls": [
+        "https://tmo.gg/en/posts/3296"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "name": "무장도끼",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "TMO 코드표에 공격력 증가 5로 표기"
+      ],
+      "source_urls": [
+        "https://tmo.gg/en/posts/3296"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "name": "가죽장갑",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "TMO 코드표에 공격속도 증가 4로 표기"
+      ],
+      "source_urls": [
+        "https://tmo.gg/en/posts/3296"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "name": "보급의료품",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "TMO 코드표에 체력 재생 0.25로 표기"
+      ],
+      "source_urls": [
+        "https://tmo.gg/en/posts/3296"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "name": "약주",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "TMO 코드표에 수치 0.25만 표기"
+      ],
+      "source_urls": [
+        "https://tmo.gg/en/posts/3296"
+      ],
+      "confidence": "low",
+      "unverified": "0.25가 체젠인지 마젠인지 해당 출처만으로 확정 불가"
+    },
+    {
+      "name": "폐선",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "사용 시 고대의 배와 해적선을 둘 다 획득"
+      ],
+      "source_urls": [
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "목공도구",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "목재 2~4 획득"
+      ],
+      "source_urls": [
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "수배서",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "facts": [
+        "라인존 골드 획득량 100% 증가",
+        "목재 구입 기회 2회 추가"
+      ],
+      "source_urls": [
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "confidence": "high"
+    }
+  ],
+  "seraphim": [
+    {
+      "name": "S-호크",
+      "grade": "세라핌",
+      "roles": {
+        "physical": [
+          "방깎",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "recipe": [
+        "검호 미호크",
+        "그린블러드"
+      ],
+      "facts": [
+        "825범위 방어력 35 감소",
+        "일섬 단일 2 아머브레이크, 최대 75",
+        "보스·광폭화 전체체력 5% 추가 마법데미지",
+        "루나리아 평타 12.5% 확률 5.25배 크리티컬+단일 2.5초 스턴, 공속 30%, 공중이동"
+      ],
+      "coach_interpretation": "물딜 방깎 슬롯이 비었을 때 가장 직접적인 세라핌. 그린블러드 1회를 소비하므로 S-샤크의 공증/방깎과 비교한다.",
+      "source_urls": [
+        "https://ordsearch.net/characters/362"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "S-베어",
+      "grade": "세라핌",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "쿠마 폭군",
+        "그린블러드",
+        "목재 3"
+      ],
+      "facts": [
+        "레이저: 보스 전체체력 5%, 광폭화 전체체력 30%, 마법데미지 4% 증폭, 4초 이감 40%",
+        "압력포: 범위 마법방어력 1% 감소",
+        "우르수스 쇼크: 마나를 쓰지 않고 15초마다 자동 발동, 압력포 11회 뒤 잃은체력 4% 마법데미지와 범위 1.05초 스턴",
+        "순간이동·전이 보유"
+      ],
+      "coach_interpretation": "사용자 규칙상 마딜 끝딜. 사이트의 1.05초 스턴은 존재하지만 메인 스턴으로 잡지 않고 짤스턴 0.2~0.3만 기여한다고 계산한다.",
+      "coaching_stun_weight": "0.2~0.3",
+      "source_urls": [
+        "https://ordsearch.net/characters/363"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "S-샤크",
+      "grade": "세라핌",
+      "roles": {
+        "physical": [
+          "방깎",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "recipe": [
+        "징베",
+        "그린블러드",
+        "목재 3"
+      ],
+      "facts": [
+        "825범위 방어력 20 감소",
+        "해류 한판 업어치기 210만 데미지+3 아머브레이크",
+        "20초마다 자신과 전설 이상 3기에게 20초간 공격력 55%+체젠 1.75 투지",
+        "기본공격 스플래시"
+      ],
+      "coach_interpretation": "방깎 수치만 보면 S-호크보다 낮지만, 3기 공증 55%가 딜러 여러 기에 걸리는 조합에서 더 높은 총가치를 낸다.",
+      "source_urls": [
+        "https://ordsearch.net/characters/364"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "S-스네이크",
+      "grade": "세라핌",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "핸콕",
+        "그린블러드",
+        "목재 3"
+      ],
+      "facts": [
+        "슬레이브 애로우: 일반 라인 3기 전체체력 6% 폭발형 데미지",
+        "범위 폭발형 데미지 3% 증폭, 최대 25%",
+        "피스톨 키스와 전투기술에 일반 라인 전체체력 7%·5% 폭발형 데미지; 세라핌전투기술 발동확률 10%",
+        "루나리아 평타 단일 2.5초 스턴"
+      ],
+      "coach_interpretation": "폭발형 라인 끝딜을 보강할 때 선택한다. 새턴의 폭발형 -10%와 맞물리면 우선도가 내려간다.",
+      "source_urls": [
+        "https://ordsearch.net/characters/365"
+      ],
+      "confidence": "high"
+    }
+  ],
+  "distorted": [
+    {
+      "name": "블랙마리아",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "스턴",
+          "유틸"
+        ]
+      },
+      "recipe": [
+        "블랙마리아 전설",
+        "브룩 음악가",
+        "로빈 오하라",
+        "왜곡 순번별 목재"
+      ],
+      "facts": [
+        "마리아네트 모드 전환: 5초마다 900범위 3.5초 스턴 / 상시 이감 40% / 5초마다 라인·광폭 잃은체력 5% 물리",
+        "900범위 방어력 15 감소",
+        "기본공격 485범위 잃은체력 0.65% 물리",
+        "단일 2초 스턴"
+      ],
+      "coach_interpretation": "스턴·이감·방깎·물리 끝딜 중 필요한 모드를 골라 쓰는 다기능 왜곡. 모드 전환 조작을 전제로 평가한다.",
+      "source_urls": [
+        "https://ordsearch.net/characters/353",
+        "https://ordsearch.net/characters?query=%EC%99%9C%EA%B3%A1%EB%90%A8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "에이스",
+      "roles": {
+        "physical": [
+          "방깎",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "에이스 전설",
+        "마젤란",
+        "스쿼드",
+        "왜곡 순번별 목재"
+      ],
+      "facts": [
+        "900범위 방어력 40 감소",
+        "900범위 이감 20%",
+        "900범위 아군 공격력 20% 증가",
+        "직선 마법 보조딜"
+      ],
+      "coach_interpretation": "방깎과 공증을 한 슬롯에서 해결하는 물딜 보완. 두 번째 이후 왜곡이면 목재 8 이상이라 가성비를 다시 계산한다.",
+      "source_urls": [
+        "https://ordsearch.net/characters/367",
+        "https://ordsearch.net/characters?query=%EC%99%9C%EA%B3%A1%EB%90%A8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "바제스",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "단일"
+        ]
+      },
+      "role_count": {
+        "magic_single": 1
+      },
+      "recipe": [
+        "사보 히든",
+        "바제스",
+        "CP9 후쿠로",
+        "하찌",
+        "왜곡 순번별 목재"
+      ],
+      "facts": [
+        "라인 단일 현재체력 40%와 11% 폭발형 데미지",
+        "파동 엘보 범위 2.5초 스턴",
+        "수중이동"
+      ],
+      "coach_interpretation": "사용자 규칙상 마딜 단일 1만 기록한다. 페이지에 스턴이 있어도 조합 역할표에서 메인 스턴 슬롯으로 중복 계산하지 않는다.",
+      "source_urls": [
+        "https://ordsearch.net/characters?query=%EC%99%9C%EA%B3%A1%EB%90%A8",
+        "https://ordsearch.net/mix/ddaro"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "퀸",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "스턴",
+          "유틸"
+        ]
+      },
+      "recipe": [
+        "킹 전설",
+        "상디 디아블잠브",
+        "프랑키",
+        "왜곡 순번별 목재"
+      ],
+      "facts": [
+        "브라키오 붐버 3 아머브레이크",
+        "역재 범위 약 2초 방어력 20 감소",
+        "빙귀 범위 0.95초 스턴+1 아머브레이크",
+        "700범위 아군 체력·마나회복 1"
+      ],
+      "coach_interpretation": "물딜에서 아머브레이크·발동 방깎·짧은 스턴·마나를 함께 채운다. 킹 전설을 먹는 재료 충돌이 크다.",
+      "source_urls": [
+        "https://ordsearch.net/characters?query=%EC%99%9C%EA%B3%A1%EB%90%A8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "코알라",
+      "roles": {
+        "physical": [
+          "스턴",
+          "유틸"
+        ],
+        "magic": [
+          "단일",
+          "스턴",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "징베 전설",
+        "비비 전설",
+        "로빈 전설",
+        "왜곡 순번별 목재"
+      ],
+      "facts": [
+        "700범위 아군 마나 초당 3.25",
+        "마나 스킬 범위 1.25초 스턴",
+        "평타 50% 단일 0.75초 저항무시 스턴",
+        "기와돌려차기: 발동15%, 62만5000 마법데미지, 단일 100% 추가 고정, 보스·광폭 전체체력2.5% 추가 고정",
+        "무뢰관: 60만 고정데미지 6회+100만 마법데미지",
+        "기와돌려차기·무뢰관의 아머브레이크 및 아머브레이크 비례 데미지는 삭제됨"
+      ],
+      "coach_interpretation": "마젠이 필요한 마딜과 마나 기반 발동형 보조딜의 핵심 보완. 징베·비비·로빈 전설을 모두 먹으므로 상위 조합 충돌이 매우 크다.",
+      "source_urls": [
+        "https://ordsearch.net/characters/153",
+        "https://ordsearch.net/characters?query=%EC%99%9C%EA%B3%A1%EB%90%A8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "페로나",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "스턴",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "모리아 전설",
+        "미호크",
+        "압살롬",
+        "저격왕",
+        "페로나",
+        "왜곡 순번별 목재"
+      ],
+      "facts": [
+        "915범위 이감 45%",
+        "자기 라인존 폭발형 데미지 10% 증폭",
+        "마나 스킬 500범위 1.5초 스턴",
+        "7.5초 절대쿨 라인몬스터 삭제",
+        "스토리·보스 마법방어력 7% 감소",
+        "네거티브 홀로우는 절대쿨 종료 뒤 다음 공격 시 100% 발동"
+      ],
+      "coach_interpretation": "마딜 이감·폭증·삭제·마방깎을 한 번에 채우는 고밀도 유틸. 미호크 영원 조합 시 폭발형 증폭이 사라지는 충돌이 있다.",
+      "source_urls": [
+        "https://ordsearch.net/characters?query=%EC%99%9C%EA%B3%A1%EB%90%A8"
+      ],
+      "confidence": "high"
+    }
+  ],
+  "changed": [
+    {
+      "name": "도플라밍고",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "도플라밍고 희귀",
+        "목재 10"
+      ],
+      "facts": [
+        "라인 단일 현재체력 20% 폭발형 데미지",
+        "공중이동"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters?level=8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "베이비5",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "광보잡",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "베이비5 희귀",
+        "목재 10"
+      ],
+      "facts": [
+        "보스 현재체력 1.5% 마법데미지",
+        "광폭화 전체체력 10% 마법데미지"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters?level=8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "비비",
+      "roles": {
+        "physical": [
+          "방깎",
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "recipe": [
+        "비비 희귀",
+        "목재 10"
+      ],
+      "facts": [
+        "기본공격 5명 동시",
+        "750범위 방어력 11 감소",
+        "750범위 이감 20%"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters?level=8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "카쿠",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "카쿠 희귀",
+        "목재 10"
+      ],
+      "facts": [
+        "라인 단일 전체체력 5% 폭발형 데미지",
+        "자신 공격속도 33%",
+        "1,500범위 순간이동"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters?level=8"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "캐럿 스론",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "캐럿 희귀",
+        "목재 10",
+        "레일리 표기 있음"
+      ],
+      "facts": [
+        "라인 폭발형 데미지 1% 증폭, 최대 25%",
+        "단일 0.45초 스턴",
+        "공중이동"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters?level=8"
+      ],
+      "confidence": "medium",
+      "unverified": "상세 재료 줄에는 캐럿+목재10만 보이지만 총재료 합산에는 레일리가 표시된다. 실제 조합 UI에서 히든 레일리 요구 여부를 확인해야 한다."
+    }
+  ],
+  "hidden_units": [
+    {
+      "name": "피셔 타이거",
+      "roles": {
+        "physical": [
+          "스턴",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "단일",
+          "스턴",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "반 더 데켄",
+        "핸콕",
+        "파이러츠도킹5",
+        "히든 레일리"
+      ],
+      "facts": [
+        "주변 아군 공격력 35%",
+        "보스·광폭 현재체력 2.5% 고정데미지",
+        "515범위 2초 스턴",
+        "평타 22% 단일 0.75초 스턴"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/151"
+      ],
+      "confidence": "high",
+      "conflict": "히든 레일리를 소비한다."
+    },
+    {
+      "name": "반 더 데켄",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "스턴",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "반더데켄",
+        "검은수염",
+        "아론",
+        "해적선"
+      ],
+      "facts": [
+        "800범위 잃은체력 4% 마법데미지+1.5초 스턴",
+        "평타 단일 0.4초 스턴"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/158"
+      ],
+      "confidence": "high",
+      "conflict": "해적선을 소비한다."
+    },
+    {
+      "name": "이완코브",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴",
+          "유틸"
+        ],
+        "magic": [
+          "스턴",
+          "유틸"
+        ]
+      },
+      "recipe": [
+        "이완코브",
+        "크로커다일 MR.0",
+        "버기 마기탄"
+      ],
+      "facts": [
+        "850범위 방어력 11 감소",
+        "대상 아군 공격력 45%+체젠 1, 50초",
+        "500범위 1.8초 스턴"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/149"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "사보",
+      "roles": {
+        "physical": [
+          "방깎",
+          "광보잡",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "recipe": [
+        "마인 오즈",
+        "로우",
+        "사보"
+      ],
+      "facts": [
+        "방어력 20 감소",
+        "이감 25%",
+        "보스·광폭 전체체력 비례 단일 보조딜"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/160",
+        "https://ordsearch.net/mix/ddaro"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "키쿠",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "단일",
+          "스턴",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "킨에몬",
+        "조로 현상금 사냥꾼",
+        "키드 초신성"
+      ],
+      "facts": [
+        "마나 스킬: 일반·광폭 전체체력 35%, 보스 전체체력 7% 마법데미지",
+        "평타 스킬 단일 2초 스턴"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/150"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "캐럿",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "쵸파 혼포인트",
+        "에넬",
+        "압살롬 2",
+        "히든 레일리"
+      ],
+      "facts": [
+        "충격파: 15% 확률로 단일 대상 현재체력 28% 데미지",
+        "히든 레일리를 요구하는 제작 히든"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/253",
+        "https://ordsearch.net/mix/ddaro"
+      ],
+      "confidence": "medium",
+      "conflict": "히든 레일리를 소비한다."
+    },
+    {
+      "name": "레베카",
+      "roles": {
+        "physical": [
+          "방깎",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "recipe": [
+        "바제스",
+        "슈가"
+      ],
+      "facts": [
+        "방어력 18 감소",
+        "스플래시 보조딜",
+        "단일 짤스턴 보유"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/155",
+        "https://ordsearch.net/mix/ddaro"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "아오키지",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "스턴",
+          "유틸"
+        ]
+      },
+      "recipe": [
+        "아오키지",
+        "다이아몬드 죠즈",
+        "모몬가"
+      ],
+      "facts": [
+        "강한 이감과 범위 스턴을 제공하는 히든"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters?query=%ED%9E%88%EB%93%A0%EC%A1%B0%ED%95%A9",
+        "https://ordsearch.net/mix/ddaro"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "name": "아카이누",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "광보잡",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "아카이누",
+        "반 더 데켄",
+        "킬러",
+        "스쿼드"
+      ],
+      "facts": [
+        "철저한정의: 보스 공격 시 3.5초마다 발동, 같은 대상을 계속 공격하면 명구 데미지가 누적 증가",
+        "철저한정의의 범위 마법방어력 감소 기능은 삭제됨",
+        "명구: 450범위 25만 데미지, 보스 대상 1000% 추가 마법데미지"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/161",
+        "https://ordsearch.net/mix/ddaro"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "name": "료쿠규",
+      "roles": {
+        "physical": [
+          "방깎",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "recipe": [
+        "류마",
+        "이완코브",
+        "바르토로메오",
+        "바솔로뮤 쿠마"
+      ],
+      "facts": [
+        "상시 방어력 25 감소",
+        "마나 스킬 범위 방어력 15 추가 감소",
+        "발동 이감과 물리 보조딜"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/302"
+      ],
+      "confidence": "high",
+      "conflict": "이완코브·바르토·쿠마라는 고가치 보완 재료를 동시에 소비한다."
+    },
+    {
+      "name": "스튜시",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "단일",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "카쿠",
+        "센토마루",
+        "슈가"
+      ],
+      "facts": [
+        "라인 단일 현재체력 25% 폭발형 데미지",
+        "1,500범위 순간이동"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/329"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "베르고",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴",
+          "보조딜"
+        ],
+        "magic": [
+          "스턴"
+        ]
+      },
+      "recipe": [
+        "바르토로메오",
+        "상디 디아블잠브",
+        "봉쿠레",
+        "우솝 화염탄"
+      ],
+      "facts": [
+        "맥시멈스윙: 마나 100 소모, 범위 2.5초 스턴+4 아머브레이크",
+        "800범위 5초간 방어력 18 감소",
+        "평타 범위·단일 아머브레이크",
+        "단일 0.6초 저항무시 스턴"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/148"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "검호 미호크",
+      "roles": {
+        "physical": [
+          "방깎",
+          "광보잡",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "recipe": [
+        "미호크",
+        "샹크스",
+        "다이아몬드 죠즈"
+      ],
+      "facts": [
+        "방어력 25 감소",
+        "기본공격 스플래시와 직선 보조딜",
+        "2.305에서 일반 히든 업그레이드 수치를 잘못 받던 버그가 수정되어 독자 업그레이드 수치 적용"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters?page=2&query=%ED%9E%88%EB%93%A0%EC%A1%B0%ED%95%A9",
+        "https://ordsearch.net/mix/ddaro"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "킬러",
+      "roles": {
+        "physical": [
+          "방깎",
+          "광보잡",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "recipe": [
+        "캡틴 키드",
+        "헤르메포",
+        "킬러",
+        "바질 호킨스"
+      ],
+      "facts": [
+        "방어력 12 감소",
+        "보스 현재체력 0.9%, 광폭화 전체체력 5.75%",
+        "3명 동시 공격"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/166",
+        "https://ordsearch.net/mix/ddaro"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "봉쿠레(벤담)",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴"
+        ],
+        "magic": [
+          "스턴"
+        ]
+      },
+      "recipe": [
+        "핸콕",
+        "봉쿠레",
+        "버기 마기탄",
+        "이나즈마 혁명군"
+      ],
+      "facts": [
+        "850범위 방어력 11 감소",
+        "500범위 1.65초 스턴"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/163"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "류마",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "단일",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "조로 현상금 사냥꾼",
+        "류마",
+        "브룩"
+      ],
+      "facts": [
+        "라인 단일 현재체력 20% 폭발형 데미지",
+        "라인 단일 0.4초 스턴"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/164"
+      ],
+      "confidence": "high"
+    },
+    {
+      "name": "비의 시류",
+      "roles": {
+        "physical": [
+          "보조딜"
+        ],
+        "magic": [
+          "단일",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "시류",
+        "벤베크만",
+        "마젤란"
+      ],
+      "facts": [
+        "혈우 마나 소모 100, 전체체력 비례 데미지가 보스·광폭화에도 적용",
+        "단일 보조딜 히든",
+        "류마 영원·미호크 영원 재료"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/154",
+        "https://ordsearch.net/mix/ddaro"
+      ],
+      "confidence": "medium"
+    },
+    {
+      "name": "써니호",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "광보잡"
+        ]
+      },
+      "recipe": [
+        "캡틴 키드",
+        "카쿠",
+        "해적선"
+      ],
+      "facts": [
+        "광폭화 첫 타겟팅 때 전체체력 45% 추가 마법데미지",
+        "일반 어흥포 범위 1.4초 스턴, 베가펑크 지식 중 Max는 범위·단일 3초 스턴"
+      ],
+      "coach_interpretation": "사용자 규칙상 광폭화 전용으로만 센다. 광보잡 외의 정규 스턴/라인 역할에는 가산하지 않는다.",
+      "source_urls": [
+        "https://ordsearch.net/characters/145"
+      ],
+      "confidence": "high",
+      "conflict": "해적선을 소비한다."
+    },
+    {
+      "name": "모비딕호",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "recipe": [
+        "다이아몬드 죠즈",
+        "마르코",
+        "에이스",
+        "해적선"
+      ],
+      "facts": [
+        "이감 40%",
+        "주변 아군 체력 초당 1.25 회복",
+        "기본공격 다중 타격"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/147",
+        "https://ordsearch.net/characters?page=3&query=%ED%9E%88%EB%93%A0%EC%A1%B0%ED%95%A9"
+      ],
+      "confidence": "high",
+      "conflict": "해적선을 소비한다."
+    },
+    {
+      "name": "발라티에",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "recipe": [
+        "제프",
+        "루피 기어세컨드",
+        "해적선"
+      ],
+      "facts": [
+        "850범위 아군 공격속도 22%",
+        "대상 아군 12초간 공격속도 150% 가속, 쿨 50초"
+      ],
+      "source_urls": [
+        "https://ordsearch.net/characters/152"
+      ],
+      "confidence": "high",
+      "conflict": "해적선을 소비하며 다른 가속 스킬과 중복되지 않는다."
+    },
+    {
+      "name": "방주맥심",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "스턴",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "recipe": [
+        "와이퍼",
+        "우솝 보잉열도",
+        "카포네 갱 벳지",
+        "해적선"
+      ],
+      "facts": [
+        "마나 스킬 800범위 1.2초 스턴",
+        "범위 마법방어력 10% 감소",
+        "범위 폭발형 데미지 10% 증폭",
+        "발동 범위 이감 30%"
+      ],
+      "coach_interpretation": "사용자 지정 핵심 묶음: 마방깎10+발동이감30+폭뎀증10. 마딜이 세 항목 중 둘 이상 부족하면 선박 사용 가치가 높다.",
+      "source_urls": [
+        "https://ordsearch.net/characters/146"
+      ],
+      "confidence": "high",
+      "conflict": "해적선을 소비하고 에넬 제한의 핵심 재료이기도 하다."
+    },
+    {
+      "name": "레드포스호",
+      "roles": {
+        "physical": [
+          "방깎",
+          "광보잡",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "recipe": [
+        "샹크스",
+        "버기 마기탄",
+        "해적선"
+      ],
+      "facts": [
+        "850범위 아군 공격력 35%",
+        "900범위 적 방어력 20 감소",
+        "보스 전체체력 1.75%, 광폭화 전체체력 7.5% 추가 마법데미지",
+        "상세 페이지에는 보스·광폭·스토리 평타 30% 확률 단일 0.7초 스턴이 표기"
+      ],
+      "coach_interpretation": "사용자 규칙상 스턴 없음으로 계산한다. 물딜 방깎+공증+광보잡 패키지로만 평가한다.",
+      "source_urls": [
+        "https://ordsearch.net/characters/139"
+      ],
+      "confidence": "high",
+      "conflict": "해적선을 소비한다."
+    }
+  ],
+  "legendary_support_index": [
+    {
+      "name": "겟코 모리아",
+      "roles": {
+        "physical": [
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "이감30",
+        "그림자흡수: 기본공격 시 발동, 절대쿨 9초, 장군좀비 소환",
+        "장군좀비: 모리아와 공격력·공속 동일, 평타 375범위 60% 방어무시, 지속20초",
+        "기본 공격력74000, 공격쿨타임1.25"
+      ],
+      "source": "https://ordsearch.net/characters?level=5",
+      "confidence": "high"
+    },
+    {
+      "name": "골.D.에이스",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴"
+        ],
+        "magic": [
+          "스턴"
+        ]
+      },
+      "key_facts": [
+        "825범위 방어력33 감소",
+        "단일 2초 스턴"
+      ],
+      "source": "https://ordsearch.net/characters?level=5",
+      "confidence": "high"
+    },
+    {
+      "name": "나미",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "한 번 조합하면 플레이어 골드 획득량60% 증가",
+        "이감42% 3초",
+        "마법데미지 증폭1%"
+      ],
+      "source": "https://ordsearch.net/characters?level=5",
+      "confidence": "high"
+    },
+    {
+      "name": "네코마무시",
+      "roles": {
+        "physical": [
+          "광보잡",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "key_facts": [
+        "아군 공격력32%",
+        "이감30%",
+        "보스·광폭 체력비례 고정데미지"
+      ],
+      "source": "https://ordsearch.net/characters?level=5",
+      "confidence": "high"
+    },
+    {
+      "name": "라분",
+      "roles": {
+        "physical": [
+          "스턴",
+          "유틸"
+        ],
+        "magic": [
+          "스턴",
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "575범위 2.25초 스턴",
+        "아군 공속10%",
+        "기본공격 스플래시"
+      ],
+      "source": "https://ordsearch.net/characters?level=5",
+      "confidence": "high"
+    },
+    {
+      "name": "로브 루치",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "라인 단일 현재체력30% 폭발형",
+        "단일 0.6초 스턴"
+      ],
+      "source": "https://ordsearch.net/characters?level=5",
+      "confidence": "high"
+    },
+    {
+      "name": "롤로노아 조로",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "라인 단일 체력13% 이하 처형",
+        "보스 단일 1초 저항무시 스턴",
+        "사용자 규칙상 광보잡 제외"
+      ],
+      "source": "https://ordsearch.net/characters?level=5",
+      "confidence": "high"
+    },
+    {
+      "name": "마르코",
+      "roles": {
+        "physical": [
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "이감30%",
+        "물리 스플래시와 다중 보조딜"
+      ],
+      "source": "https://ordsearch.net/characters?level=5",
+      "confidence": "high"
+    },
+    {
+      "name": "마샬 D 티치",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "단일",
+          "스턴",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "단일 마법증폭8%+모든피해10%",
+        "끌어오기+3초 스턴",
+        "범위 현재체력1% 마법데미지"
+      ],
+      "source": "https://ordsearch.net/characters?level=5",
+      "confidence": "high"
+    },
+    {
+      "name": "몽키 D 루피 나이트메어",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "라인 체력비례 폭발형 보조딜"
+      ],
+      "source": "https://ordsearch.net/characters?level=5",
+      "confidence": "medium"
+    },
+    {
+      "name": "몽키.D.드래곤",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴",
+          "유틸"
+        ],
+        "magic": [
+          "스턴",
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "아군 공격력25%·공속5%",
+        "적 방어력10·이감10%",
+        "500범위 2.75초 스턴"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=2",
+      "confidence": "high"
+    },
+    {
+      "name": "바르토로메오",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴",
+          "보조딜"
+        ],
+        "magic": [
+          "스턴"
+        ]
+      },
+      "key_facts": [
+        "방어력12 감소",
+        "550범위 2.75초 스턴",
+        "보스 배수 보조딜"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=2",
+      "confidence": "high"
+    },
+    {
+      "name": "바솔로뮤 쿠마",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "스턴",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "600범위 잃은체력4%+1.05초 스턴",
+        "500범위 1.4초 스턴",
+        "전이·순간이동"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=2",
+      "confidence": "high"
+    },
+    {
+      "name": "보아 핸콕",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "일반 라인 전체체력 폭발형",
+        "단일 0.8초 스턴"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=2",
+      "confidence": "high"
+    },
+    {
+      "name": "블랙마리아",
+      "roles": {
+        "physical": [
+          "스턴",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "key_facts": [
+        "기본공격 375범위 방어무시50% 스플래시",
+        "단일 1초 스턴"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=2",
+      "confidence": "high"
+    },
+    {
+      "name": "빈스모크 레이쥬",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "800범위 이감35%, 공격 대상 추가 이감15%",
+        "라인 현재체력 폭발형 다단"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=2",
+      "confidence": "high"
+    },
+    {
+      "name": "상디",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "라인 단일 현재체력3.5% 마법데미지"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=2",
+      "confidence": "high"
+    },
+    {
+      "name": "샬롯 브륄레",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "선택한 전설 유닛으로 복사",
+        "복사에 TP1 필요"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=2",
+      "confidence": "high"
+    },
+    {
+      "name": "샬롯 크래커",
+      "roles": {
+        "physical": [
+          "방깎",
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "725범위 방어력25 감소",
+        "1기에게 영구 공격력19%+공속9%, 쿨240초"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=2",
+      "confidence": "high"
+    },
+    {
+      "name": "샹크스",
+      "roles": {
+        "physical": [
+          "광보잡",
+          "보조딜"
+        ],
+        "magic": [
+          "광보잡",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "보스·광폭 보조딜 성격"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=2",
+      "confidence": "medium"
+    },
+    {
+      "name": "센고쿠",
+      "roles": {
+        "physical": [
+          "방깎",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "이감20%",
+        "900범위 6초 격노: 아군 공격력40%, 적 방어력18 감소",
+        "2.300에서 격노의 체력·마나 회복 기능 삭제",
+        "다른 격노와 중복 불가"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=3",
+      "confidence": "high"
+    },
+    {
+      "name": "슈가",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "마나회복1.25",
+        "액티브 유닛삭제 쿨85초",
+        "보상 획득 유틸"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=3",
+      "confidence": "high"
+    },
+    {
+      "name": "스모커",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴",
+          "유틸"
+        ],
+        "magic": [
+          "스턴",
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "이감50%",
+        "화이트바인 발동확률24%, 15만 데미지, 범위 아머브레이크1",
+        "단일 짤스턴"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=3",
+      "confidence": "high"
+    },
+    {
+      "name": "시노부",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "끝딜",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "라인 전체체력7% 폭발형",
+        "분신 소환 시 단일1.5초 스턴",
+        "보물 감지",
+        "사용자 규칙상 광보잡 제외"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=3",
+      "confidence": "high"
+    },
+    {
+      "name": "시저 크라운",
+      "roles": {
+        "physical": [
+          "방깎"
+        ],
+        "magic": []
+      },
+      "key_facts": [
+        "900범위 방어력30 감소"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=3",
+      "confidence": "high"
+    },
+    {
+      "name": "시키",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴",
+          "유틸"
+        ],
+        "magic": [
+          "스턴"
+        ]
+      },
+      "key_facts": [
+        "바위낙하 범위 스턴과 아머브레이크2",
+        "공중이동"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=3",
+      "confidence": "high"
+    },
+    {
+      "name": "실버즈 레일리",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "스턴",
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "900범위 방어력20 감소",
+        "800범위 3초 스턴+3 아머브레이크",
+        "아군 공격력30%",
+        "히든 레일리+목재5 요구"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=3",
+      "confidence": "high"
+    },
+    {
+      "name": "아마츠키 토키",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "아군 공속20% 오라",
+        "적 이감25%",
+        "9초마다 전설 이상 2기에게 6초 공속35%",
+        "다른 가속과 중복 불가",
+        "고대의 배+목재5 요구"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=3",
+      "confidence": "high"
+    },
+    {
+      "name": "에드워드 뉴게이트",
+      "roles": {
+        "physical": [
+          "방깎",
+          "스턴",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "스턴",
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "상시 방어력15 감소, 보스·스토리 추가 방어력30 감소",
+        "이감",
+        "범위 3초 스턴",
+        "보스 보조딜"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=3",
+      "confidence": "high"
+    },
+    {
+      "name": "울티",
+      "roles": {
+        "physical": [
+          "방깎",
+          "광보잡",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "key_facts": [
+        "방어력27 감소",
+        "아머브레이크",
+        "보스·광폭 특화"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=3",
+      "confidence": "high"
+    },
+    {
+      "name": "장군좀비",
+      "roles": {
+        "physical": [],
+        "magic": []
+      },
+      "key_facts": [
+        "현재 상세 페이지에 별도 스킬 없음"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=4",
+      "confidence": "high"
+    },
+    {
+      "name": "제파",
+      "roles": {
+        "physical": [
+          "광보잡",
+          "보조딜"
+        ],
+        "magic": [
+          "광보잡",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "보스 현재체력2% 고정",
+        "광폭 전체체력12% 고정",
+        "흑완: 보스·광폭 공격 시 425범위 전체체력0.35% 마법데미지",
+        "단일0.7초 저항무시 스턴"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=4",
+      "confidence": "high"
+    },
+    {
+      "name": "징베",
+      "roles": {
+        "physical": [
+          "방깎",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "마나회복 오라",
+        "아머브레이크 누적 조건부 방어력 감소",
+        "단일0.6초 스턴"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=4",
+      "confidence": "high"
+    },
+    {
+      "name": "쵸파",
+      "roles": {
+        "physical": [
+          "방깎",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "아군 공속20%",
+        "825범위 방어력18 감소",
+        "스플래시"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=4",
+      "confidence": "high"
+    },
+    {
+      "name": "카르가라",
+      "roles": {
+        "physical": [
+          "방깎",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "key_facts": [
+        "825범위 방어력20 감소",
+        "라인·스토리 방어력20 추가, 보스40 추가 방어구 관통(각 20초)",
+        "단일0.4초 저항무시 스턴"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=4",
+      "confidence": "high"
+    },
+    {
+      "name": "코비",
+      "roles": {
+        "physical": [
+          "유틸",
+          "보조딜"
+        ],
+        "magic": [
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "격노형 공격력 버프와 체력·마나 회복 표기가 있으나 사용자 규칙상 마나젠으로 집계하지 않음",
+        "라인 현재체력25% 폭발형 보조딜"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=4",
+      "confidence": "high"
+    },
+    {
+      "name": "킹",
+      "roles": {
+        "physical": [
+          "방깎",
+          "유틸",
+          "보조딜"
+        ],
+        "magic": []
+      },
+      "key_facts": [
+        "이감10%·방어력5 감소 오라",
+        "독 방어력20 감소+일시 추가10",
+        "단일 이감"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=4",
+      "confidence": "high"
+    },
+    {
+      "name": "트라팔가 로우",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "단일",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "단일 이감99% 2.5초",
+        "현재체력 비례 보조딜",
+        "대상 아군 12초 공속150%, 다른 가속과 중복 불가"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=4",
+      "confidence": "high"
+    },
+    {
+      "name": "후지토라",
+      "roles": {
+        "physical": [],
+        "magic": [
+          "스턴",
+          "유틸",
+          "보조딜"
+        ]
+      },
+      "key_facts": [
+        "이감25% 오라",
+        "범위2.4초 스턴",
+        "마법방어력 감소"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=4",
+      "confidence": "high"
+    },
+    {
+      "name": "히루루크의 묘비",
+      "roles": {
+        "physical": [
+          "유틸"
+        ],
+        "magic": [
+          "유틸"
+        ]
+      },
+      "key_facts": [
+        "아군 공격력55% 버프"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=4",
+      "confidence": "medium"
+    },
+    {
+      "name": "히바리",
+      "roles": {
+        "physical": [
+          "방깎",
+          "광보잡",
+          "유틸"
+        ],
+        "magic": []
+      },
+      "key_facts": [
+        "ORDSearch 덱 계산 메타데이터에는 방어력22 감소·광폭화 특화가 잡힘",
+        "댓글의 사랑의 도시락: 1회 소모, 공속12%; 코비 초월은20%; 크래커 비스킷과 중복불가"
+      ],
+      "source": "https://ordsearch.net/characters?level=5&page=5",
+      "confidence": "medium",
+      "unverified": "상세 페이지 본문에 도시락 스킬 원문이 노출되지 않고 댓글 정보와 덱 메타데이터를 함께 사용했다."
+    }
+  ],
+  "material_conflict_rules": [
+    {
+      "rule": "히든 레일리 우선 잠금",
+      "detail": "피셔·캐럿·레이리 전설·키자루 초월·우타 영원 중 무엇을 갈지 먼저 정한 뒤 레일리를 소비한다."
+    },
+    {
+      "rule": "해적선 역할 우선순위",
+      "detail": "물딜은 레드포스의 방깎+공증, 마딜은 맥심의 마방깎+폭증, 공속 부족은 발라티에, 광폭화만 부족하면 써니호를 비교한다."
+    },
+    {
+      "rule": "왜곡 목재 누적",
+      "detail": "두 번째 왜곡은 목재8, 세 번째는13이므로 보조 성능만 보고 연속 제작하지 않는다."
+    },
+    {
+      "rule": "가속 중복 금지",
+      "detail": "토키·로우·발라티에의 가속 계열은 서로 중복되지 않는다. 상시 오라와 순간 가속을 구분한다."
+    },
+    {
+      "rule": "같은 명칭 버프 중복 금지",
+      "detail": "센고쿠 격노, 징베/S-샤크 투지 등 같은 계열은 중복되지 않을 수 있으므로 최고 수치 하나만 기대한다."
+    },
+    {
+      "rule": "상위 재료 보존",
+      "detail": "크래커·킹·징베·핸콕·검호 미호크·스튜시처럼 상위 조합의 핵심 재료인 보완 유닛은 최종 진로가 확정되기 전 소모하지 않는다."
+    }
+  ],
+  "unverified_or_conflicting": [
+    {
+      "topic": "변화 캐럿의 레일리",
+      "detail": "상세 조합 줄과 총재료 합산 표기가 다름",
+      "recommended_handling": "히든 레일리 보유를 조건부로 표시하고 게임 내 조합 버튼에서 확인"
+    },
+    {
+      "topic": "표식새김 수치",
+      "detail": "오래된 덱 캐시 -3, 현재 상세 페이지 -5",
+      "recommended_handling": "현재 상세 페이지 -5 사용"
+    },
+    {
+      "topic": "약주 0.25",
+      "detail": "TMO 코드표가 회복 종류를 생략",
+      "recommended_handling": "체젠/마젠으로 확정 분류하지 않음"
+    },
+    {
+      "topic": "히든 검색 25건",
+      "detail": "초월 아라마키와 희귀 히든 레일리 같은 태그 결과가 섞임",
+      "recommended_handling": "실제 제작 히든은 mix/ddaro의 22종을 기준으로 사용"
+    },
+    {
+      "topic": "고대의 배·레일리 판매 TP",
+      "detail": "오래된 재료 팁에는 판매 화면이 있으나 현재 TP 팁에서는 취소선",
+      "recommended_handling": "현행 TP 수급으로 세지 않음"
+    }
+  ]
+}

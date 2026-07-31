@@ -40,7 +40,8 @@ test('known role corrections include Sunny as frenzy-only with zero stun',()=>{
   assert.deepStrictEqual([C.stunResearch(sunny).displayStun,C.roleProfile(sunny).stun,C.roleProfile(sunny).boss,C.roleProfile(sunny).frenzy],[0,0,false,true]);
   assert.strictEqual(C.roleProfile(red).stun,0);
   assert.deepStrictEqual([C.roleProfile(maxim).magicDef,C.roleProfile(maxim).explosionAmp],[10,10]);
-  assert.deepStrictEqual([C.roleProfile(bear).end,C.roleProfile(bear).stun],[0,.25]);
+  // v19.7.1(외부 감사): S-베어는 사용자 규칙상 마딜 끝딜 1 — 0은 구값.
+  assert.deepStrictEqual([C.roleProfile(bear).end,C.roleProfile(bear).stun],[1,.25]);
   assert.deepStrictEqual([C.magicFinishProfile(bear).directCredit,C.magicFinishProfile(bear).maxCredit],[0,1]);
   assert.deepStrictEqual([C.familyOf(barges),C.roleProfile(barges).single],['magic',1]);
 });

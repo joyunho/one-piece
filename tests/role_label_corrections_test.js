@@ -60,11 +60,14 @@ check('Baratie is neutral shared attack-speed utility',()=>{
   assert(summary.includes('공용 유틸')&&summary.includes('공속 22'));
 });
 
-check('S-Bear stays utility-only until its finish-damage source is verified',()=>{
-  const bear=unit('unit_1779017164417_3162'),role=C.roleProfile(bear),summary=C.summarizeRoles({role},'magic');
-  assert.deepStrictEqual([role.family,role.utility,role.boss,role.frenzy,role.end,role.stun,role.magicDef,role.magicAmp],['magic',true,false,false,0,.25,1,8]);
+check('S-Bear: 2.305 실측 마증 4 · 사용자 규칙(짤스턴만·광보잡 제외·마딜 끝딜)',()=>{
+  // v19.7.1(외부 감사): 마증 8은 구값 — 실측 4.  끝딜은 데이터팩
+  // roles.magic(['끝딜','유틸','보조딜'])과 hard_override 를 따라 1로 센다.
+  // 보잡·광폭은 사용자 고정 규칙상 계속 세지 않는다.  근거 대조는
+  // v19_7_1_data_contract_test 가 데이터팩 원문 파싱으로 잰다.
+  const bear=unit('unit_1779017164417_3162'),role=C.roleProfile(bear);
+  assert.deepStrictEqual([role.family,role.utility,role.boss,role.frenzy,role.end,role.stun,role.magicDef,role.magicAmp],['magic',true,false,false,1,.25,1,4]);
   assert.deepStrictEqual([C.magicFinishProfile(bear).directCredit,C.magicFinishProfile(bear).maxCredit],[0,1]);
-  assert(summary.includes('마딜 유틸'));
 });
 
 console.log(`\n${checks}/${checks} role/name correction checks passed.`);

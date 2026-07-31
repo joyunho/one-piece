@@ -22,12 +22,17 @@ const liveIdentity={
   'unit_1761061295036_310':{name:'옌',groupName:'랜덤유닛',aliases:['요우무 전용 재료']},
   'unit_1761061550524_6203':{name:'카미조 토우마(단일스턴/코비용기의외침)',groupName:'랜덤유닛',aliases:['카미조 토우마','죠타로 전용 재료']}
 };
-if(Array.isArray(global.ORD_TMO_UNITS)){const ids=new Set(global.ORD_TMO_UNITS.map(u=>u.id));for(const row of missingRows)if(!ids.has(row.id))global.ORD_TMO_UNITS.push(row);for(const unit of global.ORD_TMO_UNITS){const patch=liveIdentity[unit.id];if(patch)Object.assign(unit,patch);const extraCodes=codeAliases[unit.id];if(extraCodes){unit.codes=Array.isArray(unit.codes)?unit.codes:[];for(const code of extraCodes)if(!unit.codes.includes(code))unit.codes.push(code);}}}
+// v19.7.1(외부 감사): 2.305 실측 수치 교정 — 오프라인 카탈로그가 낡은 값을
+// 갖고 있던 항목.  (A)키드 이감 33 → 35 (ordsearch 현재 상세 기준).
+const abilityPatches={
+  '4B0H':{abilities:{'이동속도 감소':35},renameFrom:/이감33/,renameTo:'이감35'}
+};
+if(Array.isArray(global.ORD_TMO_UNITS)){const ids=new Set(global.ORD_TMO_UNITS.map(u=>u.id));for(const row of missingRows)if(!ids.has(row.id))global.ORD_TMO_UNITS.push(row);for(const unit of global.ORD_TMO_UNITS){const patch=liveIdentity[unit.id];if(patch)Object.assign(unit,patch);const abilityPatch=abilityPatches[unit.id];if(abilityPatch){unit.abilities=Object.assign({},unit.abilities||{},abilityPatch.abilities);if(abilityPatch.renameFrom&&abilityPatch.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(abilityPatch.renameFrom,abilityPatch.renameTo);}const extraCodes=codeAliases[unit.id];if(extraCodes){unit.codes=Array.isArray(unit.codes)?unit.codes:[];for(const code of extraCodes)if(!unit.codes.includes(code))unit.codes.push(code);}}}
 const synergy=global.ORD_SYNERGY_MEMO;if(synergy&&synergy.byUnitId){synergy.byUnitId['unit_1767886180546_6011']=31;synergy.byUnitId.KB0H_=34;}
 function patchMemo(memo){
   for(const entry of memo&&memo.entries||[])for(const support of entry.supports||[]){const ids=support.unitIds||[],name=String(support.name||'');
     if(ids.includes('L30h')||/^써니호$/.test(name))support.specs='광폭화';
-    if(ids.includes('unit_1779017164417_3162')||/S-베어|S 베어/.test(name))support.specs='공용 유틸, 짤스턴0.25, 마뎀증8, 마방깎1 · 끝딜 자료확인';
+    if(ids.includes('unit_1779017164417_3162')||/S-베어|S 베어/.test(name))support.specs='마딜 끝딜, 유틸, 짤스턴0.25, 마뎀증4, 마방깎1';
     if(ids.includes('E30h')||/^코비$/.test(name))support.specs=String(support.specs||'').replace(/,?\s*마젠\s*1(?:\.0)?/g,'').replace(/마젠\s*1\.2/g,'');
     if(ids.includes('X30h')||/^방주맥심$/.test(name))support.specs='마방깎10, 폭뎀증10, 발동이감30, 바제스';
     if(ids.includes('unit_1779015610844_6407')||/^바제스$/.test(name)&&/왜곡/.test(support.type||''))support.specs='마딜 단일1';

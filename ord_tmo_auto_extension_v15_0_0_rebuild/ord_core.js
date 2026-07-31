@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='19.7.0';
+const VERSION='19.7.1';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -36,7 +36,7 @@ const COMMON_COLORS={
 };
 const DISPLAY_NAME_OVERRIDES={
   'L30h':'써니호 (광폭화)',
-  'unit_1779017164417_3162':'S-베어 (유틸·짤스턴 0.25·마뎀증 8·마방깎 1)',
+  'unit_1779017164417_3162':'S-베어 (유틸·끝딜·짤스턴 0.25·마뎀증 4·마방깎 1)',
   'E30h':'코비 (단일·발동 체젠·공증)',
   'X30h':'방주맥심 (발동이감 30·마방깎 10·폭뎀증 10)',
   'unit_1779015610844_6407':'바제스 왜곡 (마딜 단일 1)',
@@ -644,7 +644,10 @@ function roleProfile(u){
   if(anyMatch(n,MAGIC_FRENZY)||anyMatch(n,PHYSICAL_FRENZY))frenzy=true;
   if(u&&u.id==='240h'){boss=true;frenzy=false;}
   if(isShip(u)&&/^써니호/.test(n)){boss=false;frenzy=true;}
-  if(/S-베어|S 베어/.test(n)){stun=.25;boss=false;frenzy=false;}
+  // v19.7.1(외부 감사·데이터팩 교차검증): S-베어는 사용자 고정 규칙상
+  // 광보잡으로 세지 않고(레이저 보스5%/광폭30%는 있으나 코칭 규칙이 짤스턴
+  // 0.2~0.3과 마딜 끝딜로만 계산) — boss/frenzy false 유지, 끝딜 1 추가.
+  if(/S-베어|S 베어/.test(n)){stun=.25;boss=false;frenzy=false;end=Math.max(end,1);}
   // Koala (warped) is shared physical/magic utility, not a boss/frenzy handler.
   // ID correction wins even when a live TMO payload still contains both flags.
   if(u&&u.id==='V30h'){boss=false;frenzy=false;}
@@ -661,7 +664,8 @@ function roleProfile(u){
   let magicAmp=Math.max(abilityValue(u,'마법 대미지 증가'),abilityValue(u,'단일마법 대미지 증가'),abilityValue(u,'모든피해증가'));
   let explosionAmp=abilityValue(u,'폭발형 대미지 증폭');
   if(/방주맥심/.test(n)){magicDef=10;explosionAmp=10;triggerSlow=30;}
-  if(/S-베어|S 베어/.test(n)){magicDef=1;magicAmp=8;}
+  // v19.7.1(외부 감사): 2.305 실측은 레이저 마법데미지 증폭 4% — 8은 구값.
+  if(/S-베어|S 베어/.test(n)){magicDef=1;magicAmp=4;}
   // v17.8: 암브는 불리언이 아니라 소스 가중치다(카탈로그 값 0.1~2,
   // true=1). 명시적 0은 패치로 무효화된 유닛이므로 false로 취급한다
   // (기존 abilityBool은 0을 true로 읽는 버그가 있었다).
@@ -1499,8 +1503,11 @@ function snapshotHealth(snapshot,now){
   if(!bridgeAt)return result('missing','TMO 미수신',false,'TMO.GG 데스크톱 프로그램과 32172 조합도우미를 먼저 연 뒤 다시 읽기를 눌러주세요. 기존 34366도 호환됩니다.');
   if(s.source==='manual'&&num(s.unitCount)>=80)return result('partial','오프라인 수동 모드',true,'자동 진행도·능력치 없이 수동으로 입력한 보유 유닛을 기준으로 계산합니다.');
   if(s.source!=='tmo')return result('error','알 수 없는 데이터 원본',false,'지원하는 TMO 연동 또는 동봉 수동 실행 파일에서 다시 시작해 주세요.');
-  const helper=String(s.helperId||''),supportedHelper=helper==='32172'||helper==='34366';
-  if(!supportedHelper||s.parser!=='ord-tmo-parser-v13-adapter')return result('error','지원하지 않는 TMO 도우미',false,'TMO 32172를 사용하세요. 기존 34366은 호환 모드로 지원합니다.');
+  // v19.7.1(외부 감사): 커넥터 전 구간이 숫자 번호를 받는데 최종 상태 판정만
+  // 32172/34366 고정이라 다른 번호가 여기서 다시 죽었다 — 같은 규칙으로 통일.
+  // "정말 ORD 도우미인가"는 아래 내용 게이트(유닛 수·전량 파싱·신뢰도)가 판정한다.
+  const helper=String(s.helperId||''),supportedHelper=/^\d{1,8}$/.test(helper)||helper==='offline';
+  if(!supportedHelper||s.parser!=='ord-tmo-parser-v13-adapter')return result('error','지원하지 않는 TMO 도우미',false,'tmo.gg 조합도우미(숫자 번호 자동 인식, 주: 32172)를 사용하세요.');
   if(ageSec>12||scanAgeSec>12)return result('stale','TMO 새 스캔 없음',false,`브리지 ${ageSec}초·DOM 스캔 ${scanAgeSec}초 전입니다. TMO 탭과 확장 프로그램을 확인해 주세요. 오래된 추천은 숨겼습니다.`);
   const collection=s.collection||{},countDiscovery=s.countDiscovery||{},unitCount=num(s.unitCount),parsed=num(countDiscovery.parsed),coverage=unitCount?parsed/unitCount:0,confidence=num(collection.confidence);
   const catalogSize=typeof global!=='undefined'&&global.ORD_TMO_UNITS?global.ORD_TMO_UNITS.length:0,unitMin=catalogSize?Math.max(200,catalogSize-7):300,unitMax=catalogSize?Math.min(380,catalogSize+73):380;if(collection.found!==true||countDiscovery.found!==true||unitCount<unitMin||unitCount>unitMax||coverage!==1||num(countDiscovery.missing)>0||num(countDiscovery.ambiguous)>0||confidence<.72)return result('error','유닛 수량 수집 불완전',false,`유닛 ${unitCount}개·수량 ${parsed}/${unitCount}개·누락 ${num(countDiscovery.missing)}개·모호 ${num(countDiscovery.ambiguous)}개·신뢰도 ${Math.round(confidence*100)}%입니다. 실패한 수량을 0으로 쓰지 않고 이전 정상 패를 보호합니다.`);

@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.7.0';
+const VERSION='19.7.1';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -286,11 +286,24 @@ function stickyUpperKeySet(state,settings){
   const out=new Set();for(const id of [].concat(settings&&settings.stickyUpperIds||[])){const unit=state&&state.db.byId.get(String(id));if(unit&&C.isUpper(unit))out.add(canonicalUpper(unit));}
   return out;
 }
+// v19.7.1(외부 감사 ④): 전수 메모 처방의 추천 2상위 — 앱이 계열 필터를
+// 거친 id 목록으로 넘긴다(플래너는 플레이북 전역을 모른다).  stickyUpperHold
+// 와 같은 원칙: 점수·게이트에는 절대 넣지 않고 nodeCompare 의 후단
+// 타이브레이크로만 쓴다 — 필수 역할·경제성이 같을 때만 처방 페어가 이긴다.
+function prescribedPairHold(state,settings,unit){
+  if(!unit||!C.isUpper(unit))return 0;
+  const keys=settings&&settings._prescribedSecondKeys;if(!keys||!keys.size)return 0;
+  return keys.has(canonicalUpper(unit))?1:0;
+}
+function prescribedSecondKeySet(state,settings){
+  const out=new Set();for(const id of [].concat(settings&&settings.prescribedSecondUpperIds||[])){const unit=state&&state.db.byId.get(String(id));if(unit&&C.isUpper(unit))out.add(canonicalUpper(unit));}
+  return out;
+}
 function withUpperCommitments(settings,state,fixed){
   const secondKey=secondUpperKeyOf(state,settings,fixed),sticky=stickyUpperKeySet(state,settings);
   if(secondKey)sticky.delete(secondKey);
   for(const id of fixed||[]){const unit=state&&state.db.byId.get(id);if(unit&&C.isUpper(unit))sticky.delete(canonicalUpper(unit));}
-  return Object.assign({},settings,{_secondUpperKey:secondKey,_stickyUpperKeys:sticky});
+  return Object.assign({},settings,{_secondUpperKey:secondKey,_stickyUpperKeys:sticky,_prescribedSecondKeys:prescribedSecondKeySet(state,settings)});
 }
 // 확정된 두 번째 상위가 있으면 그 자리는 다른 상위에게 넘기지 않는다.
 // 확정이 없으면 아무것도 막지 않는다(관성은 순서로만 작동한다).
@@ -809,7 +822,8 @@ function evaluateNode(state,node,mode,route,settings,fixed,target){
   // v19: 직전 라운드에 계획했던 상위를 이 파티가 몇 기 유지하는가.  점수에는
   // 넣지 않는다 — nodeCompare 의 후단 타이브레이크로만 쓴다.
   const stickyUpperHeld=lineup.reduce((total,entry)=>total+stickyUpperHold(state,settings,entry),0);
-  node.lineup=lineup;node.mainUpper=main;node.requirements=req;node.projectedCount=count;node.complete=req.complete&&count>=target;node.score=round(score);node.requiredDebt=round(deficitPenalty,6);node.used=used;node.handFit=handFit;node.excessStun=stunExcess;node.excessSlow=slowExcess;node.blueprintMatched=blueprintMatched;node.stickyUpperHeld=stickyUpperHeld;node.materialOverlap=overlap;node.rareClearedTypes=rareClearedTypes;node.rareUsedTypes=rareUsedTypes;node.memoSupport=curatedLineupEvidence(lineup);return node;
+  const prescribedPairHeld=lineup.reduce((total,entry)=>total+prescribedPairHold(state,settings,entry),0);
+  node.lineup=lineup;node.mainUpper=main;node.requirements=req;node.projectedCount=count;node.complete=req.complete&&count>=target;node.score=round(score);node.requiredDebt=round(deficitPenalty,6);node.used=used;node.handFit=handFit;node.excessStun=stunExcess;node.excessSlow=slowExcess;node.blueprintMatched=blueprintMatched;node.stickyUpperHeld=stickyUpperHeld;node.prescribedPairHeld=prescribedPairHeld;node.materialOverlap=overlap;node.rareClearedTypes=rareClearedTypes;node.rareUsedTypes=rareUsedTypes;node.memoSupport=curatedLineupEvidence(lineup);return node;
 }
 
 function quickRank(state,row,node,fixed,policy){
@@ -889,6 +903,9 @@ function nodeCompare(a,b){
   // v19: 여기까지 같으면 남은 차이는 타이브레이크뿐이다 — 직전 라운드에
   // 만들던 상위를 유지하는 쪽을 고른다(만들다 바뀌면 재료가 낭비된다).
   if(num(a.stickyUpperHeld)!==num(b.stickyUpperHeld))return num(b.stickyUpperHeld)-num(a.stickyUpperHeld);
+  // v19.7.1(외부 감사 ④): 처방 추천 2상위 — 관성 다음 순번의 후단
+  // 타이브레이크.  필수 역할·경제성·관성이 전부 같을 때만 처방 페어가 이긴다.
+  if(num(a.prescribedPairHeld)!==num(b.prescribedPairHeld))return num(b.prescribedPairHeld)-num(a.prescribedPairHeld);
   if(num(a.excessStun)!==num(b.excessStun))return num(a.excessStun)-num(b.excessStun);
   if(num(a.excessSlow)!==num(b.excessSlow))return num(a.excessSlow)-num(b.excessSlow);
   if(num(a.memoSupport&&a.memoSupport.score)!==num(b.memoSupport&&b.memoSupport.score))return num(b.memoSupport&&b.memoSupport.score)-num(a.memoSupport&&a.memoSupport.score);

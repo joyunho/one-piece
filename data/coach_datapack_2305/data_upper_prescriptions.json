@@ -1,0 +1,6305 @@
+{
+  "title": "원랜디 2.305 상위 유닛 실전 처방 데이터",
+  "generated_at": "2026-07-31",
+  "version": "2.305",
+  "global_sources": {
+    "ordsearch_characters": "https://ordsearch.net/characters",
+    "patch_note_2300_2305": "https://m.dcinside.com/board/ordc1/189308"
+  },
+  "patch_numeric_audit": {
+    "range": "ORDR 2.300~2.305",
+    "source_url": "https://m.dcinside.com/board/ordc1/189308",
+    "priority_rule": "개별 페이지 캐시와 충돌하면 누적 패치노트의 최신 변경값을 우선한다.",
+    "corrected_units": [
+      "니코 로빈: 전투 보조 공격력 +20,000",
+      "대령 타시기: 박무 10%, 강화 난향접의 예검 연계 삭제·공격 +2회·보스/광폭 타격당 전체체력 3% 마법",
+      "몽키 D. 루피: 레드호크 스턴 2.5초·시전 0.625초·225만(x1~1.5) 물리 추가·단일 200% 추가 마법",
+      "상디: 이프리트 잠브 현재체력 3.7% 마법 피해",
+      "아카이누: 명구 단일 725만 고정, 철저한 정의 3.5초 주기·동일 대상 누적",
+      "빅 맘: 영혼강탈 50%, 마마 레이드 +2,555,555 고정, 미저리 15회",
+      "에넬: 2천만/1억 볼트 전체체력 1%/2% 마법, 마뎀증 1% 삭제",
+      "크로커다일: 침식윤회 타격당 35만·마지막 190만"
+    ]
+  },
+  "source_manifest": {
+    "variant_url_count": 70,
+    "variant_urls": [
+      "https://ordsearch.net/characters/142",
+      "https://ordsearch.net/characters/175",
+      "https://ordsearch.net/characters/176",
+      "https://ordsearch.net/characters/177",
+      "https://ordsearch.net/characters/178",
+      "https://ordsearch.net/characters/179",
+      "https://ordsearch.net/characters/180",
+      "https://ordsearch.net/characters/181",
+      "https://ordsearch.net/characters/182",
+      "https://ordsearch.net/characters/183",
+      "https://ordsearch.net/characters/187",
+      "https://ordsearch.net/characters/189",
+      "https://ordsearch.net/characters/190",
+      "https://ordsearch.net/characters/191",
+      "https://ordsearch.net/characters/192",
+      "https://ordsearch.net/characters/193",
+      "https://ordsearch.net/characters/195",
+      "https://ordsearch.net/characters/196",
+      "https://ordsearch.net/characters/197",
+      "https://ordsearch.net/characters/198",
+      "https://ordsearch.net/characters/199",
+      "https://ordsearch.net/characters/200",
+      "https://ordsearch.net/characters/201",
+      "https://ordsearch.net/characters/202",
+      "https://ordsearch.net/characters/203",
+      "https://ordsearch.net/characters/204",
+      "https://ordsearch.net/characters/205",
+      "https://ordsearch.net/characters/206",
+      "https://ordsearch.net/characters/207",
+      "https://ordsearch.net/characters/208",
+      "https://ordsearch.net/characters/209",
+      "https://ordsearch.net/characters/211",
+      "https://ordsearch.net/characters/214",
+      "https://ordsearch.net/characters/215",
+      "https://ordsearch.net/characters/216",
+      "https://ordsearch.net/characters/217",
+      "https://ordsearch.net/characters/218",
+      "https://ordsearch.net/characters/219",
+      "https://ordsearch.net/characters/220",
+      "https://ordsearch.net/characters/221",
+      "https://ordsearch.net/characters/222",
+      "https://ordsearch.net/characters/250",
+      "https://ordsearch.net/characters/251",
+      "https://ordsearch.net/characters/257",
+      "https://ordsearch.net/characters/269",
+      "https://ordsearch.net/characters/270",
+      "https://ordsearch.net/characters/272",
+      "https://ordsearch.net/characters/273",
+      "https://ordsearch.net/characters/276",
+      "https://ordsearch.net/characters/291",
+      "https://ordsearch.net/characters/292",
+      "https://ordsearch.net/characters/299",
+      "https://ordsearch.net/characters/303",
+      "https://ordsearch.net/characters/305",
+      "https://ordsearch.net/characters/306",
+      "https://ordsearch.net/characters/308",
+      "https://ordsearch.net/characters/321",
+      "https://ordsearch.net/characters/323",
+      "https://ordsearch.net/characters/324",
+      "https://ordsearch.net/characters/326",
+      "https://ordsearch.net/characters/330",
+      "https://ordsearch.net/characters/331",
+      "https://ordsearch.net/characters/346",
+      "https://ordsearch.net/characters/350",
+      "https://ordsearch.net/characters/356",
+      "https://ordsearch.net/characters/359",
+      "https://ordsearch.net/characters/368",
+      "https://ordsearch.net/characters/369",
+      "https://ordsearch.net/characters/370",
+      "https://ordsearch.net/characters/371"
+    ]
+  },
+  "counts": {
+    "combat_kits": 63,
+    "records": 70
+  },
+  "grade_counts": {
+    "초월함": {
+      "combat_kits": 30,
+      "records": 36
+    },
+    "불멸의": {
+      "combat_kits": 12,
+      "records": 12
+    },
+    "영원한": {
+      "combat_kits": 11,
+      "records": 12
+    },
+    "제한됨": {
+      "combat_kits": 10,
+      "records": 10
+    }
+  },
+  "scope": {
+    "combat_kits": 63,
+    "records": 70,
+    "grades": {
+      "초월함": {
+        "combat_kits": 30,
+        "records": 36
+      },
+      "불멸의": {
+        "combat_kits": 12,
+        "records": 12
+      },
+      "영원한": {
+        "combat_kits": 11,
+        "records": 12
+      },
+      "제한됨": {
+        "combat_kits": 10,
+        "records": 10
+      }
+    },
+    "inclusion": [
+      "초월함",
+      "불멸의",
+      "영원한",
+      "제한됨"
+    ]
+  },
+  "methodology": {
+    "verified_facts": "ORDSearch 등급 목록과 각 개별 캐릭터 페이지의 스킬 본문을 기존 전수 메모와 재대조했다.",
+    "inference": "부족 역할·2상위 추천·배치·타깃·특강 우선순위는 스킬 사실에서 도출한 처방이며 승률 통계가 아니다. 추천 2상위는 현재 패·상위 제한·재화가 허용할 때의 후보군이다.",
+    "community": "2.305 악몽 댓글·클리어 사례는 별도 community_signals로만 기록했다. 성공 사례 편향 때문에 승률이나 필수 조합으로 해석하지 않는다.",
+    "uncertainty": "중첩 규칙·조건·수치가 본문에 없거나 캐시/패치와 충돌하면 caveats에 남기고 임의 수치를 넣지 않았다."
+  },
+  "evidence_separation": {
+    "verified_facts_field": "units[].factual_roles",
+    "derived_prescription_field": "units[].prescription",
+    "observed_practice_field": "units[].community_signals",
+    "warning": "community_signals는 공개 성공 사례만 포함할 수 있어 승률·필수 조합·인과관계의 증거가 아니다."
+  },
+  "global_conflicts": [
+    "아인의 되감기는 암브·마방깎·마뎀증·폭증 누적을 초기화하므로 누적 디버프 조합과 충돌한다.",
+    "카이도의 2,000범위 공격력 -75% 문구는 적용 대상 확인 전 공격력 캐리를 겹쳐 배치하지 않는다.",
+    "코비의 자기 라인 폭발형 피해 -10%를 폭발형 마딜 계산에 반영한다.",
+    "야마토는 최저 이동속도를 원하지만 루피-기어포스는 빠른 적 보정이 있어 동일 타깃 최적 조건이 충돌한다.",
+    "로우의 99% 이감은 단일이다. 류마는 자체 지속 이감이 없다.",
+    "비비·불릿·키자루·베가펑크·우솝·프랑키처럼 재화·TP를 먹는 성장형을 동시에 과투자하지 않는다.",
+    "테조로는 골드를 보유할수록 강하고 버기는 골드를 써서 강화하므로 경제 방향이 충돌한다.",
+    "에넬·시노부·미호크·시키·오뎅 등 선박 재료 상위는 해적선/고대의 배 경합을 먼저 확인한다."
+  ],
+  "units": [
+    {
+      "key": "transcendent:nami",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "나미",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 192,
+          "name": "웨더리아의 항해사",
+          "url": "https://ordsearch.net/characters/192"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "경제",
+        "지원"
+      ],
+      "provides": [
+        "처치 골드 증가와 확률 골드·목재 획득",
+        "범위 마법 라인딜과 발동형 45% 이감",
+        "소폭 마법피해 증폭"
+      ],
+      "factual_roles": [
+        "처치 골드 증가와 확률 골드·목재 획득",
+        "범위 마법 라인딜과 발동형 45% 이감",
+        "소폭 마법피해 증폭"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "안정적 범위 스턴",
+          "마법방어력 감소",
+          "보스·광폭·끝딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "브룩",
+            "reason": "마방깎·마뎀증·마나·스턴을 동시에 채움",
+            "confidence": "high",
+            "target_key": "transcendent:brook"
+          },
+          {
+            "name": "쿠잔",
+            "reason": "강한 이감·범위 스턴·폭발형 증폭으로 라인을 고정",
+            "confidence": "high",
+            "target_key": "transcendent:kuzan"
+          },
+          {
+            "name": "아카이누",
+            "reason": "나미가 비우는 보스·광폭 단일을 담당",
+            "confidence": "medium",
+            "target_key": "transcendent:akainu"
+          }
+        ],
+        "avoid_or_overlap": [
+          "늦은 완성은 경제 패시브 회수 시간이 짧음",
+          "나미 이감만으로 범위 홀딩이 완성됐다고 계산하지 않음"
+        ],
+        "operation": {
+          "placement": "라인 중심에 두고 제우스·비구름 범위를 최대한 겹친다.",
+          "targeting": "일반 라인은 밀집 구간, 보스·광폭은 별도 단일딜러가 우선 타깃.",
+          "active_timing": "직접 Q 의존보다 빠른 완성과 지속 공격이 중요.",
+          "special_training": "제우스 강화 4TP는 나미를 주력 경제·라인축으로 쓸 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "제우스 특성강화 4TP"
+          ],
+          "economy": [
+            "가능한 이른 라운드 완성",
+            "골드·목재 수익을 다른 성장형 투자와 비교"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/192",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "나미"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:robin",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "니코 로빈",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 197,
+          "name": "오하라의 마지막 생존자",
+          "url": "https://ordsearch.net/characters/197"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "지원"
+      ],
+      "provides": [
+        "범위 공격력 지원과 범위 방어력 감소",
+        "멀티샷 물리딜",
+        "단일·범위 스턴과 저항무시 스턴"
+      ],
+      "factual_roles": [
+        "범위 공격력 지원과 범위 방어력 감소",
+        "멀티샷 물리딜",
+        "단일·범위 스턴과 저항무시 스턴"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "지속 전체 이감",
+          "전담 보스·광폭 딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "몽키 D. 루피 초월",
+            "reason": "공격력 의존 주딜이 로빈 오라와 방깎을 직접 활용",
+            "confidence": "high",
+            "target_key": "transcendent:luffy"
+          },
+          {
+            "name": "몽키 D. 거프",
+            "reason": "공격력 버프와 방깎을 받고 거프가 메인 화력을 담당",
+            "confidence": "medium",
+            "target_key": "immortal:garp"
+          },
+          {
+            "name": "골 D. 로져",
+            "reason": "공증·방깎·이감을 더해 물리 축을 완성",
+            "confidence": "medium",
+            "target_key": "immortal:roger"
+          }
+        ],
+        "avoid_or_overlap": [
+          "쵸파처럼 공증 지원만 겹치면 보잡·이감 슬롯이 비기 쉬움",
+          "분신이 로빈 사거리 밖에 나가면 정지하므로 분산 배치 금지"
+        ],
+        "operation": {
+          "placement": "주 물리 캐리와 850범위 안, 분신이 같은 대상을 칠 수 있는 위치.",
+          "targeting": "보스·광폭 때 로빈과 분신의 타깃을 주딜 대상에 고정.",
+          "active_timing": "기간테스코 마노의 저항무시 스턴은 위험 웨이브에 맞춰 회전 관리.",
+          "special_training": "히간테플루르 강화 4TP는 보조가 아니라 로빈 자체딜까지 쓸 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "히간테플루르 특성강화 4TP"
+          ],
+          "economy": [
+            "추가 성장 재화보다 배치·공속 보완이 핵심"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/197",
+        "https://ordsearch.net/characters?level=10",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "니코 로빈"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:vegapunk",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "닥터 베가펑크",
+      "record_count": 4,
+      "variants": [
+        {
+          "id": 368,
+          "name": "스네이크 경로",
+          "url": "https://ordsearch.net/characters/368"
+        },
+        {
+          "id": 369,
+          "name": "베어 경로",
+          "url": "https://ordsearch.net/characters/369"
+        },
+        {
+          "id": 370,
+          "name": "샤크 경로",
+          "url": "https://ordsearch.net/characters/370"
+        },
+        {
+          "id": 371,
+          "name": "호크 경로",
+          "url": "https://ordsearch.net/characters/371"
+        }
+      ],
+      "build_axis": [
+        "혼합",
+        "지원",
+        "성장"
+      ],
+      "provides": [
+        "범위 공격력·공속 버프와 40% 이감",
+        "저항무시 범위 스턴과 팀 성장 경험치",
+        "재화로 새틀라이트를 늘리는 연구형 구조"
+      ],
+      "factual_roles": [
+        "범위 공격력·공속 버프와 40% 이감",
+        "저항무시 범위 스턴과 팀 성장 경험치",
+        "재화로 새틀라이트를 늘리는 연구형 구조"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "즉시 완성되는 보스·광폭 전담",
+          "계통별 방깎 또는 마방깎"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "코비",
+            "reason": "서로 다른 버프 수와 분신 오라를 늘려 코비 조건을 강화",
+            "confidence": "high",
+            "target_key": "transcendent:koby"
+          },
+          {
+            "name": "후지토라",
+            "reason": "공속으로 암브·스턴·운석 회전을 동시에 가속",
+            "confidence": "high",
+            "target_key": "transcendent:fujitora"
+          },
+          {
+            "name": "아라마키",
+            "reason": "공속·마나 보조가 스택과 변신 회전을 도움",
+            "confidence": "medium",
+            "target_key": "transcendent:aramaki"
+          }
+        ],
+        "avoid_or_overlap": [
+          "불릿·우솝 씨앗·프랑키 함선과 동시 과투자",
+          "늦은 완성 후 새틀라이트 풀투자"
+        ],
+        "operation": {
+          "placement": "주딜과 새틀라이트가 버프 범위 안에 들어오도록 라인 중심 배치.",
+          "targeting": "물딜은 릴리스·아틀라스, 마딜·혼합은 요크·마더 플레임 비중을 높임.",
+          "active_timing": "마더 플레임은 위험 웨이브의 저항무시 스턴에 맞춤.",
+          "special_training": "특강보다 새틀라이트별 실제 생성 비용과 남은 라운드를 먼저 계산."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "새틀라이트·마더 플레임의 TP/자원은 개별 페이지와 인게임 툴팁 확인"
+          ],
+          "economy": [
+            "새틀라이트 생성 재화",
+            "늦은 라운드에는 투자 회수 중단선 설정"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/368",
+        "https://ordsearch.net/characters/369",
+        "https://ordsearch.net/characters/370",
+        "https://ordsearch.net/characters/371",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "닥터 베가펑크"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "4개 레코드는 시작 세라핌/조합 경로가 다르지만 완성 후 공통 운영 체계로 수렴한다."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:tashigi",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "대령 타시기",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 209,
+          "name": "성장형 검사",
+          "url": "https://ordsearch.net/characters/209"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "혼합",
+        "성장"
+      ],
+      "provides": [
+        "레벨업 스탯 성장량 증가",
+        "단일 전체체력 피해와 단일 스턴",
+        "소량 아머브레이크와 힘 비례 연타"
+      ],
+      "factual_roles": [
+        "레벨업 스탯 성장량 증가",
+        "단일 전체체력 피해와 단일 스턴",
+        "소량 아머브레이크와 힘 비례 연타"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "지속 범위 이감",
+          "초반 성장 시간",
+          "광폭·보스 마무리 보조"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "닥터 베가펑크",
+            "reason": "경험치·공속·공증으로 성장과 발동을 보조",
+            "confidence": "medium",
+            "target_key": "transcendent:vegapunk"
+          },
+          {
+            "name": "쿠잔",
+            "reason": "강한 범위 이감과 스턴을 채움",
+            "confidence": "high",
+            "target_key": "transcendent:kuzan"
+          },
+          {
+            "name": "골 D. 로져",
+            "reason": "혼합 물리 운용 시 공증·방깎·이감을 공급",
+            "confidence": "medium",
+            "target_key": "immortal:roger"
+          }
+        ],
+        "avoid_or_overlap": [
+          "늦은 완성",
+          "타시기 자체 단일 스턴을 범위 홀딩으로 계산"
+        ],
+        "operation": {
+          "placement": "초반부터 공격 기회를 많이 확보하는 라인 위치.",
+          "targeting": "보스·광폭에는 단일 체력비례 연타를 집중.",
+          "active_timing": "월보/이동기가 있다면 미션과 주라인 사이 이동에 사용.",
+          "special_training": "수련 4TP의 즉시 경험치가 성장 문턱을 넘기는 시점에 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "수련 특성강화 4TP"
+          ],
+          "economy": [
+            "가능한 조기 완성",
+            "경험치 손실 최소화"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/209",
+        "https://ordsearch.net/characters?level=10",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "대령 타시기"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 유카9 상세 댓글은 타시기 원딜·보잡 성능을 관찰하면서도 깎·이감·범위 스턴을 외부에서 채운 구성을 공개.",
+          "source_url": "https://ordsearch.net/characters/209",
+          "evidence_type": "community_success_case"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:doflamingo",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "도플라밍고",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 208,
+          "name": "어둠의 조커",
+          "url": "https://ordsearch.net/characters/208"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "혼합",
+        "마나형"
+      ],
+      "provides": [
+        "각성 중 범위 방깎·강한 이감·집결",
+        "범위 현재체력 혼합 피해",
+        "마나에 따라 각성 가동률이 크게 변함"
+      ],
+      "factual_roles": [
+        "각성 중 범위 방깎·강한 이감·집결",
+        "범위 현재체력 혼합 피해",
+        "마나에 따라 각성 가동률이 크게 변함"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "각성 공백의 기본 방깎·홀딩",
+          "마나 회복",
+          "보스·광폭 전담"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "아라마키",
+            "reason": "새장 집결로 다수 대상 스킬과 암브 효율을 높임",
+            "confidence": "high",
+            "target_key": "transcendent:aramaki"
+          },
+          {
+            "name": "유스타스 키드",
+            "reason": "밀집 적 수 비례 피해를 새장으로 보장",
+            "confidence": "high",
+            "target_key": "transcendent:kid"
+          },
+          {
+            "name": "징베",
+            "reason": "마나·공속을 주고 암브 축을 보강",
+            "confidence": "medium",
+            "target_key": "transcendent:jinbe"
+          }
+        ],
+        "avoid_or_overlap": [
+          "마나 회복 없이 각성 성능을 상시로 간주",
+          "넉백 유닛으로 새장 중심을 흩뜨리는 조합"
+        ],
+        "operation": {
+          "placement": "새장 중심과 다른 범위딜 중심을 일치시킨다.",
+          "targeting": "라인은 밀집 구간, 보스는 각성 방깎이 들어간 대상에 집중.",
+          "active_timing": "각성·새장을 위험 웨이브와 다른 상위 액티브에 동기화.",
+          "special_training": "새장 4TP는 도플라밍고를 메인 물리축으로 쓸 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "새장 특성강화 4TP"
+          ],
+          "economy": [
+            "외부 마나젠 확보",
+            "다른 마나형 상위와 회복원 경합 점검"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/208",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "도플라밍고"
+      },
+      "community_signals": [
+        {
+          "observation": "ORDSearch 2.305 도플라밍고 초월 상세 댓글은 별도 보잡·마나·홀딩을 보완한 성공 구성 신호를 제공.",
+          "source_url": "https://ordsearch.net/search?query=%EC%82%AC%EB%B3%B4&sc=uni&w=search.tab",
+          "evidence_type": "community_search_result"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:lucci",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "로브 루치",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 250,
+          "name": "CP.Zero",
+          "url": "https://ordsearch.net/characters/250"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "단일",
+        "현재체력"
+      ],
+      "provides": [
+        "라인 현재체력·폭발형 피해",
+        "각성 시 단일 연타 강화",
+        "단일 스턴과 전범위 순간이동"
+      ],
+      "factual_roles": [
+        "라인 현재체력·폭발형 피해",
+        "각성 시 단일 연타 강화",
+        "단일 스턴과 전범위 순간이동"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "안정적 범위 홀딩",
+          "마방깎",
+          "잃은체력 끝딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "브룩",
+            "reason": "마방깎·마뎀증·마나·범위 스턴을 제공",
+            "confidence": "high",
+            "target_key": "transcendent:brook"
+          },
+          {
+            "name": "마샬 D. 티치",
+            "reason": "단일 증폭과 버프 제거 후 루치 연타를 집중",
+            "confidence": "high",
+            "target_key": "transcendent:teach"
+          },
+          {
+            "name": "쿠잔",
+            "reason": "라인 이감·스턴·폭발형 증폭을 공급",
+            "confidence": "medium",
+            "target_key": "transcendent:kuzan"
+          }
+        ],
+        "avoid_or_overlap": [
+          "여러 타깃에 공격 분산",
+          "클리어 누적 성장치를 모든 계정에서 동일한 고정 성능으로 간주"
+        ],
+        "operation": {
+          "placement": "순간이동으로 주라인·보스 사거리 유지.",
+          "targeting": "보스·광폭은 반드시 한 대상에 지건/수건을 집중.",
+          "active_timing": "열매 각성 15초를 보스·광폭과 맞추고 공백에는 라인딜러가 버티게 함.",
+          "special_training": "열매 각성 4TP 우선도가 높음."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "열매 각성 4TP"
+          ],
+          "economy": [
+            "계정/맵 클리어 누적 조건에 따른 성능 차이 확인"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/250",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "로브 루치"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:zoro",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "롤로노아 조로",
+      "record_count": 3,
+      "variants": [
+        {
+          "id": 191,
+          "name": "기본",
+          "url": "https://ordsearch.net/characters/191"
+        },
+        {
+          "id": 321,
+          "name": "강화",
+          "url": "https://ordsearch.net/characters/321"
+        },
+        {
+          "id": 323,
+          "name": "염왕",
+          "url": "https://ordsearch.net/characters/323"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "올라운더"
+      ],
+      "provides": [
+        "단계별 범위 방깎과 이감 상승",
+        "범위·단일 스턴",
+        "공격력·힘 비례 물리딜"
+      ],
+      "factual_roles": [
+        "단계별 범위 방깎과 이감 상승",
+        "범위·단일 스턴",
+        "공격력·힘 비례 물리딜"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "전담 보스·광폭",
+          "염왕 단계에서도 남는 전체 이감"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "쵸파",
+            "reason": "공증·공속·방깎으로 조로 계수를 직접 강화",
+            "confidence": "high",
+            "target_key": "transcendent:chopper"
+          },
+          {
+            "name": "골 D. 로져",
+            "reason": "공증·방깎·이감을 더하고 보스 Q를 담당",
+            "confidence": "medium",
+            "target_key": "immortal:roger"
+          },
+          {
+            "name": "우솝",
+            "reason": "조로가 비우는 보스·광폭을 저격",
+            "confidence": "medium",
+            "target_key": "transcendent:usopp"
+          }
+        ],
+        "avoid_or_overlap": [
+          "강화 전 수치를 염왕 수치로 계산",
+          "로우의 단일 99% 이감을 전체 이감 보완으로 계산"
+        ],
+        "operation": {
+          "placement": "라인 중심에서 귀기 오라와 범위기를 겹친다.",
+          "targeting": "보스·광폭에는 단일 스턴·사자의 노래 타깃 고정.",
+          "active_timing": "마나 145 범위 스턴을 위험 라운드에 끊기지 않게 마나젠 확보.",
+          "special_training": "패기 수련 4TP와 강화/염왕 재료는 조로를 최종 주딜로 쓸 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "패기 수련 4TP",
+            "강화·염왕 경로 재료 별도"
+          ],
+          "economy": [
+            "강화 경로를 갈 수 있는 패인지 조기 판단"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/191",
+        "https://ordsearch.net/characters/321",
+        "https://ordsearch.net/characters/323",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "롤로노아 조로"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "3레코드는 강화 단계이므로 동일 전투 키트로 통합했다."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:luffy",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "몽키 D. 루피",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 189,
+          "name": "해적왕을 꿈꾸는 자",
+          "url": "https://ordsearch.net/characters/189"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "공격력 캐리"
+      ],
+      "provides": [
+        "공격력·치명·공속 스케일 라인딜",
+        "확률형 다단 범위 스턴",
+        "레드호크 암브와 제트 피스톨의 짧은 단일 이감"
+      ],
+      "factual_roles": [
+        "공격력·치명·공속 스케일 라인딜",
+        "확률형 다단 범위 스턴",
+        "레드호크 암브와 제트 피스톨의 짧은 단일 이감"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "기본 방깎·암브",
+          "전체 이감",
+          "보스·광폭"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "쵸파",
+            "reason": "공증·공속·방깎을 한 번에 제공",
+            "confidence": "high",
+            "target_key": "transcendent:chopper"
+          },
+          {
+            "name": "니코 로빈",
+            "reason": "공증·방깎·범위 스턴으로 메인 루피를 보조",
+            "confidence": "high",
+            "target_key": "transcendent:robin"
+          },
+          {
+            "name": "크로커다일 제한",
+            "reason": "물딜 방깎·이감·범위 스턴·암브 틀을 채움",
+            "confidence": "high",
+            "target_key": "limited:crocodile"
+          }
+        ],
+        "avoid_or_overlap": [
+          "공증 상위만 둘 겹쳐 방깎·이감·보잡이 비는 구성",
+          "기어포스 초월과 같은 유닛으로 취급"
+        ],
+        "operation": {
+          "placement": "공증 오라 안에서 라인 중심을 계속 공격.",
+          "targeting": "보스는 별도 보잡과 같은 대상 지정.",
+          "active_timing": "개틀링 발동 편차를 공속과 기본 홀딩으로 줄임.",
+          "special_training": "개틀링 강화 4TP는 루피 메인 운용 시 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "개틀링 특성강화 4TP"
+          ],
+          "economy": [
+            "공속·공증 지원은 필요하지만 방깎/이감 예산을 먼저 확보"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/189",
+        "https://ordsearch.net/characters?level=10",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "몽키 D. 루피"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:gear4_luffy",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "루피-기어포스",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 273,
+          "name": "스네이크맨",
+          "url": "https://ordsearch.net/characters/273"
+        }
+      ],
+      "build_axis": [
+        "혼합",
+        "방어무시",
+        "보스"
+      ],
+      "provides": [
+        "적 이동속도가 높을수록 일부 피해 보정 증가",
+        "방어무시 평타와 단일 스턴",
+        "특강 히드라에 보스·광폭 체력비례 피해"
+      ],
+      "factual_roles": [
+        "적 이동속도가 높을수록 일부 피해 보정 증가",
+        "방어무시 평타와 단일 스턴",
+        "특강 히드라에 보스·광폭 체력비례 피해"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "짧고 강한 범위 홀딩",
+          "기본 범위 방깎·암브",
+          "이감과 피해조건의 균형"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "닥터 베가펑크",
+            "reason": "공증·공속·스턴을 주되 이감 과투자를 조절 가능",
+            "confidence": "medium",
+            "target_key": "transcendent:vegapunk"
+          },
+          {
+            "name": "쵸파",
+            "reason": "방무 평타에 공증·공속을 직접 공급",
+            "confidence": "medium",
+            "target_key": "transcendent:chopper"
+          },
+          {
+            "name": "샹크스",
+            "reason": "지속 이감 대신 넓은 스턴으로 라인을 세움",
+            "confidence": "medium",
+            "target_key": "transcendent:shanks"
+          }
+        ],
+        "avoid_or_overlap": [
+          "야마토와 동일 타깃: 야마토는 최저 이속, 기어포스는 빠른 적 보정",
+          "무조건 풀 이감 공식을 적용"
+        ],
+        "operation": {
+          "placement": "공증·공속 오라 안에서 보스와 광폭에 직접 타깃.",
+          "targeting": "라인은 스턴으로 묶고 이감은 생존에 필요한 만큼만 조절.",
+          "active_timing": "블랙 맘바와 히드라 구간에 보스 타깃 고정.",
+          "special_training": "아홉 머리 뱀 4TP는 보스·광폭 운용 시 핵심."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "아홉 머리 뱀 특성강화 4TP"
+          ],
+          "economy": [
+            "이감 수치를 올릴 때 실제 피해 저하 여부를 인게임 확인"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/273",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "루피-기어포스"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 성공 댓글에서 특강·보스 고정·단끝 보완 사례가 확인됨.",
+          "source_url": "https://ordsearch.net/characters/273",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [
+        "이동속도 비례 피해의 정확 계산식은 ORDSearch 본문만으로 완전히 확정할 수 없다."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:teach",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "마샬 D. 티치",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 204,
+          "name": "지진과 어둠",
+          "url": "https://ordsearch.net/characters/204"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "단일 디버퍼",
+        "집결"
+      ],
+      "provides": [
+        "단일 마뎀증·전체피해 증폭·버프 해제",
+        "단일 당기기와 스턴",
+        "범위 강한 발동 이감"
+      ],
+      "factual_roles": [
+        "단일 마뎀증·전체피해 증폭·버프 해제",
+        "단일 당기기와 스턴",
+        "범위 강한 발동 이감"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "안정적 범위 스턴",
+          "잃은체력 끝딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "로브 루치",
+            "reason": "증폭 타깃에 단일 현재체력 연타 집중",
+            "confidence": "high",
+            "target_key": "transcendent:lucci"
+          },
+          {
+            "name": "아카이누",
+            "reason": "보스·광폭 지정딜을 증폭 구간에 몰아줌",
+            "confidence": "high",
+            "target_key": "transcendent:akainu"
+          },
+          {
+            "name": "제트",
+            "reason": "티치가 체력을 깎고 제트가 잃은체력 끝딜",
+            "confidence": "medium",
+            "target_key": "immortal:zephyr"
+          }
+        ],
+        "avoid_or_overlap": [
+          "크로우즈 당기기로 기존 홀딩 중심을 벗어나게 함",
+          "증폭이 없는 타깃에 보스 액티브 분산"
+        ],
+        "operation": {
+          "placement": "당겨진 적이 주 범위딜·스턴 안에 남도록 반대편 배치.",
+          "targeting": "크로우즈가 걸린 보스·광폭을 공용 타깃으로 지정.",
+          "active_timing": "증폭·버프 제거 직후 다른 상위의 Q/마나기를 집중.",
+          "special_training": "지진/인력 강화는 티치를 디버프 핵심으로 쓸 때 우선; 비용은 원문 툴팁 확인."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "특성강화 사용 시 TP 필요; 정확 비용은 개별 페이지 확인"
+          ],
+          "economy": [
+            "마나보다 배치·타깃 동기화가 우선"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/204",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "마샬 D. 티치"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:hawkins",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "바질 호킨스",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 270,
+          "name": "운명을 점치는 마술사",
+          "url": "https://ordsearch.net/characters/270"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "혼합",
+        "디버프 비례"
+      ],
+      "provides": [
+        "범위 방깎과 단일·범위 스턴",
+        "대상 버프·디버프 수에 비례해 피해 증가",
+        "확률 위습과 조작 가능한 미니 스트로맨"
+      ],
+      "factual_roles": [
+        "범위 방깎과 단일·범위 스턴",
+        "대상 버프·디버프 수에 비례해 피해 증가",
+        "확률 위습과 조작 가능한 미니 스트로맨"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "전체 이감",
+          "보스·광폭·끝딜",
+          "안정적 디버프 종류"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "도플라밍고",
+            "reason": "방깎·이감·집결 등 다종 디버프를 공급",
+            "confidence": "high",
+            "target_key": "transcendent:doflamingo"
+          },
+          {
+            "name": "후지토라",
+            "reason": "암브·이감·스턴을 겹쳐 저주 타수를 늘림",
+            "confidence": "medium",
+            "target_key": "transcendent:fujitora"
+          },
+          {
+            "name": "크로커다일 제한",
+            "reason": "방깎·이감·스턴·암브로 조건을 넓게 채움",
+            "confidence": "medium",
+            "target_key": "limited:crocodile"
+          }
+        ],
+        "avoid_or_overlap": [
+          "점치기 위습을 확정 자원으로 계획",
+          "미니 스트로맨을 방치해 사거리·타깃 손실"
+        ],
+        "operation": {
+          "placement": "본체와 미니 스트로맨이 같은 디버프 타깃을 칠 수 있게 배치.",
+          "targeting": "디버프가 많이 누적된 보스·광폭에 집중.",
+          "active_timing": "점치기는 쿨마다 사용하되 실패를 전제로 덱을 완성.",
+          "special_training": "미니 스트로맨 4TP는 호킨스를 메인 축으로 쓸 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "미니 스트로맨 특성강화 4TP"
+          ],
+          "economy": [
+            "확률 위습은 보너스 처리",
+            "공속 지원 확보"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/270",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "바질 호킨스"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 바질 초월 유카2 상세 댓글이 공개되어 있으나 단일 성공 사례이므로 승률 근거로 사용하지 않음.",
+          "source_url": "https://ordsearch.net/users/whdyd_/comments/unit",
+          "evidence_type": "community_success_case"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:brook",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "브룩",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 199,
+          "name": "소울 킹",
+          "url": "https://ordsearch.net/characters/199"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "지원"
+      ],
+      "provides": [
+        "마방깎·마뎀증·이감",
+        "범위·단일 스턴",
+        "공속·마나 지원과 일반몹 끝딜"
+      ],
+      "factual_roles": [
+        "마방깎·마뎀증·이감",
+        "범위·단일 스턴",
+        "공속·마나 지원과 일반몹 끝딜"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "전담 보스·광폭 딜",
+          "추가 단일"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "아카이누",
+            "reason": "브룩이 유틸을, 아카이누가 보스·광폭을 담당",
+            "confidence": "high",
+            "target_key": "transcendent:akainu"
+          },
+          {
+            "name": "로브 루치",
+            "reason": "마깎·마뎀증·마나가 단일 연타를 강화",
+            "confidence": "high",
+            "target_key": "transcendent:lucci"
+          },
+          {
+            "name": "빅 맘",
+            "reason": "라인 마법딜·성장축을 브룩이 완성",
+            "confidence": "medium",
+            "target_key": "immortal:big_mom"
+          }
+        ],
+        "avoid_or_overlap": [
+          "브룩이 많은 유틸을 준다는 이유로 보잡 완료로 판정",
+          "마딜 아닌 덱에서 지원 효과 일부를 과대평가"
+        ],
+        "operation": {
+          "placement": "주 마법 캐리와 라분이 800범위 안에 들어오도록 배치.",
+          "targeting": "보스는 파티 뮤직 증폭 후 단일 캐리가 집중.",
+          "active_timing": "라분 9타 버프와 마나기 회전을 위해 공격 중단 최소화.",
+          "special_training": "아기 라분 4TP는 팀 지원 가치가 높아 우선도가 높음."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "아기 라분 특성강화 4TP"
+          ],
+          "economy": [
+            "공속을 주면 팀 마나·공속 회전도 함께 개선"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/199",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "브룩"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:sabo",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "사보",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 216,
+          "name": "혁명의 불꽃",
+          "url": "https://ordsearch.net/characters/216"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "버프 비례"
+      ],
+      "provides": [
+        "서로 다른 버프 수에 따라 피해·지속 증가",
+        "범위 방깎·이감과 단일·범위 스턴",
+        "전체체력 물리 피해"
+      ],
+      "factual_roles": [
+        "서로 다른 버프 수에 따라 피해·지속 증가",
+        "범위 방깎·이감과 단일·범위 스턴",
+        "전체체력 물리 피해"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "추가 방깎·이감",
+          "보스·광폭 전담",
+          "다종 버프"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "쵸파",
+            "reason": "공증·공속 등 버프 종류와 물리 계수를 동시에 보강",
+            "confidence": "high",
+            "target_key": "transcendent:chopper"
+          },
+          {
+            "name": "골 D. 로져",
+            "reason": "공증·방깎·이감·보스 Q로 사보의 빈칸을 채움",
+            "confidence": "medium",
+            "target_key": "immortal:roger"
+          },
+          {
+            "name": "크로커다일 제한",
+            "reason": "남은 방깎·이감·범위 스턴·암브를 제공",
+            "confidence": "medium",
+            "target_key": "limited:crocodile"
+          }
+        ],
+        "avoid_or_overlap": [
+          "동일 계열 오라를 여러 개 넣고 버프 개수를 단순 합산",
+          "사보의 자체 수치만으로 최종 방깎·이감이 완성됐다고 판단"
+        ],
+        "operation": {
+          "placement": "서로 다른 버프 오라 범위가 모두 겹치는 라인 중심.",
+          "targeting": "보스는 단일 용조권과 다른 보잡을 같은 대상에 지정.",
+          "active_timing": "불주먹 지속시간을 버프 수가 충분한 시점에 확보.",
+          "special_training": "유대의 불주먹 4TP는 버프 조합이 갖춰졌을 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "유대의 불주먹 특성강화 4TP"
+          ],
+          "economy": [
+            "서로 다른 이름의 버프원을 우선",
+            "버프 카운트 방식은 인게임 확인"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/216",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "사보"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:sanji",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "상디",
+      "record_count": 2,
+      "variants": [
+        {
+          "id": 190,
+          "name": "기본",
+          "url": "https://ordsearch.net/characters/190"
+        },
+        {
+          "id": 324,
+          "name": "제르마 블랙",
+          "url": "https://ordsearch.net/characters/324"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "현재체력",
+        "기동"
+      ],
+      "provides": [
+        "매 공격 라인 현재체력 3.7% 마법 피해",
+        "순간이동·공중이동",
+        "강화 후 공속·스킬확률·마나 개선"
+      ],
+      "factual_roles": [
+        "매 공격 라인 현재체력 3.7% 마법 피해",
+        "순간이동·공중이동",
+        "강화 후 공속·스킬확률·마나 개선"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "마방깎",
+          "안정적 범위 스턴",
+          "보스·끝딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "브룩",
+            "reason": "마깎·마뎀증·마나·범위 스턴을 제공",
+            "confidence": "high",
+            "target_key": "transcendent:brook"
+          },
+          {
+            "name": "쿠잔",
+            "reason": "강한 이감·범위 스턴으로 라인 현퍼의 공격 시간을 확보",
+            "confidence": "high",
+            "target_key": "transcendent:kuzan"
+          },
+          {
+            "name": "제트",
+            "reason": "상디가 앞체력을 깎고 제트가 끝딜·광폭 처리",
+            "confidence": "medium",
+            "target_key": "immortal:zephyr"
+          }
+        ],
+        "avoid_or_overlap": [
+          "상디 라인 현퍼를 보스 퍼뎀으로 계산",
+          "발동형 무통샷 이감만으로 상시 홀딩 판정"
+        ],
+        "operation": {
+          "placement": "월보로 라인·스토리·미션 사이를 빠르게 전환.",
+          "targeting": "라인 체력이 높을 때 상디를 우선 공격시키고 보스는 끝딜러와 분담.",
+          "active_timing": "마나기와 제르마 강화 후 공격 기회 유지.",
+          "special_training": "제르마 블랙 4TP는 상디 메인 운용 시 핵심."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "제르마 블랙 특성강화 4TP"
+          ],
+          "economy": [
+            "강화 경로를 갈 패인지 조기 판단"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/190",
+        "https://ordsearch.net/characters/324",
+        "https://ordsearch.net/characters?level=10",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "상디"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "2레코드는 강화 단계로 통합했다.",
+        "2.300에서 이프리트 잠브가 현재체력 3.2% 폭발형에서 3.7% 마법 피해로 변경됐다."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:shanks",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "샹크스",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 205,
+          "name": "정상전쟁 종결자",
+          "url": "https://ordsearch.net/characters/205"
+        }
+      ],
+      "build_axis": [
+        "혼합",
+        "CC",
+        "보스 액티브"
+      ],
+      "provides": [
+        "매우 넓은 범위의 주기·확률 스턴",
+        "단일 스턴과 자체 공속",
+        "보스·스토리 전용 장쿨 액티브"
+      ],
+      "factual_roles": [
+        "매우 넓은 범위의 주기·확률 스턴",
+        "단일 스턴과 자체 공속",
+        "보스·스토리 전용 장쿨 액티브"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "계통별 방깎·마방깎",
+          "지속 보스딜",
+          "딜 증폭"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "야마토",
+            "reason": "샹크스가 안정적 홀딩을 보완하고 야마토가 주딜",
+            "confidence": "medium",
+            "target_key": "transcendent:yamato"
+          },
+          {
+            "name": "후지토라",
+            "reason": "후지토라의 암브·이감에 넓은 스턴을 더함",
+            "confidence": "medium",
+            "target_key": "transcendent:fujitora"
+          },
+          {
+            "name": "아카이누",
+            "reason": "마딜 보스딜과 샹크스 광역 CC가 역할 분담",
+            "confidence": "medium",
+            "target_key": "transcendent:akainu"
+          }
+        ],
+        "avoid_or_overlap": [
+          "카무사리 150초 쿨을 일반 라인에 낭비",
+          "샹크스만 넣고 물·마 증폭 슬롯 생략"
+        ],
+        "operation": {
+          "placement": "긴 사거리를 살려 주라인 중앙을 덮는 위치.",
+          "targeting": "보스·스토리는 카무사리 대상 직접 지정.",
+          "active_timing": "카무사리는 가장 위험한 보스/스토리와 삭제 직전 구간에 예약.",
+          "special_training": "카무사리 4TP는 보스 액티브가 필요한 덱에서 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "카무사리 특성강화 4TP"
+          ],
+          "economy": [
+            "장쿨 액티브 타이밍 기록"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/205",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "샹크스"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:shiraho",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "시라호시",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 200,
+          "name": "고대병기 포세이돈",
+          "url": "https://ordsearch.net/characters/200"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "성장",
+        "잃은체력"
+      ],
+      "provides": [
+        "레벨 문턱에 따른 성장",
+        "넓은 마법 범위딜과 잃은체력 끝딜",
+        "저항무시 범위 스턴"
+      ],
+      "factual_roles": [
+        "레벨 문턱에 따른 성장",
+        "넓은 마법 범위딜과 잃은체력 끝딜",
+        "저항무시 범위 스턴"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "조기 경험치",
+          "전담 보스 단일",
+          "추가 마방깎"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "브룩",
+            "reason": "마깎·마뎀증·마나를 주고 시라호시가 끝딜을 담당",
+            "confidence": "high",
+            "target_key": "transcendent:brook"
+          },
+          {
+            "name": "나미",
+            "reason": "현재체력 라인딜이 먼저 체력을 낮춰 잃은체력 계수를 열음",
+            "confidence": "medium",
+            "target_key": "transcendent:nami"
+          },
+          {
+            "name": "로브 루치",
+            "reason": "루치가 앞체력·단일, 시라호시가 후반 끝딜·홀딩",
+            "confidence": "medium",
+            "target_key": "transcendent:lucci"
+          }
+        ],
+        "avoid_or_overlap": [
+          "늦은 완성 후 레벨 16/20/24 성능을 전부 전제로 계산",
+          "시라호시 하나로 보스 단일 완료 판정"
+        ],
+        "operation": {
+          "placement": "1,000범위 포세이돈이 라인 밀집 구간을 덮는 위치.",
+          "targeting": "현재체력 딜러가 먼저 치고 시라호시 잃은체력 스킬이 후속.",
+          "active_timing": "다이브 저항무시 스턴을 위험 웨이브에 맞춤.",
+          "special_training": "해왕류 지배자 4TP는 조기 완성·레벨 회수가 가능할 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "해왕류의 지배자 특성강화 4TP"
+          ],
+          "economy": [
+            "조기 완성",
+            "경험치 공급"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/200",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "시라호시"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:aramaki",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "아라마키",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 303,
+          "name": "초록소",
+          "url": "https://ordsearch.net/characters/303"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "성장",
+        "암브"
+      ],
+      "provides": [
+        "시간·스킬에 따라 숲 스택 성장",
+        "범위 방깎·암브·라인딜",
+        "마나 변신과 단일 강한 이감"
+      ],
+      "factual_roles": [
+        "시간·스킬에 따라 숲 스택 성장",
+        "범위 방깎·암브·라인딜",
+        "마나 변신과 단일 강한 이감"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "보스·광폭",
+          "안정적 추가 범위 스턴",
+          "조기 스택 시간"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "징베",
+            "reason": "마나·공속과 암브 연계로 변신·매장수를 가속",
+            "confidence": "high",
+            "target_key": "transcendent:jinbe"
+          },
+          {
+            "name": "도플라밍고",
+            "reason": "새장 집결로 다수 대상 범위 효율을 높임",
+            "confidence": "medium",
+            "target_key": "transcendent:doflamingo"
+          },
+          {
+            "name": "우솝",
+            "reason": "아라마키가 비우는 보스·광폭을 저격",
+            "confidence": "medium",
+            "target_key": "transcendent:usopp"
+          }
+        ],
+        "avoid_or_overlap": [
+          "늦은 완성",
+          "단일 85% 이감을 전체 이감으로 계산"
+        ],
+        "operation": {
+          "placement": "변신 범위와 집결·홀딩 중심을 일치.",
+          "targeting": "라인 스택/암브 누적, 보스는 우솝 등 전담에 우선권.",
+          "active_timing": "마나 115 변신을 위험 라운드와 겹치게 마나젠 조절.",
+          "special_training": "매장수 4TP는 충분히 일찍 완성했을 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "매장수 특성강화 4TP"
+          ],
+          "economy": [
+            "숲 스택 회수 시간",
+            "외부 마나·공속"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/303",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "아라마키"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:akainu",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "아카이누",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 201,
+          "name": "신 해군원수",
+          "url": "https://ordsearch.net/characters/201"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "보스",
+        "광폭"
+      ],
+      "provides": [
+        "보스·광폭 지정형 단일 마법딜",
+        "범위 지속 라인딜",
+        "자체 이감은 보조 수준"
+      ],
+      "factual_roles": [
+        "보스·광폭 지정형 단일 마법딜",
+        "범위 지속 라인딜",
+        "자체 이감은 보조 수준"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "강한 전체 이감",
+          "범위 스턴",
+          "마방깎"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "브룩",
+            "reason": "마방깎·마뎀증·마나·스턴을 한 번에 보완",
+            "confidence": "high",
+            "target_key": "transcendent:brook"
+          },
+          {
+            "name": "마샬 D. 티치",
+            "reason": "단일 증폭과 버프 제거 구간에 명구·유성을 집중",
+            "confidence": "high",
+            "target_key": "transcendent:teach"
+          },
+          {
+            "name": "쿠잔",
+            "reason": "강한 이감·스턴·폭발형 증폭으로 라인을 세움",
+            "confidence": "medium",
+            "target_key": "transcendent:kuzan"
+          }
+        ],
+        "avoid_or_overlap": [
+          "타깃을 자주 바꿔 집중 유성 누적 손실",
+          "자체 12% 이감을 전체 홀딩으로 판정"
+        ],
+        "operation": {
+          "placement": "라인 중앙을 덮되 보스에 직접 공격 가능한 위치.",
+          "targeting": "보스·광폭은 명구·집중 유성을 한 대상에 고정.",
+          "active_timing": "티치 증폭 또는 마깎 타이밍에 유성화산을 집중.",
+          "special_training": "특강은 주력 스킬 강화 여부를 개별 페이지에서 확인 후 보잡 부족 시 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "특성강화 비용·효과는 개별 페이지 원문 확인"
+          ],
+          "economy": [
+            "힘·마나젠을 함께 확보"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/201",
+        "https://ordsearch.net/characters?level=10",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "아카이누"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:yamato",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "야마토",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 299,
+          "name": "오니히메",
+          "url": "https://ordsearch.net/characters/299"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "최저 이속 하이퍼캐리"
+      ],
+      "provides": [
+        "적이 최저 이동속도일 때 연속 추가타 조건",
+        "자가 이속 증가 디버프가 있어 더 강한 감속 필요",
+        "인수화·패왕색 구간에 공격력·공속 폭증"
+      ],
+      "factual_roles": [
+        "적이 최저 이동속도일 때 연속 추가타 조건",
+        "자가 이속 증가 디버프가 있어 더 강한 감속 필요",
+        "인수화·패왕색 구간에 공격력·공속 폭증"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "실제 최저 이속 달성",
+          "기본 방깎",
+          "보스·광폭 보완"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "크로커다일 제한",
+            "reason": "범위 40% 이감·방깎·스턴·암브 제공",
+            "confidence": "high",
+            "target_key": "limited:crocodile"
+          },
+          {
+            "name": "마르코 제한",
+            "reason": "특강 60% 이감과 체젠으로 조건·생존 보조",
+            "confidence": "medium",
+            "target_key": "limited:marco"
+          },
+          {
+            "name": "샹크스",
+            "reason": "이감 조건이 맞은 뒤 넓은 스턴 공백을 보완",
+            "confidence": "medium",
+            "target_key": "transcendent:shanks"
+          }
+        ],
+        "avoid_or_overlap": [
+          "루피-기어포스와 동일 타깃",
+          "로우·킹의 단일 이감만 합쳐 전체 최저 이속으로 계산"
+        ],
+        "operation": {
+          "placement": "강한 전체 이감 오라와 같은 라인에 배치.",
+          "targeting": "야마토·방깎·단일 이감을 같은 주 타깃에 집중.",
+          "active_timing": "인수화·패왕색 구간을 보스/광폭에 맞춤.",
+          "special_training": "수배지령 강화 4TP는 최저 이속 기반 운용이 준비된 뒤 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "수배지령 특성강화 4TP"
+          ],
+          "economy": [
+            "딜보다 이감 스펙을 먼저 완성",
+            "실제 최저 이속 도달은 인게임 확인"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/299",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "야마토"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 성공 게시물은 확인되지만 세부 덱이 공개되지 않은 사례도 있어 정량 근거로 사용하지 않음.",
+          "source_url": "https://ordsearch.net/characters/299",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:usopp",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "우솝",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 195,
+          "name": "G.O.D",
+          "url": "https://ordsearch.net/characters/195"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "보스",
+        "유틸"
+      ],
+      "provides": [
+        "보스·광폭·스토리별 저격 배율",
+        "범위 방깎과 범위 스턴",
+        "목재 씨앗으로 라인·스턴·경제·삭제 선택"
+      ],
+      "factual_roles": [
+        "보스·광폭·스토리별 저격 배율",
+        "범위 방깎과 범위 스턴",
+        "목재 씨앗으로 라인·스턴·경제·삭제 선택"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "전체 이감",
+          "추가 방깎·암브",
+          "안정적 기본 홀딩"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "버기 영원",
+            "reason": "공증·공속·방깎·이감으로 저격을 보조하며 2.305 성공 사례가 있음",
+            "confidence": "high",
+            "target_key": "eternal:buggy"
+          },
+          {
+            "name": "니코 로빈",
+            "reason": "공증·방깎·범위 스턴을 주고 우솝이 보잡 담당",
+            "confidence": "medium",
+            "target_key": "transcendent:robin"
+          },
+          {
+            "name": "야마토",
+            "reason": "야마토가 비우는 보잡을 우솝이 담당",
+            "confidence": "medium",
+            "target_key": "transcendent:yamato"
+          }
+        ],
+        "avoid_or_overlap": [
+          "모든 씨앗을 무조건 제작",
+          "프랑키 함선·베가펑크 위성과 목재 과투자"
+        ],
+        "operation": {
+          "placement": "긴 사거리로 보스·광폭을 직접 지정할 수 있는 후방.",
+          "targeting": "저격은 특수 대상을 우선; 라인 부족 때만 완두 소환.",
+          "active_timing": "씨앗은 부족 슬롯 하나만 선택: 스턴/라인/경제/삭제.",
+          "special_training": "씨앗상자 4TP는 남은 목재와 라운드가 충분할 때."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "수상한 씨앗상자 특성강화 4TP"
+          ],
+          "economy": [
+            "씨앗별 목재",
+            "해바라기는 약 120초 회수 가능 시간 점검"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/195",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "우솝"
+      },
+      "community_signals": [
+        {
+          "observation": "ORDSearch 2.305 댓글 검색에 우솝 초월+버기 영원 유카0 성공 사례가 공개되어 공증·공속 보조 방향을 뒷받침.",
+          "source_url": "https://ordsearch.net/search?page=2&sc=comment&w=paging",
+          "evidence_type": "community_success_case"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:bonney",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "주얼리 보니",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 330,
+          "name": "일그러진 미래",
+          "url": "https://ordsearch.net/characters/330"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "단일 스택",
+        "현재체력"
+      ],
+      "provides": [
+        "한 대상 타격으로 단일 방어력 감소 최대 40스택",
+        "40스택 대상 현재체력·고정 피해",
+        "마나 니카 변신과 저항무시 범위 스턴"
+      ],
+      "factual_roles": [
+        "한 대상 타격으로 단일 방어력 감소 최대 40스택",
+        "40스택 대상 현재체력·고정 피해",
+        "마나 니카 변신과 저항무시 범위 스턴"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "전체 이감",
+          "범위 홀딩·라인딜",
+          "타깃 고정"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "트라팔가 로우",
+            "reason": "R-ROOM과 단일 현퍼를 같은 타깃에 집중",
+            "confidence": "medium",
+            "target_key": "transcendent:law"
+          },
+          {
+            "name": "닥터 베가펑크",
+            "reason": "공속·마나·스턴으로 40스택과 변신 회전을 보조",
+            "confidence": "medium",
+            "target_key": "transcendent:vegapunk"
+          },
+          {
+            "name": "샹크스",
+            "reason": "보니가 비우는 넓은 범위 홀딩을 제공",
+            "confidence": "medium",
+            "target_key": "transcendent:shanks"
+          }
+        ],
+        "avoid_or_overlap": [
+          "보니 단일 방어력 감소를 범위 방깎이나 아머브레이크로 계산",
+          "타깃 잦은 변경"
+        ],
+        "operation": {
+          "placement": "안전한 홀딩 안에서 한 라인 대상에 공격을 오래 유지.",
+          "targeting": "보스·광폭마다 새 타깃에 40스택을 집중.",
+          "active_timing": "마나 150 니카 변신을 스택 완료·위험 웨이브와 맞춤.",
+          "special_training": "자유로운 미래 4TP는 보니 메인 운용 시 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "자유로운 미래 특성강화 4TP"
+          ],
+          "economy": [
+            "외부 공속·마나젠",
+            "타깃 전환 횟수 최소화"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/330",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "주얼리 보니"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:jinbe",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "징베",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 272,
+          "name": "어인협객",
+          "url": "https://ordsearch.net/characters/272"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "암브 엔진",
+        "지원"
+      ],
+      "provides": [
+        "팀 마나·공속 지원",
+        "범위 암브와 단일 스턴",
+        "대상 암브가 높을수록 스킬 강화"
+      ],
+      "factual_roles": [
+        "팀 마나·공속 지원",
+        "범위 암브와 단일 스턴",
+        "대상 암브가 높을수록 스킬 강화"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "범위 스턴",
+          "전체 이감",
+          "보스·광폭"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "후지토라",
+            "reason": "후지토라가 암브를 빠르게 75까지 쌓아 귀신기와 조건을 엶",
+            "confidence": "high",
+            "target_key": "transcendent:fujitora"
+          },
+          {
+            "name": "킹 제한",
+            "reason": "암브 조건형 두 유닛이 같은 공급원을 공유; 2.305 성공 사례 있음",
+            "confidence": "medium",
+            "target_key": "limited:king"
+          },
+          {
+            "name": "도플라밍고",
+            "reason": "징베 마나·공속이 각성 가동률을 보조",
+            "confidence": "medium",
+            "target_key": "transcendent:doflamingo"
+          }
+        ],
+        "avoid_or_overlap": [
+          "보니의 나이 스택을 암브로 계산",
+          "징베의 단일 평타 스턴을 범위 홀딩으로 계산"
+        ],
+        "operation": {
+          "placement": "암브 공급 상위와 같은 타깃·라인에 배치.",
+          "targeting": "암브 35 이상 대상에 귀신기와·무뢰관 집중.",
+          "active_timing": "보스/광폭은 암브 누적 후 액티브를 맞춤.",
+          "special_training": "귀신기와 4TP는 외부 암브 공급원이 있을 때 최우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "귀신기와 특성강화 4TP"
+          ],
+          "economy": [
+            "외부 암브 공급원 필수에 가까움",
+            "보잡 별도"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/272",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "징베"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 댓글에서 징베 초월+킹 제한 조합 성공 사례가 확인됨; 실패 로그가 없어 승률 근거는 아님.",
+          "source_url": "https://ordsearch.net/characters/272",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:chopper",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "쵸파",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 196,
+          "name": "폭주하는 몬스터",
+          "url": "https://ordsearch.net/characters/196"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "공증·공속 지원"
+      ],
+      "provides": [
+        "공격력·공속 버프와 범위 방깎",
+        "강화 후 평타계수 보조딜",
+        "범위 스턴과 이감은 없음"
+      ],
+      "factual_roles": [
+        "공격력·공속 버프와 범위 방깎",
+        "강화 후 평타계수 보조딜",
+        "범위 스턴과 이감은 없음"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "범위 스턴",
+          "전체 이감",
+          "보스·광폭"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "몽키 D. 루피 초월",
+            "reason": "공증·공속이 평타·개틀링을 직접 강화",
+            "confidence": "high",
+            "target_key": "transcendent:luffy"
+          },
+          {
+            "name": "몽키 D. 거프",
+            "reason": "버프 수와 공격력 계수를 동시에 올림",
+            "confidence": "high",
+            "target_key": "immortal:garp"
+          },
+          {
+            "name": "후지토라",
+            "reason": "공속이 암브·스턴·운석 회전을 모두 가속",
+            "confidence": "high",
+            "target_key": "transcendent:fujitora"
+          }
+        ],
+        "avoid_or_overlap": [
+          "니코 로빈 등 공증 지원만 중복해 CC·보잡이 비는 구성",
+          "특강 후 의료품과 선의 두 공증을 모두 남는 것으로 중복 계산"
+        ],
+        "operation": {
+          "placement": "주 물리 캐리를 825범위 버프 안에 둔다.",
+          "targeting": "자체 타깃보다 메인 캐리 공격 지속이 우선.",
+          "active_timing": "특강 후 발바닥 팜은 보조딜로만 보고 홀딩을 별도 유지.",
+          "special_training": "강화 럼블볼 4TP는 공격력 캐리가 확정됐을 때."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "강화 럼블볼 특성강화 4TP"
+          ],
+          "economy": [
+            "지원 슬롯을 쓴 만큼 CC·보잡 예산 확보"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/196",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "쵸파"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:koby",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "코비",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 350,
+          "name": "해군의 미래",
+          "url": "https://ordsearch.net/characters/350"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "고정",
+        "버프 비례"
+      ],
+      "provides": [
+        "서로 다른 버프 수에 따라 고정·마법·체력비례 피해 증가",
+        "분신과 순간이동",
+        "자기 라인 폭발형 피해 -10% 패널티"
+      ],
+      "factual_roles": [
+        "서로 다른 버프 수에 따라 고정·마법·체력비례 피해 증가",
+        "분신과 순간이동",
+        "자기 라인 폭발형 피해 -10% 패널티"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "다종 버프",
+          "전체 이감",
+          "짧은 사거리용 홀딩",
+          "비폭발형 마딜 증폭"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "닥터 베가펑크",
+            "reason": "공증·공속과 분신 오라 적용으로 버프 수·회전 보조",
+            "confidence": "high",
+            "target_key": "transcendent:vegapunk"
+          },
+          {
+            "name": "센고쿠",
+            "reason": "공격력 버프와 광역 스턴을 제공",
+            "confidence": "medium",
+            "target_key": "immortal:sengoku"
+          },
+          {
+            "name": "니코 로빈",
+            "reason": "공증·방깎·스턴을 주되 물리 혼합 운용에 적합",
+            "confidence": "medium",
+            "target_key": "transcendent:robin"
+          }
+        ],
+        "avoid_or_overlap": [
+          "쿠잔·방주 맥심 등 폭발형 중심 주딜을 같은 라인에 몰아 -10% 패널티 확대",
+          "같은 이름/종류 버프를 모두 별도 카운트로 가정"
+        ],
+        "operation": {
+          "placement": "325범위 평타가 라인에 닿는 짧은 홀딩 지점.",
+          "targeting": "보스보다 버프가 충분한 라인 중심에서 분신 타수를 유지.",
+          "active_timing": "월보로 짧은 사거리 손실을 보정.",
+          "special_training": "영웅의 제자 4TP는 버프 수가 갖춰진 뒤 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "영웅의 제자 특성강화 4TP"
+          ],
+          "economy": [
+            "서로 다른 버프원",
+            "폭발형 피해 패널티를 덱 계산에 반영"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/350",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "코비"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:kuzan",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "쿠잔",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 202,
+          "name": "푸른 꿩",
+          "url": "https://ordsearch.net/characters/202"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "CC",
+        "폭발형 지원"
+      ],
+      "provides": [
+        "상시 강한 범위 이감",
+        "범위 스턴",
+        "자기 라인 폭발형 피해 증폭"
+      ],
+      "factual_roles": [
+        "상시 강한 범위 이감",
+        "범위 스턴",
+        "자기 라인 폭발형 피해 증폭"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "보스·광폭",
+          "단일·끝딜",
+          "마방깎"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "아카이누",
+            "reason": "쿠잔이 라인과 폭증, 아카이누가 보잡을 담당",
+            "confidence": "high",
+            "target_key": "transcendent:akainu"
+          },
+          {
+            "name": "빅 맘",
+            "reason": "폭발형 라인딜과 쿠잔 제어가 직접 결합",
+            "confidence": "high",
+            "target_key": "immortal:big_mom"
+          },
+          {
+            "name": "나미",
+            "reason": "나미 라인딜·경제에 강한 홀딩을 더함",
+            "confidence": "medium",
+            "target_key": "transcendent:nami"
+          }
+        ],
+        "avoid_or_overlap": [
+          "아오키지 히든의 아이스 타임과 중복 계산",
+          "코비 라인과 폭발형 주딜을 겹칠 때 -10% 패널티 무시"
+        ],
+        "operation": {
+          "placement": "800범위 이감 오라가 주라인을 완전히 덮는 위치.",
+          "targeting": "보스보다 라인 밀집 구간 제어 우선.",
+          "active_timing": "아이스 에이지 마나를 위험 웨이브 전에 확보.",
+          "special_training": "서리걸음 4TP는 폭발형 주딜이 있을 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "서리걸음 특성강화 4TP"
+          ],
+          "economy": [
+            "마나젠",
+            "별도 마방깎·보잡"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/202",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "쿠잔"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:kid",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "유스타스 키드",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 292,
+          "name": "신세대의 이단아",
+          "url": "https://ordsearch.net/characters/292"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "혼합",
+        "밀집 비례"
+      ],
+      "provides": [
+        "범위 35% 이감과 다수 범위 스턴",
+        "범위 안 적 수·중심부 밀집에 따른 피해 증가",
+        "힘·공속 의존 체력 스킬"
+      ],
+      "factual_roles": [
+        "범위 35% 이감과 다수 범위 스턴",
+        "범위 안 적 수·중심부 밀집에 따른 피해 증가",
+        "힘·공속 의존 체력 스킬"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "보스·광폭",
+          "추가 이감",
+          "마방깎"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "도플라밍고",
+            "reason": "새장으로 중심부 적 수를 보장",
+            "confidence": "high",
+            "target_key": "transcendent:doflamingo"
+          },
+          {
+            "name": "마샬 D. 티치",
+            "reason": "크로우즈로 적을 끌고 단일 증폭 제공",
+            "confidence": "medium",
+            "target_key": "transcendent:teach"
+          },
+          {
+            "name": "브룩",
+            "reason": "마깎·마뎀증·마나로 혼합 마법축 보완",
+            "confidence": "medium",
+            "target_key": "transcendent:brook"
+          }
+        ],
+        "avoid_or_overlap": [
+          "넉백으로 중심부를 흩뜨리는 유닛",
+          "범위에 적이 적은데 최고 계수로 계산"
+        ],
+        "operation": {
+          "placement": "새장·집결·강한 이감의 중심에 키드 범위를 맞춘다.",
+          "targeting": "라인 중심부 우선, 보스는 별도 보잡과 분담.",
+          "active_timing": "크래시/댐드 펑크를 적 수가 가장 많을 때.",
+          "special_training": "어사인 4TP는 집결 수단이 갖춰졌을 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "어사인 특성강화 4TP"
+          ],
+          "economy": [
+            "공속·힘 지원",
+            "집결/홀딩 한 축"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/292",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "유스타스 키드"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 댓글은 키드를 단끝 조합으로 보완한 성공 사례를 보여 주지만 정량 성능 근거는 아님.",
+          "source_url": "https://ordsearch.net/characters/292",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:kizaru",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "키자루",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 203,
+          "name": "노란 원숭이",
+          "url": "https://ordsearch.net/characters/203"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "TP 투자",
+        "단일·범위"
+      ],
+      "provides": [
+        "TP를 분신 스택으로 바꾸는 성장",
+        "분신 수 비례 단일·보스·광폭 연타",
+        "범위 스턴과 긴 순간이동"
+      ],
+      "factual_roles": [
+        "TP를 분신 스택으로 바꾸는 성장",
+        "분신 수 비례 단일·보스·광폭 연타",
+        "범위 스턴과 긴 순간이동"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "전체 이감",
+          "보스 후반 끝딜",
+          "TP 예산"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "닥터 베가펑크",
+            "reason": "공속·공증으로 분신·확률 스킬을 가속",
+            "confidence": "medium",
+            "target_key": "transcendent:vegapunk"
+          },
+          {
+            "name": "브룩",
+            "reason": "마깎·마뎀증·마나로 연타를 증폭",
+            "confidence": "high",
+            "target_key": "transcendent:brook"
+          },
+          {
+            "name": "쿠잔",
+            "reason": "이감·스턴·폭발형 증폭으로 라인을 고정",
+            "confidence": "medium",
+            "target_key": "transcendent:kuzan"
+          }
+        ],
+        "avoid_or_overlap": [
+          "불릿·우솝·다른 특강형과 TP/투자 분산",
+          "분신 스택이 낮은 상태를 완성 성능으로 간주"
+        ],
+        "operation": {
+          "placement": "야타의 거울로 미션·보스·주라인을 즉시 전환.",
+          "targeting": "보스·광폭에 분신 연타를 집중.",
+          "active_timing": "광분열 TP 투자는 남은 필수 특강을 계산한 뒤 단계적으로.",
+          "special_training": "천총운검 4TP 이후 추가 분신 TP를 배분."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "천총운검 특성강화 4TP",
+            "광분열 분신 스택당 추가 TP"
+          ],
+          "economy": [
+            "덱 전체 TP 예산을 먼저 잠금"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/203",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "키자루"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:law",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "트라팔가 로우",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 206,
+          "name": "로키포트 사건의 주모자",
+          "url": "https://ordsearch.net/characters/206"
+        }
+      ],
+      "build_axis": [
+        "혼합",
+        "단일 현퍼",
+        "지원"
+      ],
+      "provides": [
+        "광폭 버프 제거와 현재체력 피해",
+        "인젝션·라디오의 99% 이감은 단일",
+        "일반 ROOM은 공증, R-ROOM은 현퍼·범위 제어 강화"
+      ],
+      "factual_roles": [
+        "광폭 버프 제거와 현재체력 피해",
+        "인젝션·라디오의 99% 이감은 단일",
+        "일반 ROOM은 공증, R-ROOM은 현퍼·범위 제어 강화"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "상시 전체 이감",
+          "안정적 범위 스턴",
+          "보스·끝딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "몽키 D. 루피 초월",
+            "reason": "일반 ROOM 공증과 방무 평타를 활용",
+            "confidence": "medium",
+            "target_key": "transcendent:luffy"
+          },
+          {
+            "name": "로브 루치",
+            "reason": "R-ROOM에서 단일 현퍼를 같은 타깃에 집중",
+            "confidence": "medium",
+            "target_key": "transcendent:lucci"
+          },
+          {
+            "name": "주얼리 보니",
+            "reason": "단일 스택·현퍼·타깃 고정을 공유",
+            "confidence": "medium",
+            "target_key": "transcendent:bonney"
+          }
+        ],
+        "avoid_or_overlap": [
+          "단일 99% 이감을 전체 이감으로 계산",
+          "일반 ROOM 공증과 R-ROOM 현퍼를 동시에 가진 것으로 계산"
+        ],
+        "operation": {
+          "placement": "ROOM 범위가 주딜과 라인을 함께 덮는 위치.",
+          "targeting": "광폭 버프 제거 대상과 현퍼 상위의 타깃을 통일.",
+          "active_timing": "샴블즈로 ROOM 중심·보스 사거리를 갱신.",
+          "special_training": "R-ROOM 4TP는 공증을 포기하고 현퍼/제어가 더 필요한 덱에서만."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "R-ROOM 특성강화 4TP"
+          ],
+          "economy": [
+            "일반 ROOM 대 R-ROOM을 최종 계통에 맞춰 선택"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/206",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "트라팔가 로우"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 댓글에서 로우 특강+후지토라·제파 등 물리 유틸 조합 성공 사례가 확인됨.",
+          "source_url": "https://ordsearch.net/characters/206",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:franky",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "프랑키",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 198,
+          "name": "미래섬의 과학",
+          "url": "https://ordsearch.net/characters/198"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "마나 지원",
+        "함선"
+      ],
+      "provides": [
+        "범위 아군 초당 마나 지원",
+        "써니호 수에 따라 미사일 증가",
+        "마나 변신·직선 범위딜과 기동"
+      ],
+      "factual_roles": [
+        "범위 아군 초당 마나 지원",
+        "써니호 수에 따라 미사일 증가",
+        "마나 변신·직선 범위딜과 기동"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "보스·광폭",
+          "전체 이감",
+          "마방깎"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "아카이누",
+            "reason": "마나 회전으로 유성·명구 보잡을 강화",
+            "confidence": "high",
+            "target_key": "transcendent:akainu"
+          },
+          {
+            "name": "도플라밍고",
+            "reason": "각성 가동률과 새장 타이밍을 지원",
+            "confidence": "high",
+            "target_key": "transcendent:doflamingo"
+          },
+          {
+            "name": "시라호시",
+            "reason": "마나 120 다이브·포세이돈 회전을 보조",
+            "confidence": "medium",
+            "target_key": "transcendent:shiraho"
+          }
+        ],
+        "avoid_or_overlap": [
+          "우솝 씨앗·베가펑크 위성·시키 함대와 목재 과투자",
+          "늦은 라운드에 써니호 최대 투자"
+        ],
+        "operation": {
+          "placement": "주 마나 캐리와 써니호가 700~750범위 안에 오도록 배치.",
+          "targeting": "라인 미사일은 써니 수를 확보한 뒤 가치 상승; 보스는 별도 전담.",
+          "active_timing": "프랑키 장군·마나기를 위험 웨이브에 맞춤.",
+          "special_training": "프랑키 쇼군 4TP는 마나 캐리와 함선 투자가 확정됐을 때."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "프랑키 쇼군 특성강화 4TP"
+          ],
+          "economy": [
+            "써니호 1기당 목재 8, 최대 2기",
+            "남은 라운드 대비 회수 계산"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/198",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "프랑키"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "transcendent:fujitora",
+      "version": "2.305",
+      "grade": "초월함",
+      "name": "후지토라",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 207,
+          "name": "성난 보라호랑이",
+          "url": "https://ordsearch.net/characters/207"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "암브 누적",
+        "CC"
+      ],
+      "provides": [
+        "스킬 명중으로 범위 암브 최대 75",
+        "상시 55% 이감과 발동 99% 이감",
+        "다수 범위 스턴과 암브 40 조건 운석"
+      ],
+      "factual_roles": [
+        "스킬 명중으로 범위 암브 최대 75",
+        "상시 55% 이감과 발동 99% 이감",
+        "다수 범위 스턴과 암브 40 조건 운석"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "보스·광폭",
+          "보조딜",
+          "부족한 기본 방깎"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "징베",
+            "reason": "후지토라 암브가 귀신기와 조건을 빠르게 열음",
+            "confidence": "high",
+            "target_key": "transcendent:jinbe"
+          },
+          {
+            "name": "쵸파",
+            "reason": "공속·공증이 암브·스턴·운석을 모두 가속",
+            "confidence": "high",
+            "target_key": "transcendent:chopper"
+          },
+          {
+            "name": "우솝",
+            "reason": "후지토라가 비우는 보스·광폭을 담당",
+            "confidence": "medium",
+            "target_key": "transcendent:usopp"
+          }
+        ],
+        "avoid_or_overlap": [
+          "암브 75가 가능한데 추가 암브만 과투자",
+          "씽크홀 99%를 상시 이감으로 계산"
+        ],
+        "operation": {
+          "placement": "주라인 중앙에서 모든 범위기가 같은 적을 맞히게 배치.",
+          "targeting": "암브 40 이상 타깃에 운석·징베 연계를 집중.",
+          "active_timing": "씽크홀은 라인이 새는 구간에 예약.",
+          "special_training": "운석낙하 4TP는 공속 지원과 함께 쓸 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "운석낙하 특성강화 4TP"
+          ],
+          "economy": [
+            "외부 공속",
+            "보잡 별도"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/207",
+        "https://ordsearch.net/characters?level=10"
+      ],
+      "source_note": {
+        "file": "transcendent_notes.md",
+        "section": "후지토라"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 게시물에서 후지토라 초월+킹 제한 성공 사례 제목이 확인되지만 세부 덱 미확인.",
+          "source_url": "https://ordsearch.net/characters/207",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:kaido",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "카이도",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 257,
+          "name": "백수의 왕",
+          "url": "https://ordsearch.net/characters/257"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "폼 전환",
+        "방깎"
+      ],
+      "provides": [
+        "인간폼 단일·드래곤폼 범위 방깎 누적",
+        "범위 60% 이감과 단일·범위 저항무시 스턴",
+        "10번째 공격과 공속 의존 스킬 다수"
+      ],
+      "factual_roles": [
+        "인간폼 단일·드래곤폼 범위 방깎 누적",
+        "범위 60% 이감과 단일·범위 저항무시 스턴",
+        "10번째 공격과 공속 의존 스킬 다수"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "안정적 범위 스턴 보강",
+          "범위 방깎 보조",
+          "주변 아군 공격력 패널티 관리"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "샹크스",
+            "reason": "넓은 스턴과 보스 액티브를 제공하며 공격력 오라 의존이 낮음",
+            "confidence": "medium",
+            "target_key": "transcendent:shanks"
+          },
+          {
+            "name": "크로커다일 제한",
+            "reason": "범위 방깎·암브·스턴을 보완",
+            "confidence": "medium",
+            "target_key": "limited:crocodile"
+          },
+          {
+            "name": "쿠잔",
+            "reason": "공격력 패널티 영향을 덜 받는 마법 CC·이감 지원",
+            "confidence": "medium",
+            "target_key": "transcendent:kuzan"
+          }
+        ],
+        "avoid_or_overlap": [
+          "2,000범위 공격력 의존 아군을 겹쳐 배치",
+          "단일 최대 방깎을 라인 전체 방깎으로 계산"
+        ],
+        "operation": {
+          "placement": "공격력 의존 보조딜러는 가능하면 2,000범위 밖; 주라인은 카이도 범위 안.",
+          "targeting": "인간폼은 보스·스토리, 드래곤폼은 라인 방깎·광역 타격.",
+          "active_timing": "폼 전환과 10번째 공격을 보스/광폭에 맞추고 공속 버프를 막라에 집중.",
+          "special_training": "현재 페이지에는 별도 4TP 특강이 명시되지 않아 임의 배정 금지."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "별도 4TP 특강 명시 없음; 인게임 확인"
+          ],
+          "economy": [
+            "공속 지원",
+            "주변 아군 배치 공간"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/257",
+        "https://ordsearch.net/characters?level=11"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "카이도"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 유카0 댓글에서 공속·공증과 추가 보잡을 권장하고, 카이도 디버프 때문에 보조딜 효율 저하를 관찰.",
+          "source_url": "https://ordsearch.net/characters/257",
+          "evidence_type": "community_success_case"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium"
+      },
+      "caveats": [
+        "공격력 -75% 문구의 정확 적용 대상은 스킬 본문만으로 완전히 확정되지 않아 인게임 확인이 필요."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:bullet",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "더글라스 불릿",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 356,
+          "name": "괴물의 후계자",
+          "url": "https://ordsearch.net/characters/356"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "아이템 몰빵",
+        "후반 고점"
+      ],
+      "provides": [
+        "공격력·공속·방깎 3축 아이템 성장",
+        "각 축 15/30개 임계점에서 유니크·레전더리 효과",
+        "최종 체력비례·암브·평타 범위 피해"
+      ],
+      "factual_roles": [
+        "공격력·공속·방깎 3축 아이템 성장",
+        "각 축 15/30개 임계점에서 유니크·레전더리 효과",
+        "최종 체력비례·암브·평타 범위 피해"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "투자 전 초중반 라인",
+          "초기 보스·스토리",
+          "이감·범위 스턴"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "샹크스",
+            "reason": "저투자 광역 스턴·보스 액티브로 성장 구간을 버팀",
+            "confidence": "medium",
+            "target_key": "transcendent:shanks"
+          },
+          {
+            "name": "니코 로빈",
+            "reason": "공증·방깎·스턴 지원으로 불릿 투자 전후를 연결",
+            "confidence": "medium",
+            "target_key": "transcendent:robin"
+          },
+          {
+            "name": "쵸파",
+            "reason": "공증·공속을 주되 TP만 쓰므로 불릿 아이템 축과 직접 경합이 적음",
+            "confidence": "medium",
+            "target_key": "transcendent:chopper"
+          }
+        ],
+        "avoid_or_overlap": [
+          "키자루·비비·우솝 등 다른 고투자 캐리와 동시 몰빵",
+          "세 아이템 축을 중간값으로 넓게 분산"
+        ],
+        "operation": {
+          "placement": "초중반 버팀 유닛 뒤에서 지속 공격 가능한 라인 중심.",
+          "targeting": "공격력 유니크 전에는 보스·스토리를 다른 유닛에 맡김.",
+          "active_timing": "우선 한 축 15 임계점을 만들고 덱 결손에 따라 다음 축 결정.",
+          "special_training": "전용 아이템 체계가 핵심이며 별도 4TP 특강은 명시되지 않음."
+        },
+        "requirements": {
+          "items": [
+            "혼합유닛을 소모해 전용 아이템 3축 강화",
+            "각 축 15/30 임계점"
+          ],
+          "tp": [
+            "별도 4TP 특강 명시 없음"
+          ],
+          "economy": [
+            "아이템과 혼합유닛을 불릿에 집중",
+            "투자 중에도 외부 방깎·보잡 유지"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/356",
+        "https://ordsearch.net/characters?level=11"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "더글라스 불릿"
+      },
+      "community_signals": [
+        {
+          "observation": "ORDSearch 불릿 댓글은 올 유니크 전 체감이 낮고 보잡을 먼저 준비했다는 성공·체감 사례를 반복 제시.",
+          "source_url": "https://ordsearch.net/characters/356",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium-high",
+        "practical_validation": "medium"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:big_mom",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "빅 맘",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 211,
+          "name": "강철 풍선",
+          "url": "https://ordsearch.net/characters/211"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "영혼 성장",
+        "라인 삭제"
+      ],
+      "provides": [
+        "일반몹 즉사로 영혼 스택 성장",
+        "마법·고정 라인딜과 강한 CC",
+        "특강 시 이감이 70%에서 40%로 감소하는 교환"
+      ],
+      "factual_roles": [
+        "일반몹 즉사로 영혼 스택 성장",
+        "마법·고정 라인딜과 강한 CC",
+        "특강 시 이감이 70%에서 40%로 감소하는 교환"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "마방깎",
+          "특강 후 추가 이감",
+          "보스 단일·끝딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "금사자 시키",
+            "reason": "마뎀증·광역 CC로 빅 맘 라인딜을 증폭",
+            "confidence": "high",
+            "target_key": "immortal:shiki"
+          },
+          {
+            "name": "브룩",
+            "reason": "마깎·마뎀증·마나·스턴을 공급",
+            "confidence": "high",
+            "target_key": "transcendent:brook"
+          },
+          {
+            "name": "제트",
+            "reason": "빅 맘이 앞체력을 지우고 제트가 광폭·끝딜",
+            "confidence": "medium",
+            "target_key": "immortal:zephyr"
+          }
+        ],
+        "avoid_or_overlap": [
+          "외부 이감 없이 특강해 30%p 이감 손실",
+          "늦은 완성 후 충분한 영혼 스택 전제"
+        ],
+        "operation": {
+          "placement": "일반몹 즉사·영혼 수집이 끊기지 않는 주라인.",
+          "targeting": "라인은 빅 맘, 보스는 전담 단일/끝딜과 역할 분담.",
+          "active_timing": "특강 전 외부 이감부터 확보; 공속 폭증 구간 공격 유지.",
+          "special_training": "특제 호미즈 4TP는 이감 보완이 완료된 뒤."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "특제 호미즈 특성강화 4TP"
+          ],
+          "economy": [
+            "가능한 조기 완성",
+            "영혼 스택 시간"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/211",
+        "https://ordsearch.net/characters?level=11",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "빅 맘"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:dragon",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "몽키 D. 드래곤",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 183,
+          "name": "혁명군의 수장",
+          "url": "https://ordsearch.net/characters/183"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "라인 퍼뎀",
+        "폭발형"
+      ],
+      "provides": [
+        "일반 라인 전체체력 폭발형 피해와 자체 증폭",
+        "범위 마법딜과 공속 오라",
+        "삭풍은 라인 외 대상 피해가 크게 감소"
+      ],
+      "factual_roles": [
+        "일반 라인 전체체력 폭발형 피해와 자체 증폭",
+        "범위 마법딜과 공속 오라",
+        "삭풍은 라인 외 대상 피해가 크게 감소"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "보스·스토리 단일·끝딜",
+          "마방깎",
+          "이감·안정적 범위 스턴"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "금사자 시키",
+            "reason": "마뎀증·광역 스턴을 주고 함대가 라인을 보강",
+            "confidence": "medium",
+            "target_key": "immortal:shiki"
+          },
+          {
+            "name": "쿠잔",
+            "reason": "이감·스턴·폭발형 증폭으로 드래곤 라인 퍼뎀을 완성",
+            "confidence": "high",
+            "target_key": "transcendent:kuzan"
+          },
+          {
+            "name": "제트",
+            "reason": "드래곤의 보스·끝딜 공백을 담당",
+            "confidence": "medium",
+            "target_key": "immortal:zephyr"
+          }
+        ],
+        "avoid_or_overlap": [
+          "드래곤 삭풍을 보스·스토리 주력으로 계산",
+          "코비와 같은 라인에서 폭발형 -10% 패널티 무시"
+        ],
+        "operation": {
+          "placement": "폭발형 증폭·마방깎과 같은 라인 중심.",
+          "targeting": "일반 라인에 삭풍 집중; 보스·스토리는 전담 상위 우선.",
+          "active_timing": "마나 160 용오름을 위험 라인에 맞추고 공속을 최대한 확보.",
+          "special_training": "용오름 강화 4TP는 라인 주력 운용 시 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "용오름 특성강화 4TP"
+          ],
+          "economy": [
+            "외부 공속·마나젠",
+            "보잡 별도"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/183",
+        "https://ordsearch.net/characters?level=11"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "몽키 D. 드래곤"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:garp",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "몽키 D. 거프",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 182,
+          "name": "해군영웅",
+          "url": "https://ordsearch.net/characters/182"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "버프 비례",
+        "광역 스턴"
+      ],
+      "provides": [
+        "서로 다른 버프 수에 따라 딜 증가",
+        "대범위 전체체력 물리딜과 스턴",
+        "적 방어력 +15 패널티"
+      ],
+      "factual_roles": [
+        "서로 다른 버프 수에 따라 딜 증가",
+        "대범위 전체체력 물리딜과 스턴",
+        "적 방어력 +15 패널티"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "추가 방깎 15 이상",
+          "다종 버프",
+          "이감·마나젠"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "골 D. 로져",
+            "reason": "공증·방깎 60·이감·보스 Q로 거의 모든 결손 보완",
+            "confidence": "high",
+            "target_key": "immortal:roger"
+          },
+          {
+            "name": "센고쿠",
+            "reason": "공증과 광역 스턴·공격력 계수를 지원",
+            "confidence": "medium",
+            "target_key": "immortal:sengoku"
+          },
+          {
+            "name": "쵸파",
+            "reason": "공증·공속·방깎으로 버프 수와 실딜을 동시에 강화",
+            "confidence": "high",
+            "target_key": "transcendent:chopper"
+          }
+        ],
+        "avoid_or_overlap": [
+          "방깎 목표에서 적 방어 +15 패널티 누락",
+          "같은 종류 오라를 모두 별도 버프 수로 가정"
+        ],
+        "operation": {
+          "placement": "여러 버프 오라와 방깎 오라가 겹치는 중심.",
+          "targeting": "갤럭시 임팩트는 밀집 라인·보스 공용 타깃.",
+          "active_timing": "마나 160을 위험 웨이브에 보존하고 범위 스턴과 동기화.",
+          "special_training": "갤럭시 임팩트 4TP 우선도가 높음."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "갤럭시 임팩트 특성강화 4TP"
+          ],
+          "economy": [
+            "다종 버프",
+            "평소보다 최소 +15 높은 방깎 목표",
+            "마나젠"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/182",
+        "https://ordsearch.net/characters?level=11"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "몽키 D. 거프"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 유카0 댓글에서 다종 버프·료쿠규 히든·봉쿠레 스턴 컨트롤을 함께 사용.",
+          "source_url": "https://ordsearch.net/characters/182",
+          "evidence_type": "community_success_case"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "high",
+        "practical_validation": "medium"
+      },
+      "caveats": [
+        "버프 개수 인식과 같은 종류 중복 카운트는 인게임 확인 필요."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:zephyr",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "제트",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 181,
+          "name": "흑완의 Z",
+          "url": "https://ordsearch.net/characters/181"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "광폭",
+        "잃은체력 끝딜"
+      ],
+      "provides": [
+        "광폭 평타 전체체력 마법 피해",
+        "잃은체력 기반 다이나 스톤",
+        "특강 후 짧은 공속 버프에서 타수 누적"
+      ],
+      "factual_roles": [
+        "광폭 평타 전체체력 마법 피해",
+        "잃은체력 기반 다이나 스톤",
+        "특강 후 짧은 공속 버프에서 타수 누적"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "광역 라인딜",
+          "강한 전체 이감",
+          "공속·마나젠·마방깎"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "금사자 시키",
+            "reason": "시키가 마뎀증·광역 스턴, 제트가 보스·끝딜 담당",
+            "confidence": "high",
+            "target_key": "immortal:shiki"
+          },
+          {
+            "name": "브룩",
+            "reason": "마깎·마뎀증·마나·공속을 폭넓게 공급",
+            "confidence": "high",
+            "target_key": "transcendent:brook"
+          },
+          {
+            "name": "몽키 D. 드래곤",
+            "reason": "드래곤이 라인, 제트가 광폭·끝딜을 담당",
+            "confidence": "medium",
+            "target_key": "immortal:dragon"
+          }
+        ],
+        "avoid_or_overlap": [
+          "현재체력이 높은 초반부터 잃은체력 딜을 최고치로 계산",
+          "공속 지원 없이 특강 고점 전제"
+        ],
+        "operation": {
+          "placement": "라인딜러 뒤에서 보스·광폭을 직접 칠 수 있는 위치.",
+          "targeting": "다른 현퍼 딜러가 먼저 체력을 낮추고 제트가 마무리.",
+          "active_timing": "특강 버프 중 7타 이상 확보하도록 공속 액티브 동기화.",
+          "special_training": "배틀 스매셔 4TP는 공속 지원이 있을 때 핵심."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "배틀 스매셔 특성강화 4TP"
+          ],
+          "economy": [
+            "고공속 버프",
+            "마나젠·마방깎",
+            "광역 라인 담당"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/181",
+        "https://ordsearch.net/characters?level=11"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "제트"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 제트 불멸 댓글에서 특강 공속과 별도 끝딜·라인 보완 운용이 관찰됨.",
+          "source_url": "https://ordsearch.net/characters/181",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:newgate",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "에드워드 뉴게이트",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 180,
+          "name": "대해적 흰수염",
+          "url": "https://ordsearch.net/characters/180"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "올라운더"
+      ],
+      "provides": [
+        "범위 방깎 45와 이감",
+        "체력비례 광역 물리딜",
+        "범위·단일 스턴과 보스·광폭 선타"
+      ],
+      "factual_roles": [
+        "범위 방깎 45와 이감",
+        "체력비례 광역 물리딜",
+        "범위·단일 스턴과 보스·광폭 선타"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "추가 방깎",
+          "공속·공격력 지원",
+          "전담 보잡 보완"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "센고쿠",
+            "reason": "공증과 광역 스턴으로 뉴게이트 계수를 강화",
+            "confidence": "high",
+            "target_key": "immortal:sengoku"
+          },
+          {
+            "name": "골 D. 로져",
+            "reason": "추가 방깎·공증·이감·보스 Q 제공",
+            "confidence": "medium",
+            "target_key": "immortal:roger"
+          },
+          {
+            "name": "우솝",
+            "reason": "뉴게이트가 비우는 보스·광폭 저격",
+            "confidence": "medium",
+            "target_key": "transcendent:usopp"
+          }
+        ],
+        "avoid_or_overlap": [
+          "방깎 45만으로 고방어 악몽 최종 방깎 완료 판정",
+          "확률 스턴 하나에 홀딩 전부 의존"
+        ],
+        "operation": {
+          "placement": "방깎·이감 오라가 주라인을 덮는 중심.",
+          "targeting": "라인과 보스 모두 격진/괴천 범위에 넣되 보스는 별도 보잡 동반.",
+          "active_timing": "특강 괴천을 고체력 웨이브와 보스 진입에 맞춤.",
+          "special_training": "진원의 일격 4TP는 뉴게이트 메인 운용 시 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "진원의 일격 특성강화 4TP"
+          ],
+          "economy": [
+            "추가 방깎",
+            "공증·공속 보조"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/180",
+        "https://ordsearch.net/characters?level=11"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "에드워드 뉴게이트"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:sengoku",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "센고쿠",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 179,
+          "name": "부처님",
+          "url": "https://ordsearch.net/characters/179"
+        }
+      ],
+      "build_axis": [
+        "혼합",
+        "공증 지원",
+        "광역 CC"
+      ],
+      "provides": [
+        "전역·근거리 공격력 오라",
+        "공격력 50% 방어무시 평타",
+        "광역 스턴과 현재체력 마법 피해"
+      ],
+      "factual_roles": [
+        "전역·근거리 공격력 오라",
+        "공격력 50% 방어무시 평타",
+        "광역 스턴과 현재체력 마법 피해"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "방깎 또는 마방깎",
+          "이감",
+          "잃은체력 끝딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "몽키 D. 거프",
+            "reason": "공격력·버프 수와 광역 스턴을 보완",
+            "confidence": "medium",
+            "target_key": "immortal:garp"
+          },
+          {
+            "name": "에드워드 뉴게이트",
+            "reason": "뉴게이트 물리 계수를 공증하고 방깎·이감을 받음",
+            "confidence": "medium",
+            "target_key": "immortal:newgate"
+          },
+          {
+            "name": "쥬라클 미호크",
+            "reason": "방무 평타가 센고쿠 공증을 직접 활용",
+            "confidence": "medium",
+            "target_key": "eternal:mihawk"
+          }
+        ],
+        "avoid_or_overlap": [
+          "카이도 2,000범위 공격력 패널티 안에 배치",
+          "공증만 보고 방깎·이감 슬롯 생략"
+        ],
+        "operation": {
+          "placement": "주 공격력 캐리를 반드시 800범위 근접 오라 안에 배치.",
+          "targeting": "현재체력 스킬은 고체력 라인에 먼저, 끝딜은 다른 유닛.",
+          "active_timing": "광역 스턴을 위험 웨이브에 겹치지 않게 분산.",
+          "special_training": "대불 4TP는 센고쿠 자신 딜과 포격 지원까지 쓸 때."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "사람사람 열매 대불 특성강화 4TP"
+          ],
+          "economy": [
+            "계통별 방깎/마방깎·이감 별도"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/179",
+        "https://ordsearch.net/characters?level=11",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "센고쿠"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:gaban",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "스코퍼 가반",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 178,
+          "name": "로져 해적단 검호",
+          "url": "https://ordsearch.net/characters/178"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "단일",
+        "보스·스토리"
+      ],
+      "provides": [
+        "낮은 마나의 보스·스토리 고정 체력비례",
+        "타격 대상 중심 방깎 60/70",
+        "강한 단일 스턴과 순간이동"
+      ],
+      "factual_roles": [
+        "낮은 마나의 보스·스토리 고정 체력비례",
+        "타격 대상 중심 방깎 60/70",
+        "강한 단일 스턴과 순간이동"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "광역 라인딜",
+          "범위 방깎",
+          "전체 이감·범위 스턴"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "골 D. 로져",
+            "reason": "범위 방깎·공증·이감으로 가반 단일 편중을 완성",
+            "confidence": "high",
+            "target_key": "immortal:roger"
+          },
+          {
+            "name": "실버즈 레일리",
+            "reason": "라인 삭제·공속·광역 스턴을 맡고 가반이 보잡",
+            "confidence": "medium",
+            "target_key": "immortal:rayleigh"
+          },
+          {
+            "name": "니코 로빈",
+            "reason": "공증·범위 방깎·스턴으로 광역 결손 보완",
+            "confidence": "medium",
+            "target_key": "transcendent:robin"
+          }
+        ],
+        "avoid_or_overlap": [
+          "가반 단일 방깎을 라인 전체 방깎으로 계산",
+          "광역 라인 담당 없이 가반 원상위"
+        ],
+        "operation": {
+          "placement": "보스·스토리에 즉시 접근할 수 있는 위치; 특강 Q로 이동 보정.",
+          "targeting": "항상 한 보스·스토리 대상에 도끼술·체력비례 집중.",
+          "active_timing": "낮은 마나기를 반복하도록 마나젠 유지.",
+          "special_training": "투쟁심 4TP는 보스/스토리 담당 시 핵심."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "투쟁심 특성강화 4TP"
+          ],
+          "economy": [
+            "마나젠",
+            "광역 라인·범위 이감 보조"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/178",
+        "https://ordsearch.net/characters?level=11"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "스코퍼 가반"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:roger",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "골 D. 로져",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 177,
+          "name": "해왕",
+          "url": "https://ordsearch.net/characters/177"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "공증",
+        "보스 액티브"
+      ],
+      "provides": [
+        "공격력 60% 오라·범위 방깎 60·이감 50%",
+        "보스·스토리 카무사리",
+        "범위 스턴보다 단일 짤스턴 중심"
+      ],
+      "factual_roles": [
+        "공격력 60% 오라·범위 방깎 60·이감 50%",
+        "보스·스토리 카무사리",
+        "범위 스턴보다 단일 짤스턴 중심"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "안정적 범위 스턴",
+          "공속·마나젠",
+          "카무사리 공백 보잡"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "몽키 D. 거프",
+            "reason": "거프의 버프 조건과 방어 +15 패널티를 동시에 보완",
+            "confidence": "high",
+            "target_key": "immortal:garp"
+          },
+          {
+            "name": "스코퍼 가반",
+            "reason": "로져가 광역 축, 가반이 단일 보스축 담당",
+            "confidence": "high",
+            "target_key": "immortal:gaban"
+          },
+          {
+            "name": "실버즈 레일리",
+            "reason": "공속·광역 스턴·라인 삭제를 보완",
+            "confidence": "medium",
+            "target_key": "immortal:rayleigh"
+          }
+        ],
+        "avoid_or_overlap": [
+          "카무사리 150초를 일반 라인에 사용",
+          "단일 0.75초 스턴을 범위 스턴 완성으로 판정"
+        ],
+        "operation": {
+          "placement": "공격력 캐리가 850범위 오라와 방깎·이감 안에 위치.",
+          "targeting": "카무사리는 높은 현재체력 보스·핵심 스토리에 우선.",
+          "active_timing": "2.305 보스 현재체력 40% 기준 장쿨을 미리 예약.",
+          "special_training": "카무사리 4TP는 로져 보스 역할의 핵심."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "카무사리 특성강화 4TP"
+          ],
+          "economy": [
+            "공속·마나젠",
+            "장쿨 보스 일정"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/177",
+        "https://ordsearch.net/characters?level=11",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "골 D. 로져"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "2.300 패치노트의 보스 현재체력 50%→40% 하향을 2.305 기준으로 우선 반영."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:rayleigh",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "실버즈 레일리",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 176,
+          "name": "명왕",
+          "url": "https://ordsearch.net/characters/176"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "라인 삭제",
+        "경제"
+      ],
+      "provides": [
+        "일반몹 제거·노획",
+        "주변 공속 45% 지원",
+        "광역 스턴·암브와 광폭 순속"
+      ],
+      "factual_roles": [
+        "일반몹 제거·노획",
+        "주변 공속 45% 지원",
+        "광역 스턴·암브와 광폭 순속"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "추가 방깎",
+          "전체 이감",
+          "보스·스토리 끝딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "스코퍼 가반",
+            "reason": "레일리가 라인·공속, 가반이 보스·스토리 담당",
+            "confidence": "high",
+            "target_key": "immortal:gaban"
+          },
+          {
+            "name": "골 D. 로져",
+            "reason": "방깎·이감·공증을 더해 라인 경제를 전투력으로 연결",
+            "confidence": "medium",
+            "target_key": "immortal:roger"
+          },
+          {
+            "name": "후지토라",
+            "reason": "레일리 공속으로 암브·스턴 회전을 가속",
+            "confidence": "medium",
+            "target_key": "transcendent:fujitora"
+          }
+        ],
+        "avoid_or_overlap": [
+          "일반몹 즉사·노획 성능을 보스딜로 환산",
+          "방깎 -20과 누적 암브만으로 즉시 고방어 처리 기대"
+        ],
+        "operation": {
+          "placement": "공속 오라가 주 물리 캐리와 분신을 덮는 위치.",
+          "targeting": "일반 라인 제거·노획을 우선, 보스는 가반/우솝 등 전담.",
+          "active_timing": "패기발산 마나를 범위 스턴 공백에 사용.",
+          "special_training": "피안화 4TP는 레일리 자체 라인딜까지 쓸 때."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "피안화 특성강화 4TP"
+          ],
+          "economy": [
+            "가능한 조기 완성으로 노획 회수",
+            "마나젠"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/176",
+        "https://ordsearch.net/characters?level=11"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "실버즈 레일리"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "immortal:shiki",
+      "version": "2.305",
+      "grade": "불멸의",
+      "name": "금사자 시키",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 175,
+          "name": "천신",
+          "url": "https://ordsearch.net/characters/175"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "마뎀증",
+        "함대"
+      ],
+      "provides": [
+        "마법피해 증폭",
+        "광역 스턴과 암브",
+        "특강 후 특별함 해적선 최대 3기 포식 성장"
+      ],
+      "factual_roles": [
+        "마법피해 증폭",
+        "광역 스턴과 암브",
+        "특강 후 특별함 해적선 최대 3기 포식 성장"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "마방깎",
+          "단일·끝딜",
+          "추가 이감",
+          "해적선 투자"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "빅 맘",
+            "reason": "시키 마뎀증·CC가 빅 맘 라인딜을 강화",
+            "confidence": "high",
+            "target_key": "immortal:big_mom"
+          },
+          {
+            "name": "제트",
+            "reason": "시키가 라인·증폭, 제트가 광폭·끝딜",
+            "confidence": "high",
+            "target_key": "immortal:zephyr"
+          },
+          {
+            "name": "몽키 D. 드래곤",
+            "reason": "라인 마법·폭발형을 크게 강화하되 보잡 별도",
+            "confidence": "medium",
+            "target_key": "immortal:dragon"
+          }
+        ],
+        "avoid_or_overlap": [
+          "에넬·시노부·미호크 등 해적선 재료 상위와 동시 계획",
+          "마뎀증 1%의 미확인 중첩 상한을 임의 최대치로 계산"
+        ],
+        "operation": {
+          "placement": "함대와 마법 주딜이 증폭·공속 범위 안에 위치.",
+          "targeting": "광역 스턴은 라인, 단일/끝딜은 짝 상위에 맡김.",
+          "active_timing": "특별함 해적선은 남은 함선 계획을 확정한 뒤 최대 3회 포식.",
+          "special_training": "대함대 4TP는 특별함 해적선 확보가 가능할 때만."
+        },
+        "requirements": {
+          "items": [
+            "특강 고점에 해적선-특별함 최대 3기 필요"
+          ],
+          "tp": [
+            "대함대 특성강화 4TP"
+          ],
+          "economy": [
+            "해적선 3기와 업그레이드",
+            "마방깎·끝딜 별도"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/175",
+        "https://ordsearch.net/characters?level=11"
+      ],
+      "source_note": {
+        "file": "immortal_notes.md",
+        "section": "금사자 시키"
+      },
+      "community_signals": [
+        {
+          "observation": "ORDSearch 검색 결과의 시키 불멸 2.305 상세 사례는 함대·마딜 보완 운용 신호를 제공.",
+          "source_url": "https://ordsearch.net/search?query=%EB%A3%8C%EC%BF%A0&sc=uni&w=search.tab",
+          "evidence_type": "community_search_result"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [
+        "폐함대선 마뎀증의 중첩 상한·지속시간은 본문만으로 미확인."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:tesoro",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "길드 테조로",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 359,
+          "name": "골드 성장형",
+          "url": "https://ordsearch.net/characters/359"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "폭발형",
+        "골드 성장"
+      ],
+      "provides": [
+        "보유 골드 25만까지 마법·폭발형 피해 증가",
+        "범위 스턴과 아군 공속 25%",
+        "특강 Q로 골드 획득·라인 삭제·보스/광폭 전체체력 피해"
+      ],
+      "factual_roles": [
+        "보유 골드 25만까지 마법·폭발형 피해 증가",
+        "범위 스턴과 아군 공속 25%",
+        "특강 Q로 골드 획득·라인 삭제·보스/광폭 전체체력 피해"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "지속 이감",
+          "마방깎·마뎀증",
+          "지속 보스·끝딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "우타",
+            "reason": "마방깎·폭증·공속·이감으로 테조로 결손을 거의 전부 보완",
+            "confidence": "high",
+            "target_key": "eternal:uta"
+          },
+          {
+            "name": "브룩",
+            "reason": "마깎·마뎀증·마나·범위 스턴을 공급",
+            "confidence": "medium",
+            "target_key": "transcendent:brook"
+          },
+          {
+            "name": "제트",
+            "reason": "테조로가 라인, 제트가 보스·끝딜 담당",
+            "confidence": "medium",
+            "target_key": "immortal:zephyr"
+          }
+        ],
+        "avoid_or_overlap": [
+          "버기 영원: 언변 강화비가 보유 골드 계수와 충돌",
+          "25만 이전 골드를 불필요한 업그레이드에 소진"
+        ],
+        "operation": {
+          "placement": "골드 스킬 범위와 주라인을 겹치고 공속 오라 안에 보조딜 배치.",
+          "targeting": "일반 라인은 퍼뎀·삭제, 보스는 Q 후 지속 단일에 인계.",
+          "active_timing": "곤 인칸테시모 Q는 위험 라운드·보스·스토리에 예약.",
+          "special_training": "황금관 4TP는 Q의 다목적 가치가 높아 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "황금관 특성강화 4TP"
+          ],
+          "economy": [
+            "보유 골드 25만 목표",
+            "버기와 골드 방향 충돌"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/359",
+        "https://ordsearch.net/characters?level=12"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "길드 테조로"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:vivi",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "네펠타리 비비",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 218,
+          "name": "알라바스타 건",
+          "url": "https://ordsearch.net/characters/218"
+        }
+      ],
+      "build_axis": [
+        "고정",
+        "현재·전체체력",
+        "확률 강화"
+      ],
+      "provides": [
+        "라인 단일 현재·전체체력 고정 피해",
+        "순간이동 Q가 3/4연사 쿨 초기화",
+        "보스에서는 다수 퍼뎀이 정액 마법 피해로 치환"
+      ],
+      "factual_roles": [
+        "라인 단일 현재·전체체력 고정 피해",
+        "순간이동 Q가 3/4연사 쿨 초기화",
+        "보스에서는 다수 퍼뎀이 정액 마법 피해로 치환"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "범위 스턴",
+          "지속 이감",
+          "보스·끝딜",
+          "강화 자원 안정성"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "쿠잔",
+            "reason": "범위 이감·스턴으로 무작위 라인 공격을 안정화",
+            "confidence": "high",
+            "target_key": "transcendent:kuzan"
+          },
+          {
+            "name": "제트",
+            "reason": "비비가 앞체력을 깎고 제트가 보스·잃은체력 끝딜",
+            "confidence": "medium",
+            "target_key": "immortal:zephyr"
+          },
+          {
+            "name": "샹크스",
+            "reason": "넓은 범위 스턴과 보스 액티브를 제공",
+            "confidence": "medium",
+            "target_key": "transcendent:shanks"
+          }
+        ],
+        "avoid_or_overlap": [
+          "불릿·키자루·베가펑크 등 다른 고투자 상위와 동시 강화",
+          "라인 퍼뎀을 보스 퍼뎀으로 그대로 계산"
+        ],
+        "operation": {
+          "placement": "Q 1,600 이동으로 안전한 라인 중심을 계속 갱신.",
+          "targeting": "라인의 고체력 단일 적을 우선; 보스는 전담 끝딜에 인계.",
+          "active_timing": "강화 1회로 Q를 연 뒤 남은 목재·랜덤위습에 따라 중단선 설정.",
+          "special_training": "별도 4TP 특강이 아니라 확률 강화가 핵심; 레벨 집착 금지."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "별도 4TP 특강보다 알라바스타 강화 체계"
+          ],
+          "economy": [
+            "제작 목재 30",
+            "강화 1회당 목재 2+기본랜덤위습 3",
+            "최대 10레벨이나 후반 성공률 9%"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/218",
+        "https://ordsearch.net/characters?level=12"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "네펠타리 비비"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:nika",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "루피-기어피프스(니카)",
+      "record_count": 2,
+      "variants": [
+        {
+          "id": 305,
+          "name": "루피 초월 경로",
+          "url": "https://ordsearch.net/characters/305"
+        },
+        {
+          "id": 306,
+          "name": "스네이크맨 초월 경로",
+          "url": "https://ordsearch.net/characters/306"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "혼합",
+        "공격력 평타"
+      ],
+      "provides": [
+        "범위 방깎 35·공속 오라 25%",
+        "공격력·스플래시·다수 범위 스턴",
+        "두 제작 경로의 완성 후 전투 스킬 동일"
+      ],
+      "factual_roles": [
+        "범위 방깎 35·공속 오라 25%",
+        "공격력·스플래시·다수 범위 스턴",
+        "두 제작 경로의 완성 후 전투 스킬 동일"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "보스·잃은체력 끝딜",
+          "지속 이감 설계",
+          "고가 제작 전 중간 전력"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "코즈키 오뎅",
+            "reason": "공증 50%와 상처 추가타를 니카 빠른 평타가 활용",
+            "confidence": "high",
+            "target_key": "eternal:oden"
+          },
+          {
+            "name": "버기 영원",
+            "reason": "공증·공속·방깎을 추가해 평타 캐리 강화",
+            "confidence": "medium",
+            "target_key": "eternal:buggy"
+          },
+          {
+            "name": "크로커다일 제한",
+            "reason": "지속 이감·추가 방깎·암브를 주며 2.305 성공 사례가 있음",
+            "confidence": "high",
+            "target_key": "limited:crocodile"
+          }
+        ],
+        "avoid_or_overlap": [
+          "태양신 흔적·초월 소비 각이 없는데 중간 유닛부터 소모",
+          "이동속도 비례 문구를 확인하지 않고 과도한 이감 고정"
+        ],
+        "operation": {
+          "placement": "공증 오라와 공속 오라를 모두 받는 주라인 중심.",
+          "targeting": "라인은 다수 스턴·스플래시, 보스는 별도 보잡과 공동 타깃.",
+          "active_timing": "거대화 공속 패널티 구간에 외부 공속을 겹침.",
+          "special_training": "별도 특강보다는 완성 경로·태양신 흔적 확보가 우선."
+        },
+        "requirements": {
+          "items": [
+            "태양신의 흔적 필수",
+            "초월 쿠마 포함",
+            "뱀초 경로는 해적선 포함"
+          ],
+          "tp": [
+            "완성 후 전용 4TP 특강은 요약 본문에서 확인되지 않음"
+          ],
+          "economy": [
+            "목재 5와 매우 무거운 하위패",
+            "두 경로 중 현재 패 소모가 적은 쪽 선택"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/305",
+        "https://ordsearch.net/characters/306",
+        "https://ordsearch.net/characters?level=12"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "루피-기어피프스(니카)"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 유카0 니카+크로커다일 제한 성공 사례가 있으며, 다른 댓글은 자체 깎·스턴만 과신하지 말라고 경고.",
+          "source_url": "https://ordsearch.net/characters/305",
+          "evidence_type": "community_success_case"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium"
+      },
+      "caveats": [
+        "적 이동속도 3당 피해 증가 문구의 정확 산식은 본문만으로 불충분."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:ryuma",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "류마",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 346,
+          "name": "와노쿠니 검호",
+          "url": "https://ordsearch.net/characters/346"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "혼합",
+        "스택 성장",
+        "끝딜"
+      ],
+      "provides": [
+        "공격으로 100/400/700 스택 문턱 성장",
+        "라인 잃은체력 폭발 피해와 단일 스턴",
+        "오뎅·토키·시노부 전용 시너지 명시"
+      ],
+      "factual_roles": [
+        "공격으로 100/400/700 스택 문턱 성장",
+        "라인 잃은체력 폭발 피해와 단일 스턴",
+        "오뎅·토키·시노부 전용 시너지 명시"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "조기 완성",
+          "지속 이감",
+          "마방깎·폭증",
+          "초반 안정성"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "코즈키 오뎅",
+            "reason": "류마 페이지에 시작 200스택·공증 50%가 직접 명시",
+            "confidence": "high",
+            "target_key": "eternal:oden"
+          },
+          {
+            "name": "우타",
+            "reason": "공속·이감·마방깎·폭증으로 성장과 딜을 지원",
+            "confidence": "high",
+            "target_key": "eternal:uta"
+          },
+          {
+            "name": "브룩",
+            "reason": "마깎·마뎀증·마나·스턴을 보완",
+            "confidence": "medium",
+            "target_key": "transcendent:brook"
+          }
+        ],
+        "avoid_or_overlap": [
+          "늦은 2영원 오뎅까지 강행",
+          "류마에게 자체 지속 이감이 있다고 계산"
+        ],
+        "operation": {
+          "placement": "공속·이감·마깎 범위가 겹치는 주라인.",
+          "targeting": "라인은 스택과 잃은체력 끝딜, 보스는 특강 후 3%와 별도 보잡 공동.",
+          "active_timing": "공격 중단을 줄여 100/400/700 스택을 최대한 빨리 통과.",
+          "special_training": "그림자 베기 4TP는 류마 최종 주딜이면 우선."
+        },
+        "requirements": {
+          "items": [
+            "슈스이 사용 시 강화 궁·플레이어존 방깎"
+          ],
+          "tp": [
+            "그림자 베기 특성강화 4TP"
+          ],
+          "economy": [
+            "조기 완성·고공속",
+            "오뎅 2영원 비용은 패가 강할 때만"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/346",
+        "https://ordsearch.net/characters?level=12"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "류마"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "ORDSearch의 그림자 검술 `250만×스택` 표기는 비정상적으로 커 보여 실제 계수 재확인 필요."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:buggy",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "버기",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 219,
+          "name": "해적파견조직총수",
+          "url": "https://ordsearch.net/characters/219"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "공증·공속 지원",
+        "소환"
+      ],
+      "provides": [
+        "골드로 공증·공속 오라 최대 5강",
+        "범위 방깎 30·이감 25",
+        "확률 소환과 긴 단일 스턴"
+      ],
+      "factual_roles": [
+        "골드로 공증·공속 오라 최대 5강",
+        "범위 방깎 30·이감 25",
+        "확률 소환과 긴 단일 스턴"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "범위 스턴",
+          "보스 퍼뎀·보잡",
+          "최종 전체 이감"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "쥬라클 미호크",
+            "reason": "방무 평타가 버기 공증·공속을 직접 활용",
+            "confidence": "high",
+            "target_key": "eternal:mihawk"
+          },
+          {
+            "name": "카벤딧슈",
+            "reason": "공속으로 암브·스턴을 가속하고 방깎을 합침",
+            "confidence": "high",
+            "target_key": "eternal:cavendish"
+          },
+          {
+            "name": "루피-기어피프스",
+            "reason": "공격력·공속 평타 구조를 최대한 강화",
+            "confidence": "medium",
+            "target_key": "transcendent:gear4_luffy"
+          }
+        ],
+        "avoid_or_overlap": [
+          "테조로와 동시 골드 운영",
+          "알비다 공격력 버프와 중복 계산",
+          "단일 7.77초 스턴을 범위 스턴으로 계산"
+        ],
+        "operation": {
+          "placement": "주 물리 캐리와 소환수가 오라 범위 안에 위치.",
+          "targeting": "소환수는 버기 현재 공격 대상을 우선하므로 보스·광폭 직접 지정.",
+          "active_timing": "언변 강화는 방깎·홀딩 최소 스펙을 해치지 않는 선에서.",
+          "special_training": "별도 4TP보다 수전노 골드 강화가 핵심."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "별도 4TP 특강 명시 없음"
+          ],
+          "economy": [
+            "언변 풀강화 총 16,665골드",
+            "처치 골드 30% 증가로 조기 완성 시 회수"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/219",
+        "https://ordsearch.net/characters?level=12"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "버기"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "허세는 코비 용기의 외침과 중복되지 않으며 알비다 공격력 버프와도 중복 주의."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:hancock",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "보아 핸콕",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 222,
+          "name": "해적여제",
+          "url": "https://ordsearch.net/characters/222"
+        }
+      ],
+      "build_axis": [
+        "혼합",
+        "방깎",
+        "범위 스턴"
+      ],
+      "provides": [
+        "특강 후 범위 방깎 40",
+        "확률·마나형 범위 스턴과 발동 60% 이감",
+        "물리·마법 혼합 라인 퍼뎀과 약한 마방깎"
+      ],
+      "factual_roles": [
+        "특강 후 범위 방깎 40",
+        "확률·마나형 범위 스턴과 발동 60% 이감",
+        "물리·마법 혼합 라인 퍼뎀과 약한 마방깎"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "지속 전체 이감",
+          "보스 지속딜",
+          "마나 회복",
+          "계통 선택"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "버기 영원",
+            "reason": "물딜 방향에서 공증·공속·추가 방깎",
+            "confidence": "medium",
+            "target_key": "eternal:buggy"
+          },
+          {
+            "name": "우타",
+            "reason": "마딜 방향에서 마방깎·폭증·공속·이감 제공",
+            "confidence": "medium",
+            "target_key": "eternal:uta"
+          },
+          {
+            "name": "프랑키",
+            "reason": "마나 175 파퓸 페뮤르 회전을 올림",
+            "confidence": "medium",
+            "target_key": "transcendent:franky"
+          }
+        ],
+        "avoid_or_overlap": [
+          "혼합딜 모든 타격이 물딜/마딜 한쪽 증폭을 전부 받는다고 계산",
+          "진입 패왕색을 다른 동일 패기와 중복 계산"
+        ],
+        "operation": {
+          "placement": "파퓸 페뮤르 자기 중심 750범위가 주라인을 덮도록 배치.",
+          "targeting": "라인 퍼뎀 우선, 보스·스토리는 별도 보잡 공동 타깃.",
+          "active_timing": "마나 175를 위험 웨이브에 확보하고 스턴 첫·끝 타격을 활용.",
+          "special_training": "석화 4TP는 핸콕 주력 운용 시 방깎·발동률·퍼뎀을 함께 올림."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "석화 특성강화 4TP"
+          ],
+          "economy": [
+            "마나젠",
+            "물딜/마딜 한 축을 먼저 확정"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/222",
+        "https://ordsearch.net/characters?level=12",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "보아 핸콕"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "2.302 패치노트의 강화 슬레이브 애로우 0.2%→0.1% 하향을 2.305 기준으로 반영."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:uta",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "우타",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 308,
+          "name": "노래노래 열매",
+          "url": "https://ordsearch.net/characters/308"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "폭발형",
+        "지원"
+      ],
+      "provides": [
+        "우타월드 이감 45%·공증 30%와 공속 15%",
+        "마방깎 10%·폭발형 증폭 10%",
+        "현재+잃은체력 폭발형 라인딜과 체력 소모"
+      ],
+      "factual_roles": [
+        "우타월드 이감 45%·공증 30%와 공속 15%",
+        "마방깎 10%·폭발형 증폭 10%",
+        "현재+잃은체력 폭발형 라인딜과 체력 소모"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "안정적 범위 스턴",
+          "보스·끝딜",
+          "체력·마나 회전"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "길드 테조로",
+            "reason": "마방깎·폭증·공속·이감이 골드 폭발딜을 완성",
+            "confidence": "high",
+            "target_key": "eternal:tesoro"
+          },
+          {
+            "name": "류마",
+            "reason": "공속으로 스택을 올리고 폭증·이감으로 끝딜을 지원",
+            "confidence": "high",
+            "target_key": "eternal:ryuma"
+          },
+          {
+            "name": "포트거스 D. 에이스",
+            "reason": "마법 범위딜을 증폭하고 에이스가 스턴을 보강",
+            "confidence": "medium",
+            "target_key": "eternal:ace"
+          }
+        ],
+        "avoid_or_overlap": [
+          "헤드셋 없이 조합 계획",
+          "공속만 올리고 라이브 마나·체력 회복을 방치"
+        ],
+        "operation": {
+          "placement": "주딜과 라인이 우타월드 범위에서 벗어나지 않게 배치.",
+          "targeting": "라인 퍼뎀 중심; 보스·스토리는 별도 보잡.",
+          "active_timing": "라이브 신시대를 자주 돌려 체력 10 회복과 월드 유지.",
+          "special_training": "나는야 최강 4TP는 우타 핵심 버프·라이브를 강화하므로 우선."
+        },
+        "requirements": {
+          "items": [
+            "우타의 헤드셋 필수"
+          ],
+          "tp": [
+            "나는야 최강 특성강화 4TP"
+          ],
+          "economy": [
+            "마나 회복",
+            "공속 증가에 비례해 체력 소모도 늘어남"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/308",
+        "https://ordsearch.net/characters?level=12"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "우타"
+      },
+      "community_signals": [
+        {
+          "observation": "ORDSearch 최근 댓글은 헤드셋과 하위패가 강하게 밀 때 선택하는 조건부 상위로 설명.",
+          "source_url": "https://ordsearch.net/characters/308",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:mihawk",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "쥬라클 미호크",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 221,
+          "name": "세계 최강의 검사",
+          "url": "https://ordsearch.net/characters/221"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "방어무시 평타",
+        "공격력 캐리"
+      ],
+      "provides": [
+        "공격력 80% 방어무시 범위 평타",
+        "상시 45% 이감과 매 공격 단일 스턴",
+        "자체 마나 회복·전체체력 고정 궁"
+      ],
+      "factual_roles": [
+        "공격력 80% 방어무시 범위 평타",
+        "상시 45% 이감과 매 공격 단일 스턴",
+        "자체 마나 회복·전체체력 고정 궁"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "공증·공속",
+          "지속 보스·끝딜",
+          "소량 범위 스턴"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "버기 영원",
+            "reason": "대형 공증·공속 오라가 방무 평타를 직접 강화",
+            "confidence": "high",
+            "target_key": "eternal:buggy"
+          },
+          {
+            "name": "코즈키 오뎅",
+            "reason": "공증 50%와 상처 추가타를 미호크 빠른 평타가 활용",
+            "confidence": "high",
+            "target_key": "eternal:oden"
+          },
+          {
+            "name": "닥터 베가펑크",
+            "reason": "공증·공속·이감·스턴을 한 번에 주며 2.305 실전 사례가 있음",
+            "confidence": "medium",
+            "target_key": "transcendent:vegapunk"
+          }
+        ],
+        "avoid_or_overlap": [
+          "주력 방무 평타인데 방깎만 과투자",
+          "해적선 재료를 에넬·시노부·시키와 중복 계획"
+        ],
+        "operation": {
+          "placement": "공증·공속 오라 안에서 단일 평타가 주라인/보스에 계속 닿게 배치.",
+          "targeting": "보스·광폭은 반복 단일 스턴과 평타 고정.",
+          "active_timing": "마나 175 최강의 참격을 고체력 보스·위험 라인에 사용.",
+          "special_training": "별도 4TP보다 공증·공속과 제작 재료 확보가 우선."
+        },
+        "requirements": {
+          "items": [
+            "제작에 해적선 2기 필수"
+          ],
+          "tp": [
+            "별도 4TP 특강 명시 없음"
+          ],
+          "economy": [
+            "해적선 경합 확인",
+            "공증·공속 투자"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/221",
+        "https://ordsearch.net/characters?level=12"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "쥬라클 미호크"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 미호크 영원 댓글과 과거 운용 댓글은 공증·공속 및 마나 보완의 체감이 크다고 반복.",
+          "source_url": "https://ordsearch.net/characters/221",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:cavendish",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "카벤딧슈",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 220,
+          "name": "미공자와 하쿠바",
+          "url": "https://ordsearch.net/characters/220"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "암브 누적",
+        "범위 스턴"
+      ],
+      "provides": [
+        "범위 방깎 35·다수 범위 스턴",
+        "특강 후 매 공격 암브를 75까지 누적",
+        "암브 75에서 라인 처형·보스/광폭 체력비례"
+      ],
+      "factual_roles": [
+        "범위 방깎 35·다수 범위 스턴",
+        "특강 후 매 공격 암브를 75까지 누적",
+        "암브 75에서 라인 처형·보스/광폭 체력비례"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "지속 이감",
+          "공속",
+          "암브 누적 전 초반 보잡"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "버기 영원",
+            "reason": "공증·공속·방깎·소량 이감으로 누적을 가속",
+            "confidence": "high",
+            "target_key": "eternal:buggy"
+          },
+          {
+            "name": "롤로노아 조로",
+            "reason": "조로 이감·스턴·방깎과 카벤딧슈 누적이 보완",
+            "confidence": "medium",
+            "target_key": "transcendent:zoro"
+          },
+          {
+            "name": "마르코 제한",
+            "reason": "지속 이감·체젠을 제공",
+            "confidence": "medium",
+            "target_key": "limited:marco"
+          }
+        ],
+        "avoid_or_overlap": [
+          "암브 75 전 보스 퍼뎀을 활성 상태로 계산",
+          "버기 영원과 하위패 경합을 무시"
+        ],
+        "operation": {
+          "placement": "공속 오라·이감 안에서 같은 타깃을 지속 공격.",
+          "targeting": "암브 75가 된 라인/보스에 라운드테이블 효과 집중.",
+          "active_timing": "기면증 수면·하쿠바 등장 공백을 범위 스턴으로 연결.",
+          "special_training": "미검 라운드테이블 4TP는 보스·처형 조건의 핵심."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "미검 라운드테이블 특성강화 4TP"
+          ],
+          "economy": [
+            "외부 공속",
+            "지속 이감"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/220",
+        "https://ordsearch.net/characters?level=12"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "카벤딧슈"
+      },
+      "community_signals": [
+        {
+          "observation": "ORDSearch 댓글에서 카벤딧슈+버기 영원 및 카벤딧슈+조로 초월 성공 사례가 반복.",
+          "source_url": "https://ordsearch.net/characters/220",
+          "evidence_type": "community_comment"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:oden",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "코즈키 오뎅",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 276,
+          "name": "와노쿠니 쇼군",
+          "url": "https://ordsearch.net/characters/276"
+        }
+      ],
+      "build_axis": [
+        "혼합",
+        "공격력 지원",
+        "상처 연계"
+      ],
+      "provides": [
+        "자신 제외 주변 공증 50%",
+        "마법피해 증폭과 저항무시 범위 스턴",
+        "상처 대상에 고등급 단일 기본공격이 추가 피해 유발"
+      ],
+      "factual_roles": [
+        "자신 제외 주변 공증 50%",
+        "마법피해 증폭과 저항무시 범위 스턴",
+        "상처 대상에 고등급 단일 기본공격이 추가 피해 유발"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "지속 이감",
+          "마방깎",
+          "보스 끝딜",
+          "무거운 제작"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "류마",
+            "reason": "류마 페이지에 200스택·공증 전용 시너지가 명시",
+            "confidence": "high",
+            "target_key": "eternal:ryuma"
+          },
+          {
+            "name": "쥬라클 미호크",
+            "reason": "빠른 방무 단일 평타가 상처를 반복 발동하고 공증 수혜",
+            "confidence": "high",
+            "target_key": "eternal:mihawk"
+          },
+          {
+            "name": "루피-기어피프스",
+            "reason": "빠른 공격력 평타가 상처·공증을 활용",
+            "confidence": "medium",
+            "target_key": "transcendent:gear4_luffy"
+          }
+        ],
+        "avoid_or_overlap": [
+          "오뎅 자신이 공증 50%를 받는다고 계산",
+          "늦은 2영원 류마를 패가 약한데 강행"
+        ],
+        "operation": {
+          "placement": "빠른 고등급 단일 평타 주딜과 공증 범위를 겹친다.",
+          "targeting": "도원 토츠카 상처 대상에 니카·미호크·류마 평타 집중.",
+          "active_timing": "마나 145 상처와 저항무시 스턴을 보스·위험 라인에 동기화.",
+          "special_training": "가신 호출 4TP는 광폭·추가 단일 스턴이 필요할 때."
+        },
+        "requirements": {
+          "items": [
+            "제작에 고대의 배 필요"
+          ],
+          "tp": [
+            "가신 호출 특성강화 4TP"
+          ],
+          "economy": [
+            "무거운 하위패",
+            "류마 2영원은 조기 각일 때만"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/276",
+        "https://ordsearch.net/characters?level=12"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "코즈키 오뎅"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "마뎀증 1%의 지속시간·중첩 상한은 본문에서 정확히 확인되지 않음."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "eternal:ace",
+      "version": "2.305",
+      "grade": "영원한",
+      "name": "포트거스 D. 에이스",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 217,
+          "name": "대염계",
+          "url": "https://ordsearch.net/characters/217"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "범위 주딜",
+        "라인 홀딩"
+      ],
+      "provides": [
+        "상시 45% 이감",
+        "공격 스킬마다 단일 저항무시 스턴과 지속 마법 피해",
+        "마나 궁의 범위 전체체력 피해·전후 범위 스턴"
+      ],
+      "factual_roles": [
+        "상시 45% 이감",
+        "공격 스킬마다 단일 저항무시 스턴과 지속 마법 피해",
+        "마나 궁의 범위 전체체력 피해·전후 범위 스턴"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "마방깎·마뎀증",
+          "마나 회복",
+          "잃은체력 끝딜"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "우타",
+            "reason": "마방깎·폭증·공속을 제공하고 에이스 스턴이 우타 홀딩을 보완",
+            "confidence": "high",
+            "target_key": "eternal:uta"
+          },
+          {
+            "name": "브룩",
+            "reason": "마깎·마뎀증·마나로 염제 회전을 강화",
+            "confidence": "high",
+            "target_key": "transcendent:brook"
+          },
+          {
+            "name": "제트",
+            "reason": "에이스가 앞체력을 깎고 제트가 끝딜",
+            "confidence": "medium",
+            "target_key": "immortal:zephyr"
+          }
+        ],
+        "avoid_or_overlap": [
+          "이미 이감·스턴이 충분한데 동일 유틸만 추가",
+          "특강 전 화염 장판을 모두 중첩 피해로 계산"
+        ],
+        "operation": {
+          "placement": "염제 850범위와 45% 이감이 주라인을 덮게 배치.",
+          "targeting": "라인·고체력 보스에 염제, 남은 체력은 끝딜러.",
+          "active_timing": "2.5초 시전 중 라인이 범위를 벗어나지 않도록 홀딩.",
+          "special_training": "즉시발화 4TP는 장판 손실을 줄이고 염제 퍼뎀을 늘려 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "즉시발화 특성강화 4TP"
+          ],
+          "economy": [
+            "마나 185 회전용 마나젠",
+            "마방깎·끝딜 별도"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/217",
+        "https://ordsearch.net/characters?level=12"
+      ],
+      "source_note": {
+        "file": "eternal_notes.md",
+        "section": "포트거스 D. 에이스"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "limited:crocodile",
+      "version": "2.305",
+      "grade": "제한됨",
+      "name": "크로커다일",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 187,
+          "name": "사막의 왕",
+          "url": "https://ordsearch.net/characters/187"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "유틸",
+        "암브"
+      ],
+      "provides": [
+        "상시 방깎 25·이감 40%",
+        "확률 범위 스턴",
+        "특강 후 7초 연속 짤스턴·범위 암브"
+      ],
+      "factual_roles": [
+        "상시 방깎 25·이감 40%",
+        "확률 범위 스턴",
+        "특강 후 7초 연속 짤스턴·범위 암브"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "메인 딜 고점",
+          "보스·광폭",
+          "특강 공백의 추가 스턴"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "킹 제한",
+            "reason": "침식윤회 암브가 킹의 50 조건을 빠르게 엶",
+            "confidence": "high",
+            "target_key": "limited:king"
+          },
+          {
+            "name": "샬롯 카타쿠리",
+            "reason": "크로커다일이 이감·범위 스턴·암브를, 카타쿠리가 평타·보잡을 담당하며 2.305 성공 사례가 있음",
+            "confidence": "high",
+            "target_key": "limited:katakuri"
+          },
+          {
+            "name": "마르코 제한",
+            "reason": "크로커다일이 방깎·스턴, 마르코가 이감·체젠·딜",
+            "confidence": "medium",
+            "target_key": "limited:marco"
+          }
+        ],
+        "avoid_or_overlap": [
+          "유틸이 많다는 이유로 단독 원딜·보잡 완료 판정",
+          "특강 침식윤회 없이 암브 누적 속도를 동일하게 계산"
+        ],
+        "operation": {
+          "placement": "방깎·이감 오라와 침식윤회 범위가 주라인을 덮게 배치.",
+          "targeting": "암브 조건형 상위와 같은 라인 타깃.",
+          "active_timing": "침식윤회 7초를 킹 처형·징베 귀신기와 시동에 맞춤.",
+          "special_training": "침식윤회 4TP는 암브 조합의 핵심."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "침식윤회 특성강화 4TP"
+          ],
+          "economy": [
+            "별도 메인딜·보잡 예산 확보"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/187",
+        "https://ordsearch.net/characters?level=9",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "limited_notes.md",
+        "section": "크로커다일"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 크로커다일 제한+카타쿠리 제한 특강 성공 사례가 ORDSearch에 공개.",
+          "source_url": "https://ordsearch.net/characters/187",
+          "evidence_type": "community_success_case"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "medium-low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "limited:ain",
+      "version": "2.305",
+      "grade": "제한됨",
+      "name": "아인",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 142,
+          "name": "뒤로뒤로 열매",
+          "url": "https://ordsearch.net/characters/142"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "광폭",
+        "라인 되감기"
+      ],
+      "provides": [
+        "광폭 대상 추가 마법 피해",
+        "단일 고확률 스턴과 전범위 이동",
+        "뒤로뒤로 발동 시 적 레벨 하락·시작점 이동·누적 디버프 초기화"
+      ],
+      "factual_roles": [
+        "광폭 대상 추가 마법 피해",
+        "단일 고확률 스턴과 전범위 이동",
+        "뒤로뒤로 발동 시 적 레벨 하락·시작점 이동·누적 디버프 초기화"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "범위 스턴",
+          "전체 이감",
+          "보스딜",
+          "초기화 후 마방깎 재적용"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "패트릭 레드필드",
+            "reason": "누적 디버프 의존이 낮은 자체 체력비례라 초기화 손해가 상대적으로 작음",
+            "confidence": "medium",
+            "target_key": "limited:redfield"
+          },
+          {
+            "name": "시노부 제한",
+            "reason": "자체 전퍼 비중이 높아 피해 구조는 맞지만 홀딩 별도",
+            "confidence": "medium",
+            "target_key": "limited:shinobu"
+          },
+          {
+            "name": "네펠타리 비비",
+            "reason": "고정·체력비례 중심이라 누적 디버프 초기화 의존이 낮음",
+            "confidence": "medium",
+            "target_key": "eternal:vivi"
+          }
+        ],
+        "avoid_or_overlap": [
+          "에넬 마방깎·킹/알비다/크로커다일 암브 누적 조합",
+          "뒤로뒤로가 보스에도 발동한다고 계산"
+        ],
+        "operation": {
+          "placement": "주 디버프 누적 구역과 되감기 발동 구역을 가능하면 분리.",
+          "targeting": "광폭은 아인 직접 타깃, 보스는 전담 딜러.",
+          "active_timing": "Q 이동으로 되감기 대상과 주딜 대상의 위치를 조절.",
+          "special_training": "현재 2.305 페이지에는 전용 특강이 별도로 기재되지 않음."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "전용 특성강화 별도 기재 없음"
+          ],
+          "economy": [
+            "초기화 후 디버프 재적용 가능한 구성"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/142",
+        "https://ordsearch.net/characters?level=9"
+      ],
+      "source_note": {
+        "file": "limited_notes.md",
+        "section": "아인"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "뒤로뒤로 열매는 암브·마방깎·마뎀증·폭증 등을 지우므로 단순 DPS 시너지보다 충돌 검사가 우선."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "limited:rebecca",
+      "version": "2.305",
+      "grade": "제한됨",
+      "name": "레베카",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 193,
+          "name": "콜로세움의 여전사",
+          "url": "https://ordsearch.net/characters/193"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "성장",
+        "스플래시"
+      ],
+      "provides": [
+        "범위 방깎 38·단일 스턴",
+        "스킬 발동으로 전설의 후예 최대 20 성장",
+        "특강이 분쇄 즉발과 성장 가속"
+      ],
+      "factual_roles": [
+        "범위 방깎 38·단일 스턴",
+        "스킬 발동으로 전설의 후예 최대 20 성장",
+        "특강이 분쇄 즉발과 성장 가속"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "조기 완성",
+          "안정적 범위 스턴",
+          "상시 전체 이감",
+          "공증·공속"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "알비다 제한",
+            "reason": "공증·범위 스턴·암브로 레베카 평타 성장 보조",
+            "confidence": "high",
+            "target_key": "limited:alvida"
+          },
+          {
+            "name": "마르코 제한",
+            "reason": "지속 이감·체젠으로 성장 시간을 벌어 줌",
+            "confidence": "high",
+            "target_key": "limited:marco"
+          },
+          {
+            "name": "크로커다일 제한",
+            "reason": "이감·범위 스턴·암브를 공급",
+            "confidence": "medium",
+            "target_key": "limited:crocodile"
+          }
+        ],
+        "avoid_or_overlap": [
+          "늦게 조합하고 20레벨 고점 전제",
+          "분쇄 50% 발동 이감을 상시 이감으로 계산"
+        ],
+        "operation": {
+          "placement": "스플래시가 주라인에 계속 닿고 공증·공속 오라 안에 위치.",
+          "targeting": "라인 성장 우선, 보스·광폭은 발동률 상승 구간 직접 타깃.",
+          "active_timing": "반복수련 마나기를 끊지 않아 3회마다 +2레벨을 회수.",
+          "special_training": "콜로세움의 여전사 4TP는 주딜 운용 시 핵심."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "콜로세움의 여전사 특성강화 4TP"
+          ],
+          "economy": [
+            "가능한 조기 완성",
+            "공증·공속 지원"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/193",
+        "https://ordsearch.net/characters?level=9"
+      ],
+      "source_note": {
+        "file": "limited_notes.md",
+        "section": "레베카"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "20레벨 이후 검의울림 세부 수치는 본문에 없어 인게임 확인 필요."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "limited:redfield",
+      "version": "2.305",
+      "grade": "제한됨",
+      "name": "패트릭 레드필드",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 214,
+          "name": "고독한 레드",
+          "url": "https://ordsearch.net/characters/214"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "현재·잃은체력",
+        "광범위"
+      ],
+      "provides": [
+        "전체체력으로 앞체력, 잃은체력으로 끝구간 처리",
+        "자가 공속 45%·넓은 범위·순간이동",
+        "41라 이전 조합 제한"
+      ],
+      "factual_roles": [
+        "전체체력으로 앞체력, 잃은체력으로 끝구간 처리",
+        "자가 공속 45%·넓은 범위·순간이동",
+        "41라 이전 조합 제한"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "마방깎",
+          "상시 이감",
+          "범위 스턴"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "에넬 제한",
+            "reason": "마방깎 18%·범위 스턴·마나·이감을 거의 정확히 제공",
+            "confidence": "high",
+            "target_key": "limited:enel"
+          },
+          {
+            "name": "시노부 제한",
+            "reason": "전체/잃은체력 비례를 겹쳐 라인 압축",
+            "confidence": "medium",
+            "target_key": "limited:shinobu"
+          },
+          {
+            "name": "아인 제한",
+            "reason": "누적 디버프 의존이 낮아 되감기 자체 손해가 상대적으로 작음",
+            "confidence": "medium",
+            "target_key": "limited:ain"
+          }
+        ],
+        "avoid_or_overlap": [
+          "41라 조합 마감 놓침",
+          "박쥐 전퍼가 보스에도 그대로 적용된다고 계산"
+        ],
+        "operation": {
+          "placement": "900/750 범위가 강한 이감·스턴 중심을 덮게 배치.",
+          "targeting": "라인 고체력은 휩쓸기, 저체력·보스는 핏빛 폭연·단신 최강.",
+          "active_timing": "41라 전에 제작 여부를 확정하고 순간이동으로 미션 전환.",
+          "special_training": "핏빛 폭연 4TP는 끝딜 역할을 쓸 때 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "핏빛 폭연 특성강화 4TP"
+          ],
+          "economy": [
+            "41라 이전 조합",
+            "마방깎·홀딩 외부 확보"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/214",
+        "https://ordsearch.net/characters?level=9"
+      ],
+      "source_note": {
+        "file": "limited_notes.md",
+        "section": "패트릭 레드필드"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "limited:enel",
+      "version": "2.305",
+      "grade": "제한됨",
+      "name": "에넬",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 215,
+          "name": "뇌신",
+          "url": "https://ordsearch.net/characters/215"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "마방깎",
+        "마나 지원"
+      ],
+      "provides": [
+        "뇌영 범위 마방깎 18%·3초 스턴",
+        "범위 35% 이감과 팀 마나 회복",
+        "개체당 1회 보스·광폭 진입 선타"
+      ],
+      "factual_roles": [
+        "뇌영 범위 마방깎 18%·3초 스턴",
+        "범위 35% 이감과 팀 마나 회복",
+        "개체당 1회 보스·광폭 진입 선타"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "추가 이감",
+          "잃은체력 끝딜",
+          "해적선 재료 여유"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "패트릭 레드필드",
+            "reason": "넓은 체력비례 마법딜에 마깎·스턴·마나를 공급",
+            "confidence": "high",
+            "target_key": "limited:redfield"
+          },
+          {
+            "name": "시노부 제한",
+            "reason": "전퍼 라인딜의 마깎·스턴·마나 결손을 보완",
+            "confidence": "high",
+            "target_key": "limited:shinobu"
+          },
+          {
+            "name": "포트거스 D. 에이스",
+            "reason": "마나 회전과 마방깎으로 범위 주딜을 강화",
+            "confidence": "medium",
+            "target_key": "eternal:ace"
+          }
+        ],
+        "avoid_or_overlap": [
+          "아인 되감기가 뇌영 마방깎을 초기화",
+          "핸콕·시노부·카타쿠리 등 동일 진입 패기를 중복 계산",
+          "해적선 상위 다중 계획"
+        ],
+        "operation": {
+          "placement": "뇌영 800범위와 방전 이감이 주라인을 덮는 위치.",
+          "targeting": "낙뢰는 보스·광폭 첫 진입에 맞추고 이후 끝딜러에 인계.",
+          "active_timing": "멘트라 이동으로 선타 대상과 뇌영 범위를 갱신.",
+          "special_training": "신의 심판 4TP는 에넬 라인딜까지 맡길 때."
+        },
+        "requirements": {
+          "items": [
+            "조합 재료에 해적선 2기"
+          ],
+          "tp": [
+            "신의 심판 특성강화 4TP"
+          ],
+          "economy": [
+            "해적선 경합",
+            "끝딜 별도"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/215",
+        "https://ordsearch.net/characters?level=9",
+        "https://m.dcinside.com/board/ordc1/189308"
+      ],
+      "source_note": {
+        "file": "limited_notes.md",
+        "section": "에넬"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "limited:shinobu",
+      "version": "2.305",
+      "grade": "제한됨",
+      "name": "시노부",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 269,
+          "name": "쿠노이치",
+          "url": "https://ordsearch.net/characters/269"
+        }
+      ],
+      "build_axis": [
+        "마딜",
+        "폭발형",
+        "탐색 경제"
+      ],
+      "provides": [
+        "일반 라인 전체체력 8% 폭발형·보스 전체체력 2% 마법",
+        "분신과 탐색 보상",
+        "30% 이감·단일 분신 스턴"
+      ],
+      "factual_roles": [
+        "일반 라인 전체체력 8% 폭발형·보스 전체체력 2% 마법",
+        "분신과 탐색 보상",
+        "30% 이감·단일 분신 스턴"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "마방깎",
+          "범위 스턴",
+          "추가 전체 이감",
+          "탐색 컨트롤"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "에넬 제한",
+            "reason": "마깎·범위 스턴·마나를 제공",
+            "confidence": "high",
+            "target_key": "limited:enel"
+          },
+          {
+            "name": "패트릭 레드필드",
+            "reason": "전체체력/잃은체력 피해가 앞뒤를 보완",
+            "confidence": "medium",
+            "target_key": "limited:redfield"
+          },
+          {
+            "name": "우타",
+            "reason": "마방깎·폭증·공속·이감으로 일반 라인 암행 강화",
+            "confidence": "high",
+            "target_key": "eternal:uta"
+          }
+        ],
+        "avoid_or_overlap": [
+          "에넬과 함께 해적선 총 3기 비용을 무시",
+          "아카이누·핸콕·카타쿠리·써니호 진입 효과 중복 계산",
+          "탐색 보상 미사용"
+        ],
+        "operation": {
+          "placement": "탐색 동선과 주라인을 순간이동으로 오가며 분신 공격 유지.",
+          "targeting": "일반 라인은 폭발형 전퍼, 보스는 2% 마법과 전담 끝딜 공동.",
+          "active_timing": "보물상자 재생 라운드마다 탐색을 우선.",
+          "special_training": "다중 그림자 분신술 4TP는 공격 기회·전퍼 시도를 늘림."
+        },
+        "requirements": {
+          "items": [
+            "조합 재료에 해적선 1기"
+          ],
+          "tp": [
+            "다중 그림자 분신술 특성강화 4TP"
+          ],
+          "economy": [
+            "탐색 쿨 관리",
+            "마방깎·범위 홀딩"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/269",
+        "https://ordsearch.net/characters?level=9"
+      ],
+      "source_note": {
+        "file": "limited_notes.md",
+        "section": "시노부"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "limited:king",
+      "version": "2.305",
+      "grade": "제한됨",
+      "name": "킹",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 291,
+          "name": "화재의 킹",
+          "url": "https://ordsearch.net/characters/291"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "암브 조건",
+        "라인 처형"
+      ],
+      "provides": [
+        "암브 50 이상 일반 라인 1,000만 고정 처형",
+        "자체 암브·범위 방깎",
+        "보스 처형 피해는 크게 낮고 이감은 단일"
+      ],
+      "factual_roles": [
+        "암브 50 이상 일반 라인 1,000만 고정 처형",
+        "자체 암브·범위 방깎",
+        "보스 처형 피해는 크게 낮고 이감은 단일"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "빠른 범위 암브 공급",
+          "범위 스턴·전체 이감",
+          "보스딜",
+          "공속"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "알비다 제한",
+            "reason": "범위 암브 최대 75·범위 스턴·공증으로 조건 완성",
+            "confidence": "high",
+            "target_key": "limited:alvida"
+          },
+          {
+            "name": "크로커다일 제한",
+            "reason": "침식윤회 암브·이감·범위 스턴 공급",
+            "confidence": "high",
+            "target_key": "limited:crocodile"
+          },
+          {
+            "name": "징베",
+            "reason": "암브 축을 공유하며 2.305 실전 성공 사례가 있음",
+            "confidence": "high",
+            "target_key": "transcendent:jinbe"
+          }
+        ],
+        "avoid_or_overlap": [
+          "암브 50 공급 없이 킹 단독 처형 기대",
+          "카류우돈 독약을 다른 독약과 중복 계산",
+          "킹 단일 45% 이감을 전체 이감으로 계산"
+        ],
+        "operation": {
+          "placement": "범위 암브 공급원과 같은 라인 중심.",
+          "targeting": "암브 50 대상은 킹이 라인 처형, 보스는 별도 보잡.",
+          "active_timing": "공속을 올려 검술 암브·처형 재진입을 가속.",
+          "special_training": "카류우돈 4TP는 암브 공급·보잡 계획이 함께 있을 때."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "카류우돈 특성강화 4TP"
+          ],
+          "economy": [
+            "암브 공급원 사실상 필수",
+            "보잡·범위 홀딩 별도"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/291",
+        "https://ordsearch.net/characters?level=9"
+      ],
+      "source_note": {
+        "file": "limited_notes.md",
+        "section": "킹"
+      },
+      "community_signals": [
+        {
+          "observation": "2.305 악몽 유카0 상세 댓글에서 킹 제한+징베 초월+스모커로 암브를 구성하고 별도 보딜·공속을 권장.",
+          "source_url": "https://ordsearch.net/characters/291",
+          "evidence_type": "community_success_case"
+        }
+      ],
+      "confidence": {
+        "facts": "high",
+        "prescription": "high",
+        "practical_validation": "medium"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "limited:katakuri",
+      "version": "2.305",
+      "grade": "제한됨",
+      "name": "샬롯 카타쿠리",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 251,
+          "name": "무쌍 도넛",
+          "url": "https://ordsearch.net/characters/251"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "평타",
+        "보스·광폭"
+      ],
+      "provides": [
+        "체력 소비 최대 공속 구간과 고배율 치명",
+        "범위 방깎 30·체젠",
+        "보스·광폭·스토리 매타 단일 스턴·치명"
+      ],
+      "factual_roles": [
+        "체력 소비 최대 공속 구간과 고배율 치명",
+        "범위 방깎 30·체젠",
+        "보스·광폭·스토리 매타 단일 스턴·치명"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "지속 전체 이감",
+          "범위 스턴",
+          "추가 방깎·암브",
+          "체력 회복"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "마르코 제한",
+            "reason": "특강 체젠·60% 이감으로 무쌍 체력 소비와 홀딩 보완",
+            "confidence": "high",
+            "target_key": "limited:marco"
+          },
+          {
+            "name": "알비다 제한",
+            "reason": "범위 스턴·암브·공증으로 평타 캐리 강화",
+            "confidence": "high",
+            "target_key": "limited:alvida"
+          },
+          {
+            "name": "크로커다일 제한",
+            "reason": "이감·범위 스턴·암브를 공급",
+            "confidence": "medium",
+            "target_key": "limited:crocodile"
+          }
+        ],
+        "avoid_or_overlap": [
+          "단일 스턴 다수를 범위 스턴으로 계산",
+          "시노부·아카이누·핸콕 등 진입 패기 중복 계산"
+        ],
+        "operation": {
+          "placement": "체젠·공증·방깎 오라 안에서 보스·광폭 직접 타깃.",
+          "targeting": "라인보다 특수 대상 치명·패기 타격 우선.",
+          "active_timing": "무쌍 도넛 체력 소비와 회복이 끊기지 않게 체젠 관리.",
+          "special_training": "견문색 패기 4TP는 카타쿠리 주딜 운용 시 우선."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "견문색의 패기 특성강화 4TP"
+          ],
+          "economy": [
+            "추가 체젠",
+            "범위 스턴·이감"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/251",
+        "https://ordsearch.net/characters?level=9"
+      ],
+      "source_note": {
+        "file": "limited_notes.md",
+        "section": "샬롯 카타쿠리"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "limited:marco",
+      "version": "2.305",
+      "grade": "제한됨",
+      "name": "마르코",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 326,
+          "name": "불사조",
+          "url": "https://ordsearch.net/characters/326"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "혼합",
+        "폼 전환",
+        "체젠"
+      ],
+      "provides": [
+        "인간폼 현재체력·불사조폼 평타계수 물리딜",
+        "기본 45%·특강 60% 이감",
+        "특강 파티 체젠과 공중이동"
+      ],
+      "factual_roles": [
+        "인간폼 현재체력·불사조폼 평타계수 물리딜",
+        "기본 45%·특강 60% 이감",
+        "특강 파티 체젠과 공중이동"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "방깎·암브",
+          "범위 스턴",
+          "폼 수동 판단"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "알비다 제한",
+            "reason": "이감·체젠 대 범위 스턴·암브·공증으로 역할 완성",
+            "confidence": "high",
+            "target_key": "limited:alvida"
+          },
+          {
+            "name": "레베카 제한",
+            "reason": "방깎 38이 불사조 물리폼을 강화하고 마르코가 성장 시간을 제공",
+            "confidence": "medium",
+            "target_key": "limited:rebecca"
+          },
+          {
+            "name": "샬롯 카타쿠리",
+            "reason": "체젠·이감으로 무쌍 가동을 보조",
+            "confidence": "medium",
+            "target_key": "limited:katakuri"
+          }
+        ],
+        "avoid_or_overlap": [
+          "보스·스토리에 인간폼 봉황인 현재체력 30% 적용 기대",
+          "폼별 마법↔물리 피해를 한 계통 디버프로 모두 강화한다고 계산"
+        ],
+        "operation": {
+          "placement": "이감 오라가 주라인을 덮고 방깎·공증 지원 안에 배치.",
+          "targeting": "고체력 라인은 인간폼, 방깎이 갖춰진 마무리·보스는 불사조폼.",
+          "active_timing": "10.75초 폼 전환 쿨을 보스 진입 전에 미리 계산.",
+          "special_training": "꺼지지 않는 불꽃 4TP는 60% 이감·파티 체젠 가치가 높음."
+        },
+        "requirements": {
+          "items": [
+            "조합 재료에 불사조의 깃털 필요"
+          ],
+          "tp": [
+            "꺼지지 않는 불꽃 특성강화 4TP"
+          ],
+          "economy": [
+            "범위 스턴·방깎 외부 확보"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/326",
+        "https://ordsearch.net/characters?level=9"
+      ],
+      "source_note": {
+        "file": "limited_notes.md",
+        "section": "마르코"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    },
+    {
+      "key": "limited:alvida",
+      "version": "2.305",
+      "grade": "제한됨",
+      "name": "알비다",
+      "record_count": 1,
+      "variants": [
+        {
+          "id": 331,
+          "name": "미끈미끈 열매",
+          "url": "https://ordsearch.net/characters/331"
+        }
+      ],
+      "build_axis": [
+        "물딜",
+        "암브",
+        "CC",
+        "끝딜"
+      ],
+      "provides": [
+        "매 공격 단일 3초 스턴·보스 1.5초",
+        "범위 스턴과 암브 최대 75",
+        "잃은체력 피해·공증 33%·넉백"
+      ],
+      "factual_roles": [
+        "매 공격 단일 3초 스턴·보스 1.5초",
+        "범위 스턴과 암브 최대 75",
+        "잃은체력 피해·공증 33%·넉백"
+      ],
+      "prescription": {
+        "missing_core_roles": [
+          "지속 전체 이감",
+          "고정 공속 0.9 관리",
+          "넉백 위치 관리"
+        ],
+        "recommended_second_uppers": [
+          {
+            "name": "킹 제한",
+            "reason": "암브 50 처형 조건을 직접 열고 공증·스턴 보완",
+            "confidence": "high",
+            "target_key": "limited:king"
+          },
+          {
+            "name": "마르코 제한",
+            "reason": "45/60% 이감·체젠을 받고 마르코에 암브·공증 제공",
+            "confidence": "high",
+            "target_key": "limited:marco"
+          },
+          {
+            "name": "레베카 제한",
+            "reason": "공증·스턴·암브로 성장형 평타딜 보조",
+            "confidence": "medium",
+            "target_key": "limited:rebecca"
+          }
+        ],
+        "avoid_or_overlap": [
+          "알비다에게 공속 버프 투자",
+          "버기 영원 공격력 버프와 중복 계산",
+          "넉백으로 새장·중심 범위딜을 흩뜨림"
+        ],
+        "operation": {
+          "placement": "넉백 방향이 라인 중심을 벗어나지 않게 반대편/측면 배치.",
+          "targeting": "암브 조건형 주딜과 같은 대상, 저체력 라인은 잃은체력으로 마무리.",
+          "active_timing": "버기즈 딜리버리 범위 스턴을 킹 처형 시동과 연결.",
+          "special_training": "제작 자체에 TP 4가 들어가므로 다른 특강과 총량을 먼저 계산."
+        },
+        "requirements": {
+          "items": [
+            "ORDSearch 스킬 본문에서 전용 필수 아이템을 확인하지 못함"
+          ],
+          "tp": [
+            "조합식에 특성포인트 4 직접 소비",
+            "별도 특강 버튼은 페이지에 기재 없음"
+          ],
+          "economy": [
+            "추가 이감",
+            "공속 버프는 다른 캐리에 배분"
+          ]
+        }
+      },
+      "evidence_urls": [
+        "https://ordsearch.net/characters/331",
+        "https://ordsearch.net/characters?level=9"
+      ],
+      "source_note": {
+        "file": "limited_notes.md",
+        "section": "알비다"
+      },
+      "community_signals": [],
+      "confidence": {
+        "facts": "high",
+        "prescription": "medium",
+        "practical_validation": "low"
+      },
+      "caveats": [
+        "두 번째 스킬 세트 전환 조건과 일부 스턴 수치는 페이지 미표기."
+      ],
+      "separation_note": "factual_roles는 ORDSearch 스킬 본문 요약이며, prescription은 해당 구조에서 도출한 운용 추론이다. community_signals는 성공 사례이지 승률 근거가 아니다."
+    }
+  ]
+}

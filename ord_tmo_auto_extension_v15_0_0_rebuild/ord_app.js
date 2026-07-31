@@ -345,7 +345,21 @@ class App{
   commitTransaction(tx){const normalized=normalizeTransaction(tx);if(!normalized)return;for(const id of Object.keys(normalized.expected)){delete this.state.manualCounts[id];delete this.state.pendingCounts[id];delete this.state.pendingAt[id];}if(Object.prototype.hasOwnProperty.call(normalized.expected,C.WISP_ID))this.state.wispOverride='';this.state.pendingTransaction=null;this._squadCacheKey='';this.recordAuditAction({actor:'tmo',action:'build-confirmed',steps:normalized.steps.map(step=>({id:String(step.id||''),name:String(step.name||''),wispCost:C.num(step.wispCost)})),expected:this.compactOverrideMap(normalized.expected)});}
   rollbackTransaction(tx){const normalized=normalizeTransaction(tx||this.state.pendingTransaction);this.restoreTransaction(normalized);this.state.pendingTransaction=null;this._squadCacheKey='';if(normalized)this.recordAuditAction({actor:'program',action:'build-rolled-back',status:normalized.status,steps:normalized.steps.map(step=>({id:String(step.id||''),name:String(step.name||'')}))});}
   prunePending(snapshot,now){const tx=normalizeTransaction(this.state.pendingTransaction);if(!tx)return false;if(!transactionSourceMatches(snapshot,tx)){this.rollbackTransaction(tx);this.setMessage('TMO 원본 세션이 바뀌어 확인 전 제작 거래를 되돌렸습니다.');return true;}const changedData=fingerprint(snapshot)!==tx.baseFingerprint||C.num(snapshot&&snapshot.dataChangedAt)>tx.baseDataChangedAt;if(changedData&&transactionMatches(snapshot,tx)){this.commitTransaction(tx);return true;}const time=now||Date.now();if(time-tx.lastAt>20000&&tx.status!=='review'){tx.status='review';this.state.pendingTransaction=tx;this.recordAuditAction({actor:'program',action:'build-confirmation-delayed',steps:tx.steps.map(step=>({id:String(step.id||''),name:String(step.name||'')}))});return true;}return false;}
-  settings(){const tx=normalizeTransaction(this.state.pendingTransaction),transactionWisp=tx&&Object.prototype.hasOwnProperty.call(tx.expected,C.WISP_ID)?String(tx.expected[C.WISP_ID]):null,blueprint=normalizeUpperBlueprint(this.state.upperBlueprint),postLegendRoute=['legend','upper'].includes(this.state.postLegendRoute)?this.state.postLegendRoute:'';return{settingsRevision:178,mode:this.state.mode,modeExplicit:this.state.modeExplicit===true,magicRoute:this.state.magicRoute,targetSquadCount:9,purpose:this.state.upperPreviewId?'upper':'',postLegendRoute,gorosei:this.state.gorosei,superKumaOwned:this.state.superKumaOwned,story10Reward:this.state.story10Reward,virtualSpecialId:this.state.virtualSpecialId,virtualSpecialBaselineId:this.state.virtualSpecialBaselineId,virtualSpecialBaselineCount:C.num(this.state.virtualSpecialBaselineCount),wispOverride:transactionWisp!=null?transactionWisp:this.state.wispOverride,upperPreviewId:this.state.upperPreviewId,secondUpperId:String(this.state.secondUpperId||''),preferredLineupIds:blueprint?blueprint.lineupIds:[],currentRound:C.num(this.state.currentRound)||1,roundStartedAt:this.state.roundStartedAt,roundPrepSeconds:this.state.roundPrepSeconds,roundNormalSeconds:this.state.roundNormalSeconds,roundBossSeconds:this.state.roundBossSeconds,manualCounts:this.effectiveManualCounts(this.state.snapshot),labResearch:Object.assign({},this.state.labResearch),upperResearchLevel:C.num(this.state.upperResearchLevel)||1,allowWarped:true,recommendWarped:true,stunConditions:{},rerollsUsed:C.num(this.state.rerollsUsed),transcendUsed:C.num(this.state.transcendUsed),seraphUsed:C.num(this.state.seraphUsed),changedUsed:C.num(this.state.changedUsed)};}
+  settings(){const tx=normalizeTransaction(this.state.pendingTransaction),transactionWisp=tx&&Object.prototype.hasOwnProperty.call(tx.expected,C.WISP_ID)?String(tx.expected[C.WISP_ID]):null,blueprint=normalizeUpperBlueprint(this.state.upperBlueprint),postLegendRoute=['legend','upper'].includes(this.state.postLegendRoute)?this.state.postLegendRoute:'';return{settingsRevision:178,mode:this.state.mode,modeExplicit:this.state.modeExplicit===true,magicRoute:this.state.magicRoute,targetSquadCount:9,purpose:this.state.upperPreviewId?'upper':'',postLegendRoute,gorosei:this.state.gorosei,superKumaOwned:this.state.superKumaOwned,story10Reward:this.state.story10Reward,virtualSpecialId:this.state.virtualSpecialId,virtualSpecialBaselineId:this.state.virtualSpecialBaselineId,virtualSpecialBaselineCount:C.num(this.state.virtualSpecialBaselineCount),wispOverride:transactionWisp!=null?transactionWisp:this.state.wispOverride,upperPreviewId:this.state.upperPreviewId,secondUpperId:String(this.state.secondUpperId||''),preferredLineupIds:blueprint?blueprint.lineupIds:[],currentRound:C.num(this.state.currentRound)||1,roundStartedAt:this.state.roundStartedAt,roundPrepSeconds:this.state.roundPrepSeconds,roundNormalSeconds:this.state.roundNormalSeconds,roundBossSeconds:this.state.roundBossSeconds,manualCounts:this.effectiveManualCounts(this.state.snapshot),labResearch:Object.assign({},this.state.labResearch),upperResearchLevel:C.num(this.state.upperResearchLevel)||1,allowWarped:true,recommendWarped:true,stunConditions:{},rerollsUsed:C.num(this.state.rerollsUsed),transcendUsed:C.num(this.state.transcendUsed),seraphUsed:C.num(this.state.seraphUsed),changedUsed:C.num(this.state.changedUsed),prescribedSecondUpperIds:this.v197PrescribedSecondIds()};}
+  // v19.7.1(외부 감사 ④): 처방(전수 메모 v2)의 추천 2상위를 플래너에
+  // "후단 타이브레이크 전용" id 목록으로 넘긴다.  플래너는 플레이북 전역을
+  // 모른다(경계 유지) — 여기서 계열 필터를 거친 순수 id 만 건넨다.
+  v197PrescribedSecondIds(){
+    const locked=this.upperLock();if(!locked)return[];
+    const db=this.catalogDb(),unit=db.byId.get(String(locked.id));if(!unit)return[];
+    const entry=upperPlaybookOf(unit);if(!entry||!Array.isArray(entry.second))return[];
+    const routeMode=this.state.mode||C.familyOf(unit)||'physical';
+    return entry.second.map(rec=>String(rec.id||'')).filter(id=>{
+      const candidate=db.byId.get(id);if(!candidate)return false;
+      const family=C.familyOf(candidate);
+      return family==='neutral'||family===routeMode;
+    }).slice(0,3).sort();
+  }
   catalogDb(){return this._catalogDb||(this._catalogDb=C.buildDb(this.catalog));}
   // v16.1: normalizeState clones and re-indexes the full 307-unit catalog.
   // During early-round kill churn TMO emits a snapshot every second or two,
@@ -927,7 +941,29 @@ class App{
   }
   resetGame(){this.beginNewRunLog();const keep={tab:'coach',gorosei:this.state.gorosei,superKumaOwned:this.state.superKumaOwned,roundPrepSeconds:this.state.roundPrepSeconds,roundNormalSeconds:this.state.roundNormalSeconds,roundBossSeconds:this.state.roundBossSeconds,roundAutoGeneration:this.state.roundAutoGeneration,roundAutoSourceEpoch:this.state.roundAutoSourceEpoch,snapshot:this.state.snapshot,liveAt:this.state.liveAt,awaitingNewGameFingerprint:fingerprint(this.state.snapshot)};Object.assign(this.state,DEFAULTS,keep,{manualCounts:{},pendingCounts:{},pendingAt:{},pendingTransaction:null,pendingReroll:null,locks:[],upperDetection:emptyUpperDetection(),watchStability:normalizeWatchStability(null)});this._squadCacheKey='';this._v15CacheKey='';this._terminalCandidate=null;this.clearVerdictCache();this.persist();this.toast('이전 게임 진행 기록을 보관하고 새 게임을 준비합니다. TMO 패가 실제로 바뀌면 추천과 새 기록을 시작합니다.');}
   elapsedToRoundStart(round){let s=C.num(this.state.roundPrepSeconds)||10;for(let r=1;r<round;r++)s+=([10,20,30,40,50,55,60,65,70,75].includes(r)?C.num(this.state.roundBossSeconds)||60:C.num(this.state.roundNormalSeconds)||35);return s;}
-  updateClockOnly(){const now=Date.now(),current=this.actualRound(),health=this.health();if(this.prunePending(this.state.snapshot,now)){this.persist();if(this.shouldDeferExternalRender())this._deferredExternalRender=true;else this.render();return;}if(this.state.roundStartedAt&&current!==this._renderedRound||health.key!==this._renderedHealthKey){if(this.shouldDeferExternalRender()){this._deferredExternalRender=true;}else{this.render();return;}}const c=C.roundClock(this.settings(),now);this.root.querySelectorAll('[data-clock]').forEach(n=>n.textContent=c.running?`${c.label} · ${c.remaining}초`:c.label);this.updateLiveStatusOnly();}
+  // v19.7.1(외부 감사 ②): 상위 제작 후 패가 더 안 바뀌면 스냅샷이 오지 않아
+  // (같은 패 = 하트비트만) 2차 확인이 영원히 안 왔고, 8초 뒤 1차 감지가
+  // 리셋돼 1차만 반복하는 교착이었다.  후보가 현재 패에 계속 있고 연결이
+  // 살아 있는 채 4초가 지나면 "지속" 자체를 2차 확인으로 승격한다.
+  v197ConfirmStableUpper(){
+    const pending=normalizeUpperDetection(this.state.upperDetection);
+    if(!pending.candidateId||pending.streak<1||this.upperLock())return false;
+    const snapshot=this.state.snapshot;if(!snapshot)return false;
+    if(C.num((snapshot.counts||{})[pending.candidateId])<=0)return false;
+    const now=Date.now(),liveAt=C.num(this.state.liveAt||snapshot.bridgeAt||snapshot.at);
+    if(!liveAt||now-liveAt>12000)return false;
+    if(now-pending.lastSeenAt<4000)return false;
+    const db=this.catalogDb(),unit=db.byId.get(pending.candidateId);
+    if(!unit)return false;
+    const routeFamily=upperRouteFamily(pending.candidateId);
+    this.state.locks=[{stage:'upper',id:pending.candidateId,source:'tmo',sticky:true,confirmedAt:now,confirmations:2,routeRootId:routeFamily?routeFamily[0]:pending.candidateId,activeVariantId:pending.candidateId}];
+    this.syncUpperMode(pending.candidateId,db);
+    this.state.upperDetection=emptyUpperDetection();
+    this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';
+    this.setMessage(`상위 ${displayNameOf(unit)}가 같은 패에서 4초 이상 유지돼 메인 상위로 고정했습니다.`);
+    return true;
+  }
+  updateClockOnly(){const now=Date.now(),current=this.actualRound(),health=this.health();if(health.ready&&this.v197ConfirmStableUpper()){this.persist();if(this.shouldDeferExternalRender())this._deferredExternalRender=true;else this.render();return;}if(this.prunePending(this.state.snapshot,now)){this.persist();if(this.shouldDeferExternalRender())this._deferredExternalRender=true;else this.render();return;}if(this.state.roundStartedAt&&current!==this._renderedRound||health.key!==this._renderedHealthKey){if(this.shouldDeferExternalRender()){this._deferredExternalRender=true;}else{this.render();return;}}const c=C.roundClock(this.settings(),now);this.root.querySelectorAll('[data-clock]').forEach(n=>n.textContent=c.running?`${c.label} · ${c.remaining}초`:c.label);this.updateLiveStatusOnly();}
 
   render(){
     // v17: a rendering exception must never leave the screen dead or blank
@@ -1413,7 +1449,11 @@ class App{
       const tier=C.upperPowerTier?C.upperPowerTier(unit,state.db):{known:false,letter:'',rank:-1};
       rows.push({unit,solve:row.solve,feasible:!!row.feasible,progress:C.num(row.progress),wispCost:C.num(row.solve.wispCost),tier});
     }
-    rows.sort((a,b)=>Number(b.feasible)-Number(a.feasible)||C.num(b.tier.rank)-C.num(a.tier.rank)||a.wispCost-b.wispCost||C.num(b.progress)-C.num(a.progress)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko'));
+    // v19.7.1(외부 감사 ④): 처방 추천 페어는 제작 가능·티어가 같을 때만
+    // 앞선다 — 제한 가중치(후단 타이브레이크) 원칙은 플래너와 동일.
+    const prescribedKeys=new Set(this.v197PrescribedSecondIds().map(id=>String(C.canonicalUpperId(id))));
+    const prescRank=row=>prescribedKeys.has(String(C.canonicalUpperId(row.unit.id)))?1:0;
+    rows.sort((a,b)=>Number(b.feasible)-Number(a.feasible)||C.num(b.tier.rank)-C.num(a.tier.rank)||prescRank(b)-prescRank(a)||a.wispCost-b.wispCost||C.num(b.progress)-C.num(a.progress)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko'));
     return rows.slice(0,6);
   }
   v151BuildableLegendRows(state,plan){
@@ -2227,7 +2267,9 @@ class App{
     const currentId=String(current.id||''),at=path.findIndex(step=>String(step&&step.id||'')===currentId);
     const next=at>=0?path.slice(at+1).find(step=>step&&String(step.id||'')!==currentId):null;
     const ledger=decision.rare||{},rareRows=Array.isArray(ledger.rows)?ledger.rows:[];
-    const holds=rareRows.filter(row=>C.num(row.hold)>0).slice(0,4);
+    // v19.7.1(외부 감사 ⑤): 보호 희귀를 4종에서 자르면 5번째부터가 화면에서
+    // 사라져 "남는 희귀"로 오해된다 — 전량 표시한다(칩은 줄바꿈으로 흐른다).
+    const holds=rareRows.filter(row=>C.num(row.hold)>0);
     const holdTotal=rareRows.reduce((sum,row)=>sum+C.num(row.hold),0);
     const holdHtml=ledger.conflict
       ?`<div class="v154-hold-conflict">${this.v153Icon('warn')}<b>희귀 원장 충돌</b><span>제작·리롤을 멈추고 TMO를 다시 읽으세요.</span></div>`
@@ -2352,10 +2394,16 @@ class App{
       const rows=[];
       if(plannedSecond)rows.push({unit:plannedSecond,label:'현재 계획',wispCost:C.num((squad&&(squad.actions||[]).find(action=>String(action.id)===plannedId)||{}).wispCost)});
       for(const option of options){if(rows.length>=3)break;if(String(option.unit.id)===plannedId)continue;rows.push({unit:option.unit,label:option.feasible?'지금 제작 가능':`선위 ${option.wispCost}`,wispCost:option.wispCost});}
+      // v19.7.1(외부 감사 ③): 처방 추천이 정식 후보의 안전 필터를 우회했다
+      // (계열 교차 45건 · 선행조건 막힘 40건 실측).  계열이 다르면 싣지 않고,
+      // 선행조건(레일리·해적선·아이템 등)이 막힌 후보는 확정 버튼을 잠근다.
+      const routeMode=plan&&plan.mode||this.state.mode||(upper?C.familyOf(upper):'')||'physical';
       for(const rec of prescribed){
         if(rows.length>=4)break;
         const unit=db&&db.byId.get(String(rec.id||''));
         if(!unit||String(C.canonicalUpperId(unit.id))===mainKey)continue;
+        const family=C.familyOf(unit);
+        if(family!=='neutral'&&family!==routeMode)continue;
         const existing=rows.find(row=>String(C.canonicalUpperId(row.unit.id))===String(C.canonicalUpperId(unit.id)));
         if(existing){existing.presc=rec;continue;}
         let wispCost=0;try{wispCost=C.num(C.recipeSolve(db,unit.id,state.counts||{}).wispCost);}catch(_){wispCost=0;}
@@ -2364,8 +2412,9 @@ class App{
       for(const row of rows){
         const shared=[...treeRares(row.unit.id)].filter(id=>mainRares.has(id));
         row.sharedRares=shared.map(id=>C.materialName(db,id));
+        try{row.hardBlocked=(C.recipeSolve(db,row.unit.id,state.counts||{}).hardMissing||[]).map(item=>item.name).slice(0,2);}catch(_){row.hardBlocked=[];}
       }
-      secondBlock=rows.length?`<details class="v153-second"><summary>두 번째 상위 확정 · ${plannedSecond?`현재 계획 ${C.esc(displayNameOf(plannedSecond))}`:'계획에 두 번째 상위 없음'}</summary><div class="v153-second-list">${rows.map(row=>`<article><span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(secondTier(row.unit))} · ${C.esc(row.label)}</small>${row.presc?`<small class="presc">처방 · ${C.esc(row.presc.why||'시너지 추천')}</small>`:''}<small class="${row.sharedRares&&row.sharedRares.length?'clash':'okv'}">${row.sharedRares&&row.sharedRares.length?`메인과 희귀 겹침 ${C.esc(row.sharedRares.slice(0,2).join('·'))}${row.sharedRares.length>2?` 외 ${row.sharedRares.length-2}`:''}`:'메인과 희귀 겹침 없음'}</small>${playbookHtml(row.unit,{compact:true,maxPairs:3})}</span><span><button data-act="detail" data-id="${C.esc(row.unit.id)}">상세</button><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}">2상위 확정</button></span></article>`).join('')}</div><small>확정하면 그 자리를 다른 상위에게 넘기지 않습니다. 물딜도 확정하면 2상위로 갑니다(보드 5기 + 상위 2기 = 9환산).</small></details>`:'';
+      secondBlock=rows.length?`<details class="v153-second"><summary>두 번째 상위 확정 · ${plannedSecond?`현재 계획 ${C.esc(displayNameOf(plannedSecond))}`:'계획에 두 번째 상위 없음'}</summary><div class="v153-second-list">${rows.map(row=>`<article><span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(secondTier(row.unit))} · ${C.esc(row.label)}</small>${row.presc?`<small class="presc">처방 · ${C.esc(row.presc.why||'시너지 추천')}</small>`:''}<small class="${row.sharedRares&&row.sharedRares.length?'clash':'okv'}">${row.sharedRares&&row.sharedRares.length?`메인과 희귀 겹침 ${C.esc(row.sharedRares.slice(0,2).join('·'))}${row.sharedRares.length>2?` 외 ${row.sharedRares.length-2}`:''}`:'메인과 희귀 겹침 없음'}</small>${row.hardBlocked&&row.hardBlocked.length?`<small class="clash">선행 막힘 · ${C.esc(row.hardBlocked.join('·'))}</small>`:''}${playbookHtml(row.unit,{compact:true,maxPairs:3})}</span><span><button data-act="detail" data-id="${C.esc(row.unit.id)}">상세</button><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}" ${row.hardBlocked&&row.hardBlocked.length?`disabled aria-disabled="true" title="선행조건 필요: ${C.esc(row.hardBlocked.join('·'))}"`:''}>2상위 확정</button></span></article>`).join('')}</div><small>확정하면 그 자리를 다른 상위에게 넘기지 않습니다. 물딜도 확정하면 2상위로 갑니다(보드 5기 + 상위 2기 = 9환산).</small></details>`:'';
     }
     return`<div class="v153-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>확정 메인 상위${power&&power.known?` · ${C.esc(power.letter)}티어`:''}</small><b>${C.esc(displayNameOf(upper))}</b><em>${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="party-preview" data-id="${C.esc(upper.id)}">전체 파티 보기</button><button data-act="snipe-open" title="다른 상위로 강제 변경">저격</button></div>${playbookDirectionHtml(upper)}${partyBoard}${secondBlock}<div class="v153-upper-gaps"><small>이 파티에서 먼저 닫을 결손</small>${requirements.length?requirements.map(row=>`<span>${C.esc(row.label)} <b>부족 ${fmt(row.gap)}</b></span>`).join(''):'<span class="ok">필수 역할 합계 충족</span>'}</div><details class="v153-support-fold"><summary>다음 보조 전설급 ${supports.length}개 · 같은 최종 파티 기준</summary><div class="v153-support-list">${supportHtml||'<p>현재 패에서 확정할 보조 전설급을 계산 중입니다.</p>'}</div></details>`;
   }

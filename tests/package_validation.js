@@ -138,7 +138,10 @@ const now=Date.now(),healthSnapshot={
   wispCountFound:true,abilityCount:5,connected:true
 };
 assert.strictEqual(C.snapshotHealth(healthSnapshot,now).ready,true,'valid confidence-based v13 snapshot is blocked');
-assert.strictEqual(C.snapshotHealth(Object.assign({},healthSnapshot,{helperId:'99999'}),now).ready,false,'unsupported helper is accepted');
+// v19.7.1(외부 감사): 임의 숫자 번호는 상태 판정도 통과해야 한다 — 내용
+// 게이트가 진짜 판별자다.  숫자가 아닌 id 만 거부한다.
+assert.strictEqual(C.snapshotHealth(Object.assign({},healthSnapshot,{helperId:'99999'}),now).ready,true,'numeric helper id is rejected by health');
+assert.strictEqual(C.snapshotHealth(Object.assign({},healthSnapshot,{helperId:'not-a-number'}),now).ready,false,'non-numeric helper is accepted');
 
 const rows=units.map(unit=>({id:unit.id,name:unit.name,count:0,countFound:true,tmoPercent:0}));
 const compactSnapshot={
