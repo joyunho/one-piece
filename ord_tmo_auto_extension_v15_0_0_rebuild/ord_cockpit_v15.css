@@ -2422,3 +2422,79 @@ button:focus-visible,select:focus-visible{
   .v151-mats .commons{flex-wrap:nowrap;overflow:hidden}
   .v153-upper .v153-upper-gaps{gap:3px}
 }
+
+/* ================================================================
+   v19.8(사용자 요청 ①③): 눈에 확 들어오는 밀도 — 빈 상태 채움 · 6칸
+   제작 그리드 · 사용 희귀 명시 · 결손 숫자 강조.
+   ================================================================ */
+/* 판단 잠금 상태: 마지막 패 기준 결손 요약이 빈 공간을 대신한다. */
+.v158-blocked-spec{margin-top:10px;border:1px solid rgba(240,185,78,.35);border-radius:12px;padding:8px 10px;background:rgba(240,185,78,.06)}
+.v158-blocked-spec>small{display:block;margin-bottom:6px;color:#d8c48c;font-size:10px;font-weight:900}
+.v158-blocked-spec>div{display:flex;gap:6px;flex-wrap:wrap}
+.v158-blocked-spec span{display:inline-flex;gap:5px;align-items:baseline;border:1px solid rgba(226,92,102,.4);border-radius:9px;padding:3px 8px;background:rgba(226,92,102,.08)}
+.v158-blocked-spec span b{font-size:12px}
+.v158-blocked-spec span em{color:#ff9d9d;font-size:11px;font-style:normal;font-weight:900}
+/* 6칸 제작 그리드: 카드가 내용 크기로 흐르고 세로로 늘어지지 않는다. */
+.v153-craft-cards.v158-six{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;align-content:start}
+.v153-craft-cards.v158-six>button{min-height:0;height:auto;align-self:start}
+.v153-craft-cards.v158-six>button.upcoming{border-style:dashed;border-color:rgba(242,187,82,.4);background:linear-gradient(180deg,rgba(24,28,44,.6),rgba(10,18,32,.6))}
+.v153-pick.dim{background:rgba(242,187,82,.2);color:#f3d58e}
+.v158-uses{display:flex;gap:6px;align-items:center;min-width:0}
+.v158-uses .v153-ic,.v158-uses .v153-ic-img{width:13px;height:13px;flex:none;color:#cbb4ff}
+.v158-uses span{overflow:hidden;color:#b9c4da;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.v158-uses b{color:#e3d3ff}
+.v158-uses.muted span{color:#8fa5bd}
+/* 결손 숫자 강조: 부족한 것이 화면에서 가장 먼저 읽혀야 한다. */
+.v153-role.bad span{font-size:12px;text-shadow:0 0 10px rgba(226,92,102,.45)}
+.v153-role.bad b{color:#ffc4c4}
+.v153-spec-head b.gap{text-shadow:0 0 12px rgba(226,92,102,.5)}
+@media (max-height:1120px) and (min-width:1240px){
+  .v153-craft-cards.v158-six{gap:6px}
+  .v158-blocked-spec{margin-top:6px;padding:6px 9px}
+}
+/* v19.8 ⑤: 최근 5판에 안 간 각 배지 — 순위는 그대로, 눈길만 준다. */
+.v158-fresh{display:inline-block;margin-left:5px;border:1px solid rgba(123,240,182,.45);border-radius:7px;padding:0 6px;background:rgba(71,215,162,.1);color:#8ef0c0;font-size:9px;font-style:normal;font-weight:900;vertical-align:2px;animation:v158-fresh-glow 3.2s ease-in-out infinite}
+@keyframes v158-fresh-glow{0%,100%{box-shadow:none}50%{box-shadow:0 0 10px rgba(71,215,162,.35)}}
+@media(prefers-reduced-motion:reduce){.v158-fresh{animation:none}}
+/* 한 화면 계약: 6칸 그리드는 압축 화면에서 역할 칩을 접고 재료 줄을 한
+   줄로 만다 — "어떤 희귀를 쓰는지"(v158-uses)는 항상 남긴다. */
+@media (max-height:1120px) and (min-width:1240px){
+  .v153-craft-cards.v158-six>button{padding:6px 7px;gap:3px}
+  .v153-craft-cards.v158-six .v156-covers{display:none}
+  .v153-craft-cards.v158-six .v154-rare-mats{flex-wrap:nowrap;overflow:hidden;min-height:0}
+  .v153-craft-cards.v158-six .v154-rare-mats>span{flex:none}
+  .v153-craft-cards.v158-six>button>header{grid-template-columns:30px minmax(0,1fr) auto;gap:6px}
+  .v153-craft-cards.v158-six>button>header img,.v153-craft-cards.v158-six>button>header .v153-ic{width:30px;height:30px}
+  .v153-craft-cards.v158-six .v156-ratio{font-size:15px}
+  .v153-craft-cards.v158-six>button>footer{margin-top:0}
+  .v153-craft-cards.v158-six .v158-uses span{font-size:9.5px}
+}
+/* v19.8 ②: 다음 제작 큐 — 초상화 3줄 + 보존 희귀. */
+.v158-queue{display:grid;gap:6px}
+.v158-queue-row{display:grid;grid-template-columns:22px 40px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--v153-line);border-radius:11px;padding:6px 8px;background:rgba(7,18,32,.68);color:inherit;cursor:pointer;text-align:left;font:inherit}
+.v158-queue-row:hover{border-color:rgba(157,130,255,.5)}
+.v158-queue-row>i{display:grid;place-items:center;width:22px;height:22px;border-radius:7px;background:#173653;color:#89e7f7;font-weight:950;font-style:normal;font-size:11px}
+.v158-queue-row img,.v158-queue-row>.v153-ic,.v158-queue-row>.v153-ic-img{width:40px;height:40px;border-radius:10px;object-fit:cover;background:#0b1830;box-shadow:0 0 0 1px rgba(157,130,255,.3)}
+.v158-queue-row b{display:block;font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v158-queue-row small{display:block;color:var(--v153-muted);font-size:10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.v158-queue-row em{display:flex;gap:3px;align-items:center;color:#f3d58e;font-style:normal;font-weight:900;font-size:12px}
+.v158-queue-row em .v153-ic,.v158-queue-row em .v153-ic-img{width:13px;height:13px}
+.v158-queue-empty{border:1px dashed var(--v153-line);border-radius:11px;padding:12px 10px}
+.v158-queue-empty b{display:block;font-size:12.5px;margin-bottom:3px}
+.v158-queue-empty span{color:var(--v153-muted);font-size:10.5px;line-height:1.4}
+.v158-hold{margin-top:7px;border:1px solid var(--v153-line);border-radius:11px;padding:6px 8px;background:rgba(7,18,32,.68)}
+.v158-hold>header{display:flex;gap:6px;align-items:center;margin-bottom:5px}
+.v158-hold>header .v153-ic,.v158-hold>header .v153-ic-img{width:14px;height:14px}
+.v158-hold>header b{font-size:11px}
+.v158-hold>header em{margin-left:auto;color:var(--v153-muted);font-size:9px;font-style:normal;font-weight:800}
+@media (max-height:1120px) and (min-width:1240px){
+  .v158-queue-row{padding:4px 7px;grid-template-columns:20px 34px minmax(0,1fr) auto}
+  .v158-queue-row img,.v158-queue-row>.v153-ic,.v158-queue-row>.v153-ic-img{width:34px;height:34px}
+}
+/* v19.8 ④: 생존 자원 소모 경고 + 초과·해제 라벨. */
+.v158-consume-warn{display:flex;gap:7px;align-items:center;margin-top:6px;border:1px solid rgba(226,92,102,.5);border-radius:11px;padding:6px 9px;background:rgba(92,24,36,.22)}
+.v158-consume-warn .v153-ic,.v158-consume-warn .v153-ic-img{width:15px;height:15px;flex:none;color:#ff9d9d}
+.v158-consume-warn span{color:#ffc9c4;font-size:10.5px;line-height:1.4}
+.v158-consume-warn b{color:#ffe1de}
+.v153-role b small.relaxed{color:#8fa5bd;font-size:9px}
+@media (max-height:1120px) and (min-width:1240px){.v158-consume-warn{margin-top:4px;padding:4px 8px}}

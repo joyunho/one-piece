@@ -36,12 +36,12 @@ test('다음 행동은 확정 카드 하나와 후속 후보 최대 2개만 보�
   // 패널이 같은 목록을 보게 하려고). 상한 계약은 그 헬퍼에서 지킨다.
   const candidateRows = slice('v153NextCandidateRows(plan){', 'renderV153NextCandidate(state,plan){');
   assert(candidateRows.includes('picked.length>=2'));
-  // v19.6(사용자 루미너스 UI): 2번 패널이 "완료 후 · 다시 계산 · 지금 보존"
-  // 3분할 판단 레일로 바뀌었다.  "먼 미래를 고정하지 않는다"는 계약은 유지 —
-  // 문구와 3개 섹션이 화면에 남아야 한다.
-  assert(candidate.includes('먼 미래 순서는 고정하지 않습니다'));
-  for (const section of ['완료 후', '다시 계산', '지금 보존', 'v154-next-board']) {
-    assert(candidate.includes(section), `다음 판단 레일 섹션이 사라짐: ${section}`);
+  // v19.8(사용자 요청 ②): 2번 패널이 "다음 제작 3개 큐 + 보존 희귀"로
+  // 바뀌었다.  "먼 미래를 고정하지 않는다"는 계약은 문구로 유지 —
+  // 1번 카드만 확정이고 이후 순서는 패 변화 시 재계산임을 화면에 남긴다.
+  assert(candidate.includes('queue.length>=3'), '다음 제작 큐 상한 3이 사라짐');
+  for (const section of ['v158-queue', '지금 보존', '패가 바뀌면 다시 계산']) {
+    assert(candidate.includes(section), `다음 제작 큐 섹션이 사라짐: ${section}`);
   }
 });
 

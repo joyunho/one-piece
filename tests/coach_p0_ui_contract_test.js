@@ -86,8 +86,8 @@ check('Rare focus shows the pre-upper safe reroll and at most three craftable Le
   assert(unusedHtml.includes('상위 전 안전 리롤'));
   assert(unusedHtml.includes('남는 희귀'));
   assert(craftHtml.includes('전설 1'),'제작 가능 목록이 비어 있다');
-  // 3번 패널은 카드 3개까지만 보이고 나머지는 "전체 보기"로 넘긴다.
-  assert.strictEqual((craftHtml.match(/<button/g)||[]).length,4,'카드 3개 + 전체 보기 1개');
+  // v19.8(사용자 요청 ③): 카드 6개까지 보이고 나머지는 "전체 보기"로 넘긴다.
+  assert.strictEqual((craftHtml.match(/<button/g)||[]).length,7,'카드 6개 + 전체 보기 1개');
   assert(craftHtml.includes('전체 제작각'),'나머지로 넘어가는 입구가 없다');
 });
 
