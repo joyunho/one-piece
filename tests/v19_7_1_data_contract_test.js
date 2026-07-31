@@ -69,4 +69,28 @@ check('써니호·코비 — 사용자 고정 규칙(광폭 전용 · 마나젠 
   if(sunny){const role=C.roleProfile(sunny);assert.strictEqual(role.boss,false);assert.strictEqual(role.frenzy,true);}
 });
 
+check('블랙마리아 왜곡 — W 폼 3형태 배타(사용자 규칙): 이감폼 기준, 스턴 0',()=>{
+  // v19.8.1: 폼 3형태(스턴/이감40/데미지)는 상호 배타 — 이감폼을 쓰는 덱
+  // 기준으로 계산한다.  0731 판의 스턴 1.25는 이 이중 계산이 부풀린 값.
+  const maria=global.ORD_TMO_UNITS.find(u=>u.id==='unit_1752903381904_1445');
+  assert(maria,'블마 왜곡 없음');
+  const role=C.roleProfile(maria);
+  assert.strictEqual(role.slow,40,'이감폼 기준 이감 40이어야 함');
+  assert.strictEqual(role.stun,0,'배타 폼인데 스턴이 같이 계산됨');
+  const research=C.stunResearch(maria);
+  assert(!research||!C.num(research.displayStun),'연구 스턴도 0이어야 함');
+  assert(C.displayNameOf(maria).includes('이감폼'),'폼 전제 라벨 없음');
+});
+
+check('라운드 상한 65 — 시계·수동 모두 65에서 멈춘다(사용자 규칙)',()=>{
+  assert.strictEqual(C.MAX_ROUND,65);
+  // 타이머가 아무리 오래 걸어도 65를 넘지 않는다(0731 로그: 80라까지 판정).
+  const longAgo=Date.now()-8*3600*1000;
+  const clock=C.roundClock({currentRound:1,roundStartedAt:longAgo,roundPrepSeconds:10,roundNormalSeconds:5,roundBossSeconds:5},Date.now());
+  assert(clock.round<=65,`시계가 ${clock.round}라까지 걸어감`);
+  assert(clock.label.includes('최종'),'상한 도달 라벨 없음');
+  const manual=C.roundClock({currentRound:99,roundStartedAt:0},Date.now());
+  assert.strictEqual(manual.round,65,'수동 라운드가 65를 넘음');
+});
+
 console.log(`\n${checks}/${checks} data contract checks passed.`);

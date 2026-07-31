@@ -928,7 +928,7 @@ class App{
     if(a==='connection'){if(this.onConnectionTest)this.onConnectionTest();return;}
     if(a==='open-tmo'){if(this.onOpenTmo)this.onOpenTmo();return;}
     if(a==='round-reset'){this.state.roundStartedAt=0;this.state.currentRound=1;this.persist();this.render();return;}
-    if(a==='round-step'){const delta=C.num(b.dataset.delta),cur=this.actualRound();this.state.currentRound=Math.max(1,cur+delta);if(this.state.roundStartedAt)this.state.roundStartedAt=Date.now()-this.elapsedToRoundStart(this.state.currentRound)*1000;this.persist();this.render();return;}
+    if(a==='round-step'){const delta=C.num(b.dataset.delta),cur=this.actualRound();this.state.currentRound=Math.min(C.MAX_ROUND||65,Math.max(1,cur+delta));if(this.state.roundStartedAt)this.state.roundStartedAt=Date.now()-this.elapsedToRoundStart(this.state.currentRound)*1000;this.persist();this.render();return;}
     if(a==='round-pause'){this.state.currentRound=this.actualRound();this.state.roundStartedAt=0;this.persist();this.render();return;}
     if(a==='round-start'){this.state.roundStartedAt=Date.now()-this.elapsedToRoundStart(Math.max(1,C.num(this.state.currentRound)||1))*1000;this.persist();this.render();return;}
     if(a==='reroll-step'){this.state.rerollsUsed=Math.max(0,Math.min(2,C.num(this.state.rerollsUsed)+C.num(b.dataset.delta)));this.persist();this.render();return;}
