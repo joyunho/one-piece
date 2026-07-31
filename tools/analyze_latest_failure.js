@@ -5,10 +5,18 @@ const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
 const EXT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild');
-const input = path.resolve(
-  process.argv[2] ||
-    path.join(ROOT, '..', 'upload', 'ORD_2305_20260727_150728_active.ordlog.json')
-);
+// v19.5(점검 결함): 기본값이 저장소 밖 특정 업로드 파일에 박혀 있어 새
+// 환경에서는 인자 없이 항상 죽었다 — data/ 의 최신 ordlog 를 고른다
+// (파일명에 타임스탬프가 있어 이름 내림차순 = 최신).
+function latestOrdlog() {
+  const dir = path.join(ROOT, 'data');
+  const logs = fs.existsSync(dir)
+    ? fs.readdirSync(dir).filter(name => name.endsWith('.ordlog.json')).sort()
+    : [];
+  if (!logs.length) throw new Error('data/*.ordlog.json 이 없습니다 — 로그 경로를 인자로 주세요');
+  return path.join(dir, logs[logs.length - 1]);
+}
+const input = path.resolve(process.argv[2] || latestOrdlog());
 
 global.window = global;
 for (const file of [

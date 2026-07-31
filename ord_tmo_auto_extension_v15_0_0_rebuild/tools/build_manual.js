@@ -25,6 +25,7 @@ const scriptFiles = [
   'ord_units_data.js',
   'ord_upper_memo.js',
   'ord_synergy_memo.js',
+  'ord_upper_playbook.js',
   'ord_data_patch.js',
   'ord_story_nonupper_data.js',
   'ord_story_upper_data.js',

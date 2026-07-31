@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v19.4.0 live cockpit bridge; connector protocol stays v13.
+  // v19.5.0 live cockpit bridge; connector protocol stays v13.
   // v19.4(사용자 요청): 도우미 번호 무관 — 숫자 id 전부 후보. 여러 탭이면
   // 주 도우미(32172) 우선.
   const PATTERNS = [
@@ -221,14 +221,11 @@
     };
     const touch = heartbeat => { touchHeartbeat(app, heartbeat); };
 
-    const source = await runtime({type: 'ORD_GET_SOURCE'});
-    pinnedTabId = Number(source.tabId) || 0;
-    pinnedEpoch = Number(source.sourceEpoch) || 0;
-    const stored = await get(['ordLatestSnapshot', 'ordLatestHeartbeat', 'ordLatestDiagnostic']);
-    app.state.connectionDiagnostic = stored.ordLatestDiagnostic || null;
-    apply(withHeartbeat(stored.ordLatestSnapshot, stored.ordLatestHeartbeat));
-    if (!stored.ordLatestSnapshot && stored.ordLatestDiagnostic && app.state.tab === 'data') scheduleRender();
-
+    // v19.5(점검 결함): 리스너 등록이 초기 읽기(await 2회) 뒤에 있어, 그
+    // 사이 도착한 스냅샷 변경이 이벤트에도 초기 읽기에도 안 잡혔다 —
+    // 다음 변경까지 낡은 패가 보였다.  리스너를 먼저 걸고 읽는다.  같은
+    // 스냅샷이 이벤트+초기 읽기로 두 번 적용될 수 있으나 updateSnapshot
+    // 이 지문으로 걸러낸다.
     chrome.storage.onChanged.addListener((changes, area) => {
       if (area !== 'local') return;
       const nextTabId = changes[SOURCE_KEY] ? Number(changes[SOURCE_KEY].newValue) || 0 : pinnedTabId;
@@ -247,10 +244,19 @@
       else if (nextHeartbeat) touch(nextHeartbeat);
     });
 
+    const source = await runtime({type: 'ORD_GET_SOURCE'});
+    pinnedTabId = Number(source.tabId) || 0;
+    pinnedEpoch = Number(source.sourceEpoch) || 0;
+    const stored = await get(['ordLatestSnapshot', 'ordLatestHeartbeat', 'ordLatestDiagnostic']);
+    app.state.connectionDiagnostic = stored.ordLatestDiagnostic || null;
+    apply(withHeartbeat(stored.ordLatestSnapshot, stored.ordLatestHeartbeat));
+    if (!stored.ordLatestSnapshot && stored.ordLatestDiagnostic && app.state.tab === 'data') scheduleRender();
+
+
     app.onConnectionTest = async () => {
       const tab = await selectTab();
       if (!tab) {
-        app.toast('열려 있는 TMO 32172/34366 조합도우미 탭이 없습니다.');
+        app.toast('열려 있는 TMO 조합도우미 탭이 없습니다.');
         return;
       }
       const beforeTab = pinnedTabId;

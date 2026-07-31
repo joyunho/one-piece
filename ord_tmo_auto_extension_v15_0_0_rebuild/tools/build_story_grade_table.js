@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 'use strict';
 
-// 스토리 파괴 속도 등급표 생성기 (v17.7).
+// 스토리 파괴 속도 등급표 생성기.
 // 코드가 실제로 쓰는 것과 같은 데이터(ord_core의 리그 등급)를 그대로
 // 마크다운으로 내보낸다 — 문서와 코드가 다시 어긋나지 않게 하는 단일
 // 원천이다.  원본 실측 순위·측정값은 바꾸지 않는다.
@@ -11,7 +11,10 @@ const path = require('path');
 
 const extensionDir = path.resolve(__dirname, '..');
 const repoDir = path.resolve(extensionDir, '..');
-const outputPath = path.join(repoDir, '스토리_등급표_v17_12.md');
+// v19.5(점검 결함): 파일명에 버전을 박으면 릴리스마다 부패한다 —
+// 안정 이름으로 두고 문서 머리에 현재 릴리스 버전을 쓴다.
+const releaseVersion = require(path.join(repoDir, 'package.json')).version;
+const outputPath = path.join(repoDir, '스토리_등급표.md');
 
 global.window = global;
 const originalWarn = console.warn;
@@ -35,7 +38,7 @@ function measureText(grade) {
   // sourceNote는 '상위 실측 1위 · 15.87초 파괴'처럼 순위 접두를 포함할 수
   // 있다 — 표에는 순위 열이 따로 있으므로 측정값만 남긴다.
   // 세팅 조건 등 부가 문구는 앱 화면에 그대로 남고, 표에는 측정값 한
-  // 조각만 싣는다(업로드된 v17.7 표와 같은 형식).
+  // 조각만 싣는다(v17.7 때 업로드된 원본 표의 형식을 그대로 따른다).
   const note = String(grade.sourceNote || '').trim();
   const parts = note.split('·').map(part => part.trim()).filter(Boolean);
   const start = parts.length > 1 && /실측\s*\d+위$|리그\s*\d+\/\d+위$/.test(parts[0]) ? 1 : 0;
@@ -43,7 +46,7 @@ function measureText(grade) {
 }
 
 const lines = [];
-lines.push('# 스토리 파괴 속도 등급표 (v17.7 · 리그별 SSS~F 9단계)');
+lines.push(`# 스토리 파괴 속도 등급표 (v${releaseVersion} · 리그별 SSS~F 9단계)`);
 lines.push('');
 lines.push('> 이 파일은 `tools/build_story_grade_table.js`로 생성됩니다. 원본 실측 순위와 측정값은 바꾸지 않고, 희귀·상위·전설급을 서로 섞지 않은 채 각 리그의 원본 순위를 9개 등분위로 재분류합니다.');
 

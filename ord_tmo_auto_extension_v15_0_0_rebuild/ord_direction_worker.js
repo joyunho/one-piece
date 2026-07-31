@@ -63,15 +63,42 @@ function rankBlueprintsForLanes(payload){
   }
   return out;
 }
-self.onmessage=event=>{
-  const request=event&&event.data||{};
+// v19.5(점검 결함): 무거운 계산(요청당 수 초) 중에 밀린 같은 종류의 낡은
+// 요청을 완주하지 않는다.  onmessage 는 우편함에 최신 요청만 남기고 처리를
+// 매크로태스크로 미룬다 — 큐에 쌓여 있던 이전 메시지들이 먼저 전부 배달돼
+// 우편함을 덮어쓴 뒤 처리기가 돌므로, 낡은 요청은 계산 없이 superseded 로
+// 회신된다.  메인 스레드는 원래 requestId 로 낡은 응답을 버리므로 안전하다.
+const mailbox=new Map();
+let drainScheduled=false;
+// setTimeout 유무를 호출 시점에 본다: 진짜 워커에는 항상 있고(우편함 효과),
+// 테스트 샌드박스(vm)에는 없어서 동기 처리로 물러난다 — 그 환경은 메시지를
+// 동기 배달하므로 즉시 처리가 곧 기존 계약이다.
+const defer=fn=>{if(typeof setTimeout==='function')setTimeout(fn,0);else fn();};
+function handle(request){
   if(request.type==='rank-upper-blueprints'){
     try{self.postMessage({type:'rank-upper-blueprints-result',requestId:request.requestId,key:request.key,rankings:rankBlueprintsForLanes(request.payload||{})});}
     catch(error){self.postMessage({type:'rank-upper-blueprints-error',requestId:request.requestId,key:request.key,error:String(error&&error.stack||error)});}
     return;
   }
-  if(request.type!=='rank-directions')return;try{
+  try{
     const payload=request.payload||{},board=self.ORDSquadPlanner.rankDeckDirections({catalog:self.ORD_TMO_UNITS,snapshot:payload.snapshot||{},settings:payload.settings||{},locks:[]},Object.assign({perLane:2,candidateCap:8},payload.options||{}));
     self.postMessage({type:'rank-directions-result',requestId:request.requestId,key:request.key,board:compactBoard(board)});
   }catch(error){self.postMessage({type:'rank-directions-error',requestId:request.requestId,key:request.key,error:String(error&&error.stack||error)});}
+}
+function drain(){
+  drainScheduled=false;
+  for(const type of [...mailbox.keys()]){
+    const request=mailbox.get(type);
+    mailbox.delete(type);
+    if(request)handle(request);
+    // 처리 중 새 메시지가 오면 그 핸들러가 drain 을 다시 예약한다.
+  }
+}
+self.onmessage=event=>{
+  const request=event&&event.data||{};
+  if(request.type!=='rank-upper-blueprints'&&request.type!=='rank-directions')return;
+  const stale=mailbox.get(request.type);
+  if(stale)self.postMessage({type:`${stale.type}-error`,requestId:stale.requestId,key:stale.key,error:'superseded-by-newer-request'});
+  mailbox.set(request.type,request);
+  if(!drainScheduled){drainScheduled=true;defer(drain);}
 };

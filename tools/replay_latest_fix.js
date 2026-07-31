@@ -5,8 +5,16 @@ const path=require('path');
 
 const ROOT=path.resolve(__dirname,'..');
 const EXT=path.join(ROOT,'ord_tmo_auto_extension_v15_0_0_rebuild');
-const LOG=path.resolve(process.argv[2]||path.join(ROOT,'..','upload','ORD_2305_20260727_150728_active.ordlog.json'));
-const requested=(process.argv[3]||'141,261,305,367').split(',').map(Number).filter(Number.isFinite);
+// v19.5(점검 결함): 기본값이 저장소 밖 업로드 파일 + 그 파일 전용 seq 로
+// 박혀 있었다 — data/ 최신 ordlog 를 고르고, seq 는 명시 인자일 때만 쓴다.
+function latestOrdlog(){
+  const dir=path.join(ROOT,'data');
+  const logs=fs.existsSync(dir)?fs.readdirSync(dir).filter(name=>name.endsWith('.ordlog.json')).sort():[];
+  if(!logs.length)throw new Error('data/*.ordlog.json 이 없습니다 — 로그 경로를 인자로 주세요');
+  return path.join(dir,logs[logs.length-1]);
+}
+const LOG=path.resolve(process.argv[2]||latestOrdlog());
+const requestedArg=(process.argv[3]||'').split(',').filter(part=>part.trim()!=='').map(Number).filter(Number.isFinite);
 
 global.window=global;
 global.localStorage={getItem:()=>null,setItem:()=>{},removeItem:()=>{}};
@@ -25,6 +33,9 @@ const E=global.ORDV15Engine;
 const App=global.ORDApp.App;
 const catalog=global.ORD_TMO_UNITS;
 const log=JSON.parse(fs.readFileSync(LOG,'utf8'));
+// seq 미지정이면 이 로그의 마지막 스냅샷 4개(대개 실패 직전 구간)를 재생한다.
+const requested=requestedArg.length?requestedArg
+  :(log.events||[]).filter(event=>event.type==='snapshot').map(event=>Number(event.seq)).slice(-4);
 const snapshots=new Map();
 let baseline=null;
 for(const event of log.events||[]){

@@ -93,6 +93,21 @@ check('worker loads every planner dependency and ranks only two candidates per l
   assert.strictEqual(harness.messages[0].key,'hand-a');
 });
 
+check('v19.5: 밀린 낡은 요청은 계산 없이 superseded 로 회신하고 최신 것만 계산한다',()=>{
+  const harness=workerHarness();
+  // 진짜 워커처럼 타이머를 흉내 내 우편함 경로를 태운다.
+  const timers=[];harness.context.setTimeout=fn=>{timers.push(fn);return timers.length;};
+  harness.context.onmessage({data:{type:'rank-directions',requestId:1,key:'old',payload:{}}});
+  harness.context.onmessage({data:{type:'rank-directions',requestId:2,key:'new',payload:{}}});
+  assert.strictEqual(harness.calls.length,0,'배수 전에 계산이 돌았음');
+  const superseded=harness.messages.find(m=>m.type==='rank-directions-error'&&m.requestId===1);
+  assert(superseded&&/superseded/.test(superseded.error),'낡은 요청이 회신 없이 버려짐');
+  timers.splice(0).forEach(fn=>fn());
+  assert.strictEqual(harness.calls.length,1,'낡은 요청까지 완주했음');
+  const result=harness.messages.find(m=>m.type==='rank-directions-result');
+  assert.strictEqual(result.requestId,2);
+});
+
 check('worker returns a compact UI-only board and reports calculation errors',()=>{
   const harness=workerHarness();
   harness.context.onmessage({data:{type:'rank-directions',requestId:8,key:'hand-b',payload:{}}});

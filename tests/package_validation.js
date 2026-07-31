@@ -14,7 +14,7 @@ const releaseFileVersion=releaseVersion.replace(/\./g,'_');
 
 const required=[
   'manifest.json','background.js','content-tmo.js','ord_helper.html','ord_units_data.js',
-  'ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js',
+  'ord_upper_memo.js','ord_synergy_memo.js','ord_upper_playbook.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js',
   'ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_app.css','ord_cockpit_v15.css','ord_boot_extension.js',
   'popup.html','popup.js','popup.css','README.txt'
 ];
@@ -41,7 +41,7 @@ for(const pattern of manifest.content_scripts[0].matches){
   assert(/\/build-helper\/\*$/.test(pattern),`build-helper 하위로 안 끝나는 매치: ${pattern}`);
 }
 
-for(const file of ['background.js','content-tmo.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_core.js','ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_boot_extension.js','popup.js']){
+for(const file of ['background.js','content-tmo.js','ord_upper_playbook.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_core.js','ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_boot_extension.js','popup.js']){
   new vm.Script(read(file),{filename:file});
 }
 const helper=read('ord_helper.html'),popup=read('popup.html');
@@ -58,10 +58,11 @@ assert(helper.indexOf('ord_squad_planner.js')<helper.indexOf('ord_v15_model.js')
 assert(helper.indexOf('ord_v15_engine.js')<helper.indexOf('ord_run_log_compactor.js'),'run-log compactor must load after v15 engine');
 assert(helper.indexOf('ord_run_log_compactor.js')<helper.indexOf('ord_run_log.js'),'run-log storage must load after compactor');
 assert(helper.indexOf('ord_run_log.js')<helper.indexOf('ord_app.js'),'run-log modules must load before app');
+assert(helper.indexOf('ord_upper_playbook.js')>0&&helper.indexOf('ord_upper_playbook.js')<helper.indexOf('ord_app.js'),'upper playbook must load before app');
 assert(!/ord_ai_advisor|openai|127\.0\.0\.1:38766/i.test(helper+popup+JSON.stringify(manifest)),'OpenAI UI or bridge surface remains');
 
 const context={console};context.window=context;vm.createContext(context);
-for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js']){
+for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_upper_playbook.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js']){
   vm.runInContext(read(file),context,{filename:file});
 }
 const units=context.ORD_TMO_UNITS,C=context.ORDCore,planner=context.ORDSquadPlanner;
@@ -83,6 +84,21 @@ assert.strictEqual(new Set(units.map(unit=>unit.id)).size,units.length,'duplicat
 const ids=new Set(units.map(unit=>unit.id));
 for(const unit of units)for(const material of unit.stuffs||[])assert(ids.has(material.id)||C.SPECIAL_IDS[material.id],`broken recipe ${unit.id} -> ${material.id}`);
 for(const unit of units.filter(C.isUpper))assert.notStrictEqual(context.ORD_SYNERGY_MEMO.byUnitId[unit.id],undefined,`missing upper synergy ${unit.id}`);
+// v19.5(사용자 요청): 상위 플레이북 — 카탈로그의 모든 상위가 요약·활용·페어를
+// 갖고, 화면에 넘치지 않는 길이를 지킨다.  표시 전용 계약: 엔진·플래너가
+// 이 데이터를 판단에 쓰기 시작하면 여기서 잡는다.
+const playbook=context.ORD_UPPER_PLAYBOOK;
+assert(playbook&&playbook.byId,'upper playbook missing');
+for(const unit of units.filter(C.isUpper)){
+  const entry=playbook.byId[unit.id];
+  assert(entry,`missing playbook entry ${unit.id} (${unit.name})`);
+  assert(entry.summary&&entry.summary.length<=60,`playbook summary bad ${unit.id}`);
+  assert(entry.use&&entry.use.length<=70,`playbook use bad ${unit.id}`);
+  assert(Array.isArray(entry.pairs)&&entry.pairs.length>=2&&entry.pairs.length<=4&&entry.pairs.every(name=>name&&name.length<=12),`playbook pairs bad ${unit.id}`);
+}
+for(const engineFile of ['ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_direction_worker.js']){
+  assert(!read(engineFile).includes('ORD_UPPER_PLAYBOOK'),`${engineFile} 이 표시 전용 플레이북을 참조함 — 엔진 판단에 쓰면 안 된다`);
+}
 const storyLeagueCounts=C.storyLeagueRows(units).reduce((out,row)=>{out[row.league]=(out[row.league]||0)+1;return out;},{});
 assert.deepStrictEqual(JSON.parse(JSON.stringify(storyLeagueCounts)),{rare:42,upper:89,legend:81},'story league catalog counts changed');
 
@@ -142,8 +158,11 @@ for(const match of manual.matchAll(/<script data-source="([^"]+)">([\s\S]*?)<\/s
 // v18.5: 아이콘 팩(ord_icons.js)이 들어와 20 → 21.  이 수는 "번들에 들어갈
 // 스크립트가 조용히 늘거나 줄지 않았는가"를 지키는 계약이라, 바뀔 때마다
 // 이유를 남기고 갱신한다.
-assert.strictEqual(manualScripts,21,'manual inline script count changed');
-for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js']){
+// v19.5: 상위 플레이북(ord_upper_playbook.js)이 들어와 21 → 22.
+assert.strictEqual(manualScripts,22,'manual inline script count changed');
+// v19.5(점검 결함): 신선도 대조 목록에 ord_icons.js 가 빠져 있어 아이콘 팩이
+// 낡아도 무검출이었다 — 번들 스크립트 전부를 대조한다.
+for(const file of ['ord_icons.js','ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_upper_playbook.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js']){
   assert.strictEqual(embeddedScripts.get(file),read(file).trim(),`manual bundle contains a stale ${file}`);
 }
 const embeddedCss=manual.match(/<style data-source="ord_app\.css">([\s\S]*?)<\/style>/);

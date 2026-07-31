@@ -1406,3 +1406,38 @@ body{background:
 .v153-role.warn strong,.v153-role.warn span{color:#ffce7a}
 .v153-role.bad strong,.v153-role.bad span{color:#ff9d9d}
 .v153-role.lead{border-radius:9px;background:rgba(255,180,94,.07)}
+
+/* v19.5(사용자 요청): 상위 플레이북 — 전수 메모의 특징 요약 · 활용법 ·
+   같이 쓰면 좋은 유닛을 상위가 보이는 자리마다 붙인다 (표시 전용). */
+.v155-playbook{display:grid;gap:4px;margin-top:2px;border:1px dashed rgba(242,187,82,.34);border-radius:10px;padding:6px 8px;background:rgba(242,187,82,.06)}
+.v155-playbook p{margin:0;color:#e8d9b0;font-size:11px;line-height:1.45}
+.v155-playbook small{display:block;color:#bfae82;font-size:10px;line-height:1.4}
+.v155-playbook .pairs{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
+.v155-playbook .pairs b{color:#8fa5bd;font-size:9.5px;font-weight:800}
+.v155-playbook .pairs i{border:1px solid rgba(85,199,228,.4);border-radius:7px;padding:1px 6px;background:rgba(85,199,228,.08);color:#9fdcf0;font-size:10px;font-style:normal;white-space:nowrap}
+.v155-playbook.compact{padding:5px 7px}
+.v155-playbook.compact p{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+.snipe-list .v155-playbook{border:none;background:none;padding:2px 0 0;margin:0}
+.snipe-list .v155-playbook p{-webkit-line-clamp:1;color:#c9bd9a;font-size:10px}
+.playbook-detail h3 small{margin-left:6px;color:var(--v153-muted);font-size:10.5px;font-weight:700}
+.playbook-detail p{margin:0 0 6px;color:#e8d9b0;font-size:13px;line-height:1.55}
+.playbook-detail p.use{color:#c9b98c;font-size:12px}
+.playbook-detail .pairs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:2px}
+.playbook-detail .pairs b{color:#8fa5bd;font-size:11px}
+.playbook-detail .pairs span{border:1px solid rgba(85,199,228,.4);border-radius:8px;padding:2px 8px;background:rgba(85,199,228,.08);color:#9fdcf0;font-size:11.5px}
+/* 한 화면 계약: 낮은 화면에서는 활용 줄을 접고 요약+페어를 한 줄로 만다. */
+@media (max-height:1000px) and (min-width:1240px){
+  .v155-playbook{display:flex;align-items:center;gap:6px;padding:3px 7px;margin-top:0}
+  .v155-playbook small{display:none}
+  .v155-playbook p{flex:1 1 auto;min-width:0;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .v155-playbook .pairs{flex:none;flex-wrap:nowrap}
+  .v155-playbook .pairs b{display:none}
+  .v155-playbook .pairs i{padding:0 5px;font-size:9.5px}
+  .v155-playbook .pairs i:nth-child(n+4){display:none}
+  .v153-upper .v153-upper-main{padding:9px}
+  .v153-party-chips>button,.v153-party-slot{padding:4px 5px}
+  .v153-upper .v153-party{padding:7px;margin-top:7px}
+  .v153-upper .v153-party>header{margin-bottom:5px}
+  .v153-upper .v153-second{padding:6px;margin-top:6px}
+  .v153-upper .v153-upper-gaps,.v153-upper .v153-support-fold{margin-top:6px}
+}

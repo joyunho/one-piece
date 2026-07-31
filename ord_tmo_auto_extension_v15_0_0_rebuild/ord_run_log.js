@@ -71,7 +71,7 @@ function fitValue(value,budget){
   let candidate=value,text=JSON.stringify(candidate);if(text.length<=budget)return candidate;if(Array.isArray(candidate)){let size=Math.min(candidate.length,100);while(size>0){candidate=value.slice(0,size);if(JSON.stringify(candidate).length<=budget)return candidate;size=Math.floor(size/2);}}else if(isPlainObject(candidate)){const out={};for(const key of Object.keys(candidate)){const next=Object.assign({},out,{[key]:candidate[key]});if(JSON.stringify(next).length>budget)break;out[key]=candidate[key];}if(Object.keys(out).length)return out;}return`[omitted:${text.length} bytes]`;
 }
 function boundedPayload(value){
-  const clean=plain(value||{}),text=JSON.stringify(clean);if(text.length<=MAX_EVENT_PAYLOAD_BYTES)return clean;const out={_truncated:{reason:'payload-byte-limit',limit:MAX_EVENT_PAYLOAD_BYTES,originalFingerprint:fingerprint('payload',clean,{dropVolatile:true})}},priority=['round','counts','settings','inputFingerprint','inputSnapshotFingerprint','selected','selectedId','candidates','reason','gates','costs','prefix','metrics'],keys=[...new Set(priority.concat(Object.keys(clean).sort()))];for(const key of keys){if(!Object.prototype.hasOwnProperty.call(clean,key))continue;const used=JSON.stringify(out).length,remaining=MAX_EVENT_PAYLOAD_BYTES-used-key.length-16;if(remaining<100)break;out[key]=fitValue(clean[key],remaining);if(JSON.stringify(out).length>MAX_EVENT_PAYLOAD_BYTES)delete out[key];}return out;
+  const clean=plain(value||{}),text=JSON.stringify(clean);if(text.length<=MAX_EVENT_PAYLOAD_BYTES)return clean;const out={_truncated:{reason:'payload-byte-limit',limit:MAX_EVENT_PAYLOAD_BYTES,originalFingerprint:fingerprint('payload',clean,{dropVolatile:true})}},priority=['round','v15','input','counts','settings','inputFingerprint','inputSnapshotFingerprint','selected','selectedId','candidates','reason','gates','costs','prefix','metrics'],keys=[...new Set(priority.concat(Object.keys(clean).sort()))];for(const key of keys){if(!Object.prototype.hasOwnProperty.call(clean,key))continue;const used=JSON.stringify(out).length,remaining=MAX_EVENT_PAYLOAD_BYTES-used-key.length-16;if(remaining<100)break;out[key]=fitValue(clean[key],remaining);if(JSON.stringify(out).length>MAX_EVENT_PAYLOAD_BYTES)delete out[key];}return out;
 }
 
 function canonicalValue(value,options,depth){
@@ -169,7 +169,7 @@ function validateRun(value){
 // into a 7.4MB file with no analytical benefit.
 function exportRun(run,options){const check=validateRun(run);if(!check.valid)throw new TypeError(`Invalid ORD run log: ${check.errors.join('; ')}`);return JSON.stringify(clonePlain(run),null,options&&options.pretty===true?2:0);}
 function importRun(text){
-  if(typeof text!=='string')throw new TypeError('Run-log import must be JSON text');if(text.length>5000000)throw new RangeError('Run-log import exceeds 5 MB');let value;try{value=JSON.parse(text);}catch(error){throw new SyntaxError(`Invalid run-log JSON: ${error.message}`);}const check=validateRun(value);if(!check.valid)throw new TypeError(`Invalid ORD run log: ${check.errors.join('; ')}`);return clonePlain(value);
+  if(typeof text!=='string')throw new TypeError('Run-log import must be JSON text');if(text.length>32000000)throw new RangeError('Run-log import exceeds 32 MB');let value;try{value=JSON.parse(text);}catch(error){throw new SyntaxError(`Invalid run-log JSON: ${error.message}`);}const check=validateRun(value);if(!check.valid)throw new TypeError(`Invalid ORD run log: ${check.errors.join('; ')}`);return clonePlain(value);
 }
 
 function createHistory(options){const limits=normalizedLimits(options);return{schemaName:HISTORY_SCHEMA_NAME,schemaVersion:SCHEMA_VERSION,updatedAt:iso(options&&options.at),limits,runs:[]};}
@@ -211,7 +211,12 @@ function createRepository(options){
   options=options||{};const limits=normalizedLimits(options.limits),prefix=String(options.keyPrefix||DEFAULT_STORAGE_KEY),chunkEvents=clampInt(options.chunkEvents,10,100,40),flushDelayMs=clampInt(options.flushDelayMs,25,5000,500),storage=options.storage||(env&&env.localStorage)||null,indexedDB=options.indexedDB===false?null:(options.indexedDB||(env&&env.indexedDB)||null),keyRange=options.IDBKeyRange||(env&&env.IDBKeyRange)||null;
   let mode=indexedDB?'indexeddb':storage?'localstorage':'memory',dbPromise=null,db=null,timer=null,flushing=null,closed=false,indexedBytesKnown=false,indexedApproxBytes=0;const queue=[],highWater=new Map(),memoryMeta=new Map(),memoryEvents=new Map();
   const fallbackIndexKey=`${prefix}:index`,fallbackMetaKey=id=>`${prefix}:run:${encodeURIComponent(id)}:meta`,fallbackChunkKey=(id,index)=>`${prefix}:run:${encodeURIComponent(id)}:events:${index}`;
-  function schedule(){if(closed||timer!=null)return;timer=setTimeout(()=>{timer=null;flush().catch(()=>{});},flushDelayMs);}
+  let flushFailureStreak=0;
+  // v19.5(점검 결함): 영구 저장 실패가 500ms 고정 재시도로 무한 반복되며
+  // 오류가 통째로 삼켜졌다.  실패가 이어지면 지수적으로 물러나고(상한 30초),
+  // 연속 실패 수와 다운그레이드 사유를 summary 로 노출한다.
+  function scheduleDelay(){return Math.min(30000,flushDelayMs*Math.pow(2,Math.min(6,flushFailureStreak)));}
+  function schedule(){if(closed||timer!=null)return;timer=setTimeout(()=>{timer=null;flush().catch(()=>{});},scheduleDelay());}
   function queueMeta(run){const check=validateRun(run);if(!check.valid)throw new TypeError(`Invalid ORD run log: ${check.errors.join('; ')}`);queue.push({kind:'meta',runId:run.runId,value:runMeta(run),firstRetainedSeq:num(run.firstRetainedSeq)||1});schedule();}
   function queueEvent(runId,event){if(!event||!EVENT_TYPE_SET.has(event.type)||!Number.isInteger(event.seq))throw new TypeError('Valid run-log event is required');queue.push({kind:'event',runId:String(runId),value:clonePlain(event)});highWater.set(String(runId),Math.max(num(highWater.get(String(runId))),event.seq));schedule();}
   function captureRun(run){queueMeta(run);const after=Math.max(0,num(highWater.get(run.runId)));for(const event of run.events)if(event.seq>after)queueEvent(run.runId,event);queue.push({kind:'trim',runId:run.runId,firstRetainedSeq:num(run.firstRetainedSeq)||1});schedule();return run;}
@@ -247,8 +252,24 @@ function createRepository(options){
     for(const op of batch){if(op.kind==='meta')memoryMeta.set(op.runId,clonePlain(op.value));else if(op.kind==='event'){if(!memoryEvents.has(op.runId))memoryEvents.set(op.runId,new Map());memoryEvents.get(op.runId).set(op.value.seq,clonePlain(op.value));}else if(op.kind==='trim'&&memoryEvents.has(op.runId))for(const seq of memoryEvents.get(op.runId).keys())if(seq<op.firstRetainedSeq)memoryEvents.get(op.runId).delete(seq);}
     for(const events of memoryEvents.values())while(events.size>limits.maxEventsPerRun)events.delete(Math.min(...events.keys()));const keep=[...memoryMeta.values()].sort((a,b)=>String(b.startedAt).localeCompare(String(a.startedAt))).slice(0,limits.maxRuns),ids=new Set(keep.map(meta=>meta.runId));for(const id of memoryMeta.keys())if(!ids.has(id)){memoryMeta.delete(id);memoryEvents.delete(id);}
   }
+  let downgradedAt=0,downgradeReason='';
+  function dropOldestFallbackRun(){
+    if(!storage)return;let index;try{index=loadFallbackIndex();}catch(_){return;}
+    if(!index.runs.length)return;
+    const removed=index.runs.sort((a,b)=>String(b.startedAt).localeCompare(String(a.startedAt))).pop();
+    try{storage.removeItem(fallbackMetaKey(removed.runId));for(const chunk of removed.chunks||[])storage.removeItem(fallbackChunkKey(removed.runId,chunk.index));storage.setItem(fallbackIndexKey,JSON.stringify(index));}catch(_){}
+  }
   async function flush(){
-    if(flushing)return flushing;if(timer!=null){clearTimeout(timer);timer=null;}if(!queue.length)return;const batch=queue.splice(0,queue.length);flushing=(async()=>{if(mode==='indexeddb'){try{await flushIndexed(batch);return;}catch(_){mode=storage?'localstorage':'memory';dbPromise=null;db=null;}}if(mode==='localstorage')flushFallback(batch);else flushMemory(batch);})();try{await flushing;}catch(error){queue.unshift(...batch);throw error;}finally{flushing=null;if(queue.length)schedule();}
+    if(flushing)return flushing;if(timer!=null){clearTimeout(timer);timer=null;}if(!queue.length)return;const batch=queue.splice(0,queue.length);flushing=(async()=>{if(mode==='indexeddb'){try{await flushIndexed(batch);return;}catch(error){
+      // v19.5(점검 결함): 조용한 영구 다운그레이드 — 최소한 사유를 남긴다.
+      downgradedAt=Date.now();downgradeReason=String(error&&error.message||error).slice(0,160);
+      try{console.warn('[ORD run-log] IndexedDB 저장 실패 — localStorage 폴백 전환:',downgradeReason);}catch(_){}
+      mode=storage?'localstorage':'memory';dbPromise=null;db=null;}}
+    if(mode==='localstorage'){
+      // v19.5(점검 결함): quota 초과 시 프루닝이 쓰기 뒤라 500ms 마다 같은
+      // 실패를 반복했다 — 가장 오래된 런을 먼저 비우고 1회 재시도.
+      try{flushFallback(batch);}catch(_){dropOldestFallbackRun();flushFallback(batch);}
+    }else flushMemory(batch);})();try{await flushing;flushFailureStreak=0;}catch(error){flushFailureStreak++;queue.unshift(...batch);throw error;}finally{flushing=null;if(queue.length)schedule();}
   }
   async function listRuns(){await flush();if(mode==='indexeddb'){try{const database=await openDb(),rows=await requestPromise(database.transaction('runs','readonly').objectStore('runs').getAll());return rows.sort((a,b)=>String(b.startedAt).localeCompare(String(a.startedAt)));}catch(_){mode=storage?'localstorage':'memory';dbPromise=null;db=null;}}if(mode==='memory')return[...memoryMeta.values()].map(clonePlain).sort((a,b)=>String(b.startedAt).localeCompare(String(a.startedAt)));const index=loadFallbackIndex();return index.runs.map(entry=>{const text=storage.getItem(fallbackMetaKey(entry.runId));try{return JSON.parse(text);}catch(_){return null;}}).filter(Boolean);}
   async function getRun(runId){
@@ -261,7 +282,7 @@ function createRepository(options){
   }
   async function close(){closed=true;if(timer!=null){clearTimeout(timer);timer=null;}await flush();if(db&&typeof db.close==='function')db.close();}
   return{
-    get mode(){return mode;},get pending(){return queue.length;},limits,
+    get mode(){return mode;},get pending(){return queue.length;},get failureStreak(){return flushFailureStreak;},get downgrade(){return downgradedAt?{at:downgradedAt,reason:downgradeReason}:null;},limits,
     startRun(run){queueMeta(run);return run;},appendEvent(runId,event){queueEvent(runId,event);return event;},captureRun,
     finishRun(run){queueMeta(run);for(const event of run.events)if(event.seq>num(highWater.get(run.runId)))queueEvent(run.runId,event);schedule();return run;},
     flush,listRuns,getRun,clearAll,close,
@@ -294,7 +315,7 @@ function createRecorder(options){
     ensureAlive();context=context||{};if(!run)return null;const normalized=['completed','failed','abandoned'].includes(status)?status:'abandoned';if(details)record('outcome',Object.assign({kind:details.kind||normalized},plain(details)),context);finishRun(run,normalized,null,context);repository.finishRun(run);return run;
   }
   function summary(){
-    const events=run&&run.events||[],counts={snapshot:0,decision:0,'user-action':0,outcome:0};for(const event of events)counts[event.type]=num(counts[event.type])+1;const lastRound=[...events].reverse().find(event=>event.round!=null),lastDecision=[...events].reverse().find(event=>event.type==='decision'),lastOutcome=[...events].reverse().find(event=>event.type==='outcome');return{ready:!loading,hasRun:!!run,runId:run&&run.runId||null,status:run&&run.status||'idle',startedAt:run&&run.startedAt||null,endedAt:run&&run.endedAt||null,eventCount:events.length,droppedEventCount:num(run&&run.droppedEventCount),lastRound:lastRound?lastRound.round:null,eventTypes:counts,lastDecisionFingerprint:lastDecision&&lastDecision.decisionFingerprint||null,lastOutcome:lastOutcome&&lastOutcome.payload&&lastOutcome.payload.kind||null,persistence:repository.mode,pendingWrites:num(repository.pending)};
+    const events=run&&run.events||[],counts={snapshot:0,decision:0,'user-action':0,outcome:0};for(const event of events)counts[event.type]=num(counts[event.type])+1;const lastRound=[...events].reverse().find(event=>event.round!=null),lastDecision=[...events].reverse().find(event=>event.type==='decision'),lastOutcome=[...events].reverse().find(event=>event.type==='outcome');return{ready:!loading,hasRun:!!run,runId:run&&run.runId||null,status:run&&run.status||'idle',startedAt:run&&run.startedAt||null,endedAt:run&&run.endedAt||null,eventCount:events.length,droppedEventCount:num(run&&run.droppedEventCount),lastRound:lastRound?lastRound.round:null,eventTypes:counts,lastDecisionFingerprint:lastDecision&&lastDecision.decisionFingerprint||null,lastOutcome:lastOutcome&&lastOutcome.payload&&lastOutcome.payload.kind||null,persistence:repository.mode,pendingWrites:num(repository.pending),flushFailureStreak:num(repository.failureStreak),persistenceDowngrade:repository.downgrade||null};
   }
   function peekEvents(limit){const count=clampInt(limit,1,500,50);return clonePlain((run&&run.events||[]).slice(-count));}
   function exportObject(){return run?clonePlain(run):null;}

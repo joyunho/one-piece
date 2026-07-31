@@ -6,7 +6,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.4.0';
+const VERSION='19.5.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -76,7 +76,7 @@ function applyScenarioPatch(observed,settings){
 }
 function build(input){
   if(!C||typeof C.mergeLiveCatalog!=='function'||typeof C.buildDb!=='function')throw new Error('ORDV15Model requires ORDCore to be loaded first.');
-  input=input||{};const settings=clone(input.settings),snapshot=input.snapshot||{},catalog=input.catalog||[],units=C.mergeLiveCatalog(catalog,snapshot),db=C.buildDb(units),observedCounts=copyCountsFromSnapshot(units,snapshot),observed={kind:'observed',db,units,counts:observedCounts,currentAbilities:currentAbilities(snapshot),percent:completionMap(units),snapshot,wisp:num(observedCounts[C.WISP_ID]),sourceHealth:{source:String(snapshot.source||''),sessionId:String(snapshot.sessionId||''),seq:num(snapshot.seq),observedAt:num(snapshot.at||snapshot.bridgeAt),dataChangedAt:num(snapshot.dataChangedAt),complete:!!(snapshot.collection&&snapshot.collection.found&&snapshot.countDiscovery&&snapshot.countDiscovery.found),wispObserved:snapshot.wispCountFound===true}},patched=applyScenarioPatch(observed,settings),beforeVirtual=cloneCounts(patched.counts);
+  input=input||{};const settings=clone(input.settings),snapshot=input.snapshot||{},catalog=input.catalog||[],_shared=typeof C.mergedDbFor==='function'?C.mergedDbFor(catalog,snapshot):{units:C.mergeLiveCatalog(catalog,snapshot),db:null},units=_shared.units,db=_shared.db||C.buildDb(units),observedCounts=copyCountsFromSnapshot(units,snapshot),observed={kind:'observed',db,units,counts:observedCounts,currentAbilities:currentAbilities(snapshot),percent:completionMap(units),snapshot,wisp:num(observedCounts[C.WISP_ID]),sourceHealth:{source:String(snapshot.source||''),sessionId:String(snapshot.sessionId||''),seq:num(snapshot.seq),observedAt:num(snapshot.at||snapshot.bridgeAt),dataChangedAt:num(snapshot.dataChangedAt),complete:!!(snapshot.collection&&snapshot.collection.found&&snapshot.countDiscovery&&snapshot.countDiscovery.found),wispObserved:snapshot.wispCountFound===true}},patched=applyScenarioPatch(observed,settings),beforeVirtual=cloneCounts(patched.counts);
   if(patched.virtualApplied)beforeVirtual[patched.virtualId]=Math.max(0,num(beforeVirtual[patched.virtualId])-1);
   const completionById=completionDetails(db,units,observed.percent,beforeVirtual,patched.counts,patched),effective={kind:'effective',db,units,rawCounts:observedCounts,counts:patched.counts,currentAbilities:observed.currentAbilities,percent:observed.percent,completionById,wisp:num(patched.counts[C.WISP_ID]),snapshot,virtualId:patched.virtualId,virtualApplied:patched.virtualApplied,virtualResolved:patched.alreadyObserved,virtualSpecialBaselineId:patched.baselineId,virtualSpecialBaselineCount:patched.baselineCount,assumptions:patched.assumptions};
   // Completion and live abilities can change while unit counts stay constant.
