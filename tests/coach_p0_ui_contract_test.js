@@ -39,7 +39,8 @@ check('live coach exposes one status strip and four decision regions',()=>{
   // 4칸으로 줄여 잡동사니를 없앴는데, 그때 한 칸에 뭉쳐 있던 "희귀 판단"이
   // 실제로는 두 가지(만들 수 있는 전설급 / 안 쓰는 희귀)라 목업대로 갈랐고,
   // "다음에 뭘 하지"를 1번 카드 안에서 빼내 2번 패널로 세웠다.
-  assert.deepStrictEqual(regions,['game-status','next-action','next-preview','craftable-legends','clear-gaps','upper-party','unused-rare']);
+  // v19.6(사용자 루미너스 UI): 스펙이 첫 행 오른쪽으로 — 순서 갱신.
+  assert.deepStrictEqual(regions,['game-status','next-action','next-preview','clear-gaps','craftable-legends','upper-party','unused-rare']);
   assert.strictEqual(new Set(regions).size,7);
   for(const key of ['status','next','candidate','spec','rare','upper','unused'])assert.strictEqual((html.match(new RegExp(`data-test="${key}"`,'g'))||[]).length,1,key);
   for(const removed of ['ord-tabs','v15-rare-board','coach-details','v15-outcome-dock'])assert(!html.includes(removed),removed);
@@ -82,12 +83,12 @@ check('Rare focus shows the pre-upper safe reroll and at most three craftable Le
   ]}}};
   const craftHtml=app.renderV153CraftableLegends(stateStub,ledgerStub);
   const unusedHtml=app.renderV153UnusedRare(stateStub,ledgerStub);
-  assert(unusedHtml.includes('상위 올리기 전 안전 리롤'));
+  assert(unusedHtml.includes('상위 전 안전 리롤'));
   assert(unusedHtml.includes('남는 희귀'));
   assert(craftHtml.includes('전설 1'),'제작 가능 목록이 비어 있다');
   // 3번 패널은 카드 3개까지만 보이고 나머지는 "전체 보기"로 넘긴다.
   assert.strictEqual((craftHtml.match(/<button/g)||[]).length,4,'카드 3개 + 전체 보기 1개');
-  assert(craftHtml.includes('전체 제작 가능 유닛 보기'),'나머지로 넘어가는 입구가 없다');
+  assert(craftHtml.includes('전체 제작각'),'나머지로 넘어가는 입구가 없다');
 });
 
 check('the primary card exposes one action, reason, after-state, stop condition and uncertainty',()=>{

@@ -19,7 +19,9 @@ test('renderCoach는 상태와 6개 핵심 판단 영역만 배치한다', () =>
   const coach = slice('renderCoach(state,plan,phase,clock,health){', 'renderCoachDetails(state,plan,open=false){');
   const regions = [...coach.matchAll(/data-region="([^"]+)"/g)].map(m => m[1]);
   // v18.4(사용자 목업): 6개 판단 영역. 아래 이름 순서가 곧 화면 순서다.
-  assert.deepStrictEqual(regions, ['next-action', 'next-preview', 'craftable-legends', 'clear-gaps', 'upper-party', 'unused-rare']);
+  // v19.6(사용자 루미너스 UI): 2번(다음 판단)이 1번 안의 레일로 들어가고,
+  // 스펙이 첫 행 오른쪽으로 — action+rail | spec / craft | party / rare 순서.
+  assert.deepStrictEqual(regions, ['next-action', 'next-preview', 'clear-gaps', 'craftable-legends', 'upper-party', 'unused-rare']);
   assert(coach.includes('renderV153Status(state,clock,health)'));
   assert(!coach.includes('renderV151RunHeader'));
   assert(!coach.includes('renderV152RarePlan'));
@@ -34,9 +36,13 @@ test('다음 행동은 확정 카드 하나와 후속 후보 최대 2개만 보�
   // 패널이 같은 목록을 보게 하려고). 상한 계약은 그 헬퍼에서 지킨다.
   const candidateRows = slice('v153NextCandidateRows(plan){', 'renderV153NextCandidate(state,plan){');
   assert(candidateRows.includes('picked.length>=2'));
-  // v18.4: 문구가 2번 패널로 옮겨졌다. "지금 고정하지 않는다"는 계약은 유지 —
-  // 확정은 1번 카드 하나뿐이라는 말이 화면에 남아야 한다.
-  assert(candidate.includes('지금 확정하는 것은 1번 카드 하나뿐입니다.'));
+  // v19.6(사용자 루미너스 UI): 2번 패널이 "완료 후 · 다시 계산 · 지금 보존"
+  // 3분할 판단 레일로 바뀌었다.  "먼 미래를 고정하지 않는다"는 계약은 유지 —
+  // 문구와 3개 섹션이 화면에 남아야 한다.
+  assert(candidate.includes('먼 미래 순서는 고정하지 않습니다'));
+  for (const section of ['완료 후', '다시 계산', '지금 보존', 'v154-next-board']) {
+    assert(candidate.includes(section), `다음 판단 레일 섹션이 사라짐: ${section}`);
+  }
 });
 
 test('스펙은 한 가지 행 형식으로 통일되고 축으로만 묶인다', () => {
@@ -64,7 +70,8 @@ test('희귀 판단은 만들 수 있는 전설급(3번)과 안 쓰는 희귀(6�
   // 사용·보류 장부는 사라지지 않는다 — 6번 패널 안에 접어서 유지한다.
   const rare = slice('renderV153CraftableLegends(state,plan){', 'renderV153UnusedRare(state,plan){');
   const unused = slice('renderV153UnusedRare(state,plan){', 'renderV153UpperParty(state,plan){');
-  for (const marker of ['상위 올리기 전 안전 리롤', "key:'use'", "key:'hold'"]) {
+  // v19.6(사용자 루미너스 UI): 배너 문구가 "상위 전 안전 리롤"로 짧아졌다.
+  for (const marker of ['상위 전 안전 리롤', "key:'use'", "key:'hold'"]) {
     assert(unused.includes(marker), marker);
   }
   assert(unused.includes("row.reroll"), '리롤 후보 추출이 사라짐');

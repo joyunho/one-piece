@@ -48,14 +48,16 @@ catch(error){
     await page.route('http*://**',route=>route.abort());
     // v18.4: 6패널 개편 — 희귀 장부가 "만들 수 있는 전설급"(3번)과 "필요없는
 // 희귀"(6번)로 나뉘고, "할 일 미리보기"(2번)가 새로 들어왔다.
-const REGIONS=['game-status','next-action','next-preview','craftable-legends','clear-gaps','upper-party','unused-rare'];
+// v19.6(사용자 루미너스 UI): 2번(다음 판단)이 1번 패널 안의 레일이 되고,
+// 스펙이 첫 행 오른쪽으로 — 영역 순서 갱신.
+const REGIONS=['game-status','next-action','next-preview','clear-gaps','craftable-legends','upper-party','unused-rare'];
     for(const cfg of [{name:'desktop',width:1920,height:1080},{name:'laptop',width:1440,height:900},{name:'mobile',width:430,height:900}]){
       await page.setViewportSize({width:cfg.width,height:cfg.height});
       await page.goto('file://'+path.resolve(__dirname,'ui_fixture.html'),{waitUntil:'domcontentloaded'});
-      await page.waitForSelector('.v153-grid');
+      await page.waitForSelector('.v155-dashboard');
       const metrics=await page.evaluate(()=>{
         const app=window.TEST_APP,decision=app.plan().plan.v15Decision||{};
-        const grid=document.querySelector('.v153-grid'),gridRect=grid.getBoundingClientRect();
+        const grid=document.querySelector('.v155-dashboard'),gridRect=grid.getBoundingClientRect();
         return{
           version:window.ORDCore.VERSION,
           health:app.health(),
@@ -78,7 +80,9 @@ const REGIONS=['game-status','next-action','next-preview','craftable-legends','c
       assert.deepStrictEqual(metrics.regions,REGIONS,`${cfg.name} region set/order changed`);
       // v18.4: 상시 노출이 4패널에서 6패널로 바뀌었다(지금 할 일 / 미리보기 /
       // 제작 가능 전설급 / 현재 스펙 / 최종 파티 / 필요없는 희귀).
-      assert.strictEqual(metrics.panelCount,6,`${cfg.name} expected exactly six decision panels`);
+      // v19.6(사용자 루미너스 UI): "다음 판단"이 1번 패널 안의 레일로 합쳐져
+      // .v153-panel 은 5장 — 판단 영역 자체는 여전히 6개(REGIONS 로 검사).
+      assert.strictEqual(metrics.panelCount,5,`${cfg.name} expected exactly five decision panels`);
       assert(metrics.gapCards<=4,`${cfg.name} clear gaps exceeded the four-card cap`);
       assert(metrics.hasAction||metrics.hasRecovery,`${cfg.name} replay of the recorded stall must show an action or recovery ladder (state=${metrics.decisionState})`);
       assert.strictEqual(metrics.legacyTabs,0,`${cfg.name} legacy tab bar returned`);

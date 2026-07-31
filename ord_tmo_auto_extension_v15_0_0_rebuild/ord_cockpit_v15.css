@@ -1407,37 +1407,841 @@ body{background:
 .v153-role.bad strong,.v153-role.bad span{color:#ff9d9d}
 .v153-role.lead{border-radius:9px;background:rgba(255,180,94,.07)}
 
-/* v19.5(사용자 요청): 상위 플레이북 — 전수 메모의 특징 요약 · 활용법 ·
-   같이 쓰면 좋은 유닛을 상위가 보이는 자리마다 붙인다 (표시 전용). */
-.v155-playbook{display:grid;gap:4px;margin-top:2px;border:1px dashed rgba(242,187,82,.34);border-radius:10px;padding:6px 8px;background:rgba(242,187,82,.06)}
-.v155-playbook p{margin:0;color:#e8d9b0;font-size:11px;line-height:1.45}
-.v155-playbook small{display:block;color:#bfae82;font-size:10px;line-height:1.4}
+/* v19.4 — 실전판 리메이크.
+   다단 컬럼은 패널 순서를 열 단위로 쌓아 [1·2·3] / [4] / [5·6]의 큰 공백을
+   만들었다. 각 행을 12열 그리드로 명시해 상태마다 높이가 달라도 다음 행이
+   항상 전체 폭을 다시 채우게 한다. */
+.ord-app.v151-shell{width:100%;max-width:1920px;padding:8px 10px 12px}
+.v153-screen{min-height:calc(100dvh - 20px)}
+.v153-status{top:5px;margin-bottom:8px;border-radius:14px;padding:7px 10px 7px 14px;box-shadow:0 12px 30px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.04)}
+.v153-hud>.v153-mode{margin:0}
+.v153-grid-6{
+  display:grid;
+  column-count:initial;
+  grid-template-columns:repeat(12,minmax(0,1fr));
+  grid-template-areas:
+    "now now now now now now now spec spec spec spec spec"
+    "next next next next next next next next unused unused unused unused"
+    "craft craft craft craft craft craft craft party party party party party";
+  grid-template-rows:auto auto minmax(170px,1fr);
+  gap:8px;
+  align-items:stretch;
+  min-height:calc(100dvh - 86px);
+}
+.v153-grid-6>.v153-panel{
+  display:flex;
+  flex-direction:column;
+  min-height:0;
+  margin:0;
+  break-inside:auto;
+  -webkit-column-break-inside:auto;
+}
+.v153-next{grid-area:now}
+.v153-preview{grid-area:next}
+.v153-craft{grid-area:craft}
+.v153-spec{grid-area:spec}
+.v153-upper{grid-area:party}
+.v153-unused{grid-area:unused}
+.v153-panel{border-radius:14px;padding:10px 11px;background:linear-gradient(180deg,rgba(14,29,47,.98),rgba(8,18,31,.98));box-shadow:0 8px 24px rgba(0,0,0,.2),inset 0 1px rgba(255,255,255,.025)}
+.v153-panel>header{margin:0 0 8px;padding:0 0 7px}
+.v153-panel>header>small{width:26px;height:26px;border-radius:8px}
+.v153-panel>header>small .v153-ic,.v153-panel>header>small .v153-ic-img{width:16px;height:16px}
+.v153-panel>header h2{font-size:16px}
+.v153-panel>header p{font-size:10px}
+.v153-preview{border-color:rgba(74,154,222,.36)}
+.v153-craft{border-color:rgba(155,135,255,.42)}
+.v153-spec{border-color:rgba(242,187,82,.34)}
+.v153-upper{border-color:rgba(71,215,162,.34)}
+.v153-unused{border-color:rgba(255,101,119,.34)}
+
+/* 다음 판단 — 후보를 가짜 시간순으로 잇지 않고, 완료 후/보존/재계산으로 분리. */
+.v154-next-board{display:grid;grid-template-columns:minmax(0,1.12fr) minmax(230px,.88fr);gap:7px}
+.v154-next-board>section{min-width:0;border:1px solid var(--v153-line);border-radius:11px;padding:8px 9px;background:rgba(7,18,32,.68)}
+.v154-next-board>section>header{display:flex;gap:6px;align-items:center;margin-bottom:6px}
+.v154-next-board>section>header .v153-ic,.v154-next-board>section>header .v153-ic-img{width:15px;height:15px}
+.v154-next-board>section>header b{font-size:11px}
+.v154-next-board>section>header em{margin-left:auto;color:var(--v153-muted);font-size:9px;font-style:normal;font-weight:800}
+.v154-after{border-color:rgba(74,154,222,.42)!important}
+.v154-after>button,.v154-after>div{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 8px;width:100%;min-height:54px;padding:7px 9px;text-align:left}
+.v154-after b{font-size:14px}.v154-after span{overflow:hidden;color:#9fb2c8;font-size:10px;text-overflow:ellipsis;white-space:nowrap}.v154-after em{grid-column:2;grid-row:1/3;align-self:center;color:#f0cf84;font-size:10px;font-style:normal}
+.v154-recheck>div{display:flex;gap:5px;flex-wrap:wrap}
+.v154-recheck>div>span{border:1px solid rgba(74,154,222,.3);border-radius:999px;padding:4px 7px;background:rgba(74,154,222,.07);color:#b8d4eb;font-size:10px}
+.v154-hold{grid-column:1/-1;border-color:rgba(242,187,82,.34)!important}
+.v154-hold>div{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.v154-hold>div>span{display:grid;gap:1px;min-width:0;border-left:2px solid rgba(242,187,82,.6);padding:3px 7px;background:rgba(242,187,82,.035)}
+.v154-hold>div>span b{overflow:hidden;font-size:11px;text-overflow:ellipsis;white-space:nowrap}
+.v154-hold>div>span small{overflow:hidden;color:var(--v153-muted);font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.v154-hold>div>span.empty{border-left-color:var(--v153-line)}
+.v154-hold-conflict{grid-column:1/-1!important;display:grid!important;grid-template-columns:auto minmax(0,1fr)!important;gap:2px 7px!important;border:1px solid rgba(255,101,119,.45)!important;border-left:3px solid var(--v153-danger)!important;border-radius:9px;padding:6px 8px!important;background:rgba(88,22,34,.22)!important}
+.v154-hold-conflict .v153-ic,.v154-hold-conflict .v153-ic-img{grid-row:1/3;width:17px;height:17px}.v154-hold-conflict span{color:#ffb5bc;font-size:9px}
+.v154-next-note{margin:6px 1px 0;color:var(--v153-muted);font-size:9.5px}
+.v154-magic-route{display:flex;justify-content:space-between;gap:8px;align-items:center;margin-bottom:7px;border:1px solid var(--v153-line);border-radius:10px;padding:5px 7px;background:rgba(7,18,32,.58)}
+.v154-magic-route>span{color:var(--v153-muted);font-size:10px;font-weight:800}.v154-magic-route select{min-height:30px;padding:4px 8px}
+
+/* 희귀 → 전설 — 각 카드가 실제 현재 패의 희귀 완성 수를 직접 말한다. */
+.v153-craft-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;flex:1}
+.v153-craft-cards>button{display:flex;min-height:168px;flex-direction:column;align-items:stretch;justify-items:stretch;gap:6px;border-radius:12px;padding:9px;background:linear-gradient(180deg,rgba(18,31,52,.92),rgba(8,18,32,.92))}
+.v153-craft-cards>button.waiting{border-color:rgba(116,139,169,.34)}
+.v153-craft-cards>button.recommended{border-color:rgba(155,135,255,.76);box-shadow:inset 0 3px rgba(155,135,255,.8),0 8px 18px rgba(0,0,0,.13)}
+.v153-craft-cards>button>header{display:grid;grid-template-columns:38px minmax(0,1fr);gap:8px;align-items:center;width:100%}
+.v153-craft-cards>button>header>img,.v153-craft-cards>button>header>.v153-ic-img{width:38px;height:38px;border-radius:10px;object-fit:cover}
+.v153-craft-cards>button>header>span{min-width:0}.v153-craft-cards>button>header b{display:block;overflow:hidden;font-size:13px;text-overflow:ellipsis;white-space:nowrap}.v153-craft-cards>button>header small{display:block;overflow:hidden;color:var(--v153-muted);font-size:9px;text-overflow:ellipsis;white-space:nowrap}
+.v154-rare-progress{display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+.v154-rare-progress strong{color:#d8ceff;font-size:18px;letter-spacing:-.03em}.v154-rare-progress em{overflow:hidden;color:#91aac3;font-size:9px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}
+.v153-craft-cards>button.ready .v154-rare-progress em{color:#76dfad}
+.v154-rare-bar{display:block;width:100%;height:5px;overflow:hidden;border-radius:999px;background:#1b2c43}
+.v154-rare-bar>span{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#725be1,#b197ff)}
+.v154-rare-mats{display:flex;gap:4px;flex-wrap:wrap;min-height:22px}
+.v154-rare-mats>span{border:1px solid rgba(112,142,180,.3);border-radius:999px;padding:3px 6px;color:#aabdd1;font-size:8.5px}
+.v154-rare-mats>span.owned{border-color:rgba(71,215,162,.35);color:#86ddb5}.v154-rare-mats>span.missing{border-style:dashed;color:#e0be79}
+.v154-rare-mats b{font-size:inherit}
+.v153-craft-cards>button>footer{display:flex;gap:5px;align-items:center;margin-top:auto;color:#9cb0c7;font-size:9px}
+.v153-craft-cards>button>footer .v153-ic,.v153-craft-cards>button>footer .v153-ic-img{width:13px;height:13px}.v153-craft-cards>button>footer b{color:#f0cf84;font-size:10px}.v153-craft-cards>button>footer span{margin-left:auto}
+.v153-craft-more{margin-top:7px}
+
+/* 파티는 요약판으로 유지하고 전체 9자리는 기존 전체 보기에서 확인한다. */
+.v153-upper-main{grid-template-columns:56px minmax(0,1fr) auto auto;gap:8px;padding:9px}
+.v153-upper-main>img{width:56px;height:56px;border-radius:13px}
+.v153-upper-main b{font-size:18px}.v153-upper-main small,.v153-upper-main em{font-size:10px}
+.v153-upper-main>button{padding:6px 9px;font-size:10px}
+.v153-party{margin-top:7px;padding:8px}
+.v153-party>header{margin-bottom:6px}
+.v153-party-lock{margin-bottom:6px;padding:4px 7px}
+.v153-party-chips{grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.v153-party-chips>button,.v153-party-slot{grid-template-columns:26px minmax(0,1fr);padding:5px}
+.v153-party-chips img,.v153-party-chips i,.v153-party-slot i,.v153-party-chips>button>.v153-ic-img,.v153-party-slot>.v153-ic-img{width:26px;height:26px}
+.v153-upper-gaps{margin-top:7px}
+.v153-support-fold{margin-top:6px}
+
+@media(max-width:1380px){
+  .v153-grid-6{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-areas:"now spec" "next unused" "craft party";
+    grid-template-rows:auto auto auto;
+    min-height:0;
+  }
+  .v154-hold>div{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:900px){
+  .ord-app.v151-shell{padding:6px}
+  .v153-screen{min-height:0}
+  .v153-grid-6{
+    display:grid;
+    grid-template-columns:1fr;
+    grid-template-areas:"now" "next" "craft" "spec" "party" "unused";
+    grid-template-rows:auto;
+  }
+  .v153-grid-6>.v153-panel{margin:0}
+  .v154-next-board{grid-template-columns:1fr}
+  .v154-hold{grid-column:1}
+  .v153-craft-cards{grid-template-columns:1fr}
+  .v153-upper-main{grid-template-columns:50px minmax(0,1fr) auto}
+  .v153-upper-main>img{width:50px;height:50px}
+  .v153-upper-main>button{grid-column:auto}
+  .v153-upper-main>button:last-child{grid-column:3}
+  .v153-party-chips{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media(max-width:560px){
+  .v154-hold>div{grid-template-columns:1fr}
+  .v153-upper-main{grid-template-columns:46px minmax(0,1fr)}
+  .v153-upper-main>button,.v153-upper-main>button:last-child{grid-column:auto}
+  .v153-party-chips{grid-template-columns:1fr}
+}
+
+/* v19.5 — Luminous Game Coach
+   기능별 색 테두리를 걷어내고 보라·파랑 한 계열로 통일한다.
+   다음 판단은 지금 행동 안의 보조 레일, 남는 희귀는 하단 스트립으로 묶는다. */
+html,body{background-color:#070914}
+body{
+  background:
+    radial-gradient(900px 540px at 2% -12%,rgba(77,145,255,.17),transparent 62%),
+    radial-gradient(820px 520px at 98% -8%,rgba(157,105,255,.15),transparent 64%),
+    linear-gradient(180deg,#090b1a 0%,#070914 58%,#060812 100%);
+  font-family:Pretendard,"Pretendard Variable",SUIT,"Noto Sans KR","Malgun Gothic","Segoe UI",sans-serif;
+}
+.ord-app.v151-shell{width:100%;max-width:1920px;padding:8px 12px 14px}
+.v153-screen{
+  --v153-bg:#070914;
+  --v153-deep:#060812;
+  --v153-card:#11152a;
+  --v153-card-2:#161b34;
+  --v153-surface-3:#202744;
+  --v153-line:rgba(181,190,255,.12);
+  --v153-line-strong:rgba(157,137,255,.26);
+  --v153-text:#f8f8ff;
+  --v153-sub:#c6cbe0;
+  --v153-muted:#9199b5;
+  --v153-ocean:#61baff;
+  --v153-ocean-deep:#4b88ed;
+  --v153-brass:#ffc96b;
+  --v153-violet:#9d82ff;
+  --v153-success:#60dfb1;
+  --v153-warning:#ffc96b;
+  --v153-danger:#ff7792;
+  min-height:0;
+  color:var(--v153-text);
+  font-size:14px;
+  line-height:1.45;
+  letter-spacing:-.02em;
+}
+.v153-screen::before{
+  opacity:.2;
+  background-image:radial-gradient(circle,rgba(181,190,255,.18) 1px,transparent 1.2px);
+  background-size:28px 28px;
+  mask-image:linear-gradient(to bottom,black,transparent 78%);
+  -webkit-mask-image:linear-gradient(to bottom,black,transparent 78%);
+}
+
+/* 상단 HUD */
+.v153-status{
+  position:relative;
+  top:auto;
+  min-height:58px;
+  margin-bottom:10px;
+  gap:13px;
+  border:1px solid rgba(181,190,255,.14);
+  border-radius:19px;
+  padding:8px 10px 8px 13px;
+  background:rgba(14,17,34,.96);
+  box-shadow:0 12px 34px rgba(0,0,0,.24),inset 0 1px rgba(255,255,255,.045);
+  backdrop-filter:blur(18px);
+}
+.v153-brand{gap:10px}
+.v153-brand-mark{
+  width:39px;height:39px;
+  border:0;
+  border-radius:13px;
+  background:linear-gradient(145deg,rgba(157,130,255,.24),rgba(97,186,255,.16));
+  color:#aee7ff;
+  box-shadow:inset 0 1px rgba(255,255,255,.08),0 8px 20px rgba(67,74,180,.16);
+}
+.v153-brand-mark::after{display:none}
+.v153-brand b{font-size:17px;letter-spacing:.025em}
+.v153-brand small{display:block;color:#929ab7;font-size:10px;letter-spacing:.035em}
+.v153-status button,.v153-status select,.v153-panel button,.v153-panel select{
+  border-color:rgba(181,190,255,.13);
+  border-radius:12px;
+  background:#181d37;
+  color:#f2f3ff;
+}
+.v153-status button,.v153-panel button{
+  transition:transform .16s cubic-bezier(.2,.8,.2,1),border-color .16s,background-color .16s,box-shadow .16s;
+}
+.v153-status button:hover,.v153-panel button:hover{
+  border-color:rgba(157,130,255,.48);
+  background:#202746;
+}
+.v153-mode{border-color:rgba(181,190,255,.11);border-radius:13px;background:#10152b}
+.v153-mode button{border-radius:10px}
+.v153-mode button.on,.v153-status .primary,.v153-panel .primary{
+  border-color:transparent;
+  background:linear-gradient(135deg,#568dff,#9b72ff);
+  color:#fff;
+  box-shadow:0 7px 18px rgba(102,91,232,.24);
+}
+.v153-round,.v153-pill{border-color:rgba(181,190,255,.12);border-radius:13px;background:#171c34}
+.v153-pill{padding:0 11px}
+.v153-pill small{color:#a2a9c3;font-size:11px}
+.v153-pill b{font-size:15px}
+.v153-sync{background:#171c34}
+.v153-sync .sync-pill{font-size:11px}
+.v153-tools>summary{border-color:rgba(181,190,255,.13);border-radius:12px;background:#181d37}
+.v153-tools>summary .v153-ic,.v153-iconbtn .v153-ic{width:18px;height:18px}
+.v153-tools-pop{border-color:rgba(157,130,255,.28);border-radius:17px;background:#10152b}
+
+/* 화면 구조: 다음 판단을 행동 카드에 합치고 희귀는 하단 한 줄로 둔다. */
+.v155-dashboard{
+  display:grid;
+  grid-template-columns:minmax(0,7fr) minmax(520px,5fr);
+  grid-template-areas:
+    "action spec"
+    "craft party"
+    "rare rare";
+  gap:10px;
+  align-items:stretch;
+  min-height:0;
+}
+.v155-action-zone{grid-area:action}
+.v153-spec{grid-area:spec}
+.v153-craft{grid-area:craft}
+.v153-upper{grid-area:party}
+.v155-rare-strip{grid-area:rare}
+.v153-panel{
+  --panel-a:#9d82ff;
+  --panel-b:#61baff;
+  position:relative;
+  display:flex;
+  min-width:0;
+  min-height:0;
+  overflow:hidden;
+  flex-direction:column;
+  border:1px solid rgba(181,190,255,.12)!important;
+  border-radius:19px;
+  padding:13px 14px;
+  background:linear-gradient(145deg,rgba(20,24,47,.97),rgba(12,15,30,.98))!important;
+  box-shadow:0 11px 30px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.035)!important;
+  scroll-margin-top:12px;
+}
+.v153-panel::before{
+  content:'';
+  position:absolute;
+  z-index:1;
+  top:0;left:20px;
+  width:76px;height:2px;
+  border-radius:999px;
+  background:linear-gradient(90deg,var(--panel-a),var(--panel-b));
+  opacity:.8;
+}
+.v153-next{
+  --panel-a:#6edcff;
+  --panel-b:#a67fff;
+  border-color:rgba(133,137,255,.34)!important;
+  background:
+    radial-gradient(520px 270px at 12% 0%,rgba(78,149,255,.15),transparent 68%),
+    radial-gradient(440px 260px at 90% 8%,rgba(166,112,255,.15),transparent 68%),
+    linear-gradient(145deg,#141a38,#0e142b 58%,#11132b)!important;
+  box-shadow:0 18px 44px rgba(40,52,146,.18),inset 0 1px rgba(255,255,255,.055)!important;
+}
+.v153-craft{--panel-a:#b18cff;--panel-b:#6f9dff}
+.v153-spec{--panel-a:#65c8ff;--panel-b:#8d8dff}
+.v153-upper{--panel-a:#928dff;--panel-b:#62d2e9}
+.v153-unused{--panel-a:#7e8cb9;--panel-b:#6878a8}
+.v153-panel>header{
+  min-height:32px;
+  margin:0 0 11px;
+  padding:0;
+  border:0;
+  gap:10px;
+}
+.v153-panel>header>small{
+  width:32px;height:32px;
+  border-radius:10px;
+  background:linear-gradient(145deg,rgba(157,130,255,.18),rgba(97,186,255,.11));
+  color:#b5a6ff;
+}
+.v153-panel>header>small .v153-ic,.v153-panel>header>small .v153-ic-img{width:18px;height:18px}
+.v153-panel>header h2{font-size:18px;font-weight:850;letter-spacing:-.03em}
+.v153-panel>header p{display:block;max-width:none;color:#929ab6;font-size:11.5px}
+.v153-next>header>small{color:#86e5ff}
+.v153-spec>header>small{color:#78d5ff}
+.v153-craft>header>small{color:#c1a8ff}
+.v153-upper>header>small{color:#77dfc1}
+.v153-unused>header>small{color:#9ca7c9}
+
+/* 지금 할 일 + 다음 판단 */
+.v155-action-layout{
+  display:grid;
+  flex:1 1 auto;
+  grid-template-columns:minmax(0,1.45fr) minmax(315px,.78fr);
+  gap:13px;
+  align-items:stretch;
+  min-width:0;
+}
+.v155-action-core{display:flex;min-width:0}
+.v155-action-core>.v151-action{width:100%}
+.v153-next .v151-action{gap:9px;overflow:visible}
+.v153-next .v151-action-main{
+  grid-template-columns:78px minmax(0,1fr) 88px;
+  gap:13px;
+  border:1px solid rgba(181,190,255,.10);
+  border-radius:17px;
+  padding:12px;
+  background:linear-gradient(135deg,rgba(117,110,255,.10),rgba(71,164,255,.045));
+}
+.v153-next .v151-action-main>img,.v153-next .v151-action-main>i{
+  width:78px;height:78px;
+  border:2px solid rgba(132,213,255,.24);
+  border-radius:18px;
+  background:#141a35;
+  box-shadow:0 10px 24px rgba(0,0,0,.26),0 0 22px rgba(87,141,255,.10);
+}
+.v153-next .v151-state{
+  margin-bottom:4px;
+  border:0;
+  border-radius:999px;
+  padding:3px 8px;
+  background:rgba(112,129,255,.14);
+  color:#a9c7ff;
+  font-size:11px;
+}
+.v153-next .v151-action-title{
+  font-size:28px;
+  font-weight:900;
+  line-height:1.12;
+  letter-spacing:-.045em;
+}
+.v153-next .v151-action p{
+  margin-top:5px;
+  color:#b9c0d8;
+  font-size:12.5px;
+  line-height:1.48;
+}
+.v153-next .v151-cost{
+  display:grid;
+  width:88px;height:78px;
+  min-width:88px;
+  place-content:center;
+  border:0;
+  border-radius:17px;
+  padding:8px;
+  background:rgba(255,201,107,.085);
+  text-align:center;
+}
+.v153-next .v151-cost small,.v153-next .v151-cost span{font-size:10.5px}
+.v153-next .v151-cost b{color:#ffd06f;font-size:28px}
+.v153-next .v151-deltas{gap:6px}
+.v153-next .v151-deltas span{
+  border:0;
+  border-radius:12px;
+  padding:7px 9px;
+  background:#171d37;
+}
+.v153-next .v151-deltas small{font-size:10.5px}
+.v153-next .v151-deltas b{font-size:15px}
+.v153-next .v151-mats{
+  gap:5px;
+  border-top-color:rgba(181,190,255,.09);
+  padding-top:7px;
+}
+.v153-next .v151-mats small{font-size:11px}
+.v153-next .v151-mats em{
+  border:0;
+  border-radius:9px;
+  padding:4px 8px;
+  background:#1a203c;
+  font-size:10.5px;
+}
+.v153-next .v151-action-facts{
+  display:grid;
+  grid-template-columns:repeat(4,minmax(0,1fr));
+  gap:6px;
+  margin-top:1px;
+  border-top:0;
+  padding-top:0;
+}
+.v153-next .v151-action-facts>span{
+  border:0;
+  border-radius:11px;
+  padding:7px 9px;
+  background:#171d36;
+}
+.v153-next .v151-action-facts small{font-size:10px}
+.v153-next .v151-action-facts b{font-size:12px}
+.v153-next .v151-action-facts em{font-size:10.5px}
+.v153-next .v151-action-foot{margin-top:auto;padding-top:2px}
+.v153-next .v151-action-foot>small{color:#f2a9b5;font-size:10.5px}
+.v153-next .v151-action-foot button{min-height:38px}
+.v153-next .v151-action-foot button.primary{
+  padding:8px 16px;
+  background:linear-gradient(135deg,#568dff,#9b72ff);
+  color:#fff;
+  box-shadow:0 8px 20px rgba(102,91,232,.24);
+}
+.v155-decision-rail{
+  display:flex;
+  min-width:0;
+  flex-direction:column;
+  border-left:1px solid rgba(181,190,255,.10);
+  padding-left:13px;
+}
+.v155-subhead{
+  display:flex;
+  gap:9px;
+  align-items:center;
+  margin:1px 0 9px;
+}
+.v155-subhead>small{
+  display:grid;
+  width:29px;height:29px;
+  flex:none;
+  place-items:center;
+  border-radius:10px;
+  background:rgba(157,130,255,.13);
+  color:#b5a6ff;
+}
+.v155-subhead>small .v153-ic,.v155-subhead>small .v153-ic-img{width:16px;height:16px}
+.v155-subhead h3{margin:0;font-size:15px;line-height:1.2}
+.v155-subhead p{margin:1px 0 0;color:#8f98b4;font-size:10.5px}
+.v155-decision-rail .v154-next-board{display:grid;grid-template-columns:1fr;gap:7px}
+.v155-decision-rail .v154-next-board>section{
+  grid-column:1;
+  border:0!important;
+  border-radius:13px;
+  padding:9px 10px;
+  background:#171d36;
+}
+.v155-decision-rail .v154-after{background:linear-gradient(145deg,rgba(89,164,255,.12),#171d36)!important}
+.v155-decision-rail .v154-hold{background:linear-gradient(145deg,rgba(157,130,255,.10),#171d36)!important}
+.v155-decision-rail .v154-next-board>section>header{margin-bottom:5px}
+.v155-decision-rail .v154-next-board>section>header b{font-size:11.5px}
+.v155-decision-rail .v154-after>button,.v155-decision-rail .v154-after>div{min-height:45px;padding:6px 7px}
+.v155-decision-rail .v154-after b{font-size:13px}
+.v155-decision-rail .v154-after span{font-size:10px}
+.v155-decision-rail .v154-recheck>div>span{
+  border:0;
+  padding:4px 7px;
+  background:rgba(89,164,255,.09);
+  font-size:10px;
+}
+.v155-decision-rail .v154-hold>div{grid-template-columns:repeat(2,minmax(0,1fr));gap:4px}
+.v155-decision-rail .v154-hold>div>span{
+  border-left-color:rgba(157,130,255,.62);
+  padding:3px 6px;
+  background:rgba(157,130,255,.035);
+}
+.v155-decision-rail .v154-hold>div>span b{font-size:10.5px}
+.v155-decision-rail .v154-hold>div>span small{font-size:9.5px}
+.v155-decision-rail .v154-next-note{display:none}
+
+/* 스펙: 생존/화력 2열 + 각 행 진행 막대 */
+.v153-spec-head{gap:7px;margin:0 0 7px}
+.v153-spec-head>span{
+  border:0;
+  border-radius:13px;
+  padding:8px 10px;
+  background:#181e38;
+}
+.v153-spec-head small{font-size:10.5px}
+.v153-spec-head b{font-size:23px}
+.v153-pace{
+  margin-bottom:7px;
+  border:0;
+  border-radius:12px;
+  padding:7px 9px;
+  background:#171d35;
+}
+.v153-pace b{font-size:11.5px}.v153-pace span{font-size:10px}
+.v155-role-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-items:start}
+.v155-role-grid .v153-role-group{
+  margin:0;
+  border:0;
+  border-radius:14px;
+  padding:9px 10px;
+  background:#171c34;
+}
+.v153-role-group>header b{font-size:13px}
+.v153-role-group>header em{font-size:9.5px}
+.v153-role-group>header span{font-size:10.5px}
+.v153-role-group>p{margin:2px 0 6px;color:#8f98b3;font-size:10px}
+.v153-role{
+  position:relative;
+  grid-template-columns:18px minmax(72px,1fr) auto 59px;
+  gap:5px;
+  min-height:34px;
+  padding:6px 1px 10px;
+  border-top-color:rgba(181,190,255,.07);
+}
+.v153-role::before,.v153-role::after{
+  content:'';
+  position:absolute;
+  left:23px;
+  bottom:4px;
+  height:3px;
+  border-radius:999px;
+}
+.v153-role::before{right:1px;background:#252b48}
+.v153-role::after{
+  width:var(--metric);
+  max-width:calc(100% - 24px);
+  background:linear-gradient(90deg,#5b9eff,#9b78ff);
+  transition:width .4s cubic-bezier(.2,.8,.2,1);
+}
+.v153-role.ok::after{background:linear-gradient(90deg,#50cfa0,#79e4c0)}
+.v153-role.wait::after{background:#4b536e}
+.v153-role b{gap:3px;font-size:11.5px;white-space:normal;line-height:1.15}
+.v153-role b i{font-size:8px;padding:1px 4px}
+.v153-role b small{font-size:8.5px}
+.v153-role>strong{font-size:12.5px}
+.v153-role>strong em{font-size:9.5px}
+.v153-role>span{font-size:9.5px}
+.v153-role.bad>strong,.v153-role.bad>span,.v153-role.warn>strong,.v153-role.warn>span{color:#ffc96b}
+.v153-role.ok>strong,.v153-role.ok>span{color:#65dfb2}
+.v153-role.lead{background:rgba(157,130,255,.075)}
+.v154-magic-route{
+  margin-bottom:7px;
+  border:0;
+  border-radius:12px;
+  background:#171d35;
+}
+
+/* 희귀 → 전설 */
+.v153-craft-cards{gap:9px}
+.v153-craft-cards>button{
+  min-height:158px;
+  border:1px solid rgba(181,190,255,.11);
+  border-radius:15px;
+  padding:10px;
+  background:#171c34;
+}
+.v153-craft-cards>button:hover,.v153-party-chips>button:hover{transform:translateY(-2px);box-shadow:0 11px 25px rgba(0,0,0,.2)}
+.v153-craft-cards>button.recommended{
+  border-color:rgba(157,130,255,.48);
+  background:linear-gradient(145deg,rgba(157,130,255,.13),#171c34 48%);
+  box-shadow:0 10px 25px rgba(75,58,165,.14);
+}
+.v153-craft-cards>button>header{grid-template-columns:42px minmax(0,1fr);gap:9px}
+.v153-craft-cards>button>header>img,.v153-craft-cards>button>header>.v153-ic-img{width:42px;height:42px;border-radius:12px}
+.v153-craft-cards>button>header b{font-size:13.5px}
+.v153-craft-cards>button>header small{color:#969fba;font-size:10px}
+.v154-rare-progress strong{color:#c0adff;font-size:23px;font-weight:900}
+.v154-rare-progress em{font-size:10.5px}
+.v154-rare-bar{height:6px;background:#252b49}
+.v154-rare-bar>span{background:linear-gradient(90deg,#5b9eff,#a477ff);box-shadow:0 0 12px rgba(139,112,255,.3)}
+.v154-rare-mats{gap:4px;min-height:24px}
+.v154-rare-mats>span{
+  border:0;
+  padding:4px 7px;
+  background:#202640;
+  font-size:9.5px;
+}
+.v154-rare-mats>span.owned::before{content:'✓';margin-right:4px;color:#64dfb1}
+.v154-rare-mats>span.missing::before{content:'·';margin-right:4px;color:#ffc96b}
+.v153-craft-cards>button>footer{font-size:10px}
+.v153-craft-cards>button>footer b{color:#ffd17a;font-size:11px}
+
+/* 최종 파티 및 빈 상태 */
+.v153-upper-main{
+  border:0;
+  border-radius:15px;
+  background:linear-gradient(145deg,rgba(157,130,255,.11),rgba(96,186,255,.055));
+}
+.v153-party{
+  border:0;
+  border-radius:14px;
+  background:#171c34;
+}
+.v153-party-lock{border:0;background:#202641}
+.v153-party-chips>button,.v153-party-slot{border-color:rgba(181,190,255,.10);background:#1d233e}
+.v153-upper-gaps>span{border:0;background:rgba(255,119,146,.08)}
+.v153-upper-gaps>span.ok{background:rgba(96,223,177,.08)}
+.v153-spec-wait,.v153-upper-empty,.v153-no-crafts,.v153-reroll-safe{
+  display:grid;
+  gap:3px;
+  min-height:68px;
+  align-content:center;
+  border:0!important;
+  border-radius:14px;
+  padding:12px 14px;
+  background:linear-gradient(145deg,rgba(118,132,197,.08),rgba(89,165,255,.045));
+  color:#9da6c1;
+}
+.v153-spec-wait b,.v153-upper-empty b,.v153-no-crafts b,.v153-reroll-safe b{color:#e9ebf8;font-size:13px}
+.v153-spec-wait span,.v153-upper-empty span,.v153-no-crafts span,.v153-reroll-safe span{font-size:11px}
+.v153-snipe-open{border-style:solid!important}
+.v155-party-idle{display:grid;gap:8px}
+.v155-party-ghost{display:grid;grid-template-columns:repeat(9,minmax(0,1fr));gap:5px}
+.v155-party-ghost>i{
+  display:grid;
+  min-height:48px;
+  place-items:center;
+  border:1px solid rgba(181,190,255,.10);
+  border-radius:12px;
+  background:linear-gradient(145deg,rgba(157,130,255,.055),rgba(97,186,255,.035));
+  color:#68728f;
+  font-style:normal;
+}
+.v155-party-ghost>i>span{
+  display:grid;
+  width:20px;height:20px;
+  place-items:center;
+  border-radius:7px;
+  background:#202640;
+  font-size:9px;
+  font-weight:850;
+}
+
+/* 남는 희귀: 전체 폭 한 줄 */
+.v155-rare-strip{
+  display:grid;
+  grid-template-columns:155px minmax(0,1fr);
+  gap:13px;
+  align-items:center;
+  padding-top:11px;
+  padding-bottom:11px;
+}
+.v155-rare-strip>header{
+  margin:0;
+  padding:0 12px 0 0;
+  border-right:1px solid rgba(181,190,255,.10);
+}
+.v155-rare-strip>header>div{display:grid;gap:1px}
+.v155-rare-strip>header p{margin:0}
+.v155-rare-body{display:flex;gap:8px;align-items:center;min-width:0}
+.v155-rare-body>.v153-reroll-safe,.v155-rare-body>.v153-reroll-now{flex:1 1 280px;margin:0;min-height:58px;padding:9px 11px}
+.v155-rare-body>.v153-unused-chips{flex:1 1 360px}
+.v155-rare-body>.v153-reroll-btn{width:auto;min-width:126px;margin:0}
+.v155-rare-body>.v153-rare-ledger-fold{flex:none;margin:0 0 0 auto}
+.v153-unused-chips{gap:6px}
+.v153-unused-chips button{border:0;border-radius:12px;background:rgba(255,119,146,.07)}
+.v153-rare-ledger-fold summary{font-size:10.5px}
+
+button:focus-visible,select:focus-visible{
+  outline:3px solid rgba(97,186,255,.3);
+  outline-offset:2px;
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+}
+
+@media(max-width:1250px){
+  .v155-dashboard{
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    grid-template-areas:
+      "action action"
+      "spec party"
+      "craft craft"
+      "rare rare";
+  }
+}
+@media(max-width:1150px){
+  .v153-status{grid-template-columns:1fr;gap:8px}
+  .v153-brand{justify-content:flex-start}
+  .v153-hud{justify-content:flex-start}
+  .v153-main-tools{grid-column:auto;justify-content:flex-start}
+  .v155-action-layout{grid-template-columns:1fr}
+  .v155-decision-rail{border-top:1px solid rgba(181,190,255,.10);border-left:0;padding-top:11px;padding-left:0}
+}
+@media(max-width:900px){
+  .ord-app.v151-shell{padding:6px}
+  .v155-dashboard{
+    grid-template-columns:1fr;
+    grid-template-areas:"action" "spec" "craft" "party" "rare";
+  }
+  .v155-role-grid{grid-template-columns:1fr}
+  .v153-panel{padding:12px}
+  .v153-panel>header h2{font-size:17px}
+  .v153-next .v151-action-main{grid-template-columns:60px minmax(0,1fr)}
+  .v153-next .v151-action-main>img,.v153-next .v151-action-main>i{width:60px;height:60px}
+  .v153-next .v151-cost{grid-column:1/-1;width:auto;height:auto;min-width:0;grid-template-columns:auto auto auto;gap:8px;align-items:center;text-align:left}
+  .v153-next .v151-action-title{font-size:24px}
+  .v153-next .v151-action-facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .v153-craft-cards{grid-template-columns:1fr}
+  .v155-party-ghost{grid-template-columns:repeat(3,minmax(0,1fr))}
+  .v155-rare-strip{grid-template-columns:1fr}
+  .v155-rare-strip>header{padding:0;border-right:0}
+  .v155-rare-body{align-items:stretch;flex-direction:column}
+  .v155-rare-body>*{width:100%!important}
+}
+@media(max-width:560px){
+  .v153-hud{display:grid;grid-template-columns:1fr 1fr}
+  .v153-round,.v153-mode{grid-column:1/-1}
+  .v153-main-tools{display:grid;grid-template-columns:minmax(0,1fr) auto auto}
+  .v153-brand small{display:none}
+  .v153-next .v151-action-facts{grid-template-columns:1fr}
+  .v155-decision-rail .v154-hold>div{grid-template-columns:1fr}
+}
+
+/* v19.6(사용자 요청): 상위 플레이북 — 전수 메모의 특징 요약 · 활용법 ·
+   같이 쓰면 좋은 유닛을 상위가 보이는 자리마다 붙인다 (표시 전용).
+   루미너스 대시보드 팔레트(보라 #9d82ff · 파랑 #61baff)에 맞춘다. */
+.v155-playbook{display:grid;gap:4px;margin-top:2px;border:1px dashed rgba(157,130,255,.36);border-radius:11px;padding:6px 9px;background:linear-gradient(135deg,rgba(157,130,255,.09),rgba(97,186,255,.05))}
+.v155-playbook p{margin:0;color:#dcd6f7;font-size:11px;line-height:1.45}
+.v155-playbook small{display:block;color:#a99fd6;font-size:10px;line-height:1.4}
 .v155-playbook .pairs{display:flex;flex-wrap:wrap;gap:4px;align-items:center}
 .v155-playbook .pairs b{color:#8fa5bd;font-size:9.5px;font-weight:800}
-.v155-playbook .pairs i{border:1px solid rgba(85,199,228,.4);border-radius:7px;padding:1px 6px;background:rgba(85,199,228,.08);color:#9fdcf0;font-size:10px;font-style:normal;white-space:nowrap}
-.v155-playbook.compact{padding:5px 7px}
+.v155-playbook .pairs i{border:1px solid rgba(97,186,255,.42);border-radius:8px;padding:1px 6px;background:rgba(97,186,255,.10);color:#9fd4ff;font-size:10px;font-style:normal;white-space:nowrap}
+.v155-playbook.compact{padding:5px 8px}
 .v155-playbook.compact p{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
 .snipe-list .v155-playbook{border:none;background:none;padding:2px 0 0;margin:0}
-.snipe-list .v155-playbook p{-webkit-line-clamp:1;color:#c9bd9a;font-size:10px}
+.snipe-list .v155-playbook p{-webkit-line-clamp:1;color:#b9b0dd;font-size:10px}
 .playbook-detail h3 small{margin-left:6px;color:var(--v153-muted);font-size:10.5px;font-weight:700}
-.playbook-detail p{margin:0 0 6px;color:#e8d9b0;font-size:13px;line-height:1.55}
-.playbook-detail p.use{color:#c9b98c;font-size:12px}
+.playbook-detail p{margin:0 0 6px;color:#dcd6f7;font-size:13px;line-height:1.55}
+.playbook-detail p.use{color:#b3a8e0;font-size:12px}
 .playbook-detail .pairs{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:2px}
 .playbook-detail .pairs b{color:#8fa5bd;font-size:11px}
-.playbook-detail .pairs span{border:1px solid rgba(85,199,228,.4);border-radius:8px;padding:2px 8px;background:rgba(85,199,228,.08);color:#9fdcf0;font-size:11.5px}
-/* 한 화면 계약: 낮은 화면에서는 활용 줄을 접고 요약+페어를 한 줄로 만다. */
-@media (max-height:1000px) and (min-width:1240px){
-  .v155-playbook{display:flex;align-items:center;gap:6px;padding:3px 7px;margin-top:0}
+.playbook-detail .pairs span{border:1px solid rgba(97,186,255,.42);border-radius:9px;padding:2px 8px;background:rgba(97,186,255,.10);color:#9fd4ff;font-size:11.5px}
+/* 한 화면 계약: 낮은 화면에서는 활용 줄을 접고 요약+페어를 한 줄로 만다.
+   (1080p 데스크톱도 루미너스 대시보드에서는 압축 대상 — 1120 기준.) */
+@media (max-height:1120px) and (min-width:1240px){
+  .v155-playbook{display:flex;align-items:center;gap:6px;padding:3px 8px;margin-top:0}
   .v155-playbook small{display:none}
   .v155-playbook p{flex:1 1 auto;min-width:0;display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   .v155-playbook .pairs{flex:none;flex-wrap:nowrap}
   .v155-playbook .pairs b{display:none}
   .v155-playbook .pairs i{padding:0 5px;font-size:9.5px}
   .v155-playbook .pairs i:nth-child(n+4){display:none}
-  .v153-upper .v153-upper-main{padding:9px}
+}
+
+/* v19.6 한 화면 계약 — 루미너스 대시보드 압축 티어.
+   기본 치수는 1249px(실측)라 1080p 데스크톱에서도 스크롤이 생긴다.
+   1120 이하 높이에서 행별 주도 요소(1행 액션 카드 · 2행 제작/파티 카드)를
+   비율 유지한 채 줄인다.  900 노트북은 이 티어 + 기존 1000 티어를 함께 받는다. */
+@media (max-height:1120px) and (min-width:1240px){
+  .ord-app.v151-shell{padding:5px 10px 7px}
+  .v153-status{margin-bottom:6px;padding:4px 10px 4px 12px}
+  .v153-status button,.v153-status select,.v153-pill{min-height:30px}
+  .v155-dashboard{gap:6px}
+  .v153-panel{padding:8px 11px;border-radius:13px}
+  .v153-panel>header{margin-bottom:6px;padding-bottom:5px}
+  .v153-panel>header h2{font-size:15px}
+  /* 1행: 지금 할 일 카드 */
+  .v153-next .v151-action-main>img,.v153-next .v151-action-main>i{width:56px;height:56px;border-radius:13px}
+  .v153-next .v151-action-title{font-size:22px}
+  .v153-next .v151-action-facts{gap:4px}
+  .v153-next .v151-action-facts>span{padding:3px 7px}
+  .v153-next .v151-deltas span{padding:4px 8px}
+  .v153-next .v151-boss-warn{margin-top:5px;padding:4px 9px}
+  .v153-next .v151-mats{padding-top:4px}
+  .v153-next .v151-action-foot{margin-top:4px}
+  .v153-next .command-line{margin-top:3px;padding:5px 8px}
+  .v154-next-board>section{padding:6px 8px}
+  .v154-next-board>section>header{margin-bottom:4px}
+  .v154-next-note{margin-top:5px}
+  /* 2행 왼쪽: 희귀 → 전설 카드 */
+  .v153-craft-cards>button{min-height:132px;padding:7px;gap:4px}
+  .v154-rare-mats{min-height:18px}
+  .v154-rare-mats>span{padding:2px 5px}
+  /* 2행 오른쪽: 최종 파티 */
+  .v153-upper-main{padding:8px}
+  .v153-upper-main>img{width:56px;height:56px}
+  .v153-upper-main b{font-size:18px}
+  .v153-party{padding:7px;margin-top:6px}
+  .v153-party>header{margin-bottom:5px}
+  .v153-party-chips{gap:5px}
   .v153-party-chips>button,.v153-party-slot{padding:4px 5px}
-  .v153-upper .v153-party{padding:7px;margin-top:7px}
-  .v153-upper .v153-party>header{margin-bottom:5px}
-  .v153-upper .v153-second{padding:6px;margin-top:6px}
-  .v153-upper .v153-upper-gaps,.v153-upper .v153-support-fold{margin-top:6px}
+  .v153-party-lock{padding:3px 7px;margin-bottom:5px}
+  .v153-second{padding:6px;margin-top:6px}
+  .v153-upper-gaps{margin-top:6px}
+  .v153-support-fold{margin-top:6px}
+  .v153-support-fold>summary{padding:3px 0}
+  /* 3행: 남는 희귀 스트립 */
+  .v155-rare-strip{padding:5px 11px}
+}
+
+/* 900 노트북 강압축 — 정보 우선순위가 낮은 것부터 접는다: 액션 카드의
+   보조 사실 칩 → 제작 카드의 재료 칩 → 여백.  판단 내용 자체는 안 줄인다. */
+@media (max-height:1000px) and (min-width:1240px){
+  /* 대시보드 전체를 0.9 배율로 눌러(zoom) 남는 초과분을 흡수한다 —
+     패널·정보를 숨기는 것보다 전부 보이는 쪽이 사용자 요구에 맞다. */
+  .v155-dashboard{zoom:.9}
+  .v153-next .v151-action-facts{display:none}
+  .v153-next .v151-mats{display:none}
+  .v153-next .v151-action-main>img,.v153-next .v151-action-main>i{width:48px;height:48px}
+  .v153-next .v151-action-title{font-size:18px;line-height:1.12}
+  .v153-next .v151-boss-warn{padding:3px 8px;font-size:10px;line-height:1.25}
+  .v153-next .v151-deltas span{padding:3px 7px}
+  .v153-next .v151-deltas b{font-size:13px}
+  .v154-next-board>section>header{margin-bottom:3px}
+  .v154-after>button,.v154-after>div{padding:4px 6px}
+  .v154-hold span{padding:2px 6px}
+  .v153-spec-head>span{padding:4px 9px}
+  .v153-spec-head b{font-size:16px}
+  .v153-pace{margin-bottom:6px;padding:4px 8px}
+  .v153-role{padding:3px 2px}
+  .v153-role-group{margin-top:6px;padding:6px 8px}
+  .v153-craft-cards>button{min-height:0;padding:5px 7px;gap:3px}
+  .v153-craft-cards>button>header img{width:30px;height:30px}
+  .v154-rare-progress{margin:0}
+  .v154-rare-mats{display:none}
+  .v153-craft-cards>button>footer{margin-top:0}
+  .v153-craft-more{padding:4px 8px;margin-top:4px}
+  .v153-upper-main{padding:6px}
+  .v153-upper-main>img{width:44px;height:44px}
+  .v153-upper-main b{font-size:16px}
+  .v153-upper-gaps{margin-top:5px}
+  .v153-upper-gaps>span{padding:2px 7px}
+  .v153-party{padding:6px;margin-top:5px}
+  .v153-party-chips>button,.v153-party-slot{padding:3px 5px}
+  .v154-next-board>section{padding:5px 7px}
+  .v155-subhead{margin-bottom:4px}
 }
