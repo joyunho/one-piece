@@ -93,6 +93,10 @@ function observed(snapshot){
   for(const [key,value] of [['seq',snapshot&&snapshot.seq],['dataChangedAt',snapshot&&snapshot.dataChangedAt],['unitCount',snapshot&&snapshot.unitCount],['playableUnitCount',snapshot&&snapshot.playableUnitCount],['wispCount',snapshot&&snapshot.wispCount]])if(finite(value)!=null)out[key]=rounded(value);
   if(snapshot&&snapshot.wispCountFound!=null)out.wispCountFound=bool(snapshot.wispCountFound);
   if(finite(collection.confidence)!=null)out.confidence=rounded(collection.confidence);
+  // v19.7(호환 ①): 0731 로그 포렌식에서 도우미 번호가 로그에 안 남아
+  // 호환 문제를 확정할 수 없었다 — 번호·어댑터를 보존한다(문자열 2개뿐).
+  if(snapshot&&snapshot.helperId!=null)out.helperId=String(snapshot.helperId);
+  if(snapshot&&snapshot.adapterId!=null)out.adapterId=String(snapshot.adapterId);
   return out;
 }
 function compactSnapshot(snapshot,previousBaseline){

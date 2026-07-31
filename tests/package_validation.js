@@ -13,7 +13,7 @@ const releaseVersion=String(packageInfo.version);
 const releaseFileVersion=releaseVersion.replace(/\./g,'_');
 
 const required=[
-  'manifest.json','background.js','content-tmo.js','ord_helper.html','ord_units_data.js',
+  'manifest.json','background.js','content-tmo.js','ord_page_unthrottle.js','ord_helper.html','ord_units_data.js',
   'ord_upper_memo.js','ord_synergy_memo.js','ord_upper_playbook.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js',
   'ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_app.css','ord_cockpit_v15.css','ord_boot_extension.js',
   'popup.html','popup.js','popup.css','README.txt'
@@ -36,12 +36,22 @@ for(const pattern of manifest.host_permissions){
   assert(/\/build-helper\/\*$/.test(pattern),`build-helper 하위로 안 끝나는 권한: ${pattern}`);
 }
 assert(!manifest.host_permissions.some(pattern=>/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(pattern)),'local OpenAI bridge permission remains');
-for(const pattern of manifest.content_scripts[0].matches){
-  assert(pattern.includes('/build-helper/'),'content script match is broader than build-helper');
-  assert(/\/build-helper\/\*$/.test(pattern),`build-helper 하위로 안 끝나는 매치: ${pattern}`);
+for(const script of manifest.content_scripts){
+  for(const pattern of script.matches){
+    assert(pattern.includes('/build-helper/'),'content script match is broader than build-helper');
+    assert(/\/build-helper\/\*$/.test(pattern),`build-helper 하위로 안 끝나는 매치: ${pattern}`);
+  }
+}
+// v19.7(⑦): MAIN world 언스로틀러 — 숨김 탭에서 페이지의 로컬 폴링 타이머를
+// 워커로 살리는 두 번째 콘텐츠 스크립트.  경계는 위 루프가 같이 잰다.
+{
+  const unthrottle=manifest.content_scripts.find(script=>(script.js||[]).includes('ord_page_unthrottle.js'));
+  assert(unthrottle,'page unthrottle content script missing');
+  assert.strictEqual(unthrottle.world,'MAIN','unthrottle must run in the page world');
+  assert.strictEqual(unthrottle.run_at,'document_start','unthrottle must wrap timers before page scripts run');
 }
 
-for(const file of ['background.js','content-tmo.js','ord_upper_playbook.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_core.js','ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_boot_extension.js','popup.js']){
+for(const file of ['background.js','content-tmo.js','ord_page_unthrottle.js','ord_upper_playbook.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_core.js','ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_boot_extension.js','popup.js']){
   new vm.Script(read(file),{filename:file});
 }
 const helper=read('ord_helper.html'),popup=read('popup.html');

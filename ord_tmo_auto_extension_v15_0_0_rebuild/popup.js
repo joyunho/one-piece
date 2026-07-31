@@ -1,6 +1,6 @@
 'use strict';
 
-// v19.6.0 compact popup; parser protocol remains v13-compatible.
+// v19.7.0 compact popup; parser protocol remains v13-compatible.
 const state = document.getElementById('state');
 const detail = document.getElementById('detail');
 const testButton = document.getElementById('test');
@@ -46,10 +46,12 @@ function inject(tabId) {
   }));
 }
 function selectPreferred(tabs) {
+  // v19.7(호환 ①): 사용자가 지금 보고 있는 도우미 탭이 최우선이다 — 예전에는
+  // 비활성 32172 탭이 활성인 다른 번호 탭을 이겨 수동 동기화조차 안 됐다.
   const supportedTabs = tabs.filter(tab => supported(helperId(tab.url)));
-  return supportedTabs.find(tab => tab.active && helperId(tab.url) === PRIMARY_HELPER_ID) ||
+  return supportedTabs.find(tab => tab.active) ||
     supportedTabs.find(tab => helperId(tab.url) === PRIMARY_HELPER_ID) ||
-    supportedTabs.find(tab => tab.active) || supportedTabs[0] || null;
+    supportedTabs[0] || null;
 }
 function matchingHeartbeat(snapshot, heartbeat, epoch) {
   return !!(snapshot && heartbeat && heartbeat.dataHash === snapshot.dataHash &&
@@ -73,6 +75,23 @@ function renderStored(value) {
     Number(counts.ambiguous || 0) === 0 && snapshot.wispCountFound === true);
   if (!valid) {
     const confidence = Number(diagnostic.confidence) || 0;
+    // v19.7(호환 ①): "왜 안 되는지"를 보인다 — background 가 기록한 마지막
+    // 기각 사유가 최신이면 단계·번호까지 그대로 표시한다.
+    const reject = value.ordLatestReject || null;
+    const rejectFresh = reject && (!snapshot || Number(reject.at) > (Number(snapshot.bridgeAt) || 0));
+    if (rejectFresh) {
+      const REASONS = {
+        'no-pinned-source': '연결 미고정 — 코치 화면을 한 번 열거나 아래 동기화를 누르세요',
+        'unselected-tab': '다른 탭이 고정돼 있음 — 지금 탭에서 동기화를 누르세요',
+        'unselected-helper': `고정 번호 ${reject.pinnedHelperId || '?'} ≠ 수신 번호 ${reject.incomingHelperId || '?'} — 동기화로 재고정`,
+        'unsupported-helper': `도우미 번호를 URL에서 못 읽음 (${reject.incomingHelperId || '없음'})`,
+        'invalid-snapshot': `수집 게이트 미달 · 유닛 ${Number(reject.unitCount) || 0}종 · 위습 ${reject.wispCountFound ? '인식' : '미인식'} · 신뢰 ${((Number(reject.confidence) || 0) * 100).toFixed(0)}%`,
+        'helper-repinned': `도우미 번호 변경 감지 — ${reject.to || '?'}로 재고정됨, 수신 대기 중`
+      };
+      state.textContent = `수신 기각 · ${REASONS[reject.reason] || reject.reason}`;
+      detail.textContent = (reject.topErrors || []).slice(0, 3).join(' · ') || (diagnostic.errors || []).slice(0, 3).join(' · ');
+      return;
+    }
     state.textContent = diagnostic.reason === 'invalid-snapshot'
       ? `수집 불완전 · 신뢰 ${(confidence * 100).toFixed(0)}% · 수량을 0으로 임의 처리하지 않음`
       : '아직 유효한 TMO 조합도우미 수신 데이터가 없습니다.';
@@ -97,13 +116,32 @@ function refreshStatus() {
     'ordLatestSnapshot',
     'ordLatestHeartbeat',
     'ordLatestDiagnostic',
+    'ordLatestReject',
     'ordPinnedTmoTabId',
     'ordPinnedSourceEpoch'
   ], renderStored);
 }
 
 document.getElementById('open').onclick = () => runtime({type: 'ORD_OPEN_DASHBOARD'});
-document.getElementById('tmo').onclick = () => chrome.tabs.create({url: `https://tmo.gg/ko/build-helper/${PRIMARY_HELPER_ID}`});
+document.getElementById('tmo').onclick = () => {
+  // v19.7(호환 ①): 마지막으로 쓰던 도우미 번호를 우선 연다(없으면 주 도우미).
+  chrome.storage.local.get(['ordLastTmoUrl'], value => {
+    const last = String(value && value.ordLastTmoUrl || '');
+    chrome.tabs.create({url: supported(helperId(last)) ? last : `https://tmo.gg/ko/build-helper/${PRIMARY_HELPER_ID}`});
+  });
+};
+// v19.7(⑦ 폴백): TMO 탭을 작은 팝업 창으로 분리 — 게임을 창모드로 두고
+// 화면 구석·보조 모니터에 두면 언스로틀러가 무력해진 경우에도(사이트 개편
+// 등) 페이지가 계속 보이는 상태로 갱신된다.
+document.getElementById('miniwin').onclick = async () => {
+  const all = await queryTabs({url: PATTERNS});
+  const tab = selectPreferred(all);
+  if (!tab) {
+    state.textContent = 'TMO 조합도우미 탭이 없습니다. 먼저 열어주세요.';
+    return;
+  }
+  chrome.windows.create({tabId: tab.id, type: 'popup', width: 380, height: 320, left: 12, top: 12, focused: false});
+};
 testButton.onclick = async () => {
   testButton.disabled = true;
   state.textContent = 'TMO 탭 확인 중...';
@@ -147,6 +185,6 @@ testButton.onclick = async () => {
 };
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && (changes.ordLatestSnapshot || changes.ordLatestHeartbeat || changes.ordLatestDiagnostic)) refreshStatus();
+  if (area === 'local' && (changes.ordLatestSnapshot || changes.ordLatestHeartbeat || changes.ordLatestDiagnostic || changes.ordLatestReject)) refreshStatus();
 });
 refreshStatus();

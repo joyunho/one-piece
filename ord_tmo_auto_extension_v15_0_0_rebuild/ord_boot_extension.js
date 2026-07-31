@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v19.6.0 live cockpit bridge; connector protocol stays v13.
+  // v19.7.0 live cockpit bridge; connector protocol stays v13.
   // v19.4(사용자 요청): 도우미 번호 무관 — 숫자 id 전부 후보. 여러 탭이면
   // 주 도우미(32172) 우선.
   const PATTERNS = [
@@ -142,10 +142,12 @@
     const list = all.filter(tab => supported(helperId(tab.url)));
     if (!list.length) return null;
     let selected = list.find(tab => tab.id === Number(source.tabId));
-    if (!selected && supported(helperId(stored.ordLastTmoUrl))) selected = list.find(tab => tab.url === stored.ordLastTmoUrl);
-    if (!selected) selected = list.find(tab => tab.active && helperId(tab.url) === PRIMARY_HELPER_ID);
-    if (!selected) selected = list.find(tab => helperId(tab.url) === PRIMARY_HELPER_ID);
+    // v19.7(호환 ①): 예전에는 비활성 32172 탭이 활성인 다른 번호 탭을 항상
+    // 이겼다 — 사용자가 지금 보고 있는 도우미가 최우선이다.  URL 비교도
+    // 완전 일치 대신 번호 비교(쿼리·해시 차이로 불발되던 것).
     if (!selected) selected = list.find(tab => tab.active);
+    if (!selected && supported(helperId(stored.ordLastTmoUrl))) selected = list.find(tab => helperId(tab.url) === helperId(stored.ordLastTmoUrl));
+    if (!selected) selected = list.find(tab => helperId(tab.url) === PRIMARY_HELPER_ID);
     return selected || list[0];
   }
   async function pin(tab) {
@@ -299,7 +301,7 @@
         }
       }
     } else {
-      setTimeout(() => app.toast('TMO 32172 주 도우미를 열고 연결해 주세요. 34366도 호환됩니다.'), 300);
+      setTimeout(() => app.toast('tmo.gg 도우미 탭을 열고 연결해 주세요. 숫자 번호는 자동 인식됩니다(주: 32172).'), 300);
     }
 
     monitorId = setInterval(async () => {

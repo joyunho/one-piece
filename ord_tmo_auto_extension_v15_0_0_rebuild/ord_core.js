@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='19.6.0';
+const VERSION='19.7.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -778,8 +778,31 @@ function buildDb(units){
   for(const u of list){const g=groupName(u);if(!byGroup.has(g))byGroup.set(g,[]);byGroup.get(g).push(u);}
   return{units:list,byId,byGroup,commons:list.filter(u=>isCommon(u)&&COMMON_NAMES.includes(nameOf(u))),uncommons:list.filter(isUncommon),specials:list.filter(isSpecialTier),rares:list.filter(isRare),legendish:list.filter(isLegendish),uppers:list.filter(isUpper)};
 }
+// v19.7(호환 ①): 유닛 이름 정규화 — 도우미 문서마다 공백·괄호 표기가
+// 흔들려도 같은 유닛으로 붙게 한다.
+function normalizeLiveName(value){return String(value||'').replace(/\s+/g,'').replace(/[()\[\]{}·.,'"!?~\-]/g,'').toLowerCase();}
+function liveIdMatchRate(catalog,snapshot){
+  const ids=new Set((catalog||[]).map(u=>u.id));const rows=snapshot&&snapshot.units||[];
+  if(!rows.length)return 1;let hit=0;for(const row of rows)if(ids.has(String(row.id)))hit++;
+  return hit/rows.length;
+}
 function mergeLiveCatalog(catalog,snapshot){
   const liveMap=new Map();for(const row of snapshot&&snapshot.units||[]){const d=row.data||row;liveMap.set(row.id,Object.assign({},d,row));}
+  // v19.7(호환 ①): 다른 도우미 문서는 같은 유닛이라도 id가 문서 생성 시각
+  // 기반이라 전부 다르다 — id 일치율이 절반 미만이면 이름 정규화로 2차
+  // 매핑한다.  이름이 카탈로그 안에서 유일할 때만 붙여 오매핑을 막고,
+  // 32172/34366(일치율 ~1)에서는 아무것도 바뀌지 않는다.
+  const catalogIds=new Set((catalog||[]).map(u=>u.id));
+  let idHits=0;for(const id of liveMap.keys())if(catalogIds.has(String(id)))idHits++;
+  if(liveMap.size&&idHits/liveMap.size<0.5){
+    const nameIndex=new Map();
+    for(const u of catalog||[]){const key=normalizeLiveName(u.name);if(!key)continue;nameIndex.set(key,nameIndex.has(key)?null:u);}
+    for(const [id,live] of Array.from(liveMap)){
+      if(catalogIds.has(String(id)))continue;
+      const target=nameIndex.get(normalizeLiveName(live.name));
+      if(target&&target.id!==id&&!liveMap.has(target.id)){liveMap.delete(id);liveMap.set(target.id,Object.assign({},live,{id:target.id,remappedFrom:String(id)}));}
+    }
+  }
   const out=[];for(const base of catalog||[]){const live=liveMap.get(base.id)||{},hasLiveAbilities=Object.prototype.hasOwnProperty.call(live,'abilities'),merged=Object.assign({},base,live,{abilities:hasLiveAbilities?Object.assign({},live.abilities||{}):Object.assign({},base.abilities||{})});merged.tmoPercent=live.tmoPercent!=null?num(live.tmoPercent):live.percent!=null?num(live.percent):num(base.percent);merged.count=live.count!=null?num(live.count):0;out.push(merged);}
   for(const [id,live] of liveMap){if(!out.some(u=>u.id===id))out.push(Object.assign({},live));}return out;
 }
@@ -1489,5 +1512,5 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);

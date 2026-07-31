@@ -42,6 +42,34 @@ check('카탈로그 상위 전원이 요약·활용·페어를 가진다',()=>{
   for(const id of Object.keys(book.byId))assert(ids.has(id),`카탈로그에 없는 플레이북 항목: ${id}`);
 });
 
+check('v2 처방 필드 — 축·부족 핵심·운영·추천 2상위·주의가 전원 채워져 있다',()=>{
+  // v19.7(사용자 요청 ③⑤): 63키트 처방 데이터팩 통합.
+  const upperIds=new Set(units.filter(C.isUpper).map(unit=>String(unit.id)));
+  for(const [id,entry] of Object.entries(book.byId)){
+    assert(Array.isArray(entry.axis)&&entry.axis.length>=1&&entry.axis.length<=3&&entry.axis.every(item=>item.length<=10),`axis 위반: ${id}`);
+    assert(Array.isArray(entry.missingCore)&&entry.missingCore.length>=1&&entry.missingCore.length<=3&&entry.missingCore.every(item=>item.length<=16),`missingCore 위반: ${id}`);
+    assert(typeof entry.op==='string'&&entry.op.length>0&&entry.op.length<=70,`op 위반: ${id}`);
+    assert(Array.isArray(entry.avoid)&&entry.avoid.length<=2&&entry.avoid.every(item=>item.length<=40),`avoid 위반: ${id}`);
+    assert(Array.isArray(entry.second)&&entry.second.length===3,`second 수 위반: ${id}`);
+    for(const rec of entry.second){
+      assert(upperIds.has(String(rec.id)),`second 유령 id: ${id} -> ${rec.id}`);
+      assert(String(rec.id)!==String(id),`second 자기 자신: ${id}`);
+      assert(rec.name&&rec.name.length<=12&&rec.why&&rec.why.length<=40,`second 텍스트 위반: ${id}`);
+    }
+  }
+});
+
+check('③⑤ 화면 배선 — 확정 설명 카드와 2상위 처방·희귀 겹침 표시',()=>{
+  const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
+  assert(app.includes('function playbookDirectionHtml('),'방향 확정 카드 렌더러 없음');
+  assert(app.includes('${playbookDirectionHtml(upper)}'),'확정 메인 카드가 방향 설명을 안 씀');
+  assert(app.includes('파티가 채울 것'),'부족 핵심 라벨 없음');
+  assert(app.includes("label:'처방 추천'"),'2상위 처방 후보 주입 없음');
+  assert(app.includes('메인과 희귀 겹침'),'희귀 겹침 표시 없음');
+  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  assert(css.includes('.v155-playbook .row')&&css.includes('v157-direction'),'방향 카드 스타일 없음');
+});
+
 check('배포 대상 3종에 전부 실린다',()=>{
   const helper=read('ord_helper.html');
   assert(helper.includes('ord_upper_playbook.js'),'확장 helper 미탑재');
@@ -57,8 +85,8 @@ check('상위가 보이는 화면 5곳에 붙는다',()=>{
   assert(app.includes('function upperPlaybookOf(')&&app.includes('function playbookHtml('),'플레이북 렌더 헬퍼가 없음');
   // 후보 카드(5번 패널 · 상위 미확정): 이유 문장 옆에 컴팩트 요약.
   assert(/reason\|\|'상위와 보조 전설급을 같은 파티로 평가합니다\.'\)\}<\/p>\$\{playbookHtml\(/.test(app),'후보 카드에 플레이북이 없음');
-  // 확정 메인 상위 카드: 전체(요약+활용+페어) 블록.
-  assert(app.includes('저격</button></div>${playbookHtml(upper)}'),'확정 메인 카드에 플레이북이 없음');
+  // 확정 메인 상위 카드: v19.7부터 방향 확정 설명 카드(축·부족·운영)로 승격.
+  assert(app.includes('저격</button></div>${playbookDirectionHtml(upper)}'),'확정 메인 카드에 플레이북이 없음');
   // 2상위: 확정 블록과 후보 행 양쪽.
   assert(app.includes('바뀌지 않습니다</small>${playbookHtml(confirmedSecond,'),'확정 2상위에 플레이북이 없음');
   assert(app.includes('${playbookHtml(row.unit,{compact:true,maxPairs:3})}'),'2상위 후보 행에 플레이북이 없음');

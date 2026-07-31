@@ -530,6 +530,12 @@
 .v151-mats em{border:1px solid #274561;border-radius:7px;padding:2px 6px;background:#0A1A2E;color:#CFE1F5;font-size:9.5px;font-style:normal}
 .v151-mats em.ok{border-color:rgba(126,211,140,.4);color:#9FE8AC}
 .v151-mats em.gap{border-color:rgba(240,153,120,.4);color:#FFB99A}
+/* v19.7(사용자 요청 ④): 지금 할 일의 부족 흔함 칩 — 색점 + 이름 + 수량 */
+.v151-mats .commons em.common-chip{display:inline-flex;align-items:center;gap:5px;padding:2px 7px 2px 5px}
+.v151-mats .commons em.common-chip i{width:9px;height:9px;flex:none;border-radius:3px;box-shadow:0 0 6px rgba(255,255,255,.18)}
+.v151-mats>div>em.common-chip{padding-left:5px}
+.v151-mats>div>em.common-chip::before{display:none}
+
 /* Reroll guidance: rares with no use in the committed upper/support paths. */
 .v151-ship-plan{display:grid;flex:0 0 auto;gap:4px;border-top:1px dashed #2E4258;padding-top:6px}
 .v151-ship-plan>small{color:#8FB8D8;font-size:9.5px;font-weight:900;letter-spacing:.03em}
@@ -2179,6 +2185,10 @@ button:focus-visible,select:focus-visible{
   .v153-next .v151-action-title{font-size:22px}
   .v153-next .v151-action-facts{gap:4px}
   .v153-next .v151-action-facts>span{padding:3px 7px}
+  /* 재료 줄: 라벨을 칩과 같은 줄로 — 라벨 전용 줄 2개(직접+흔함)를 회수. */
+  .v153-next .v151-mats{gap:3px;padding-top:4px}
+  .v153-next .v151-mats>div>small{flex:0 0 auto;margin-right:2px}
+  .v153-next .v151-action-foot{margin-top:2px}
   .v153-next .v151-deltas span{padding:4px 8px}
   .v153-next .v151-boss-warn{margin-top:5px;padding:4px 9px}
   .v153-next .v151-mats{padding-top:4px}
@@ -2195,17 +2205,18 @@ button:focus-visible,select:focus-visible{
   .v153-upper-main{padding:8px}
   .v153-upper-main>img{width:56px;height:56px}
   .v153-upper-main b{font-size:18px}
-  .v153-party{padding:7px;margin-top:6px}
-  .v153-party>header{margin-bottom:5px}
-  .v153-party-chips{gap:5px}
-  .v153-party-chips>button,.v153-party-slot{padding:4px 5px}
-  .v153-party-lock{padding:3px 7px;margin-bottom:5px}
-  .v153-second{padding:6px;margin-top:6px}
-  .v153-upper-gaps{margin-top:6px}
-  .v153-support-fold{margin-top:6px}
-  .v153-support-fold>summary{padding:3px 0}
+  .v153-party{padding:6px;margin-top:5px}
+  .v153-party>header{margin-bottom:4px}
+  .v153-party-chips{gap:4px}
+  .v153-party-chips>button,.v153-party-slot{padding:3px 5px}
+  .v153-party-lock{padding:3px 7px;margin-bottom:4px}
+  .v153-second{padding:5px;margin-top:5px}
+  .v153-upper-gaps{margin-top:5px}
+  .v153-upper-gaps>span{padding:2px 7px}
+  .v153-support-fold{margin-top:5px}
+  .v153-support-fold>summary{padding:2px 0}
   /* 3행: 남는 희귀 스트립 */
-  .v155-rare-strip{padding:5px 11px}
+  .v155-rare-strip{padding:4px 11px}
 }
 
 /* 900 노트북 강압축 — 정보 우선순위가 낮은 것부터 접는다: 액션 카드의
@@ -2213,9 +2224,10 @@ button:focus-visible,select:focus-visible{
 @media (max-height:1000px) and (min-width:1240px){
   /* 대시보드 전체를 0.9 배율로 눌러(zoom) 남는 초과분을 흡수한다 —
      패널·정보를 숨기는 것보다 전부 보이는 쪽이 사용자 요구에 맞다. */
-  .v155-dashboard{zoom:.9}
+  .v155-dashboard{zoom:.87}
   .v153-next .v151-action-facts{display:none}
-  .v153-next .v151-mats{display:none}
+  .v153-next .v151-mats>div:not(.commons){display:none}
+  .v153-next .v151-mats{border-top:0;padding-top:2px}
   .v153-next .v151-action-main>img,.v153-next .v151-action-main>i{width:48px;height:48px}
   .v153-next .v151-action-title{font-size:18px;line-height:1.12}
   .v153-next .v151-boss-warn{padding:3px 8px;font-size:10px;line-height:1.25}
@@ -2244,4 +2256,169 @@ button:focus-visible,select:focus-visible{
   .v153-party-chips>button,.v153-party-slot{padding:3px 5px}
   .v154-next-board>section{padding:5px 7px}
   .v155-subhead{margin-bottom:4px}
+}
+
+/* ================================================================
+   v19.7(사용자 요청 ②): 블링블링 — 빈 공간을 정보와 빛으로 채운다.
+   모든 장식은 CSS 만 사용(외부 요청 금지 · CSP 준수), 움직임은
+   prefers-reduced-motion 에서 전부 꺼진다.
+   ================================================================ */
+
+/* 배경: 이중 네뷸라 + 미세 별빛.  고정 배경이라 스크롤 성능 영향 없음. */
+.ord-app.v151-shell{position:relative}
+.ord-app.v151-shell::before{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(900px 520px at 12% -8%,rgba(157,130,255,.16),transparent 60%),
+    radial-gradient(760px 460px at 88% 4%,rgba(97,186,255,.13),transparent 60%),
+    radial-gradient(520px 420px at 50% 110%,rgba(71,215,162,.07),transparent 62%);
+}
+.ord-app.v151-shell::after{
+  content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:.5;
+  background-image:
+    radial-gradient(1.2px 1.2px at 7% 18%,rgba(255,255,255,.5),transparent 100%),
+    radial-gradient(1px 1px at 23% 64%,rgba(180,220,255,.4),transparent 100%),
+    radial-gradient(1.4px 1.4px at 41% 12%,rgba(255,255,255,.35),transparent 100%),
+    radial-gradient(1px 1px at 58% 41%,rgba(200,180,255,.4),transparent 100%),
+    radial-gradient(1.3px 1.3px at 71% 77%,rgba(255,255,255,.3),transparent 100%),
+    radial-gradient(1px 1px at 86% 23%,rgba(160,220,255,.45),transparent 100%),
+    radial-gradient(1.1px 1.1px at 94% 58%,rgba(255,255,255,.35),transparent 100%),
+    radial-gradient(1px 1px at 33% 88%,rgba(210,190,255,.35),transparent 100%);
+}
+
+/* 브랜드 마크: 별이 살아 있다. */
+.v153-brand-mark{animation:v157-spark 4.2s ease-in-out infinite}
+@keyframes v157-spark{
+  0%,100%{box-shadow:0 0 10px rgba(157,130,255,.45)}
+  50%{box-shadow:0 0 18px rgba(97,186,255,.7),0 0 34px rgba(157,130,255,.35)}
+}
+
+/* 패널 헤더: 제목 아래 은은한 그라데이션 밑줄. */
+.v153-panel>header{position:relative}
+.v153-panel>header::after{
+  content:'';position:absolute;left:0;right:0;bottom:-1px;height:1px;
+  background:linear-gradient(90deg,var(--panel-a,#9d82ff) 0%,transparent 62%);
+  opacity:.55;
+}
+
+/* 희귀→전설 카드 v2: 초상화·달성률·닫는 결손·재료 초상 칩. */
+.v153-craft-cards>button>header{display:grid;grid-template-columns:44px minmax(0,1fr) auto;gap:9px;align-items:center}
+.v153-craft-cards>button>header img,.v153-craft-cards>button>header .v153-ic{width:44px;height:44px;border-radius:12px;object-fit:cover;background:#0b1830;box-shadow:0 0 0 1px rgba(157,130,255,.35),0 0 14px rgba(97,186,255,.18)}
+.v156-ratio{font-size:21px;font-weight:950;font-style:normal;color:#b9c8ff;letter-spacing:-.02em}
+.v156-ratio i{font-size:11px;font-style:normal;opacity:.7;margin-left:1px}
+.v156-ratio.ok{color:#7bf0b6;text-shadow:0 0 12px rgba(71,215,162,.5)}
+.v156-covers{display:flex;gap:6px;align-items:center;min-width:0}
+.v156-covers .v153-ic,.v156-covers .v153-ic-img{width:13px;height:13px;flex:none;color:#7bf0b6}
+.v156-covers.muted .v153-ic,.v156-covers.muted .v153-ic-img{color:#8fa5bd}
+.v156-covers span{display:flex;gap:4px;flex-wrap:wrap;min-width:0}
+.v156-covers b{border:1px solid rgba(123,240,182,.3);border-radius:7px;padding:1px 6px;background:rgba(71,215,162,.08);color:#9fe8c2;font-size:9.5px;font-weight:800;white-space:nowrap}
+.v156-covers.muted b{border-color:rgba(143,165,189,.3);background:rgba(143,165,189,.08);color:#a9bacf}
+.v154-rare-mats>span{display:inline-flex;align-items:center;gap:4px}
+.v154-rare-mats>span img{width:18px;height:18px;border-radius:5px;object-fit:cover;background:#0b1830}
+/* 진행 바: 채워진 부분 위로 빛줄기가 훑고 지나간다. */
+.v154-rare-bar{position:relative;overflow:hidden}
+.v154-rare-bar>span{position:relative;overflow:hidden;background:linear-gradient(90deg,#7a5cd6,#61baff)}
+.v154-rare-bar>span::after{
+  content:'';position:absolute;inset:0;
+  background:linear-gradient(105deg,transparent 30%,rgba(255,255,255,.5) 50%,transparent 70%);
+  transform:translateX(-100%);animation:v157-sheen 2.8s ease-in-out infinite;
+}
+.v154-rare-bar.full>span{background:linear-gradient(90deg,#2fae7e,#7bf0b6)}
+@keyframes v157-sheen{0%{transform:translateX(-100%)}55%,100%{transform:translateX(100%)}}
+/* 추천 카드: 보라↔파랑 숨쉬는 테두리. */
+.v153-craft-cards>button.recommended{border-color:rgba(157,130,255,.55);animation:v157-breathe 3.6s ease-in-out infinite}
+@keyframes v157-breathe{
+  0%,100%{box-shadow:0 0 0 1px rgba(157,130,255,.25),0 6px 22px rgba(122,92,214,.18)}
+  50%{box-shadow:0 0 0 1px rgba(97,186,255,.45),0 6px 30px rgba(97,186,255,.28)}
+}
+.v153-craft-cards>button.ready .v154-rare-progress em{color:#7bf0b6;text-shadow:0 0 10px rgba(71,215,162,.45)}
+
+/* 지금 할 일: 유닛 초상화에 링 글로우. */
+.v153-next .v151-action-main>img{box-shadow:0 0 0 2px rgba(157,130,255,.5),0 0 22px rgba(97,186,255,.3)}
+
+/* 최종 파티 칩: 단계색 링. */
+.v153-party-chips>button img{box-shadow:0 0 0 1.5px rgba(143,165,189,.4)}
+.v153-party-chips>button.stage-own img{box-shadow:0 0 0 1.5px rgba(71,215,162,.65),0 0 10px rgba(71,215,162,.35)}
+.v153-party-chips>button.stage-now img{box-shadow:0 0 0 1.5px rgba(97,186,255,.7),0 0 10px rgba(97,186,255,.4)}
+.v153-party-chips>button.stage-next img{box-shadow:0 0 0 1.5px rgba(242,187,82,.6)}
+
+/* 남는 희귀 빈 상태: 큰 빈 상자 대신 한 줄 안내. */
+.v155-rare-body .v153-no-unused{display:flex;gap:8px;align-items:center;padding:4px 2px}
+
+@media(prefers-reduced-motion:reduce){
+  .v153-brand-mark,.v154-rare-bar>span::after,.v153-craft-cards>button.recommended{animation:none}
+}
+/* 한 화면 계약: 압축 티어에서 결손 칩은 남기고 재료 칩만 접는다(기존 규칙 유지). */
+@media (max-height:1000px) and (min-width:1240px){
+  .v156-covers b{font-size:9px}
+  .v153-craft-cards>button>header{grid-template-columns:34px minmax(0,1fr) auto}
+  .v153-craft-cards>button>header img,.v153-craft-cards>button>header .v153-ic{width:34px;height:34px}
+  .v156-ratio{font-size:17px}
+}
+
+/* v19.7 ⑤: 확정 2상위 상시 콜아웃 — 메인 카드 바로 아래. */
+.v157-second-callout{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:6px;border:1px solid rgba(154,120,228,.5);border-radius:11px;padding:6px 9px;background:linear-gradient(135deg,rgba(122,92,214,.14),rgba(97,186,255,.07))}
+.v157-second-callout .v153-ic,.v157-second-callout .v153-ic-img{width:17px;height:17px;color:#cbb4ff}
+.v157-second-callout small{display:block;color:#b8aef0;font-size:9.5px;font-weight:900}
+.v157-second-callout b{display:block;font-size:14px}
+.v157-second-callout>span:first-of-type em{display:block;color:#a9bacf;font-size:10.5px;font-style:normal}
+.v157-second-callout.ready{border-color:rgba(71,215,162,.55)}
+.v157-second-callout.ready>span:first-of-type em{color:#7bf0b6}
+.v157-side{display:flex;gap:6px;align-items:center}
+.v157-side em{color:#f3d58e;font-size:11px;font-style:normal;font-weight:800}
+.v157-side button{border:1px solid var(--v153-line);border-radius:9px;padding:4px 9px;font-size:10.5px;font-weight:800;background:rgba(20,34,58,.9);color:inherit;cursor:pointer}
+
+/* v19.7 ⑥: 막판 랜덤 흔함 노리기. */
+.v157-longshot{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px;align-items:center;margin-top:6px;border:1px dashed rgba(242,187,82,.5);border-radius:11px;padding:6px 9px;background:rgba(242,187,82,.07)}
+.v157-longshot>.v153-ic,.v157-longshot>.v153-ic-img{width:17px;height:17px;color:#f3d58e}
+.v157-longshot small{display:block;color:#d8c48c;font-size:9.5px;font-weight:900}
+.v157-longshot b{font-size:13px;margin-right:6px}
+.v157-longshot .chips{display:inline-flex;gap:4px;flex-wrap:wrap;vertical-align:middle}
+.v157-longshot .chips em{display:inline-flex;align-items:center;gap:4px;border:1px solid #274561;border-radius:7px;padding:1px 6px 1px 4px;background:#0A1A2E;color:#CFE1F5;font-size:10px;font-style:normal}
+.v157-longshot .chips em i{width:8px;height:8px;border-radius:3px}
+.v157-longshot>span>em{display:block;color:#b9a97f;font-size:10px;font-style:normal;margin-top:1px}
+.v157-longshot>button{border:1px solid var(--v153-line);border-radius:9px;padding:4px 9px;font-size:10.5px;font-weight:800;background:rgba(20,34,58,.9);color:inherit;cursor:pointer}
+@media (max-height:1120px) and (min-width:1240px){
+  .v157-second-callout,.v157-longshot{padding:3px 8px;margin-top:3px}
+  .v157-longshot>span>em{display:none}
+  .v157-longshot small,.v157-second-callout small{display:none}
+  .v151-mats .commons em.common-chip{padding:1px 5px 1px 4px;font-size:9px}
+  .v153-next .v151-action-main p{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+  /* 방향 확정 카드: 축·부족 두 줄만 남기고 운영·주의는 접는다. */
+  .v155-playbook.v157-direction{display:grid;gap:3px;padding:4px 8px;white-space:normal}
+  .v155-playbook.v157-direction p{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:1;white-space:normal;text-overflow:clip}
+  .v155-playbook.v157-direction small{display:none}
+  .v155-playbook.v157-direction .pairs{display:none}
+  .v153-upper-gaps{gap:3px}
+}
+
+/* v19.7 ③: 방향 확정 카드의 축·부족 핵심 행 + ⑤ 2상위 처방 라벨. */
+.v155-playbook .row{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.v155-playbook .row b{color:#8fa5bd;font-size:9.5px;font-weight:800;flex:none}
+.v155-playbook .row i{border:1px solid rgba(157,130,255,.4);border-radius:7px;padding:1px 6px;background:rgba(157,130,255,.10);color:#cbb9ff;font-size:10px;font-style:normal;white-space:nowrap}
+.v155-playbook .row.miss i{border-color:rgba(255,157,157,.42);background:rgba(226,92,102,.10);color:#ffb3b3}
+.v155-playbook small.warn{color:#ffce7a}
+.v153-second-list small.presc{display:block;color:#cbb9ff;font-size:10px}
+.v153-second-list small.okv{display:block;color:#7bf0b6;font-size:10px}
+.v153-second-list small.clash{display:block;color:#ffce7a;font-size:10px}
+
+/* 한 화면 계약 최종 티어 — 위 기본 스타일들보다 반드시 뒤에 와야 하는
+   압축 재선언(소스 순서가 곧 우선순위다). */
+@media (max-height:1120px) and (min-width:1240px){
+  .v157-longshot small,.v157-second-callout small{display:none!important}
+  .v155-playbook.v157-direction{display:grid;gap:3px;padding:4px 8px}
+  .v155-playbook.v157-direction p{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:1;white-space:normal}
+  .v155-playbook.v157-direction small{display:none}
+  .v155-playbook.v157-direction .pairs{display:none}
+  .v155-playbook.v157-direction .row i{padding:0 5px;font-size:9.5px}
+  .v153-second-list small.presc,.v153-second-list small.okv,.v153-second-list small.clash{font-size:9.5px}
+}
+@media (max-height:1120px) and (min-width:1240px){
+  /* 보조 사실 칩: 1080 화면에서는 첫 줄만 — 전체는 >1120 화면과 상세에서. */
+  .v153-next .v151-action-facts{max-height:33px;overflow:hidden}
+  .v157-longshot>span{display:flex;align-items:center;gap:6px;flex-wrap:nowrap;overflow:hidden;min-width:0}
+  .v157-longshot b{flex:none;font-size:12px;margin-right:0}
+  .v157-longshot .chips{flex-wrap:nowrap}
+  .v151-mats .commons{flex-wrap:nowrap;overflow:hidden}
+  .v153-upper .v153-upper-gaps{gap:3px}
 }

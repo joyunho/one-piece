@@ -11,7 +11,7 @@
     return;
   }
 
-  const VERSION = '19.6.0';
+  const VERSION = '19.7.0';
   const PARSER = 'ord-tmo-parser-v13-adapter';
   const SESSION = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
   const HELPER_ADAPTERS = Object.freeze({
@@ -54,6 +54,16 @@
     {id: 'unit_1767884614234_8036', name: '오타마 (희귀함이하구매)', groupName: '특수함', re: /^오타마.*희귀함\s*이하\s*구매/}
   ];
   const SPECIAL_ROW_IDS = new Set(SPECIAL_ROWS.map(row => row.id));
+
+  // v19.7(호환 ①): 다른 도우미 문서는 유닛 id가 문서 생성 시각 기반이라
+  // 32172의 위습 id '810e'가 존재하지 않는다 — 이름으로 위습 행을 찾는다.
+  // 내용 게이트(wispCountFound)와 코어 선위 계산이 전부 이 id를 보므로,
+  // 이름으로 찾은 행은 '810e' 별칭 행으로 함께 싣는다.
+  const WISP_NAME_RE = /^(?:선택\s*)?위(?:습|스프)$/;
+  function findWispRow(rows) {
+    return rows.find(row => row.id === '810e' && row.countFound)
+      || rows.find(row => row.countFound && WISP_NAME_RE.test(String(row.name || '').replace(/\s+/g, ' ').trim()));
+  }
 
   const ABILITY_LABELS = [
     '이동속도 감소', '발동이동속도 감소', '단일이동속도 감소', '스턴', '방어력 감소', '발동방어력 감소',
@@ -579,6 +589,11 @@
     const id = helperId();
     const adapter = adapterFor(id);
     const units = collectUnits();
+    // v19.7(호환 ①): 위습이 다른 id로 잡혔으면 '810e' 별칭 행을 추가한다.
+    const wispSource = findWispRow(units.rows);
+    if (wispSource && wispSource.id !== '810e' && !units.rows.some(row => row.id === '810e')) {
+      units.rows.push(Object.assign({}, wispSource, {id: '810e', name: '위습', groupName: '흔함'}));
+    }
     const domAbilities = collectDomAbilities();
     const derivedAbilities = deriveAbilities(units.rows);
     const currentAbilities = Object.keys(domAbilities.values).length ? Object.assign({}, domAbilities.values) : derivedAbilities;
@@ -646,8 +661,9 @@
       visiblePercentCount: units.progressRows.filter(row => row.progressSource !== 'tooltip').length,
       tooltipPercentCount: units.progressRows.filter(row => row.rawPercent !== null).length,
       progressFound: units.progressRows.length,
-      wispCount: (units.rows.find(row => row.id === '810e' && row.countFound) || {}).count || 0,
-      wispCountFound: !!units.rows.find(row => row.id === '810e' && row.countFound),
+      wispCount: (findWispRow(units.rows) || {}).count || 0,
+      wispCountFound: !!findWispRow(units.rows),
+      wispAliasId: (findWispRow(units.rows) || {}).id || '',
       parseErrors: units.tooltipErrors,
       currentAbilities,
       currentAbilityRows: domAbilities.rows,
@@ -868,7 +884,7 @@
     style.textContent = ':host{all:initial;position:fixed;right:14px;bottom:14px;z-index:2147483647;font-family:system-ui,sans-serif}.card{width:310px;padding:11px;border:1px solid #33476a;border-radius:15px;background:rgba(5,10,23,.94);color:#eaf3ff;box-shadow:0 18px 55px rgba(0,0,0,.45)}.top{display:flex;justify-content:space-between;align-items:center}.title{font-size:13px;font-weight:900}.dot{width:9px;height:9px;border-radius:50%;background:#f3b84b}.dot.ok{background:#27d17f;box-shadow:0 0 12px #27d17f}.meta{margin-top:5px;color:#8fa2bd;font-size:10px;line-height:1.45}.btn{margin-top:8px;width:100%;border:0;border-radius:10px;padding:8px;background:linear-gradient(135deg,#7b5fff,#25bfe6);color:white;font-weight:900;cursor:pointer}';
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = '<div class="top"><span class="title">ORD 실전 판단 코치 v19.6.0</span><span class="dot"></span></div><div class="meta">수집 대기 중 · TMO.GG 데스크톱 프로그램을 먼저 실행하세요</div><button class="btn">실전 코치 열기</button>';
+    card.innerHTML = '<div class="top"><span class="title">ORD 실전 판단 코치 v19.7.0</span><span class="dot"></span></div><div class="meta">수집 대기 중 · TMO.GG 데스크톱 프로그램을 먼저 실행하세요</div><button class="btn">실전 코치 열기</button>';
     card.querySelector('.btn').onclick = () => send({type: 'ORD_OPEN_DASHBOARD'});
     shadow.append(style, card);
     document.documentElement.appendChild(host);
@@ -945,6 +961,19 @@
   // v19.4: 숨김↔표시 전환 시 즉시 재스캔 — 숨김 직전 마지막 상태를 실어
   // 보내고, 다시 보이면 조여졌던 타이머를 기다리지 않고 바로 따라잡는다.
   document.addEventListener('visibilitychange', () => schedule(true, document.visibilityState === 'hidden' ? 'tab-hidden' : 'tab-visible'));
+  // v19.7(⑦): MAIN world 언스로틀러(ord_page_unthrottle.js)의 워커 틱 —
+  // 숨김 상태에서 페이지가 방금 로컬 프로그램을 읽고 DOM 을 갱신했다는
+  // 신호다.  이벤트 배달은 타이머와 달리 조여지지 않으므로 여기서 바로
+  // 스캔한다(1.5초 디바운스 — 200ms 폴을 전부 따라갈 필요는 없다).
+  let lastWorkerTickScanAt = 0;
+  addEventListener('message', event => {
+    if (event.source !== window || !event.data || event.data.__ord !== 'tmo-poll-tick') return;
+    if (document.visibilityState !== 'hidden') return;
+    const now = Date.now();
+    if (now - lastWorkerTickScanAt < 1500) return;
+    lastWorkerTickScanAt = now;
+    schedule(true, 'worker-tick');
+  });
   document.addEventListener('input', event => {
     if (event.target && event.target.closest && !event.target.closest('#ord-tmo-sync-badge') && numericInput(event.target)) schedule(false, 'input');
   }, true);

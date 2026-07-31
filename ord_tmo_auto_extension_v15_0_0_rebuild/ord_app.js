@@ -129,6 +129,18 @@ function playbookHtml(unit,options){
   const pairHtml=pairs.length?`<span class="pairs"><b>같이</b>${pairs.map(name=>`<i>${C.esc(name)}</i>`).join('')}</span>`:'';
   return`<div class="v155-playbook${opts.compact?' compact':''}"><p>${C.esc(entry.summary||'')}</p>${use}${pairHtml}</div>`;
 }
+// v19.7(사용자 요청 ③): 상위(다상위 포함) 방향을 확정하면 그 상위의 중심
+// 내용 — 빌드 축 · 파티가 채워야 할 부족 핵심 · 운영 한 줄 — 이 화면에
+// 바로 나온다.  전수 메모 v2(63키트 처방) 기반, 표시 전용.
+function playbookDirectionHtml(unit){
+  const entry=upperPlaybookOf(unit);if(!entry)return playbookHtml(unit);
+  const axis=(entry.axis||[]).slice(0,3).map(item=>`<i>${C.esc(item)}</i>`).join('');
+  const missing=(entry.missingCore||[]).slice(0,3).map(item=>`<i>${C.esc(item)}</i>`).join('');
+  const pairs=(entry.pairs||[]).slice(0,4).map(name=>`<i>${C.esc(name)}</i>`).join('');
+  const avoid=(entry.avoid||[]).slice(0,1).map(item=>`<small class="warn">주의 · ${C.esc(item)}</small>`).join('');
+  if(!axis&&!missing&&!entry.op)return playbookHtml(unit);
+  return`<div class="v155-playbook v157-direction"><p>${C.esc(entry.summary||'')}</p>${axis?`<span class="row"><b>축</b>${axis}</span>`:''}${missing?`<span class="row miss"><b>파티가 채울 것</b>${missing}</span>`:''}${entry.op?`<small>운영 · ${C.esc(entry.op)}</small>`:''}${avoid}${pairs?`<span class="pairs"><b>같이</b>${pairs}</span>`:''}</div>`;
+}
 function storyBadge(unit,grade,extra=''){const source=grade||C.storyGrade(unit),g=source&&source.league?source:(C.storyLeagueGrade&&C.storyLeagueGrade(unit,source)||source),basis=g.basisLabel||({measured:'실측',research:'자료',estimated:'추정',na:'해당 없음'}[g.basis]||'추정'),tier=g.tier==='—'?'na':String(g.tier||'D').toLowerCase();return`<span class="story-badge tier-${tier} ${C.esc(g.basis||'estimated')} ${extra}" title="${C.esc(g.note||'')}">${C.esc(g.label||`스토리 ${g.tier||'—'}`)} · ${C.esc(basis)}</span>`;}
 function emptyUpperDetection(){return{candidateId:'',streak:0,lastSnapshotKey:'',lastSeenAt:0};}
 function normalizeUpperDetection(value){const v=value&&typeof value==='object'?value:{};return{candidateId:String(v.candidateId||''),streak:Math.max(0,Math.min(1,C.num(v.streak))),lastSnapshotKey:String(v.lastSnapshotKey||''),lastSeenAt:C.num(v.lastSeenAt)||0};}
@@ -1093,13 +1105,19 @@ class App{
       // v17.3(사용자 요청): 재료 팝업을 열지 않아도 "부족 최하위 재료 =
       // 선택위습 N"과 "바로 필요한 조합 재료"가 카드에 바로 보인다.
       // 대안 목록은 이 패널에서 제거(2번 패널이 대신 담당).
-      const solve=shown&&shown.quote&&shown.quote.solve;
+      // v19.7(사용자 요청): "지금 할 일에서 어떤 어떤 흔함이 부족한지 나오게
+      // 해줘" — quote 가 없는 상태(대기·보류)에서도 흔함 부족을 직접 계산해
+      // 색점 칩으로 전부 보여준다(상위 4개 절단 제거, 최대 8종).
+      let solve=shown&&shown.quote&&shown.quote.solve||null;
+      if(!solve&&shown&&shown.id&&state&&state.db){try{solve=C.recipeSolve(state.db,shown.id,state.counts||{});}catch(_){solve=null;}}
       if(!solve)return'';
       const direct=(solve.direct||[]).slice(0,6).map(item=>`<em class="${C.num(item.owned)>=C.num(item.count)?'ok':'gap'}">${C.esc(C.materialName(state.db,item.id))} ${C.num(item.owned)}/${C.num(item.count)}</em>`).join('');
-      const lowest=(C.commonTop?C.commonTop(state.db,solve.lowestMissing||{},4):[]).map(item=>`<em>${C.esc(item.name)}×${C.num(item.count!=null?item.count:item.need)}</em>`).join('');
+      const lowestEntries=Object.entries(solve.lowestMissing||{}).map(([mid,count])=>({id:mid,name:C.materialName(state.db,mid),count:C.num(count)})).filter(item=>item.count>0).sort((a,b)=>b.count-a.count);
+      const lowest=lowestEntries.slice(0,8).map(item=>`<em class="common-chip"><i style="background:${C.COMMON_COLORS[item.name]||'#64748b'}"></i>${C.esc(item.name)} ×${item.count}</em>`).join('');
+      const wispCost=shown&&shown.quote&&shown.quote.wisp?C.num(shown.quote.wisp.cost):C.num(solve.wispCost);
       if(!direct&&!lowest)return'';
-      return`<div class="v151-mats">${direct?`<div><small>바로 필요한 조합 재료</small>${direct}</div>`:''}${lowest?`<div><small>부족 최하위 재료 = 선택위습 ${C.num(shown.quote.wisp.cost)}</small>${lowest}</div>`:''}</div>`;
-    })()}${unit&&this.commandInfo(unit).hasVerified?this.renderCommandLine(unit):''}${this.renderV151Recovery(decision,status)}${this.v151ActionFacts(state,decision)}<div class="v151-action-foot"><small>${C.esc(stop)}</small><div>${shown?`<button data-act="detail" data-id="${C.esc(shown.id)}">재료</button>`:''}${button}</div></div></div>`;
+      return`<div class="v151-mats">${direct?`<div><small>바로 필요한 조합 재료</small>${direct}</div>`:''}${lowest?`<div class="commons"><small>부족 흔함 ${lowestEntries.length}종 = 선택위습 ${wispCost}</small>${lowest}${lowestEntries.length>8?`<em>외 ${lowestEntries.length-8}종</em>`:''}</div>`:`<div class="commons"><small>부족 흔함</small><em class="ok">${wispCost>0?`흔함 전량 보유 — 선택위습 ${wispCost}만 필요`:'흔함 전량 보유 — 선택위습도 필요 없음'}</em></div>`}</div>`;
+    })()}${unit&&this.commandInfo(unit).hasVerified?this.renderCommandLine(unit):''}${this.renderV151Recovery(decision,status)}${this.v157SecondUpperCallout(state,decision)}${this.v157LongshotHint(state,status)}${this.v151ActionFacts(state,decision)}<div class="v151-action-foot"><small>${C.esc(stop)}</small><div>${shown?`<button data-act="detail" data-id="${C.esc(shown.id)}">재료</button>`:''}${button}</div></div></div>`;
   }
 
   renderV151Recovery(decision,status){
@@ -1110,6 +1128,60 @@ class App{
     if(!targets.length||status==='ACT_NOW'||status==='SYNC_BLOCKED')return'';
     const rows=targets.slice(0,4).map(row=>{const missing=(row.missing||[]).slice(0,3).map(item=>`${item.name}${C.num(item.count)>1?`×${C.num(item.count)}`:''}`).join(' · ');return`<button type="button" class="v151-recovery-row" data-act="detail" data-id="${C.esc(row.id)}" aria-label="${C.esc(row.name)} 재료 상세 보기"><i>${C.esc(row.roleLabel||'역할')}</i><span><b>${C.esc(row.name)}</b><small>${missing?`부족: ${C.esc(missing)}`:'재료 충족 · 선위 대기'}</small></span><em>선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</em></button>`;}).join('');
     return`<div class="v151-recovery"><small>회복 목표 · ${C.esc(recovery.note||'남은 필수 역할을 닫는 최근접 후보')}</small>${rows}</div>`;
+  }
+
+  // v19.7(사용자 요청 ⑤): 0731 로그 — 2상위(나미)를 r31에 확정했는데 판
+  // 전체 306개 판단 중 "지금 할 일"에 한 번도 오르지 않았고, 사용자가 r40에
+  // 직접 만들었다(그 사이 라인은 계속 밀렸다).  확정 2상위가 미보유면 메인
+  // 카드 바로 아래 전용 줄로 상시 노출한다 — 부족 재료·선위까지 함께.
+  v157SecondUpperCallout(state,decision){
+    const secondId=String(this.state.secondUpperId||'');
+    if(!secondId||!state||!state.db)return'';
+    const unit=state.db.byId.get(secondId);
+    if(!unit||C.num(state.counts[secondId])>0)return'';
+    if(String(decision&&decision.action&&decision.action.id||'')===secondId)return'';
+    let solve=null;try{solve=C.recipeSolve(state.db,secondId,state.counts||{});}catch(_){return'';}
+    const rares=Object.entries(solve.buildNeeded&&solve.buildNeeded.rare||{}).map(([id,count])=>`${C.materialName(state.db,id)}${C.num(count)>1?`×${C.num(count)}`:''}`).slice(0,4);
+    const commonsShort=Object.values(solve.lowestMissing||{}).reduce((sum,value)=>sum+C.num(value),0);
+    const wispGap=Math.max(0,C.num(solve.wispCost)-C.num(state.wisp));
+    const feasible=!(solve.hardMissing||[]).length&&!rares.length&&wispGap<=0;
+    const parts=[];
+    if(rares.length)parts.push(`부족 희귀 ${rares.join('·')}`);
+    if(commonsShort)parts.push(`흔함 ${commonsShort}장`);
+    if(wispGap)parts.push(`선위 ${wispGap} 부족`);
+    const note=feasible?'지금 제작 가능 — 이 상위가 라인을 나눠 받습니다':parts.join(' · ')||'재료 계산 중';
+    return`<div class="v157-second-callout ${feasible?'ready':''}">${this.v153Icon('lock')}<span><small>확정 2상위 · 메인 다음 우선 제작</small><b>${C.esc(displayNameOf(unit))}</b><em>${C.esc(note)}</em></span><span class="v157-side"><button data-act="detail" data-id="${C.esc(secondId)}">재료</button><em>선위 ${C.num(solve.wispCost)}</em></span></div>`;
+  }
+
+  // v19.7(사용자 요청 ⑥): 0731 로그 — 도플 변이(S50h)가 흔함 3장(버기2·
+  // 상디1)까지 좁혀졌는데 엔진은 r53~58 내내 HOLD 였고 손 정지 29초 전에야
+  // 추천했다.  후반 대기 상태에서 "흔함만 부족한" 변화·왜곡 마무리를 랜덤
+  // 흔함(라운드당 2장) 노리기 카드로 승격한다.  표시 전용 — 게이트 없음.
+  v157LongshotHint(state,status){
+    if(!state||!state.db)return'';
+    if(this.actualRound()<46)return'';
+    if(!['HOLD','PREPARE','SYNC_BLOCKED'].includes(String(status||'')))return'';
+    const counts=state.counts||{},targets=[];
+    for(const unit of state.db.units){
+      if(!(C.isChanged(unit)||C.isWarped(unit))||C.num(counts[unit.id])>0)continue;
+      let solve=null;try{solve=C.recipeSolve(state.db,unit.id,counts);}catch(_){continue;}
+      // buildNeeded 는 "만들어야 할 중간 단계"지 차단이 아니다 — 희귀 조상을
+      // 흔함부터 쌓아 올리는 경로가 바로 이 각이다.  진짜 차단(특수 선행·
+      // 미해석 재료)만 거른다.
+      if((solve.hardMissing||[]).length)continue;
+      const byTier=solve.missingByTier||{};
+      if(Object.keys(byTier.hard||{}).length||Object.keys(byTier.other||{}).length)continue;
+      const commons=Object.entries(solve.lowestMissing||{}).map(([id,count])=>({id,name:C.materialName(state.db,id),count:C.num(count)})).filter(item=>item.count>0);
+      const totalShort=commons.reduce((sum,item)=>sum+item.count,0);
+      if(!totalShort||totalShort>6)continue;
+      if(C.num(solve.wispCost)>C.num(state.wisp)+2)continue;
+      targets.push({unit,solve,commons,totalShort});
+    }
+    if(!targets.length)return'';
+    targets.sort((a,b)=>a.totalShort-b.totalShort||C.num(a.solve.wispCost)-C.num(b.solve.wispCost));
+    const top=targets[0];
+    const chips=top.commons.slice(0,4).map(item=>`<em><i style="background:${C.COMMON_COLORS[item.name]||'#64748b'}"></i>${C.esc(item.name)}×${item.count}</em>`).join('');
+    return`<div class="v157-longshot">${this.v153Icon('gem')}<span><small>막판 랜덤 흔함 노리기 · 라운드마다 랜덤 흔함 ${C.num(C.RANDOM_WISP_PER_ROUND)||2}장</small><b>${C.esc(displayNameOf(top.unit))}</b><span class="chips">${chips}</span><em>이것만 나오면 완성 — 당장 각이 없어도 공짜 확률입니다</em></span><button data-act="detail" data-id="${C.esc(top.unit.id)}">재료</button></div>`;
   }
 
   // v17.5(사용자 요청): 해적선은 특수재료라 리롤로 못 얻는다 — 보유한
@@ -1414,6 +1486,9 @@ class App{
         unit:row.unit,
         solve,
         roles:row.roles||'역할 보조',
+        // v19.7(사용자 요청 ②): 카드 빈 공간을 "이걸 만들면 무엇이 닫히나"로
+        // 채운다 — 후보 계산이 이미 아는 covers 를 실어 보낸다.
+        covers:candidate&&candidate.covers||[],
         rareSpend:{total:owned,byId:ingredients.filter(item=>item.owned>0).map(item=>({id:item.id,name:item.name,use:item.owned}))},
         rareProgress:{owned,short,total,ratio:total?owned/total:0,ingredients},
         feasible,
@@ -2182,12 +2257,20 @@ class App{
   renderV153CraftableLegends(state,plan){
     const rows=this.v153RareCraftRows(state,plan);
     if(!rows.length)return`<div class="v153-no-crafts"><b>겹치는 전설 없음</b><span>보유 희귀와 맞는 전설 조합이 생기면 여기에 표시됩니다.</span></div>`;
+    const db=state&&state.db;
     const cards=rows.slice(0,3).map((row,index)=>{
       const progress=row.rareProgress||{},owned=C.num(progress.owned),total=C.num(progress.total),ratio=total?Math.round(owned/total*100):0;
-      const ingredients=(progress.ingredients||[]).slice(0,3).map(item=>`<span class="${C.num(item.short)>0?'missing':'owned'}">${C.esc(item.name)} <b>${C.num(item.owned)}/${C.num(item.total)}</b></span>`).join('');
+      // v19.7(사용자 요청 ②): 재료 칩에 유닛 초상화를 넣는다 — 텍스트만 있던
+      // 칩이 카드 아래 빈 공간의 원인이었다.
+      const ingredients=(progress.ingredients||[]).slice(0,4).map(item=>{
+        const unit=db&&db.byId.get(String(item.id)),img=unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="" loading="lazy">`:'';
+        return`<span class="${C.num(item.short)>0?'missing':'owned'}">${img}${C.esc(item.name)} <b>${C.num(item.owned)}/${C.num(item.total)}</b></span>`;
+      }).join('');
       const status=row.feasible?'제작 가능':row.blocked&&row.blocked.length?row.blocked[0]:C.num(row.wispGap)>0?`선위 ${C.num(row.wispGap)} 부족`:'재료 대기';
       const recommended=C.num(row.recommendationRank)>0;
-      return`<button class="${recommended?'recommended':''} ${row.feasible?'ready':'waiting'}" data-act="detail" data-id="${C.esc(row.unit.id)}">${recommended?'<i class="v153-pick">추천</i>':''}<header>${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:this.v153Icon('placeholder')}<span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(row.roles||'역할 보조')}</small></span></header><div class="v154-rare-progress"><strong>희귀 ${owned}/${total}</strong><em>${C.esc(status)}</em></div><i class="v154-rare-bar"><span style="width:${ratio}%"></span></i><div class="v154-rare-mats">${ingredients}</div><footer>${this.v153Icon('spiral')}<b>선위 ${C.num(row.solve&&row.solve.wispCost)}</b><span>${owned}장 완성 · ${C.num(progress.short)}장 남음</span></footer></button>`;
+      const covers=(row.covers||[]).slice(0,3);
+      const coversHtml=covers.length?`<div class="v156-covers">${this.v153Icon('check')}<span>${covers.map(label=>`<b>${C.esc(label)}</b>`).join('')}</span></div>`:`<div class="v156-covers muted">${this.v153Icon('gear')}<span><b>${C.esc(row.roles||'역할 보조')}</b></span></div>`;
+      return`<button class="${recommended?'recommended':''} ${row.feasible?'ready':'waiting'}" data-act="detail" data-id="${C.esc(row.unit.id)}">${recommended?'<i class="v153-pick">추천</i>':''}<header>${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:this.v153Icon('placeholder')}<span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(row.roles||'역할 보조')}</small></span><em class="v156-ratio ${row.feasible?'ok':''}">${ratio}<i>%</i></em></header><div class="v154-rare-progress"><strong>희귀 ${owned}/${total}</strong><em>${C.esc(status)}</em></div><i class="v154-rare-bar${row.feasible?' full':''}"><span style="width:${ratio}%"></span></i>${coversHtml}<div class="v154-rare-mats">${ingredients}</div><footer>${this.v153Icon('spiral')}<b>선위 ${C.num(row.solve&&row.solve.wispCost)}</b><span>${owned}장 완성 · ${C.num(progress.short)}장 남음</span></footer></button>`;
     }).join('');
     return`<div class="v153-craft-cards">${cards}</div>${rows.length>3?`<button class="v153-craft-more" data-act="tab" data-tab="deck">전체 제작각 ${rows.length}개</button>`:''}`;
   }
@@ -2259,12 +2342,32 @@ class App{
       secondBlock=`<div class="v153-second confirmed"><header>${this.v153Icon('lock')}<b>확정 두 번째 상위</b></header><div><strong>${C.esc(displayNameOf(confirmedSecond))}</strong><small>${C.esc(secondTier(confirmedSecond))} · 이 자리는 다른 상위로 바뀌지 않습니다</small>${playbookHtml(confirmedSecond,{compact:true})}</div><footer><button data-act="detail" data-id="${C.esc(confirmedSecond.id)}">상세</button><button data-act="release-second-upper">확정 해제</button></footer></div>`;
     }else{
       const options=this.v19SecondUpperCandidates(state,plan,upper),plannedId=plannedSecond?String(plannedSecond.id):'';
+      // v19.7(사용자 요청 ⑤): 처방(전수 메모 v2)의 추천 2상위를 후보에 합치고,
+      // 메인 상위와 희귀 트리가 겹치는지 실측으로 표시한다 — "서로 희귀함
+      // 안 겹치고 시너지 나는 방향".  0731 로그의 나미는 겹침 1종(마젤란)
+      // 뿐이었는데 그 사실이 화면 어디에도 없었다.
+      const treeRares=id=>{try{const solve=C.recipeSolve(db,id,state.counts||{});return new Set([...Object.keys(solve.rareUse||{}),...Object.keys(solve.buildNeeded&&solve.buildNeeded.rare||{})]);}catch(_){return new Set();}};
+      const mainRares=treeRares(upper.id);
+      const prescribed=(upperPlaybookOf(upper)||{}).second||[];
       const rows=[];
       if(plannedSecond)rows.push({unit:plannedSecond,label:'현재 계획',wispCost:C.num((squad&&(squad.actions||[]).find(action=>String(action.id)===plannedId)||{}).wispCost)});
       for(const option of options){if(rows.length>=3)break;if(String(option.unit.id)===plannedId)continue;rows.push({unit:option.unit,label:option.feasible?'지금 제작 가능':`선위 ${option.wispCost}`,wispCost:option.wispCost});}
-      secondBlock=rows.length?`<details class="v153-second"><summary>두 번째 상위 확정 · ${plannedSecond?`현재 계획 ${C.esc(displayNameOf(plannedSecond))}`:'계획에 두 번째 상위 없음'}</summary><div class="v153-second-list">${rows.map(row=>`<article><span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(secondTier(row.unit))} · ${C.esc(row.label)}</small>${playbookHtml(row.unit,{compact:true,maxPairs:3})}</span><span><button data-act="detail" data-id="${C.esc(row.unit.id)}">상세</button><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}">2상위 확정</button></span></article>`).join('')}</div><small>확정하면 그 자리를 다른 상위에게 넘기지 않습니다. 물딜도 확정하면 2상위로 갑니다(보드 5기 + 상위 2기 = 9환산).</small></details>`:'';
+      for(const rec of prescribed){
+        if(rows.length>=4)break;
+        const unit=db&&db.byId.get(String(rec.id||''));
+        if(!unit||String(C.canonicalUpperId(unit.id))===mainKey)continue;
+        const existing=rows.find(row=>String(C.canonicalUpperId(row.unit.id))===String(C.canonicalUpperId(unit.id)));
+        if(existing){existing.presc=rec;continue;}
+        let wispCost=0;try{wispCost=C.num(C.recipeSolve(db,unit.id,state.counts||{}).wispCost);}catch(_){wispCost=0;}
+        rows.push({unit,label:'처방 추천',wispCost,presc:rec});
+      }
+      for(const row of rows){
+        const shared=[...treeRares(row.unit.id)].filter(id=>mainRares.has(id));
+        row.sharedRares=shared.map(id=>C.materialName(db,id));
+      }
+      secondBlock=rows.length?`<details class="v153-second"><summary>두 번째 상위 확정 · ${plannedSecond?`현재 계획 ${C.esc(displayNameOf(plannedSecond))}`:'계획에 두 번째 상위 없음'}</summary><div class="v153-second-list">${rows.map(row=>`<article><span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(secondTier(row.unit))} · ${C.esc(row.label)}</small>${row.presc?`<small class="presc">처방 · ${C.esc(row.presc.why||'시너지 추천')}</small>`:''}<small class="${row.sharedRares&&row.sharedRares.length?'clash':'okv'}">${row.sharedRares&&row.sharedRares.length?`메인과 희귀 겹침 ${C.esc(row.sharedRares.slice(0,2).join('·'))}${row.sharedRares.length>2?` 외 ${row.sharedRares.length-2}`:''}`:'메인과 희귀 겹침 없음'}</small>${playbookHtml(row.unit,{compact:true,maxPairs:3})}</span><span><button data-act="detail" data-id="${C.esc(row.unit.id)}">상세</button><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}">2상위 확정</button></span></article>`).join('')}</div><small>확정하면 그 자리를 다른 상위에게 넘기지 않습니다. 물딜도 확정하면 2상위로 갑니다(보드 5기 + 상위 2기 = 9환산).</small></details>`:'';
     }
-    return`<div class="v153-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>확정 메인 상위${power&&power.known?` · ${C.esc(power.letter)}티어`:''}</small><b>${C.esc(displayNameOf(upper))}</b><em>${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="party-preview" data-id="${C.esc(upper.id)}">전체 파티 보기</button><button data-act="snipe-open" title="다른 상위로 강제 변경">저격</button></div>${playbookHtml(upper)}${partyBoard}${secondBlock}<div class="v153-upper-gaps"><small>이 파티에서 먼저 닫을 결손</small>${requirements.length?requirements.map(row=>`<span>${C.esc(row.label)} <b>부족 ${fmt(row.gap)}</b></span>`).join(''):'<span class="ok">필수 역할 합계 충족</span>'}</div><details class="v153-support-fold"><summary>다음 보조 전설급 ${supports.length}개 · 같은 최종 파티 기준</summary><div class="v153-support-list">${supportHtml||'<p>현재 패에서 확정할 보조 전설급을 계산 중입니다.</p>'}</div></details>`;
+    return`<div class="v153-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>확정 메인 상위${power&&power.known?` · ${C.esc(power.letter)}티어`:''}</small><b>${C.esc(displayNameOf(upper))}</b><em>${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="party-preview" data-id="${C.esc(upper.id)}">전체 파티 보기</button><button data-act="snipe-open" title="다른 상위로 강제 변경">저격</button></div>${playbookDirectionHtml(upper)}${partyBoard}${secondBlock}<div class="v153-upper-gaps"><small>이 파티에서 먼저 닫을 결손</small>${requirements.length?requirements.map(row=>`<span>${C.esc(row.label)} <b>부족 ${fmt(row.gap)}</b></span>`).join(''):'<span class="ok">필수 역할 합계 충족</span>'}</div><details class="v153-support-fold"><summary>다음 보조 전설급 ${supports.length}개 · 같은 최종 파티 기준</summary><div class="v153-support-list">${supportHtml||'<p>현재 패에서 확정할 보조 전설급을 계산 중입니다.</p>'}</div></details>`;
   }
 
   renderCoach(state,plan,phase,clock,health){

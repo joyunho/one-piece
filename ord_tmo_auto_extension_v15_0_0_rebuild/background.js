@@ -14,6 +14,17 @@ const AUTO_ROUND_KEY = 'ordAutoRoundState';
 const latestSeq = new Map();
 let mutationQueue = Promise.resolve();
 
+// v19.7(호환 ①): 기각 사유 대부분이 어디에도 안 남아 "왜 안 되는지"를 볼 수
+// 없었다 — 모든 기각 경로가 마지막 기각을 기록한다.  스캔은 2초마다 오므로
+// 같은 사유의 반복은 5초에 한 번만 저장해 storage 를 아낀다.
+let lastRejectMemo = {reason: '', at: 0};
+function recordReject(reason, extra) {
+  const now = Date.now();
+  if (lastRejectMemo.reason === reason && now - lastRejectMemo.at < 5000) return;
+  lastRejectMemo = {reason, at: now};
+  set({ordLatestReject: Object.assign({at: now, reason}, extra || {})}).catch(() => {});
+}
+
 function get(keys) {
   return new Promise(resolve => chrome.storage.local.get(keys, value => resolve(value || {})));
 }
@@ -268,14 +279,17 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
       const sourceEpoch = Number(stored[EPOCH_KEY]) || 0;
 
       if (!supported(incoming.helperId)) {
+        recordReject('unsupported-helper', {incomingHelperId: String(incoming.helperId || ''), tabId});
         reply({ok: false, ignored: 'unsupported-helper'});
         return;
       }
       if (!pinnedTabId || !tabId || tabId !== pinnedTabId) {
+        recordReject(pinnedTabId ? 'unselected-tab' : 'no-pinned-source', {tabId, pinnedTabId, incomingHelperId: String(incoming.helperId || '')});
         reply({ok: false, ignored: 'unselected-tab'});
         return;
       }
       if (pinnedHelperId !== String(incoming.helperId || '')) {
+        recordReject('unselected-helper', {tabId, pinnedHelperId, incomingHelperId: String(incoming.helperId || '')});
         reply({ok: false, ignored: 'unselected-helper'});
         return;
       }
@@ -324,6 +338,14 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
             sourceEpoch,
             reason: 'invalid-snapshot'
           }
+        });
+        recordReject('invalid-snapshot', {
+          tabId,
+          incomingHelperId: String(incoming.helperId || ''),
+          unitCount: Number(incoming.unitCount) || 0,
+          wispCountFound: incoming.wispCountFound === true,
+          confidence: Number(collection.confidence) || 0,
+          topErrors: [].concat(collection.errors || [], counts.errors || []).slice(0, 5)
         });
         reply({ok: false, ignored: 'invalid-snapshot'});
         return;
@@ -396,5 +418,23 @@ chrome.tabs.onRemoved.addListener(tabId => {
   enqueue(async () => {
     const current = await get([SOURCE_KEY]);
     if (Number(current[SOURCE_KEY]) === Number(tabId)) await pinSource(0, '', '');
+  }).catch(() => {});
+});
+
+// v19.7(호환 ①): 고정된 탭이 SPA 내비게이션으로 다른 도우미 번호로 이동하면
+// 이전에는 모든 스냅샷이 'unselected-helper'로 영구 기각됐고 재고정 경로가
+// 없었다 — 같은 탭에서 번호가 바뀌면 새 번호로 자동 재고정한다.
+// (onUpdated 는 일부 실행 환경·테스트 하네스에 없다 — 없으면 조용히 생략.)
+if (chrome.tabs.onUpdated && chrome.tabs.onUpdated.addListener) chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+  if (!changeInfo.url) return;
+  enqueue(async () => {
+    const current = await get([SOURCE_KEY, HELPER_KEY]);
+    if (Number(current[SOURCE_KEY]) !== Number(tabId)) return;
+    const nextHelperId = helperIdFromUrl(changeInfo.url);
+    const pinnedHelperId = String(current[HELPER_KEY] || '');
+    if (!nextHelperId || !supported(nextHelperId)) return;
+    if (nextHelperId === pinnedHelperId) return;
+    await pinSource(tabId, nextHelperId, changeInfo.url);
+    recordReject('helper-repinned', {tabId, from: pinnedHelperId, to: nextHelperId});
   }).catch(() => {});
 });
