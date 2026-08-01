@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v19.9.2-decision-engine-manual">
+  <meta name="ord-helper" content="v19.9.3-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.305 악몽 수동 도우미">
-  <title>원랜디 2.305 악몽 실전 판단 코치 v19.9.2 · 수동 모드</title>
+  <title>원랜디 2.305 악몽 실전 판단 코치 v19.9.3 · 수동 모드</title>
   <style data-source="ord_app.css">
 :root{color-scheme:dark;--bg:#060b18;--panel:#0d162a;--panel2:#101d35;--line:#223454;--text:#eef5ff;--muted:#91a2bd;--blue:#4f7cff;--cyan:#25c2e7;--green:#27d17f;--amber:#f3b84b;--red:#ef6262;--violet:#8b67ff;--shadow:0 20px 55px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 10% 0,#122a5a 0,#060b18 35%,#040812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-break:keep-all;overflow-wrap:anywhere}button,input,select{font:inherit}button{cursor:pointer}.ord-app{min-height:100vh;padding:18px;max-width:1860px;margin:0 auto}.ord-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px;border:1px solid rgba(112,154,255,.26);border-radius:24px;background:linear-gradient(135deg,rgba(66,83,222,.34),rgba(17,64,94,.3));box-shadow:var(--shadow)}.ord-kicker{font-size:11px;letter-spacing:.14em;color:#9bb7ff;font-weight:900}.ord-header h1{margin:5px 0 3px;font-size:29px;line-height:1.15}.ord-header p{margin:0;color:var(--muted);font-size:13px}.ord-head-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:720px}.ord-head-status>*{border:1px solid var(--line);border-radius:999px;background:rgba(6,11,24,.7);color:#d9e8ff;padding:8px 12px;font-size:12px;font-weight:800;white-space:nowrap}.ord-head-status .good{border-color:rgba(39,209,127,.45);color:#a8f7ce}.ord-head-status .warn{border-color:rgba(243,184,75,.45);color:#ffe1a1}.ord-head-status button{background:#1b2b4d}.ord-tabs{display:flex;gap:8px;margin:14px 0}.ord-tabs button,.purpose-buttons button,.two-button button,.round-box button,.action-buttons button,.prep-list button,.mini-cards button,.ghost,.primary{border:1px solid var(--line);border-radius:11px;background:#111d32;color:#dce9ff;padding:9px 13px;font-weight:850}.ord-tabs button.on,.purpose-buttons button.on,.primary{border-color:transparent;background:linear-gradient(135deg,var(--violet),var(--blue));color:white}.ord-layout{display:grid;grid-template-columns:294px minmax(0,1fr);gap:14px;align-items:start}.ord-side{display:grid;gap:12px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;padding-right:3px;min-width:0}.side-card,.ord-panel{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(15,26,48,.96),rgba(9,16,31,.96));box-shadow:0 14px 38px rgba(0,0,0,.18);min-width:0}.side-card{padding:14px}.side-card b{font-size:14px}.side-title{display:flex;justify-content:space-between;gap:8px}.side-title span{font-size:11px;color:var(--cyan)}.side-card label{display:grid;gap:5px;color:var(--muted);font-size:11px;margin-top:11px}.side-card input,.side-card select,.form-grid input{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#071020;color:var(--text);padding:9px}.side-card small{display:block;color:var(--muted);font-size:10.5px;line-height:1.45;margin-top:6px}.round-box{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding:10px;border:1px solid rgba(37,194,231,.3);border-radius:13px;background:rgba(10,39,62,.35)}.round-box strong{font-size:13px;min-width:0}.round-box div{display:flex;gap:4px}.round-box button{padding:6px 8px;font-size:11px}.side-card details{margin-top:10px}.side-card summary,.detail-modal summary{cursor:pointer;color:#cbd9ef;font-size:11px;font-weight:800}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.two-button{display:flex;gap:6px;margin-top:10px}.two-button button{flex:1;font-size:11px;padding:8px}.two-button .on{border-color:var(--green);color:#c5ffe0;background:rgba(39,209,127,.1)}.two-button .danger.on{border-color:var(--red);color:#ffc1c1;background:rgba(239,98,98,.1)}.stat-row{display:flex;justify-content:space-between;align-items:center}.stat-row b{font-size:24px;color:#ffe7a3}.lock-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.lock-list>span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(139,103,255,.35);border-radius:999px;padding:5px 8px;background:rgba(139,103,255,.1);font-size:10px}.lock-list button{border:0;background:none;color:#ffaaaa;font-weight:900}.side-card.compact{padding-bottom:10px}.common-line{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;margin-top:7px;font-size:11px}.common-line i{width:8px;height:8px;border-radius:50%}.common-line b{font-size:11px}.ord-main{display:grid;gap:13px;min-width:0}.milestone{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 19px;border:1px solid rgba(37,194,231,.4);border-radius:21px;background:linear-gradient(135deg,rgba(6,47,78,.78),rgba(31,25,87,.56));min-width:0}.milestone small{color:#61daf5;font-weight:900}.milestone h2{margin:3px 0 5px;font-size:24px}.milestone p{margin:0;color:#abc0df;font-size:12px}.purpose-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.purpose-buttons button{font-size:11px}.top-two{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:13px}.ord-panel{padding:17px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px}.panel-head small{color:#72d8ef;font-size:10px;font-weight:900}.panel-head h2{margin:2px 0 4px;font-size:20px}.panel-head p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.45}.count-pill,.mode-pill,.control-badge{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;white-space:nowrap}.mode-pill.physical{color:#ffcb9a;border-color:#e48e45}.mode-pill.magic{color:#a9c9ff;border-color:#5c84d8}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.profile-grid>div,.spec-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px;min-width:0}.profile-grid small,.spec-grid small{display:block;color:var(--muted);font-size:10px}.profile-grid b{display:block;margin-top:5px;font-size:12px;line-height:1.45}.synergy-line{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.synergy-line small{width:100%;color:var(--muted)}.synergy-line span{border:1px solid rgba(39,209,127,.3);border-radius:999px;padding:5px 8px;font-size:10px;color:#b8f7d5}.upper-focus details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.upper-focus details p{color:#aebbd0;font-size:11px}.control-badge.safe{color:#a9f7cc;border-color:rgba(39,209,127,.45)}.control-badge.edge{color:#ffe2a4;border-color:rgba(243,184,75,.45)}.control-badge.danger{color:#ffb4b4;border-color:rgba(239,98,98,.45)}.spec-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.spec-grid b{display:block;font-size:21px;margin:4px 0}.spec-grid span{color:#8193ae;font-size:9.5px}.deficit-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}.deficit-line>b{font-size:11px}.deficit-line span{border:1px solid rgba(243,184,75,.32);border-radius:999px;padding:5px 8px;color:#ffd78d;font-size:10px}.deficit-line .ok{color:#a9f7cc;border-color:rgba(39,209,127,.3)}.state-intro{display:flex;justify-content:space-between;gap:15px;align-items:center}.state-intro h2{margin:4px 0}.state-intro p{color:var(--muted);margin:0;font-size:12px}.control{min-width:260px;border:1px solid var(--line);border-radius:15px;padding:12px}.control b,.control span{display:block}.control span{font-size:10px;color:var(--muted);margin-top:4px}.control.safe{border-color:rgba(39,209,127,.35)}.control.edge{border-color:rgba(243,184,75,.35)}.control.danger{border-color:rgba(239,98,98,.35)}.mini-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mini-cards article{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.mini-cards img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mini-cards b,.mini-cards span,.mini-cards small{display:block;min-width:0}.mini-cards b{font-size:12px}.mini-cards span{font-size:10px;color:#9fb1ca}.mini-cards small{font-size:9px;color:#7085a4}.mini-cards button{padding:7px;font-size:10px}.action-list{display:grid;gap:8px}.action-row{display:grid;grid-template-columns:42px 48px minmax(0,1fr) 124px auto;gap:11px;align-items:center;border:1px solid rgba(55,84,132,.8);border-radius:16px;padding:11px;background:linear-gradient(90deg,rgba(12,27,50,.95),rgba(8,17,33,.95));min-width:0}.action-row .rank{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));font-weight:950}.action-row>img{width:46px;height:46px;border-radius:12px;object-fit:cover}.action-main{min-width:0}.unit-title{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.unit-title b{font-size:14px}.unit-title span{font-size:10px;color:#8da1bd}.role-tags{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.role-tags>span,.role-tags i{border:1px solid #284266;border-radius:999px;padding:4px 7px;font-size:9.5px;font-style:normal;color:#bcd3f2}.role-tags i{border-color:color-mix(in srgb,var(--pc) 60%,#223454);box-shadow:inset 3px 0 var(--pc)}.action-main p{margin:0;color:#91a6c2;font-size:10.5px}.action-cost{border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}.action-cost b{display:block;font-size:22px;color:#ffe1a1}.action-cost small{display:block;color:#7f91ab;font-size:9px}.action-cost span{display:block;margin-top:4px;font-size:9px}.action-cost .good{color:#9ff1c5}.action-cost .warn{color:#ffd083}.action-cost .bad{color:#ffaaaa}.action-buttons{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.action-buttons button{font-size:10px;padding:8px}.empty{padding:20px;border:1px dashed #2c4266;border-radius:14px;text-align:center;color:#8193ad}.prep-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prep-list>div{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.prep-list img{width:38px;height:38px;border-radius:10px;object-fit:cover}.prep-list b,.prep-list small{display:block}.prep-list b{font-size:12px}.prep-list small{color:#8195b2;font-size:9.5px}.prep-list em{font-style:normal;color:#ffd587;font-size:9.5px}.prep-list button{font-size:9px;padding:6px}.rare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rare-columns>div{border:1px solid var(--line);border-radius:14px;padding:11px}.rare-columns h3{margin:0 0 8px;font-size:12px}.rare-columns .use{border-color:rgba(39,209,127,.3)}.rare-columns .hold{border-color:rgba(243,184,75,.3)}.rare-columns .reroll{border-color:rgba(239,98,98,.3)}.rare-columns>div>div{display:grid;grid-template-columns:28px 1fr auto;gap:7px;align-items:center;margin-top:6px;font-size:10px}.rare-columns img{width:28px;height:28px;border-radius:8px}.rare-panel>small{display:block;margin-top:9px;color:#7f91aa;font-size:9.5px}.owned-chips{display:flex;gap:7px;flex-wrap:wrap}.owned-chips button{display:flex;align-items:center;gap:7px;max-width:260px;border:1px solid var(--line);border-radius:12px;background:#091326;color:#dceaff;padding:7px 9px}.owned-chips img{width:30px;height:30px;border-radius:8px}.owned-chips span{font-size:10px;text-align:left}.deck-page,.data-page{display:grid;gap:13px}.raw-ability-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.raw-ability-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px;background:#091326;font-size:10px;min-width:0}.raw-ability-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.raw-ability-grid>div>b{flex:0 0 auto;white-space:nowrap}.raw-ability-grid b{color:#d9ecff}.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.owned-grid button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#091326;color:#e3efff;padding:9px;text-align:left}.owned-grid img{width:36px;height:36px;border-radius:9px}.owned-grid span,.owned-grid small{display:block}.owned-grid span{font-size:11px}.owned-grid small{font-size:9px;color:#8296b4}.owned-grid.small button{grid-template-columns:32px 1fr auto}.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.diag-grid>div{border:1px solid var(--line);border-radius:12px;padding:10px;background:#091326}.diag-grid small,.diag-grid b{display:block}.diag-grid small{color:#8395b0;font-size:9px}.diag-grid b{font-size:11px;margin-top:4px}.data-page pre{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#050b16;padding:11px;color:#9fb5d0;font-size:10px}.manual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.manual-grid label{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;font-size:10px}.manual-grid input{width:100%;border:1px solid var(--line);border-radius:8px;background:#050b16;color:white;padding:7px}.modal-back{position:fixed;inset:0;z-index:9999;background:rgba(1,4,12,.8);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px}.detail-modal{width:min(900px,96vw);max-height:92vh;overflow:auto;border:1px solid #30486f;border-radius:24px;background:#081121;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.65);position:relative}.modal-x{position:absolute;right:15px;top:15px;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#111d31;color:white;font-size:20px}.detail-modal header{display:flex;gap:12px;align-items:center;padding-right:50px}.detail-modal header img{width:54px;height:54px;border-radius:14px}.detail-modal h2{margin:0;font-size:19px}.detail-modal header p{margin:4px 0 0;color:#8ea4c1;font-size:10px}.detail-hero{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:15px 0}.detail-hero>div,.missing-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px}.detail-hero small,.detail-hero b,.detail-hero span{display:block}.detail-hero small{color:#8296b4;font-size:9px}.detail-hero b{margin:4px 0;font-size:16px}.detail-hero span{font-size:10px;color:#a9bad0}.detail-modal section{margin-top:14px}.detail-modal h3{font-size:12px}.direct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.direct-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:10px;min-width:0}.direct-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.direct-grid>div>b{flex:0 0 auto;white-space:nowrap}.missing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.missing-grid small,.missing-grid b{display:block}.missing-grid small{color:#8296b4;font-size:9px}.missing-grid b{font-size:10px;line-height:1.55;margin-top:5px}.detail-modal details{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px}.detail-modal details p{font-size:10px;color:#9cb0cb}.detail-modal .close{margin-top:14px}.ord-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;border-radius:14px;padding:11px 16px;background:linear-gradient(135deg,var(--violet),var(--blue));box-shadow:var(--shadow);font-weight:900;font-size:12px}
@@ -2766,8 +2766,11 @@ button:focus-visible,select:focus-visible{
   .v159-skip-warn,.v159-single-closer{margin-top:4px;padding:4px 8px}
   .v159-endgame{margin-top:4px;padding:5px 9px}
 }
-/* v19.9.2: 회복 목표 조합식 + 여유 0 경고 라벨. */
+/* v19.9.2: 회복 목표 조합식 + 여유 0 경고 라벨.
+   행 기본 스타일이 b 를 블록으로 만들므로 조합식 안에서는 인라인으로 되돌린다
+   — 아니면 재료가 한 줄씩 세로로 떨어져 카드가 세로로 폭주한다. */
 .v151-recovery-row .v159-recovery-recipe{display:block;color:#8fa5bd;font-size:9.5px;line-height:1.4;white-space:normal}
+.v151-recovery-row .v159-recovery-recipe b,.v151-recovery-row .v159-recovery-recipe i{display:inline;font-size:inherit}
 .v151-recovery-row .v159-recovery-recipe b{font-weight:800}
 .v151-recovery-row .v159-recovery-recipe b.owned{color:#8ef0c0}
 .v151-recovery-row .v159-recovery-recipe b.missing{color:#ffc9c4}
@@ -2776,6 +2779,15 @@ button:focus-visible,select:focus-visible{
 @media (max-height:1120px) and (min-width:1240px){
   .v151-recovery-row .v159-recovery-recipe{font-size:9px}
 }
+/* v19.9.3: 로컬 서버 직접 읽기 시험(연결 진단 페이지 전용 · 한 화면 계약 밖). */
+.v199-local-probe .probe-note{color:var(--v153-muted);font-size:12px;line-height:1.5}
+.v199-local-probe .probe-fail{border:1px solid rgba(226,92,102,.5);border-radius:11px;padding:10px 12px;background:rgba(92,24,36,.22)}
+.v199-local-probe .probe-fail b{display:block;color:#ffc9c4;margin-bottom:4px}
+.v199-local-probe .probe-fail span{display:block;color:#ffe1de;font-size:12px;word-break:break-all}
+.v199-local-probe .probe-fail small{display:block;margin-top:6px;color:#c9a6a6;font-size:11px;line-height:1.5}
+.v199-local-probe .probe-ok pre{max-height:220px;overflow:auto;border:1px solid var(--v153-line);border-radius:11px;padding:10px;background:rgba(7,18,32,.68);font-size:11px;line-height:1.5;white-space:pre-wrap;word-break:break-all}
+.v199-local-probe textarea{width:100%;margin-top:8px;border:1px solid var(--v153-line);border-radius:11px;padding:10px;background:rgba(7,18,32,.68);color:#cfe1f5;font-size:11px;font-family:ui-monospace,monospace}
+.v199-local-probe details summary{cursor:pointer;color:#89e7f7;font-size:12px;margin-top:8px}
 
   </style>
 </head>
@@ -3214,7 +3226,7 @@ window.ORD_META_STATS={"schema":"ord-meta-stats-v1","source":"tmo_nightmare_all_
 (function(global){
 'use strict';
 
-const VERSION='19.9.2';
+const VERSION='19.9.3';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -3266,7 +3278,7 @@ const UI_NAME_OVERRIDES={
   'Q20h':'라분(전설)','U20h':'검은수염(전설)','Z90h':'네코(전설)','R20h':'로브 루치(전설)','Y20h':'루나메(전설)',
   'X20h':'블랙마리아(전설)','430h':'상디(전설)','730h':'슈가(전설)','S20h':'조로(전설)','I30h':'제파(전설)',
   'N30h':'료쿠규(히든)','M30h':'사보(히든)','740h':'피셔타이거(히든)','J30h':'시류(히든)','Z30h':'아카이누(히든)',
-  // v19.9.2(사용자 규칙): 블마 왜곡은 W 폼 3형태(스턴/이감40/데미지) 배타 —
+  // v19.8.1(사용자 규칙): 블마 왜곡은 W 폼 3형태(스턴/이감40/데미지) 배타 —
   // 코칭은 이감폼 기준(스턴 0).  라벨로 폼 전제를 밝힌다.
   'J70h':'캐럿(변화)','unit_1752903381904_1445':'블랙마리아(왜곡·이감폼 기준)','V30h':'코알라(왜곡)','IC0h':'퀸(왜곡)',
   '840h':'페로나(왜곡)','unit_1779015610844_6407':'바제스(왜곡)','U30h':'레드포스호(해적선)',
@@ -3654,7 +3666,7 @@ const STUN_RESEARCH={
   'KB0H':{displayStun:1.092,capture:82.75},'KB0H_':{displayStun:1.092,capture:82.75},'760h':{displayStun:.64,capture:64.29},'B50h':{displayStun:.999,capture:79.97},'C50h':{displayStun:.863,capture:75.05},'unit_1767356778906_9384':{displayStun:1.312,capture:87.89},
   'F50h':{displayStun:.548,capture:58.58},'unit_1761060487951_749':{displayStun:.421,capture:49.2},'unit_1761062338921_7460':{displayStun:.633,capture:63.87},
   'unit_1761061031358_4977':{displayStun:.736,capture:69.39},'unit_1761062663657_987':{displayStun:2.168,capture:96.95},'unit_1761126198374_11':{displayStun:.908,capture:76.81},
-  // v19.9.2(사용자 규칙): 블랙마리아 왜곡은 W 폼 3형태(스턴/이감40/데미지)가
+  // v19.8.1(사용자 규칙): 블랙마리아 왜곡은 W 폼 3형태(스턴/이감40/데미지)가
   // 상호 배타다 — 이감폼을 쓰는 덱 기준으로 계산하므로 스턴은 0.  0731 판의
   // 스턴 1.25는 이 0.748 이중 계산이 부풀린 값이었다.
   'unit_1752903381904_1445':{displayStun:0,capture:0},'IC0h':{displayStun:.427,capture:49.73},'unit_1779016778159_2512':{displayStun:.317,capture:40}
@@ -4625,7 +4637,7 @@ function gameFlow(state,locks,settings){
 function milestonePurpose(round,hasUpper,hasLockedUpper){if(hasUpper||hasLockedUpper)return'spec';if(num(round)<=7)return'rare';if(num(round)<=20)return'story';return'upper';}
 function phaseForRound(round){round=num(round)||1;if(round<=7)return{key:'rare',label:'첫 희귀 + 선택 위습',note:'7라운드 안에 첫 희귀를 완성합니다.'};if(round<=20)return{key:'story',label:'첫 전설·히든',note:'첫 전설 또는 히든을 늦어도 20라 전에 완성합니다.'};if(round<=25)return{key:'route',label:'상위·딜 계통 결정',note:'스토리 보상 희귀·고급도박 유입이 끝난 전체 패(희귀 8장 전후)로 상위와 물딜·마딜을 결정합니다. 유입 전에는 선택 위습 소비를 아끼세요.'};if(round<=30)return{key:'upper',label:'상위 + 라인 전설',note:'상위 하나와 희귀보다 강한 라인 방어 전설을 마련합니다.'};if(round<=50)return{key:'spec',label:'50라 전 9환산 보강',note:'상위 결손을 채우며 실제 전설 환산 9기를 보수적 구조 최소선으로 맞춥니다. 패 불리기는 흔함·안흔이 나오는 하급도박이 효율적입니다.'};return{key:'finish',label:'최종 9기+ 마감',note:'전설·히든, 해적선, 희귀 2기, 변화됨 중 최저비용 경로로 마지막 스펙을 채웁니다.'};}
 function roundDuration(round,settings){return BOSS_ROUNDS.has(round)?num(settings.roundBossSeconds)||60:num(settings.roundNormalSeconds)||35;}
-// v19.9.2(사용자 규칙): 라운드는 65가 최대다 — 0731 로그는 타이머가 80라까지
+// v19.8.1(사용자 규칙): 라운드는 65가 최대다 — 0731 로그는 타이머가 80라까지
 // 걸어가며 죽은 판을 24라운드나 더 판정했다.  시계·수동 모두 65에서 멈춘다.
 const MAX_ROUND=65;
 function roundClock(settings,now){
@@ -4765,7 +4777,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.9.2';
+const VERSION='19.9.3';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -6395,7 +6407,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.9.2';
+const VERSION='19.9.3';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -6525,7 +6537,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.9.2';
+const VERSION='19.9.3';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -6599,7 +6611,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.9.2';
+const VERSION='19.9.3';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -6792,7 +6804,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.9.2';
+const VERSION='19.9.3';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -9592,6 +9604,7 @@ class App{
     if(a==='remove-lock'){if(b.dataset.stage==='upper'){this.toast('메인 상위는 순간 누락으로 풀리지 않도록 고정됩니다. 바꾸려면 경로만 초기화하세요.');return;}this.state.locks=this.state.locks.filter(x=>!(x.stage===b.dataset.stage&&x.id===id));this.persist();this.render();return;}
     if(a==='reset-route'){this.state.locks=[];this.state.upperBlueprint=null;this.state.upperDetection=emptyUpperDetection();this.state.upperPreviewId='';this.state.directionStatus='open';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint='';this.state.releasedUpperHint=null;this.state.postLegendRoute='';const current=this.normalized();this.state.postLegendObservedCount=legendHiddenCount(current);this.state.postLegendBaseline=legendHiddenCounts(current);this.state.purpose='';this._squadCacheKey='';this._directionRankCacheKey='';this.persist();this.toast('확정 상위와 예상 파티를 초기화했습니다. 새 방향부터 다시 비교합니다.');return;}
     if(a==='connection'){if(this.onConnectionTest)this.onConnectionTest();return;}
+    if(a==='local-probe'){this.v199LocalProbe();return;}
     if(a==='open-tmo'){if(this.onOpenTmo)this.onOpenTmo();return;}
     if(a==='round-reset'){this.state.roundStartedAt=0;this.state.currentRound=1;this.persist();this.render();return;}
     if(a==='round-step'){const delta=C.num(b.dataset.delta),cur=this.actualRound();this.state.currentRound=Math.min(C.MAX_ROUND||65,Math.max(1,cur+delta));if(this.state.roundStartedAt)this.state.roundStartedAt=Date.now()-this.elapsedToRoundStart(this.state.currentRound)*1000;this.persist();this.render();return;}
@@ -11461,10 +11474,62 @@ class App{
     if(!this._runResultOpen)return'';const d=this._runResultDraft||RUN_RESULT_DEFAULTS,kind=d.kind||'r50_failed',tx=normalizeTransaction(this.state.pendingTransaction),button=(value,label,note)=>`<button class="${kind===value?'on':''}" data-act="run-result-kind" data-value="${value}"><b>${label}</b><small>${note}</small></button>`;
     return`<div class="modal-back run-result-back" data-act="run-result-close"><article class="run-result-modal" role="dialog" aria-modal="true" aria-label="게임 결과 기록"><button class="modal-x" data-act="run-result-close" aria-label="닫기">×</button><header><small>이번 게임 결과 · 사용자 확인값</small><h2>어디에서 어떻게 끝났나요?</h2><p>프로그램은 성공·실패를 추정하지 않습니다. 아래 결과와 당시 상태를 함께 저장합니다.</p></header><div class="result-kinds">${button('r50_failed','50라 실패','게임 종료 · JSON 자동 저장')}${button('r50_killed','50라 보스 처치','계속 기록 · 65라까지 진행')}${button('r51_65_failed','51~65라 실패','게임 종료 · JSON 자동 저장')}${button('r65_cleared','65라 클리어','게임 종료 · JSON 자동 저장')}</div><div class="result-health ${health.ready?'ok':'warn'}"><b>${C.esc(health.label)}</b><span>${health.ageSec<999?`${C.num(health.ageSec)}초 전 TMO 패`:'TMO 패 없음'} · ${health.ready?'현재 상태를 결과에 연결합니다.':'오래된 상태임을 표시하고 저장합니다.'}</span>${tx?'<em>TMO 제작 확인 대기 중 · 확정 패와 임시 패를 분리 기록</em>':''}</div>${this.renderVerdictReport(this.verdictReportForDisplay())}<div class="result-form"><label>결과 라운드<input data-run-field="round" type="number" min="1" max="65" value="${C.esc(d.round)}"></label><label>보스 남은 체력 %<input data-run-field="bossHpPercent" type="number" min="0" max="100" placeholder="모르면 비움" value="${C.esc(d.bossHpPercent)}"></label><label>프로그램 판단을 따랐나요?<select data-run-field="followedProgram"><option value="unknown" ${d.followedProgram==='unknown'?'selected':''}>모름</option><option value="followed" ${d.followedProgram==='followed'?'selected':''}>그대로 따름</option><option value="changed" ${d.followedProgram==='changed'?'selected':''}>중간에 내 판단으로 변경</option></select></label>${RUN_FAILURE_KINDS.has(kind)?`<label>실패 상황<select data-run-field="failureReason"><option value="unknown" ${d.failureReason==='unknown'?'selected':''}>모름</option><option value="timeout" ${d.failureReason==='timeout'?'selected':''}>시간 초과·보스 미처치</option><option value="line" ${d.failureReason==='line'?'selected':''}>라인사</option><option value="control" ${d.failureReason==='control'?'selected':''}>컨트롤 실패</option></select></label>`:''}<label>공격력 업<input data-run-field="attackUpgrade" type="number" min="0" placeholder="모르면 비움" value="${C.esc(d.attackUpgrade)}"></label><label>이감 업<input data-run-field="slowUpgrade" type="number" min="0" placeholder="모르면 비움" value="${C.esc(d.slowUpgrade)}"></label><label>체젠 업<input data-run-field="hpRegenUpgrade" type="number" min="0" placeholder="모르면 비움" value="${C.esc(d.hpRegenUpgrade)}"></label><label>마젠 업<input data-run-field="mpRegenUpgrade" type="number" min="0" placeholder="모르면 비움" value="${C.esc(d.mpRegenUpgrade)}"></label><label class="result-check"><input data-run-field="helperUsed" type="checkbox" ${d.helperUsed?'checked':''}><span>도움소 사용</span></label><label class="result-note">컨트롤·보스 상황 메모<textarea data-run-field="note" maxlength="500" placeholder="예: 보스 체력 18% 남음, 라인은 안정적, 단일 컨트롤 놓침">${C.esc(d.note)}</textarea></label></div><footer><button data-act="run-result-close">취소</button><button class="primary" data-act="run-result-save">${kind==='r50_killed'?'처치 기록 후 계속':'결과 기록 + JSON 저장'}</button></footer></article></div>`;
   }
+  // v19.9.3(사용자 확인 요청): 로컬 서버 직접 읽기 시험 — TMO 탭 없이 데이터를
+  // 받는 A안(127.0.0.1:25625 직접 읽기)의 가능 여부를 그 자리에서 판정한다.
+  // 응답이 읽히고 우리 카탈로그 코드('300h' 루피 등)가 그 안에 보이면 유력.
+  async v199LocalProbe(){
+    this._localProbe={state:'running'};
+    this.render();
+    const url='http://127.0.0.1:25625/datas';
+    const finish=result=>{this._localProbe=result;this.render();};
+    try{
+      let result=null;
+      if(typeof chrome!=='undefined'&&chrome.runtime&&chrome.runtime.sendMessage&&this.config.source!=='standalone-manual'){
+        result=await new Promise(resolve=>chrome.runtime.sendMessage({type:'ORD_LOCAL_PROBE',url},response=>{
+          const error=chrome.runtime.lastError;
+          resolve(error?{ok:false,error:error.message}:response||{ok:false,error:'백그라운드 응답 없음'});
+        }));
+      }else{
+        // 수동 HTML 폴백: 직접 fetch — CORS 로 막히면 그 실패 자체가 판정 자료다.
+        const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),4000);
+        try{
+          const response=await fetch(url,{signal:controller.signal,cache:'no-store'});
+          const text=await response.text();clearTimeout(timer);
+          result={ok:true,status:response.status,contentType:String(response.headers.get('content-type')||''),size:text.length,text:text.slice(0,200000)};
+        }catch(error){clearTimeout(timer);result={ok:false,error:String(error&&error.message||error)};}
+      }
+      if(!result||!result.ok){finish({state:'error',error:String(result&&result.error||'알 수 없는 실패')});return;}
+      const text=String(result.text||'');
+      // 카탈로그 코드 일치 스캔 — 응답이 우리가 이미 아는 유닛 코드 체계로
+      // 말하는지 본다.  20종 이상이면 A안(직접 읽기) 유력.
+      let idHits=0;const codeSamples=[];
+      try{
+        const db=this.catalogDb();
+        for(const unit of db.units){
+          const id=String(unit.id||'');
+          const codes=[].concat(unit.codes||[],id?[id]:[]);
+          if(codes.some(code=>code&&text.includes(`"${code}"`))){
+            idHits++;if(codeSamples.length<8)codeSamples.push(id);
+            if(idHits>=60)break;
+          }
+        }
+      }catch(_){}
+      let json=false;try{JSON.parse(text);json=true;}catch(_){}
+      finish({state:'done',status:C.num(result.status),contentType:String(result.contentType||''),size:C.num(result.size),json,idHits,codeSamples,snippet:text.slice(0,1600),full:text});
+    }catch(error){finish({state:'error',error:String(error&&error.message||error)});}
+  }
+  renderV199LocalProbe(){
+    const probe=this._localProbe||null;
+    const body=!probe?'<p class="probe-note">아직 시험 전입니다. TMO 데스크톱 프로그램(코치 로그의 Horse 서버)이 켜져 있는 상태에서 눌러 주세요.</p>'
+      :probe.state==='running'?'<p class="probe-note">127.0.0.1:25625/datas 응답 대기 중…</p>'
+      :probe.state==='error'?`<div class="probe-fail"><b>읽기 실패</b><span>${C.esc(probe.error||'')}</span><small>TMO 프로그램이 꺼져 있으면 정상적인 실패입니다. 켜져 있는데도 이 메시지가 나오면, 이 문구 그대로가 판정 자료입니다 — 복사해서 알려 주세요.</small></div>`
+      :`<div class="probe-ok"><div class="diag-grid"><div><small>HTTP</small><b>${C.num(probe.status)}</b></div><div><small>크기</small><b>${C.num(probe.size)}자</b></div><div><small>JSON 해석</small><b>${probe.json?'성공':'실패/부분'}</b></div><div><small>카탈로그 코드 일치</small><b>${C.num(probe.idHits)}종${C.num(probe.idHits)>=20?' — 직접 읽기 유력':''}</b></div></div>${probe.codeSamples&&probe.codeSamples.length?`<p class="probe-note">발견 코드 예: ${C.esc(probe.codeSamples.join(', '))}</p>`:''}<pre>${C.esc(String(probe.snippet||''))}</pre><details><summary>전체 응답 보기·복사 (${C.num(probe.size)>200000?'앞 200,000자':'전체'} — 이걸 붙여넣어 주세요)</summary><textarea readonly rows="10">${C.esc(String(probe.full||''))}</textarea></details></div>`;
+    return`<section class="ord-panel v199-local-probe"><div class="panel-head"><div><h2>로컬 서버 직접 읽기 시험</h2><p>tmo.gg 페이지가 읽는 로컬 데이터(127.0.0.1:25625/datas)를 코치가 직접 읽을 수 있는지 확인합니다 — 되면 TMO 탭 없이 동작하는 구조(A안)로 갈 수 있습니다.</p></div><button class="primary" data-act="local-probe" ${probe&&probe.state==='running'?'disabled':''}>${probe&&probe.state==='running'?'읽는 중…':'지금 시험'}</button></div>${body}</section>`;
+  }
   renderData(state,plan,health){
     const s=state.snapshot||{},collection=s.collection||{},discovery=s.countDiscovery||{},diagnostic=this.state.connectionDiagnostic||{},errors=[].concat(collection.errors||[],discovery.errors||[]),rejected=diagnostic.reason==='invalid-snapshot'&&C.num(diagnostic.bridgeAt)>=C.num(s.bridgeAt),age=value=>C.num(value)<999?`${C.num(value)}초 전`:'없음',specials=Object.entries(C.SPECIAL_IDS).map(([id,name])=>`<label><span>${C.esc(name)}</span><input data-count="${id}" type="number" min="0" value="${C.num(state.counts[id])}"></label>`).join('');
     const detail={helperId:s.helperId,adapterId:s.adapterId,sourceUrl:s.url,sessionId:s.sessionId,seq:s.seq,dataHash:s.dataHash,observationKey:s.observationKey,collection:{found:collection.found,confidence:collection.confidence,errors},countDiscovery:{found:discovery.found,parsed:discovery.parsed,total:s.unitCount,coverage:C.num(s.unitCount)?Math.round(C.num(discovery.parsed)/C.num(s.unitCount)*100):0,missing:discovery.missing,ambiguous:discovery.ambiguous},wispCountFound:s.wispCountFound,currentAbilitySource:s.currentAbilitySource,latestRejected:rejected?diagnostic:null,progressSample:(s.progressSample||[]).slice(0,8),missingSpecialIds:s.missingSpecialIds||[]},rejectedHtml=rejected?`<div class="connection-rejected"><b>최신 스캔은 추천에 반영하지 않았습니다</b><span>유닛 ${C.num(diagnostic.unitCount)}개 · 수량 ${C.num(diagnostic.countParsed)}개 · 신뢰 ${Math.round(C.num(diagnostic.confidence)*100)}%</span><small>${C.esc([].concat(diagnostic.errors||[]).slice(0,6).join(' · ')||'수량 누락 또는 모호한 입력을 발견했습니다.')}</small></div>`:'';
-    return`<div class="data-page"><section class="ord-panel"><div class="panel-head"><div><h2>연결 진단</h2><p>${C.esc(health.note)}</p></div><button class="primary" data-act="connection">TMO 지금 읽기</button></div>${rejectedHtml}<div class="diag-grid"><div><small>상태</small><b>${C.esc(health.label)}</b></div><div><small>브리지 수신</small><b>${age(health.bridgeAgeSec!=null?health.bridgeAgeSec:health.ageSec)}</b></div><div><small>DOM 스캔</small><b>${age(health.scanAgeSec)}</b></div><div><small>실제 패 변화</small><b>${age(health.dataAgeSec)}</b></div><div><small>도우미</small><b>${C.esc(s.helperId||'대기')} · ${C.esc(s.adapterId||'')}</b></div><div><small>수량 신뢰도</small><b>${Math.round(C.num(collection.confidence)*100)}%</b></div><div><small>유닛 수량</small><b>${C.num(discovery.parsed)}/${C.num(s.unitCount)}개</b></div><div><small>진행도</small><b>${C.num(s.percentCount)}개</b></div><div><small>현재 능력치</small><b>${C.num(s.abilityCount)}개</b></div><div><small>보유</small><b>${C.num(s.nonzero)}개</b></div><div><small>선택 위습</small><b>${s.wispCountFound===true?C.num(s.wispCount):'미확인'}</b></div><div><small>수집 경고</small><b>${errors.length}개</b></div></div><pre>${C.esc(JSON.stringify(detail,null,2))}</pre></section><section class="ord-panel"><div class="panel-head"><div><h2>특수재료 수동 보정</h2><p>자동 수집이 틀릴 때만 값을 고정하세요.</p></div></div><div class="manual-grid">${specials}</div><button class="ghost" data-act="clear-overrides">수동 보정 모두 해제</button><button class="ghost danger-text" data-act="clear-data">앱 설정만 초기화 · 진행 기록 보존</button></section></div>`;
+    return`<div class="data-page"><section class="ord-panel"><div class="panel-head"><div><h2>연결 진단</h2><p>${C.esc(health.note)}</p></div><button class="primary" data-act="connection">TMO 지금 읽기</button></div>${rejectedHtml}<div class="diag-grid"><div><small>상태</small><b>${C.esc(health.label)}</b></div><div><small>브리지 수신</small><b>${age(health.bridgeAgeSec!=null?health.bridgeAgeSec:health.ageSec)}</b></div><div><small>DOM 스캔</small><b>${age(health.scanAgeSec)}</b></div><div><small>실제 패 변화</small><b>${age(health.dataAgeSec)}</b></div><div><small>도우미</small><b>${C.esc(s.helperId||'대기')} · ${C.esc(s.adapterId||'')}</b></div><div><small>수량 신뢰도</small><b>${Math.round(C.num(collection.confidence)*100)}%</b></div><div><small>유닛 수량</small><b>${C.num(discovery.parsed)}/${C.num(s.unitCount)}개</b></div><div><small>진행도</small><b>${C.num(s.percentCount)}개</b></div><div><small>현재 능력치</small><b>${C.num(s.abilityCount)}개</b></div><div><small>보유</small><b>${C.num(s.nonzero)}개</b></div><div><small>선택 위습</small><b>${s.wispCountFound===true?C.num(s.wispCount):'미확인'}</b></div><div><small>수집 경고</small><b>${errors.length}개</b></div></div><pre>${C.esc(JSON.stringify(detail,null,2))}</pre></section>${this.renderV199LocalProbe()}<section class="ord-panel"><div class="panel-head"><div><h2>특수재료 수동 보정</h2><p>자동 수집이 틀릴 때만 값을 고정하세요.</p></div></div><div class="manual-grid">${specials}</div><button class="ghost" data-act="clear-overrides">수동 보정 모두 해제</button><button class="ghost danger-text" data-act="clear-data">앱 설정만 초기화 · 진행 기록 보존</button></section></div>`;
   }
   // v17.8(사용자 요청 6): 이 유닛을 레시피 트리에 소비하는 상위 목록.
   // 완성도 높은 순 — "이걸 만들면 어느 상위로 이어지나"를 바로 보여준다.

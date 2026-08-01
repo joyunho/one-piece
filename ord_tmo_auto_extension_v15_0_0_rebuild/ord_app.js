@@ -967,6 +967,7 @@ class App{
     if(a==='remove-lock'){if(b.dataset.stage==='upper'){this.toast('메인 상위는 순간 누락으로 풀리지 않도록 고정됩니다. 바꾸려면 경로만 초기화하세요.');return;}this.state.locks=this.state.locks.filter(x=>!(x.stage===b.dataset.stage&&x.id===id));this.persist();this.render();return;}
     if(a==='reset-route'){this.state.locks=[];this.state.upperBlueprint=null;this.state.upperDetection=emptyUpperDetection();this.state.upperPreviewId='';this.state.directionStatus='open';this.state.directionKey='';this.state.directionUpperId='';this.state.directionHoldFingerprint='';this.state.releasedUpperHint=null;this.state.postLegendRoute='';const current=this.normalized();this.state.postLegendObservedCount=legendHiddenCount(current);this.state.postLegendBaseline=legendHiddenCounts(current);this.state.purpose='';this._squadCacheKey='';this._directionRankCacheKey='';this.persist();this.toast('확정 상위와 예상 파티를 초기화했습니다. 새 방향부터 다시 비교합니다.');return;}
     if(a==='connection'){if(this.onConnectionTest)this.onConnectionTest();return;}
+    if(a==='local-probe'){this.v199LocalProbe();return;}
     if(a==='open-tmo'){if(this.onOpenTmo)this.onOpenTmo();return;}
     if(a==='round-reset'){this.state.roundStartedAt=0;this.state.currentRound=1;this.persist();this.render();return;}
     if(a==='round-step'){const delta=C.num(b.dataset.delta),cur=this.actualRound();this.state.currentRound=Math.min(C.MAX_ROUND||65,Math.max(1,cur+delta));if(this.state.roundStartedAt)this.state.roundStartedAt=Date.now()-this.elapsedToRoundStart(this.state.currentRound)*1000;this.persist();this.render();return;}
@@ -2836,10 +2837,62 @@ class App{
     if(!this._runResultOpen)return'';const d=this._runResultDraft||RUN_RESULT_DEFAULTS,kind=d.kind||'r50_failed',tx=normalizeTransaction(this.state.pendingTransaction),button=(value,label,note)=>`<button class="${kind===value?'on':''}" data-act="run-result-kind" data-value="${value}"><b>${label}</b><small>${note}</small></button>`;
     return`<div class="modal-back run-result-back" data-act="run-result-close"><article class="run-result-modal" role="dialog" aria-modal="true" aria-label="게임 결과 기록"><button class="modal-x" data-act="run-result-close" aria-label="닫기">×</button><header><small>이번 게임 결과 · 사용자 확인값</small><h2>어디에서 어떻게 끝났나요?</h2><p>프로그램은 성공·실패를 추정하지 않습니다. 아래 결과와 당시 상태를 함께 저장합니다.</p></header><div class="result-kinds">${button('r50_failed','50라 실패','게임 종료 · JSON 자동 저장')}${button('r50_killed','50라 보스 처치','계속 기록 · 65라까지 진행')}${button('r51_65_failed','51~65라 실패','게임 종료 · JSON 자동 저장')}${button('r65_cleared','65라 클리어','게임 종료 · JSON 자동 저장')}</div><div class="result-health ${health.ready?'ok':'warn'}"><b>${C.esc(health.label)}</b><span>${health.ageSec<999?`${C.num(health.ageSec)}초 전 TMO 패`:'TMO 패 없음'} · ${health.ready?'현재 상태를 결과에 연결합니다.':'오래된 상태임을 표시하고 저장합니다.'}</span>${tx?'<em>TMO 제작 확인 대기 중 · 확정 패와 임시 패를 분리 기록</em>':''}</div>${this.renderVerdictReport(this.verdictReportForDisplay())}<div class="result-form"><label>결과 라운드<input data-run-field="round" type="number" min="1" max="65" value="${C.esc(d.round)}"></label><label>보스 남은 체력 %<input data-run-field="bossHpPercent" type="number" min="0" max="100" placeholder="모르면 비움" value="${C.esc(d.bossHpPercent)}"></label><label>프로그램 판단을 따랐나요?<select data-run-field="followedProgram"><option value="unknown" ${d.followedProgram==='unknown'?'selected':''}>모름</option><option value="followed" ${d.followedProgram==='followed'?'selected':''}>그대로 따름</option><option value="changed" ${d.followedProgram==='changed'?'selected':''}>중간에 내 판단으로 변경</option></select></label>${RUN_FAILURE_KINDS.has(kind)?`<label>실패 상황<select data-run-field="failureReason"><option value="unknown" ${d.failureReason==='unknown'?'selected':''}>모름</option><option value="timeout" ${d.failureReason==='timeout'?'selected':''}>시간 초과·보스 미처치</option><option value="line" ${d.failureReason==='line'?'selected':''}>라인사</option><option value="control" ${d.failureReason==='control'?'selected':''}>컨트롤 실패</option></select></label>`:''}<label>공격력 업<input data-run-field="attackUpgrade" type="number" min="0" placeholder="모르면 비움" value="${C.esc(d.attackUpgrade)}"></label><label>이감 업<input data-run-field="slowUpgrade" type="number" min="0" placeholder="모르면 비움" value="${C.esc(d.slowUpgrade)}"></label><label>체젠 업<input data-run-field="hpRegenUpgrade" type="number" min="0" placeholder="모르면 비움" value="${C.esc(d.hpRegenUpgrade)}"></label><label>마젠 업<input data-run-field="mpRegenUpgrade" type="number" min="0" placeholder="모르면 비움" value="${C.esc(d.mpRegenUpgrade)}"></label><label class="result-check"><input data-run-field="helperUsed" type="checkbox" ${d.helperUsed?'checked':''}><span>도움소 사용</span></label><label class="result-note">컨트롤·보스 상황 메모<textarea data-run-field="note" maxlength="500" placeholder="예: 보스 체력 18% 남음, 라인은 안정적, 단일 컨트롤 놓침">${C.esc(d.note)}</textarea></label></div><footer><button data-act="run-result-close">취소</button><button class="primary" data-act="run-result-save">${kind==='r50_killed'?'처치 기록 후 계속':'결과 기록 + JSON 저장'}</button></footer></article></div>`;
   }
+  // v19.9.3(사용자 확인 요청): 로컬 서버 직접 읽기 시험 — TMO 탭 없이 데이터를
+  // 받는 A안(127.0.0.1:25625 직접 읽기)의 가능 여부를 그 자리에서 판정한다.
+  // 응답이 읽히고 우리 카탈로그 코드('300h' 루피 등)가 그 안에 보이면 유력.
+  async v199LocalProbe(){
+    this._localProbe={state:'running'};
+    this.render();
+    const url='http://127.0.0.1:25625/datas';
+    const finish=result=>{this._localProbe=result;this.render();};
+    try{
+      let result=null;
+      if(typeof chrome!=='undefined'&&chrome.runtime&&chrome.runtime.sendMessage&&this.config.source!=='standalone-manual'){
+        result=await new Promise(resolve=>chrome.runtime.sendMessage({type:'ORD_LOCAL_PROBE',url},response=>{
+          const error=chrome.runtime.lastError;
+          resolve(error?{ok:false,error:error.message}:response||{ok:false,error:'백그라운드 응답 없음'});
+        }));
+      }else{
+        // 수동 HTML 폴백: 직접 fetch — CORS 로 막히면 그 실패 자체가 판정 자료다.
+        const controller=new AbortController();const timer=setTimeout(()=>controller.abort(),4000);
+        try{
+          const response=await fetch(url,{signal:controller.signal,cache:'no-store'});
+          const text=await response.text();clearTimeout(timer);
+          result={ok:true,status:response.status,contentType:String(response.headers.get('content-type')||''),size:text.length,text:text.slice(0,200000)};
+        }catch(error){clearTimeout(timer);result={ok:false,error:String(error&&error.message||error)};}
+      }
+      if(!result||!result.ok){finish({state:'error',error:String(result&&result.error||'알 수 없는 실패')});return;}
+      const text=String(result.text||'');
+      // 카탈로그 코드 일치 스캔 — 응답이 우리가 이미 아는 유닛 코드 체계로
+      // 말하는지 본다.  20종 이상이면 A안(직접 읽기) 유력.
+      let idHits=0;const codeSamples=[];
+      try{
+        const db=this.catalogDb();
+        for(const unit of db.units){
+          const id=String(unit.id||'');
+          const codes=[].concat(unit.codes||[],id?[id]:[]);
+          if(codes.some(code=>code&&text.includes(`"${code}"`))){
+            idHits++;if(codeSamples.length<8)codeSamples.push(id);
+            if(idHits>=60)break;
+          }
+        }
+      }catch(_){}
+      let json=false;try{JSON.parse(text);json=true;}catch(_){}
+      finish({state:'done',status:C.num(result.status),contentType:String(result.contentType||''),size:C.num(result.size),json,idHits,codeSamples,snippet:text.slice(0,1600),full:text});
+    }catch(error){finish({state:'error',error:String(error&&error.message||error)});}
+  }
+  renderV199LocalProbe(){
+    const probe=this._localProbe||null;
+    const body=!probe?'<p class="probe-note">아직 시험 전입니다. TMO 데스크톱 프로그램(코치 로그의 Horse 서버)이 켜져 있는 상태에서 눌러 주세요.</p>'
+      :probe.state==='running'?'<p class="probe-note">127.0.0.1:25625/datas 응답 대기 중…</p>'
+      :probe.state==='error'?`<div class="probe-fail"><b>읽기 실패</b><span>${C.esc(probe.error||'')}</span><small>TMO 프로그램이 꺼져 있으면 정상적인 실패입니다. 켜져 있는데도 이 메시지가 나오면, 이 문구 그대로가 판정 자료입니다 — 복사해서 알려 주세요.</small></div>`
+      :`<div class="probe-ok"><div class="diag-grid"><div><small>HTTP</small><b>${C.num(probe.status)}</b></div><div><small>크기</small><b>${C.num(probe.size)}자</b></div><div><small>JSON 해석</small><b>${probe.json?'성공':'실패/부분'}</b></div><div><small>카탈로그 코드 일치</small><b>${C.num(probe.idHits)}종${C.num(probe.idHits)>=20?' — 직접 읽기 유력':''}</b></div></div>${probe.codeSamples&&probe.codeSamples.length?`<p class="probe-note">발견 코드 예: ${C.esc(probe.codeSamples.join(', '))}</p>`:''}<pre>${C.esc(String(probe.snippet||''))}</pre><details><summary>전체 응답 보기·복사 (${C.num(probe.size)>200000?'앞 200,000자':'전체'} — 이걸 붙여넣어 주세요)</summary><textarea readonly rows="10">${C.esc(String(probe.full||''))}</textarea></details></div>`;
+    return`<section class="ord-panel v199-local-probe"><div class="panel-head"><div><h2>로컬 서버 직접 읽기 시험</h2><p>tmo.gg 페이지가 읽는 로컬 데이터(127.0.0.1:25625/datas)를 코치가 직접 읽을 수 있는지 확인합니다 — 되면 TMO 탭 없이 동작하는 구조(A안)로 갈 수 있습니다.</p></div><button class="primary" data-act="local-probe" ${probe&&probe.state==='running'?'disabled':''}>${probe&&probe.state==='running'?'읽는 중…':'지금 시험'}</button></div>${body}</section>`;
+  }
   renderData(state,plan,health){
     const s=state.snapshot||{},collection=s.collection||{},discovery=s.countDiscovery||{},diagnostic=this.state.connectionDiagnostic||{},errors=[].concat(collection.errors||[],discovery.errors||[]),rejected=diagnostic.reason==='invalid-snapshot'&&C.num(diagnostic.bridgeAt)>=C.num(s.bridgeAt),age=value=>C.num(value)<999?`${C.num(value)}초 전`:'없음',specials=Object.entries(C.SPECIAL_IDS).map(([id,name])=>`<label><span>${C.esc(name)}</span><input data-count="${id}" type="number" min="0" value="${C.num(state.counts[id])}"></label>`).join('');
     const detail={helperId:s.helperId,adapterId:s.adapterId,sourceUrl:s.url,sessionId:s.sessionId,seq:s.seq,dataHash:s.dataHash,observationKey:s.observationKey,collection:{found:collection.found,confidence:collection.confidence,errors},countDiscovery:{found:discovery.found,parsed:discovery.parsed,total:s.unitCount,coverage:C.num(s.unitCount)?Math.round(C.num(discovery.parsed)/C.num(s.unitCount)*100):0,missing:discovery.missing,ambiguous:discovery.ambiguous},wispCountFound:s.wispCountFound,currentAbilitySource:s.currentAbilitySource,latestRejected:rejected?diagnostic:null,progressSample:(s.progressSample||[]).slice(0,8),missingSpecialIds:s.missingSpecialIds||[]},rejectedHtml=rejected?`<div class="connection-rejected"><b>최신 스캔은 추천에 반영하지 않았습니다</b><span>유닛 ${C.num(diagnostic.unitCount)}개 · 수량 ${C.num(diagnostic.countParsed)}개 · 신뢰 ${Math.round(C.num(diagnostic.confidence)*100)}%</span><small>${C.esc([].concat(diagnostic.errors||[]).slice(0,6).join(' · ')||'수량 누락 또는 모호한 입력을 발견했습니다.')}</small></div>`:'';
-    return`<div class="data-page"><section class="ord-panel"><div class="panel-head"><div><h2>연결 진단</h2><p>${C.esc(health.note)}</p></div><button class="primary" data-act="connection">TMO 지금 읽기</button></div>${rejectedHtml}<div class="diag-grid"><div><small>상태</small><b>${C.esc(health.label)}</b></div><div><small>브리지 수신</small><b>${age(health.bridgeAgeSec!=null?health.bridgeAgeSec:health.ageSec)}</b></div><div><small>DOM 스캔</small><b>${age(health.scanAgeSec)}</b></div><div><small>실제 패 변화</small><b>${age(health.dataAgeSec)}</b></div><div><small>도우미</small><b>${C.esc(s.helperId||'대기')} · ${C.esc(s.adapterId||'')}</b></div><div><small>수량 신뢰도</small><b>${Math.round(C.num(collection.confidence)*100)}%</b></div><div><small>유닛 수량</small><b>${C.num(discovery.parsed)}/${C.num(s.unitCount)}개</b></div><div><small>진행도</small><b>${C.num(s.percentCount)}개</b></div><div><small>현재 능력치</small><b>${C.num(s.abilityCount)}개</b></div><div><small>보유</small><b>${C.num(s.nonzero)}개</b></div><div><small>선택 위습</small><b>${s.wispCountFound===true?C.num(s.wispCount):'미확인'}</b></div><div><small>수집 경고</small><b>${errors.length}개</b></div></div><pre>${C.esc(JSON.stringify(detail,null,2))}</pre></section><section class="ord-panel"><div class="panel-head"><div><h2>특수재료 수동 보정</h2><p>자동 수집이 틀릴 때만 값을 고정하세요.</p></div></div><div class="manual-grid">${specials}</div><button class="ghost" data-act="clear-overrides">수동 보정 모두 해제</button><button class="ghost danger-text" data-act="clear-data">앱 설정만 초기화 · 진행 기록 보존</button></section></div>`;
+    return`<div class="data-page"><section class="ord-panel"><div class="panel-head"><div><h2>연결 진단</h2><p>${C.esc(health.note)}</p></div><button class="primary" data-act="connection">TMO 지금 읽기</button></div>${rejectedHtml}<div class="diag-grid"><div><small>상태</small><b>${C.esc(health.label)}</b></div><div><small>브리지 수신</small><b>${age(health.bridgeAgeSec!=null?health.bridgeAgeSec:health.ageSec)}</b></div><div><small>DOM 스캔</small><b>${age(health.scanAgeSec)}</b></div><div><small>실제 패 변화</small><b>${age(health.dataAgeSec)}</b></div><div><small>도우미</small><b>${C.esc(s.helperId||'대기')} · ${C.esc(s.adapterId||'')}</b></div><div><small>수량 신뢰도</small><b>${Math.round(C.num(collection.confidence)*100)}%</b></div><div><small>유닛 수량</small><b>${C.num(discovery.parsed)}/${C.num(s.unitCount)}개</b></div><div><small>진행도</small><b>${C.num(s.percentCount)}개</b></div><div><small>현재 능력치</small><b>${C.num(s.abilityCount)}개</b></div><div><small>보유</small><b>${C.num(s.nonzero)}개</b></div><div><small>선택 위습</small><b>${s.wispCountFound===true?C.num(s.wispCount):'미확인'}</b></div><div><small>수집 경고</small><b>${errors.length}개</b></div></div><pre>${C.esc(JSON.stringify(detail,null,2))}</pre></section>${this.renderV199LocalProbe()}<section class="ord-panel"><div class="panel-head"><div><h2>특수재료 수동 보정</h2><p>자동 수집이 틀릴 때만 값을 고정하세요.</p></div></div><div class="manual-grid">${specials}</div><button class="ghost" data-act="clear-overrides">수동 보정 모두 해제</button><button class="ghost danger-text" data-act="clear-data">앱 설정만 초기화 · 진행 기록 보존</button></section></div>`;
   }
   // v17.8(사용자 요청 6): 이 유닛을 레시피 트리에 소비하는 상위 목록.
   // 완성도 높은 순 — "이걸 만들면 어느 상위로 이어지나"를 바로 보여준다.

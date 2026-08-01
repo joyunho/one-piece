@@ -30,12 +30,18 @@ assert.deepStrictEqual(new Set(manifest.permissions),new Set(['storage','tabs','
 assert(manifest.host_permissions.length>0,'build-helper permissions are missing');
 // v19.4(사용자 요청): 도우미 번호 고정 해제 — 대신 tmo.gg + /build-helper/
 // 밖으로는 절대 넓히지 않는다는 경계를 그대로 잰다.
+// v19.9.3(사용자 확인 요청): 로컬 Horse 서버 진단(127.0.0.1:25625) 딱 한
+// 주소만 예외 — 웹 호스트는 여전히 tmo.gg /build-helper/ 뿐이고, 그 밖의
+// localhost 광역 권한(포트 전체·다른 포트)은 계속 금지한다.
+const LOCAL_PROBE_PERMISSION='http://127.0.0.1:25625/*';
 for(const pattern of manifest.host_permissions){
+  if(pattern===LOCAL_PROBE_PERMISSION)continue;
   assert(pattern.includes('/build-helper/'),'host permission is broader than build-helper');
   assert(/^https:\/\/(www\.)?tmo\.gg\//.test(pattern),`tmo.gg 밖 호스트 권한: ${pattern}`);
   assert(/\/build-helper\/\*$/.test(pattern),`build-helper 하위로 안 끝나는 권한: ${pattern}`);
 }
-assert(!manifest.host_permissions.some(pattern=>/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(pattern)),'local OpenAI bridge permission remains');
+assert(!manifest.host_permissions.some(pattern=>pattern!==LOCAL_PROBE_PERMISSION&&/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(pattern)),'local bridge permission remains');
+assert.strictEqual(manifest.host_permissions.filter(pattern=>pattern===LOCAL_PROBE_PERMISSION).length,1,'로컬 진단 권한은 정확히 한 번');
 for(const script of manifest.content_scripts){
   for(const pattern of script.matches){
     assert(pattern.includes('/build-helper/'),'content script match is broader than build-helper');

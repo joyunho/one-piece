@@ -125,12 +125,18 @@ function snapshot(helperId, overrides = {}) {
     const manifest = JSON.parse(read('manifest.json'));
     assert.strictEqual(manifest.version, RELEASE_VERSION);
     assert.deepStrictEqual(manifest.permissions.sort(), ['alarms', 'scripting', 'storage', 'tabs']);
+    // v19.9.3(사용자 확인 요청): 로컬 Horse 서버(127.0.0.1:25625) 직접 읽기
+    // 시험을 위해 정확히 그 주소 하나만 예외로 허용한다.  원 계약은 유지:
+    // 웹 호스트 권한은 여전히 tmo.gg /build-helper/ 뿐이고, localhost 광역
+    // (http://127.0.0.1/* 나 포트 전체) 권한은 금지다.
+    const LOCAL_PROBE_PERMISSION='http://127.0.0.1:25625/*';
     const helperPermissions=manifest.host_permissions.filter(pattern=>pattern.includes('/build-helper/'));
-    assert.strictEqual(helperPermissions.length,manifest.host_permissions.length,'build-helper 밖 host 권한이 생겼음');
+    const extras=manifest.host_permissions.filter(pattern=>!pattern.includes('/build-helper/'));
+    assert.deepStrictEqual(extras,[LOCAL_PROBE_PERMISSION],'허용된 로컬 진단 주소 외의 host 권한이 생겼음');
     assert(helperPermissions.length>=4);
     assert(helperPermissions.every(pattern => /^https:\/\/(www\.)?tmo\.gg\//.test(pattern)),'tmo.gg 밖 호스트 권한');
     assert(helperPermissions.every(pattern => /\/build-helper\/\*$/.test(pattern)),'build-helper 경로 밖으로 넓어짐');
-    assert(!manifest.host_permissions.some(pattern=>/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(pattern)));
+    assert(!manifest.host_permissions.some(pattern=>pattern!==LOCAL_PROBE_PERMISSION&&/localhost|127\.0\.0\.1|0\.0\.0\.0/.test(pattern)),'로컬 광역 권한 금지');
     assert(manifest.content_scripts[0].matches.every(pattern => pattern.includes('/build-helper/')));
     assert(manifest.content_scripts[0].matches.every(pattern => /\/build-helper\/\*$/.test(pattern)));
     assert(!manifest.permissions.includes('webRequest'));

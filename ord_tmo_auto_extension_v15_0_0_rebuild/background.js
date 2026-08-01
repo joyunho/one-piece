@@ -200,6 +200,32 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     return true;
   }
 
+  // v19.9.3(사용자 확인 요청): 로컬 서버 직접 읽기 시험.  tmo.gg 페이지가
+  // 폴링하는 TMO 데스크톱 프로그램의 Horse 서버(127.0.0.1:25625)를 확장이
+  // 직접 읽을 수 있는지 판정한다 — 가능하면 "TMO 탭을 띄워 놔야 하는"
+  // 구조 자체를 없앨 수 있다(A안).  진단 전용: 응답을 저장하지 않고 화면에
+  // 덤프만 한다.  주소는 로컬 Horse 서버로만 제한.
+  if (message && message.type === 'ORD_LOCAL_PROBE') {
+    const url = String(message.url || 'http://127.0.0.1:25625/datas');
+    if (!/^http:\/\/127\.0\.0\.1:25625\//.test(url)) {
+      reply({ok: false, error: '허용되지 않은 주소'});
+      return true;
+    }
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 4000);
+    fetch(url, {signal: controller.signal, cache: 'no-store'})
+      .then(async response => {
+        clearTimeout(timer);
+        const text = await response.text();
+        reply({ok: true, status: response.status, contentType: String(response.headers.get('content-type') || ''), size: text.length, text: text.slice(0, 200000)});
+      })
+      .catch(error => {
+        clearTimeout(timer);
+        reply({ok: false, error: String(error && error.message || error)});
+      });
+    return true;
+  }
+
   if (message && message.type === 'ORD_PIN_SOURCE') {
     const tabId = Number(message.tabId) || 0;
     const helperId = String(message.helperId || '');

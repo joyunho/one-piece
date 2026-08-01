@@ -2550,3 +2550,12 @@ button:focus-visible,select:focus-visible{
 @media (max-height:1120px) and (min-width:1240px){
   .v151-recovery-row .v159-recovery-recipe{font-size:9px}
 }
+/* v19.9.3: 로컬 서버 직접 읽기 시험(연결 진단 페이지 전용 · 한 화면 계약 밖). */
+.v199-local-probe .probe-note{color:var(--v153-muted);font-size:12px;line-height:1.5}
+.v199-local-probe .probe-fail{border:1px solid rgba(226,92,102,.5);border-radius:11px;padding:10px 12px;background:rgba(92,24,36,.22)}
+.v199-local-probe .probe-fail b{display:block;color:#ffc9c4;margin-bottom:4px}
+.v199-local-probe .probe-fail span{display:block;color:#ffe1de;font-size:12px;word-break:break-all}
+.v199-local-probe .probe-fail small{display:block;margin-top:6px;color:#c9a6a6;font-size:11px;line-height:1.5}
+.v199-local-probe .probe-ok pre{max-height:220px;overflow:auto;border:1px solid var(--v153-line);border-radius:11px;padding:10px;background:rgba(7,18,32,.68);font-size:11px;line-height:1.5;white-space:pre-wrap;word-break:break-all}
+.v199-local-probe textarea{width:100%;margin-top:8px;border:1px solid var(--v153-line);border-radius:11px;padding:10px;background:rgba(7,18,32,.68);color:#cfe1f5;font-size:11px;font-family:ui-monospace,monospace}
+.v199-local-probe details summary{cursor:pointer;color:#89e7f7;font-size:12px;margin-top:8px}

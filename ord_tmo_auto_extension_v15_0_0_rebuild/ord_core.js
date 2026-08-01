@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='19.9.2';
+const VERSION='19.9.3';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -53,7 +53,7 @@ const UI_NAME_OVERRIDES={
   'Q20h':'라분(전설)','U20h':'검은수염(전설)','Z90h':'네코(전설)','R20h':'로브 루치(전설)','Y20h':'루나메(전설)',
   'X20h':'블랙마리아(전설)','430h':'상디(전설)','730h':'슈가(전설)','S20h':'조로(전설)','I30h':'제파(전설)',
   'N30h':'료쿠규(히든)','M30h':'사보(히든)','740h':'피셔타이거(히든)','J30h':'시류(히든)','Z30h':'아카이누(히든)',
-  // v19.9.2(사용자 규칙): 블마 왜곡은 W 폼 3형태(스턴/이감40/데미지) 배타 —
+  // v19.8.1(사용자 규칙): 블마 왜곡은 W 폼 3형태(스턴/이감40/데미지) 배타 —
   // 코칭은 이감폼 기준(스턴 0).  라벨로 폼 전제를 밝힌다.
   'J70h':'캐럿(변화)','unit_1752903381904_1445':'블랙마리아(왜곡·이감폼 기준)','V30h':'코알라(왜곡)','IC0h':'퀸(왜곡)',
   '840h':'페로나(왜곡)','unit_1779015610844_6407':'바제스(왜곡)','U30h':'레드포스호(해적선)',
@@ -441,7 +441,7 @@ const STUN_RESEARCH={
   'KB0H':{displayStun:1.092,capture:82.75},'KB0H_':{displayStun:1.092,capture:82.75},'760h':{displayStun:.64,capture:64.29},'B50h':{displayStun:.999,capture:79.97},'C50h':{displayStun:.863,capture:75.05},'unit_1767356778906_9384':{displayStun:1.312,capture:87.89},
   'F50h':{displayStun:.548,capture:58.58},'unit_1761060487951_749':{displayStun:.421,capture:49.2},'unit_1761062338921_7460':{displayStun:.633,capture:63.87},
   'unit_1761061031358_4977':{displayStun:.736,capture:69.39},'unit_1761062663657_987':{displayStun:2.168,capture:96.95},'unit_1761126198374_11':{displayStun:.908,capture:76.81},
-  // v19.9.2(사용자 규칙): 블랙마리아 왜곡은 W 폼 3형태(스턴/이감40/데미지)가
+  // v19.8.1(사용자 규칙): 블랙마리아 왜곡은 W 폼 3형태(스턴/이감40/데미지)가
   // 상호 배타다 — 이감폼을 쓰는 덱 기준으로 계산하므로 스턴은 0.  0731 판의
   // 스턴 1.25는 이 0.748 이중 계산이 부풀린 값이었다.
   'unit_1752903381904_1445':{displayStun:0,capture:0},'IC0h':{displayStun:.427,capture:49.73},'unit_1779016778159_2512':{displayStun:.317,capture:40}
@@ -1412,7 +1412,7 @@ function gameFlow(state,locks,settings){
 function milestonePurpose(round,hasUpper,hasLockedUpper){if(hasUpper||hasLockedUpper)return'spec';if(num(round)<=7)return'rare';if(num(round)<=20)return'story';return'upper';}
 function phaseForRound(round){round=num(round)||1;if(round<=7)return{key:'rare',label:'첫 희귀 + 선택 위습',note:'7라운드 안에 첫 희귀를 완성합니다.'};if(round<=20)return{key:'story',label:'첫 전설·히든',note:'첫 전설 또는 히든을 늦어도 20라 전에 완성합니다.'};if(round<=25)return{key:'route',label:'상위·딜 계통 결정',note:'스토리 보상 희귀·고급도박 유입이 끝난 전체 패(희귀 8장 전후)로 상위와 물딜·마딜을 결정합니다. 유입 전에는 선택 위습 소비를 아끼세요.'};if(round<=30)return{key:'upper',label:'상위 + 라인 전설',note:'상위 하나와 희귀보다 강한 라인 방어 전설을 마련합니다.'};if(round<=50)return{key:'spec',label:'50라 전 9환산 보강',note:'상위 결손을 채우며 실제 전설 환산 9기를 보수적 구조 최소선으로 맞춥니다. 패 불리기는 흔함·안흔이 나오는 하급도박이 효율적입니다.'};return{key:'finish',label:'최종 9기+ 마감',note:'전설·히든, 해적선, 희귀 2기, 변화됨 중 최저비용 경로로 마지막 스펙을 채웁니다.'};}
 function roundDuration(round,settings){return BOSS_ROUNDS.has(round)?num(settings.roundBossSeconds)||60:num(settings.roundNormalSeconds)||35;}
-// v19.9.2(사용자 규칙): 라운드는 65가 최대다 — 0731 로그는 타이머가 80라까지
+// v19.8.1(사용자 규칙): 라운드는 65가 최대다 — 0731 로그는 타이머가 80라까지
 // 걸어가며 죽은 판을 24라운드나 더 판정했다.  시계·수동 모두 65에서 멈춘다.
 const MAX_ROUND=65;
 function roundClock(settings,now){
