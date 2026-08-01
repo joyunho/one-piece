@@ -1,6 +1,6 @@
 'use strict';
 
-// v19.9.0 compact popup; parser protocol remains v13-compatible.
+// v19.9.1 compact popup; parser protocol remains v13-compatible.
 const state = document.getElementById('state');
 const detail = document.getElementById('detail');
 const testButton = document.getElementById('test');
@@ -86,7 +86,8 @@ function renderStored(value) {
         'unselected-helper': `고정 번호 ${reject.pinnedHelperId || '?'} ≠ 수신 번호 ${reject.incomingHelperId || '?'} — 동기화로 재고정`,
         'unsupported-helper': `도우미 번호를 URL에서 못 읽음 (${reject.incomingHelperId || '없음'})`,
         'invalid-snapshot': `수집 게이트 미달 · 유닛 ${Number(reject.unitCount) || 0}종 · 위습 ${reject.wispCountFound ? '인식' : '미인식'} · 신뢰 ${((Number(reject.confidence) || 0) * 100).toFixed(0)}%`,
-        'helper-repinned': `도우미 번호 변경 감지 — ${reject.to || '?'}로 재고정됨, 수신 대기 중`
+        'helper-repinned': `도우미 번호 변경 감지 — ${reject.to || '?'}로 재고정됨, 수신 대기 중`,
+        'content-script-revived': '소스 탭 스크립트 끊김 감지 — 자동 재주입 완료, 수신 재개 대기'
       };
       state.textContent = `수신 기각 · ${REASONS[reject.reason] || reject.reason}`;
       detail.textContent = (reject.topErrors || []).slice(0, 3).join(' · ') || (diagnostic.errors || []).slice(0, 3).join(' · ');

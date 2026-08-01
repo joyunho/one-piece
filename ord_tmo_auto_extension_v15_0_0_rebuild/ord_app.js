@@ -109,6 +109,10 @@ function purposeLabel(p){return p==='rare'?'첫 희귀':p==='story'?'전설·히
 function statusTone(key){return key==='ready'?'good':key==='blocked'?'bad':'warn';}
 function tierLabel(u){return C.groupName(u).replace(/\s*물딜은.*$/,'').replace(/🚁/g,'').trim();}
 function displayNameOf(u){return(C.displayNameOf||C.nameOf)(u);}
+// v19.9.1(사용자 요청): 조합식에는 능력치 주석을 쓰지 않는다 — "슈가 (마젠0.6)"
+// → "슈가".  공백 뒤 여는 괄호부터 끝까지만 지우므로 "(D)드래곤"처럼 괄호로
+// 시작하는 본명은 건드리지 않는다.
+function recipeNameOf(name){return String(name||'').replace(/\s+\(.*\)\s*$/,'');}
 function routeCandidateReady(row){
   const evaluation=row&&row.blueprintEvaluation;
   return!!(row&&(row.keepUpper===true||evaluation&&evaluation.basis==='upper-plus-support-full-squad'&&C.num(evaluation.rank)>0));
@@ -1212,13 +1216,19 @@ class App{
       // 색점 칩으로 전부 보여준다(상위 4개 절단 제거, 최대 8종).
       let solve=shown&&shown.quote&&shown.quote.solve||null;
       if(!solve&&shown&&shown.id&&state&&state.db){try{solve=C.recipeSolve(state.db,shown.id,state.counts||{});}catch(_){solve=null;}}
+      // v19.9.1(사용자 요청 "조합이 지금 할 일에도 떴으면"): 엔진 견적의
+      // solve 에는 direct(직접 조합식)가 없는 경우가 있어 조합 줄이 통째로
+      // 빠졌다 — 없으면 레시피를 직접 풀어 채운다.
+      if(solve&&!(solve.direct||[]).length&&shown&&shown.id&&state&&state.db){try{const fresh=C.recipeSolve(state.db,shown.id,state.counts||{});if((fresh.direct||[]).length)solve=Object.assign({},solve,{direct:fresh.direct});}catch(_){}}
       if(!solve)return'';
-      const direct=(solve.direct||[]).slice(0,6).map(item=>`<em class="${C.num(item.owned)>=C.num(item.count)?'ok':'gap'}">${C.esc(C.materialName(state.db,item.id))} ${C.num(item.owned)}/${C.num(item.count)}</em>`).join('');
+      // v19.9.1(사용자 요청): 제작 카드와 같은 "조합 · A + B" 형식 — 능력치
+      // 주석 없이 이름만, 보유 충족 여부는 색으로.
+      const direct=(solve.direct||[]).slice(0,6).map(item=>{const need=Math.max(1,C.num(item.count));return`<em class="${C.num(item.owned)>=need?'ok':'gap'}">${C.esc(recipeNameOf(C.materialName(state.db,item.id)))}${need>1?`×${need}`:''}</em>`;}).join('<i class="v159-plus">+</i>');
       const lowestEntries=Object.entries(solve.lowestMissing||{}).map(([mid,count])=>({id:mid,name:C.materialName(state.db,mid),count:C.num(count)})).filter(item=>item.count>0).sort((a,b)=>b.count-a.count);
       const lowest=lowestEntries.slice(0,8).map(item=>`<em class="common-chip"><i style="background:${C.COMMON_COLORS[item.name]||'#64748b'}"></i>${C.esc(item.name)} ×${item.count}</em>`).join('');
       const wispCost=shown&&shown.quote&&shown.quote.wisp?C.num(shown.quote.wisp.cost):C.num(solve.wispCost);
       if(!direct&&!lowest)return'';
-      return`<div class="v151-mats">${direct?`<div><small>바로 필요한 조합 재료</small>${direct}</div>`:''}${lowest?`<div class="commons"><small>부족 흔함 ${lowestEntries.length}종 = 선택위습 ${wispCost}</small>${lowest}${lowestEntries.length>8?`<em>외 ${lowestEntries.length-8}종</em>`:''}</div>`:`<div class="commons"><small>부족 흔함</small><em class="ok">${wispCost>0?`흔함 전량 보유 — 선택위습 ${wispCost}만 필요`:'흔함 전량 보유 — 선택위습도 필요 없음'}</em></div>`}</div>`;
+      return`<div class="v151-mats">${direct?`<div class="v159-action-recipe"><small>조합</small>${direct}</div>`:''}${lowest?`<div class="commons"><small>부족 흔함 ${lowestEntries.length}종 = 선택위습 ${wispCost}</small>${lowest}${lowestEntries.length>8?`<em>외 ${lowestEntries.length-8}종</em>`:''}</div>`:`<div class="commons"><small>부족 흔함</small><em class="ok">${wispCost>0?`흔함 전량 보유 — 선택위습 ${wispCost}만 필요`:'흔함 전량 보유 — 선택위습도 필요 없음'}</em></div>`}</div>`;
     })()}${(()=>{
       // v19.8(포렌식 ④): 0731 판 r19 — 센고쿠 승인이 유일한 광보잡 희귀
       // (아카이누)를 재료로 소진했고 경고가 없어서 광보잡 2가 영영 안
@@ -2503,8 +2513,10 @@ class App{
       // v19.9(사용자 요청): "뭐랑 뭐랑 뭐랑 조합해야 하는지" — TMO 레시피의
       // 직접 조합식(direct stuffs)을 그대로 보인다.  보유분이 재료 수를 채우면
       // owned, 아니면 missing 으로 칠한다.
-      const direct=(row.solve&&row.solve.direct||[]).slice(0,4);
-      const recipeLine=direct.length?`<div class="v159-recipe">${this.v153Icon('gear')}<span>조합 · ${direct.map(item=>{const need=Math.max(1,C.num(item.count));const label=`${C.esc(C.materialName(db,item.id))}${need>1?`×${need}`:''}`;return`<b class="${C.num(item.owned)>=need?'owned':'missing'}">${label}</b>`;}).join('<i>+</i>')}</span></div>`:'';
+      // v19.9.1(사용자 요청): 능력치 주석은 빼고(recipeNameOf) 잘리지 않게
+      // 두 줄까지 감싼다(CSS line-clamp).  절단 상한도 4→6 재료.
+      const direct=(row.solve&&row.solve.direct||[]).slice(0,6);
+      const recipeLine=direct.length?`<div class="v159-recipe">${this.v153Icon('gear')}<span>조합 · ${direct.map(item=>{const need=Math.max(1,C.num(item.count));const label=`${C.esc(recipeNameOf(C.materialName(db,item.id)))}${need>1?`×${need}`:''}`;return`<b class="${C.num(item.owned)>=need?'owned':'missing'}">${label}</b>`;}).join('<i>+</i>')}</span></div>`:'';
       // v19.9(사용자 요청): 노리기 카드의 우상단 %를 숨긴다 — 배지와 겹쳐
       // "0%"가 읽히지도 않았고, 희귀 0장 카드의 0%는 정보가 아니다.
       const ratioHtml=row.upcoming?'':`<em class="v156-ratio ${row.feasible?'ok':''}">${tmoPct}<i>%</i></em>`;
