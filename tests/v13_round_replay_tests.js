@@ -75,10 +75,11 @@ const nineCounts=Object.fromEntries(readyIds.map(id=>[id,1])),r55Ready=replay(55
 assert.deepStrictEqual([r55Ready.counts.board,r55Ready.counts.squad,r55Ready.squadReady,r55Ready.clearReady,r55Ready.phase],[9,11,true,true,'upgrade-control']);
 assert.deepStrictEqual([r55Ready.deficits.profile.armorCurrent,r55Ready.deficits.profile.armorTarget,r55Ready.deficits.profile.armorIdeal],[194,180,211]);
 const comfort=r55Ready.deficits.requirements.find(row=>row.key==='stunFull');
-// v18.9(사용자 교정): 이감 충족 픽스처라 1.5스턴은 필수에서 권장으로 내려간다.
-// 스턴 자체는 여전히 닫혀 있어야 한다 — 게이트가 풀렸다고 스턴을 버리는 게
-// 아니라, 이감이 있으면 1.5까지 억지로 채우지 않는다는 뜻이다.
-assert(comfort&&comfort.required===false&&comfort.gap<=0);
+// v19.9(사용자 교정): 물딜 1.5스턴은 이감이 차도 항상 필수다 — 단 방깎·
+// 0.5스턴·이감·광보잡 뒤 마지막에 채운다(fillLast).  이 완성 픽스처는
+// 스턴이 이미 닫혀 있으므로 필수 게이트가 통과 상태여야 한다.
+assert(comfort&&comfort.required===true&&comfort.gap<=0);
+assert(comfort.fillLast===true||comfort.meta&&comfort.meta.fillLast===true,'물딜 1.5스턴은 마지막에 채우는 게이트다');
 assert.match(r55Ready.note,/업그레이드와 컨트롤/);
 
 console.log('PASS  round replay 7→15→20→25 preserves TMO-count deadlines without reward history');

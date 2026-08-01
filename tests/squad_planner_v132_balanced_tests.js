@@ -50,14 +50,12 @@ test('physical seven-board/nine-equivalent plan keeps hard gates including the 1
   assert(byKey.stunBase.current>=.5,`minimum stun ${byKey.stunBase.current}`);
   assert(byKey.slow.current>=102,`slow ${byKey.slow.current}`);
   assert(byKey.bossFrenzy.current>=1,`boss/frenzy ${byKey.bossFrenzy.current}`);
-  // v18.9(사용자 교정): 이감(102)을 채운 이 계획에서는 1.5스턴이 필수에서
-  // 권장으로 내려간다.  계획이 실제로 1.5를 채웠는지는 아래에서 계속 검사한다 —
-  // 게이트가 풀렸다고 스턴을 버리는 계획이 되면 안 되기 때문이다.
-  assert.strictEqual(byKey.stunFull.required,false,'이감 충족 계획에서 1.5스턴이 필수로 남았다');
-  // v18.9(사용자 교정)의 의도한 결과: 이감이 채워지면 계획은 1.5스턴을 포기하고
-  // 그 자리를 딜러에 쓴다(실측 0.934).  대신 0.5 최소선은 위에서 계속 검사하고,
-  // 과잉 적립도 아래에서 막는다 — "스턴을 버려도 된다"가 아니라 "이감이 있으면
-  // 1.5까지 억지로 채우지 않는다"가 계약이다.
+  // v19.9(사용자 교정): 물딜 1.5스턴은 이감이 차도 항상 필수다 — 단 마지막에
+  // 채운다.  "방깎이 높으면 몹이 조금 새더라도 딜로 찍어누를 수 있는데, 방깎이
+  // 낮고 몹을 잡고 있으면 못 녹여서 결국 죽는다."  이 계획은 complete=true 를
+  // 위에서 검사하므로 required 게이트가 실제로 닫혔다는 것까지 함께 증명된다.
+  assert.strictEqual(byKey.stunFull.required,true,'물딜 1.5스턴은 항상 필수다(v19.9)');
+  assert(byKey.stunFull.current>=1.5-1e-9,`1.5스턴을 마지막에라도 채워야 한다: ${byKey.stunFull.current}`);
   assert(byKey.stunBase.current>=.5,`minimum stun must hold: ${byKey.stunBase.current}`);
   assert(byKey.stunFull.current<=2.05,`unnecessary stun stack ${byKey.stunFull.current}`);
   assert(coverage.excessStun<=.55,`excess stun ${coverage.excessStun}`);

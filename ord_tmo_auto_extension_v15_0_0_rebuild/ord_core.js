@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='19.8.1';
+const VERSION='19.9.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -53,7 +53,7 @@ const UI_NAME_OVERRIDES={
   'Q20h':'라분(전설)','U20h':'검은수염(전설)','Z90h':'네코(전설)','R20h':'로브 루치(전설)','Y20h':'루나메(전설)',
   'X20h':'블랙마리아(전설)','430h':'상디(전설)','730h':'슈가(전설)','S20h':'조로(전설)','I30h':'제파(전설)',
   'N30h':'료쿠규(히든)','M30h':'사보(히든)','740h':'피셔타이거(히든)','J30h':'시류(히든)','Z30h':'아카이누(히든)',
-  // v19.8.1(사용자 규칙): 블마 왜곡은 W 폼 3형태(스턴/이감40/데미지) 배타 —
+  // v19.9.0(사용자 규칙): 블마 왜곡은 W 폼 3형태(스턴/이감40/데미지) 배타 —
   // 코칭은 이감폼 기준(스턴 0).  라벨로 폼 전제를 밝힌다.
   'J70h':'캐럿(변화)','unit_1752903381904_1445':'블랙마리아(왜곡·이감폼 기준)','V30h':'코알라(왜곡)','IC0h':'퀸(왜곡)',
   '840h':'페로나(왜곡)','unit_1779015610844_6407':'바제스(왜곡)','U30h':'레드포스호(해적선)',
@@ -441,7 +441,7 @@ const STUN_RESEARCH={
   'KB0H':{displayStun:1.092,capture:82.75},'KB0H_':{displayStun:1.092,capture:82.75},'760h':{displayStun:.64,capture:64.29},'B50h':{displayStun:.999,capture:79.97},'C50h':{displayStun:.863,capture:75.05},'unit_1767356778906_9384':{displayStun:1.312,capture:87.89},
   'F50h':{displayStun:.548,capture:58.58},'unit_1761060487951_749':{displayStun:.421,capture:49.2},'unit_1761062338921_7460':{displayStun:.633,capture:63.87},
   'unit_1761061031358_4977':{displayStun:.736,capture:69.39},'unit_1761062663657_987':{displayStun:2.168,capture:96.95},'unit_1761126198374_11':{displayStun:.908,capture:76.81},
-  // v19.8.1(사용자 규칙): 블랙마리아 왜곡은 W 폼 3형태(스턴/이감40/데미지)가
+  // v19.9.0(사용자 규칙): 블랙마리아 왜곡은 W 폼 3형태(스턴/이감40/데미지)가
   // 상호 배타다 — 이감폼을 쓰는 덱 기준으로 계산하므로 스턴은 0.  0731 판의
   // 스턴 1.25는 이 0.748 이중 계산이 부풀린 값이었다.
   'unit_1752903381904_1445':{displayStun:0,capture:0},'IC0h':{displayStun:.427,capture:49.73},'unit_1779016778159_2512':{displayStun:.317,capture:40}
@@ -1076,8 +1076,7 @@ function clearProfileDetails(spec,mode,settings){
   spec=spec||{};settings=settings||{};mode=mode==='magic'?'magic':'physical';const g=GOROSEI[settings.gorosei]||GOROSEI.none,ctl=controlState(spec,mode,settings),slowTarget=mode==='magic'?g.slowMagic:g.slowPhysical,stun=num(spec.stun),stunBase=Math.min(.5,Math.max(0,stun)),stunFull=Math.max(0,stun),bossFrenzy=Math.min(num(spec.boss),num(spec.frenzy));
   if(mode==='physical'){
     const upper=settings._upperUnit||null,exceptionEligible=physicalArmorException(upper),buffReady=enoughPhysicalBuffs(spec,settings),exceptionActive=exceptionEligible&&buffReady,armorFloor=exceptionActive?120:g.armorSoft,armorIdeal=exceptionActive?120:g.armorSafe,armorTarget=armorFloor,armorCurrent=num(spec.armor),triggerArmor=Math.max(0,num(spec.triggerArmor)),armorExpected=armorCurrent+triggerArmor*.65,armorMaximum=armorCurrent+triggerArmor;
-    // v18.9: 이감 충족 여부는 1.5스턴 필수 해제의 조건이다(사용자 교정).
-    const slowSatisfied=num(ctl.slow)>=num(slowTarget),secondUpperCommitted=!!String(settings.secondUpperId||'');
+    const secondUpperCommitted=!!String(settings.secondUpperId||'');
     const requirements=[
       // v19(사용자 요청): "물딜도 2상위 각이 보이면 갈 수 있게".
       //
@@ -1101,17 +1100,19 @@ function clearProfileDetails(spec,mode,settings){
       // 함께 요구한다.  0729 물딜 판(74라)이 정확히 여기 걸린다 — 보잡 1
       // (S-호크) · 광폭 2(센고쿠+S-호크) 라 min=1 로 "충족"이 떴다.
       {key:'bossFrenzy',label:'광보잡 2',current:bossFrenzy,target:2,weight:95},
-      // v18.9(사용자 교정): 이감이 목표를 채웠으면 1.5스턴을 필수로 걸지 않는다.
+      // v19.9(사용자 교정): 물딜의 1.5스턴은 항상 필수지만 반드시 마지막에 채운다.
       //
-      // 사용자 판단: "이감이 빡이면 스턴을 굳이 1.5로 안 잡아도 된다.  유닛
-      // 카운트를 더 보기 위해 딜러를 더 추가하는 게 낫다."  0730 클리어 판에서
-      // 엔진이 1.5스턴을 우솝(0.2스턴)으로 채우려 해서 사용자가 도플·카쿠 변화를
-      // 강제로 만들었다 — 그 자리는 딜러가 더 낫다는 뜻이다.
+      // 사용자 판단: "물딜은 방깎이 우선시 되어야 한다.  최소 스턴 잡고
+      // 풀이감을 잡은 뒤에 스턴 1.5를 채우는 거지, 먼저 채우는 건 별로 좋지
+      // 않다 — 방깎이 모자라질 가능성이 높다.  방깎이 높으면 몹이 조금
+      // 새더라도 딜로 찍어누를 수 있는데, 방깎이 낮고 몹을 잡고 있으면 못
+      // 녹여서 결국 죽는다."
       //
-      // 0.5스턴 최소선은 그대로 필수다.  이감이 미달인 동안에도 1.5는 필수로
-      // 남는다(v17.7 이 실전 6판으로 세운 하드 게이트) — 이감이라는 다른 생존
-      // 축이 열려 있을 때 스턴까지 빠지면 둘 다 없는 판이 된다.
-      {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:35,required:slowSatisfied?false:true,recommended:slowSatisfied,meta:{lastPriority:true,relaxedBySlow:slowSatisfied}}
+      // 그래서 v18.9 의 '이감 충족 시 필수 해제'는 물딜에서 폐기한다(마딜은
+      // 유지) — 1.5는 버리는 게 아니라 방깎→0.5스턴→이감→광보잡이 닫힌 뒤
+      // 마지막으로 채우는 필수 게이트다.  순서 고정은 ord_v15_policy 의 물딜
+      // 그룹 정렬(fillLast)이 맡고, 여기서는 필수 여부만 선언한다.
+      {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:35,required:true,meta:{lastPriority:true,fillLast:true}}
     ];
     return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorCurrent),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 0.5스턴과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 2기 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
   }
@@ -1400,7 +1401,7 @@ function gameFlow(state,locks,settings){
 function milestonePurpose(round,hasUpper,hasLockedUpper){if(hasUpper||hasLockedUpper)return'spec';if(num(round)<=7)return'rare';if(num(round)<=20)return'story';return'upper';}
 function phaseForRound(round){round=num(round)||1;if(round<=7)return{key:'rare',label:'첫 희귀 + 선택 위습',note:'7라운드 안에 첫 희귀를 완성합니다.'};if(round<=20)return{key:'story',label:'첫 전설·히든',note:'첫 전설 또는 히든을 늦어도 20라 전에 완성합니다.'};if(round<=25)return{key:'route',label:'상위·딜 계통 결정',note:'스토리 보상 희귀·고급도박 유입이 끝난 전체 패(희귀 8장 전후)로 상위와 물딜·마딜을 결정합니다. 유입 전에는 선택 위습 소비를 아끼세요.'};if(round<=30)return{key:'upper',label:'상위 + 라인 전설',note:'상위 하나와 희귀보다 강한 라인 방어 전설을 마련합니다.'};if(round<=50)return{key:'spec',label:'50라 전 9환산 보강',note:'상위 결손을 채우며 실제 전설 환산 9기를 보수적 구조 최소선으로 맞춥니다. 패 불리기는 흔함·안흔이 나오는 하급도박이 효율적입니다.'};return{key:'finish',label:'최종 9기+ 마감',note:'전설·히든, 해적선, 희귀 2기, 변화됨 중 최저비용 경로로 마지막 스펙을 채웁니다.'};}
 function roundDuration(round,settings){return BOSS_ROUNDS.has(round)?num(settings.roundBossSeconds)||60:num(settings.roundNormalSeconds)||35;}
-// v19.8.1(사용자 규칙): 라운드는 65가 최대다 — 0731 로그는 타이머가 80라까지
+// v19.9.0(사용자 규칙): 라운드는 65가 최대다 — 0731 로그는 타이머가 80라까지
 // 걸어가며 죽은 판을 24라운드나 더 판정했다.  시계·수동 모두 65에서 멈춘다.
 const MAX_ROUND=65;
 function roundClock(settings,now){

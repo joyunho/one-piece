@@ -77,9 +77,13 @@ check('④ 처방 페어는 플래너 후단 타이브레이크로만 들어간�
   assert(appSrc.includes('v197PrescribedSecondIds(){'),'전달 목록 계산 없음');
 });
 
-check('⑤ 보호 희귀가 전량 표시된다',()=>{
+check('⑤ 보호 희귀가 전량 표시된다(v19.9: 표시 위치는 사용·보류 접이)',()=>{
+  // v19.9: 다음 제작 레일의 보존 섹션은 사용자 요청으로 제거됐다.  감사
+  // ⑤의 계약(보호 희귀를 4종에서 자르지 않는다)은 남는 희귀 패널의
+  // 사용·보류 접이가 이어받는다 — 그곳은 전량 나열이고 절단이 없다.
   assert(!appSrc.includes('filter(row=>C.num(row.hold)>0).slice(0,4)'),'보호 희귀가 여전히 4종에서 잘림');
-  assert(appSrc.includes('filter(row=>C.num(row.hold)>0);'),'보호 희귀 전량 필터 없음');
+  assert(appSrc.includes("groups=[{key:'use',label:'사용'},{key:'hold',label:'보류'}]"),'사용·보류 접이가 사라짐');
+  assert(appSrc.includes('rows.filter(row=>C.num(row[group.key])>0)'),'접이 전량 필터가 사라짐');
 });
 
 check('감사 기타 — snapshotHealth 숫자 번호 허용·루트 README 버전 부패 제거',()=>{

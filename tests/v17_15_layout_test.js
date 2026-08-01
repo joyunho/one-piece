@@ -36,13 +36,15 @@ test('다음 행동은 확정 카드 하나와 후속 후보 최대 2개만 보�
   // 패널이 같은 목록을 보게 하려고). 상한 계약은 그 헬퍼에서 지킨다.
   const candidateRows = slice('v153NextCandidateRows(plan){', 'renderV153NextCandidate(state,plan){');
   assert(candidateRows.includes('picked.length>=2'));
-  // v19.8(사용자 요청 ②): 2번 패널이 "다음 제작 3개 큐 + 보존 희귀"로
-  // 바뀌었다.  "먼 미래를 고정하지 않는다"는 계약은 문구로 유지 —
-  // 1번 카드만 확정이고 이후 순서는 패 변화 시 재계산임을 화면에 남긴다.
-  assert(candidate.includes('queue.length>=3'), '다음 제작 큐 상한 3이 사라짐');
-  for (const section of ['v158-queue', '지금 보존', '패가 바뀌면 다시 계산']) {
+  // v19.8(사용자 요청 ②): 2번 패널이 "다음 제작 큐"로 바뀌었다.
+  // v19.9(사용자 요청): 큐 상한 3→5, '지금 보존' 섹션 제거(근거는 남는 희귀
+  // 패널의 사용·보류 접이에 유지).  "먼 미래를 고정하지 않는다"는 계약은
+  // 문구로 유지 — 1번 카드만 확정이고 이후 순서는 패 변화 시 재계산.
+  assert(candidate.includes('queue.length>=5'), '다음 제작 큐 상한 5가 사라짐');
+  for (const section of ['v158-queue', '패가 바뀌면 다시 계산']) {
     assert(candidate.includes(section), `다음 제작 큐 섹션이 사라짐: ${section}`);
   }
+  assert(!candidate.includes('지금 보존'), "'지금 보존' 섹션은 v19.9에서 제거됐다");
 });
 
 test('스펙은 한 가지 행 형식으로 통일되고 축으로만 묶인다', () => {

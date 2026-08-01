@@ -2498,3 +2498,37 @@ button:focus-visible,select:focus-visible{
 .v158-consume-warn b{color:#ffe1de}
 .v153-role b small.relaxed{color:#8fa5bd;font-size:9px}
 @media (max-height:1120px) and (min-width:1240px){.v158-consume-warn{margin-top:4px;padding:4px 8px}}
+/* v19.9: 제작 카드 직접 조합식 — "뭐랑 뭐랑 조합해야 하는지". */
+.v159-recipe{display:flex;gap:6px;align-items:center;min-width:0}
+.v159-recipe .v153-ic,.v159-recipe .v153-ic-img{width:13px;height:13px;flex:none;color:#89e7f7}
+.v159-recipe span{overflow:hidden;color:#b9c4da;font-size:10px;text-overflow:ellipsis;white-space:nowrap}
+.v159-recipe b{font-weight:800}
+.v159-recipe b.owned{color:#8ef0c0}
+.v159-recipe b.missing{color:#ffc9c4}
+.v159-recipe i{font-style:normal;color:#5c7290;margin:0 3px}
+/* v19.9: 승인 카드 스킵 · 유일 마감 수단 조기 적립 경고 — 표시 전용. */
+.v159-skip-warn,.v159-single-closer{display:flex;gap:7px;align-items:center;margin-top:6px;border:1px solid rgba(242,187,82,.55);border-radius:11px;padding:6px 9px;background:rgba(92,66,16,.22)}
+.v159-skip-warn .v153-ic,.v159-skip-warn .v153-ic-img,.v159-single-closer .v153-ic,.v159-single-closer .v153-ic-img{width:15px;height:15px;flex:none;color:#f3d58e}
+.v159-skip-warn span,.v159-single-closer span{color:#f5e2b8;font-size:10.5px;line-height:1.4}
+.v159-skip-warn b,.v159-single-closer b{color:#ffefc9}
+.v159-single-closer{margin-bottom:6px}
+/* v19.9: 이감 구성 분해 — 초과가 뜰 때만 나오는 설명 줄. */
+.v153-role b small.v159-slow-split{display:block;color:#8fa5bd;font-size:9px;line-height:1.35;white-space:normal}
+/* v19.9: 판 종료 침묵 감지 배너 — 상태바 바로 아래 전폭. */
+.v159-endgame{display:flex;gap:8px;align-items:center;margin:6px 0 0;border:1px solid rgba(137,231,247,.5);border-radius:12px;padding:7px 11px;background:rgba(9,44,58,.5)}
+.v159-endgame .v153-ic,.v159-endgame .v153-ic-img{width:15px;height:15px;flex:none;color:#89e7f7}
+.v159-endgame span{flex:1;min-width:0;color:#c9ecf5;font-size:11px;line-height:1.4}
+.v159-endgame b{color:#eafcff}
+.v159-endgame button{border:1px solid rgba(137,231,247,.55);border-radius:9px;padding:4px 10px;background:rgba(137,231,247,.14);color:#bff2ff;font:inherit;font-size:11px;font-weight:800;cursor:pointer}
+.v159-endgame button:hover{background:rgba(137,231,247,.24)}
+/* 한 화면 계약: 압축 티어 재선언은 항상 파일 끝 — 새 요소도 함께 줄인다.
+   다음 제작 큐가 5줄이 되면서 압축 화면에서는 큐 행을 한 단계 더 줄인다. */
+@media (max-height:1120px) and (min-width:1240px){
+  .v158-queue{gap:4px}
+  .v158-queue-row{padding:3px 6px;grid-template-columns:18px 30px minmax(0,1fr) auto}
+  .v158-queue-row img,.v158-queue-row>.v153-ic,.v158-queue-row>.v153-ic-img{width:30px;height:30px}
+  .v158-queue-row b{font-size:12px}
+  .v159-recipe span{font-size:9.5px}
+  .v159-skip-warn,.v159-single-closer{margin-top:4px;padding:4px 8px}
+  .v159-endgame{margin-top:4px;padding:5px 9px}
+}

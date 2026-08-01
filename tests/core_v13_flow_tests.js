@@ -106,15 +106,16 @@ test('a complete physical squad counts its equivalents and clears the 1.5-stun h
   // 단계로 넘어가고 1.5스턴 게이트가 닫혀 있다"는 것이다.
   assert.deepStrictEqual([flow.counts.board,flow.counts.squad,flow.squadReady,flow.clearReady,flow.phase],[9,11,true,true,'upgrade-control']);
   assert.deepStrictEqual([flow.deficits.profile.armorCurrent,flow.deficits.profile.armorTarget,flow.deficits.profile.armorIdeal],[194,180,211]);
-  // v18.9(사용자 교정): 이감이 목표를 채우면 1.5스턴은 필수에서 권장으로 내려간다
-  // ("이감이 빡이면 스턴을 굳이 1.5로 안 잡아도 된다 — 그 자리는 딜러가 낫다").
-  // 이 픽스처는 이감 102 충족이라 게이트가 풀린 상태이고, 스턴 자체는 이미 닫혀 있다.
+  // v19.9(사용자 교정): 물딜 1.5스턴은 다시 항상 필수다 — 이감이 차도 해제되지
+  // 않는다.  "방깎이 높으면 몹이 조금 새더라도 딜로 찍어누를 수 있는데, 방깎이
+  // 낮고 몹을 잡고 있으면 못 녹여서 결국 죽는다."  대신 순서가 최후다(fillLast):
+  // 방깎→0.5스턴→이감→광보잡을 닫은 뒤 마지막에 채운다.  이 픽스처는 스턴이
+  // 이미 닫혀 있어 게이트 위치와 무관하게 통과해야 한다.
   const stunGate=flow.deficits.requirements.find(row=>row.key==='stunFull');
   assert(stunGate&&stunGate.gap<=0,'1.5 stun must still be closed in this fixture');
-  assert.strictEqual(stunGate.required,false,'이감 충족 상태에서는 1.5스턴이 필수가 아니다');
+  assert.strictEqual(stunGate.required,true,'물딜 1.5스턴은 항상 필수다(v19.9)');
   // deficits() 는 meta 를 행 최상위로 펼친다.
-  assert.strictEqual(stunGate.relaxedBySlow,true,'해제 사유(이감 충족)가 기록되지 않았다');
-  assert.strictEqual(stunGate.recommended,true,'필수 해제 시 권장으로 남아야 한다');
+  assert.strictEqual(stunGate.fillLast,true,'물딜 1.5스턴은 마지막에 채우는 게이트여야 한다');
   assert.match(flow.note,/업그레이드와 컨트롤/);
 });
 
@@ -130,17 +131,18 @@ test('physical clear hard-gates armor at 180 and requires 1.5 stun as the last-p
   const at179=C.deficits(physicalSpec({armor:179,stun:.5}),'physical',baseSettings({mode:'physical'})),at180=C.deficits(physicalSpec({armor:180,stun:.5}),'physical',baseSettings({mode:'physical'})),full=C.deficits(physicalSpec({armor:180,stun:1.5}),'physical',baseSettings({mode:'physical'}));
   assert(at179.clearRows.some(x=>x.key==='armor'&&x.target===180&&x.gap===1));
   // v17.7: 물딜 1.5스턴은 마지막 우선순위의 필수 하드 게이트였다.
-  // v18.9(사용자 교정): 이감이 목표를 채우면 그 게이트가 권장으로 내려간다.
-  // 이 픽스처는 이감 102 충족이라 armor 180 을 닫으면 필수 결손이 비게 된다 —
-  // 1.5스턴은 남아 있지만 더 이상 "닫아야 하는 것"이 아니다.
-  assert.deepStrictEqual(at180.clearRows,[],'이감 충족 + 방깎 180 이면 필수 결손이 없다');
+  // v18.9 는 이감 충족 시 이 게이트를 권장으로 내렸지만, v19.9(사용자 교정)가
+  // 물딜에서 그 완화를 폐기했다: "최소 스턴 잡고 풀이감을 잡은 뒤에 스턴
+  // 1.5를 채우는 거지, 먼저 채우는 건 별로 좋지 않다."  그래서 이감 102 충족
+  // + 방깎 180 에서도 1.5스턴 결손은 필수로 남는다 — 다만 마지막 순서다.
+  assert.deepStrictEqual(at180.clearRows.map(x=>x.key),['stunFull'],'이감 충족 + 방깎 180 이면 남는 필수 결손은 1.5스턴뿐이다');
   const relaxed=at180.requirements.find(x=>x.key==='stunFull');
-  assert.strictEqual(relaxed.required,false,'이감 충족 상태에서 1.5스턴이 필수로 남았다');
+  assert.strictEqual(relaxed.required,true,'물딜 1.5스턴은 이감이 차도 필수로 남는다(v19.9)');
   assert(relaxed.gap>0,'스턴 0.5 픽스처인데 1.5 결손이 없다');
   assert.deepStrictEqual(full.clearRows,[]);
   assert.deepStrictEqual([at180.profile.armorTarget,at180.profile.armorIdeal],[180,211]);
   const comfort=at180.requirements.find(row=>row.key==='stunFull');
-  assert.deepStrictEqual([comfort.required,comfort.target,comfort.gap],[false,1.5,1]);
+  assert.deepStrictEqual([comfort.required,comfort.target,comfort.gap],[true,1.5,1]);
   assert.deepStrictEqual(at180.profile.priority,['armor','stunBase','slow','bossFrenzy','stunFull']);
 });
 

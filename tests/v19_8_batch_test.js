@@ -26,14 +26,16 @@ check('① 판단 잠금 상태가 마지막 패 결손·회복 목표를 채운
   assert(css.includes('.v158-blocked-spec'),'스타일 없음');
 });
 
-check('② 다음 제작 큐 — 3개 상한 + 소스 사슬 + 보존 유지',()=>{
+check('② 다음 제작 큐 — 5개 상한(v19.9) + 소스 사슬 + 보존 섹션 제거',()=>{
   const preview=app.slice(app.indexOf('renderV153Preview(state,plan){'),app.indexOf('renderV153CraftableLegends(state,plan){'));
-  assert(preview.includes('queue.length>=3'),'3개 상한 없음');
+  // v19.9(사용자 요청): "다음제작을 5개까지 늘려줘" · "지금 보존은 필요 없을
+  // 것 같고" — 보존 근거는 남는 희귀 패널의 사용·보류 접이에 그대로 있다.
+  assert(preview.includes('queue.length>=5'),'5개 상한 없음');
   for(const source of ["'검증 경로'","'파티 순서 · 가변'","'차선'","'회복 목표'","'상위 후보 경로'"]){
     assert(preview.includes(source),`소스 누락: ${source}`);
   }
   assert(preview.includes('v158-queue'),'큐 마크업 없음');
-  assert(preview.includes('지금 보존'),'보존 희귀 섹션이 사라짐');
+  assert(!preview.includes('지금 보존'),"'지금 보존' 섹션은 v19.9에서 제거됐다");
   assert(preview.includes('패가 바뀌면 다시 계산'),'먼 미래 미고정 문구 없음');
   // 보유 유닛은 큐에 안 올린다(이미 만든 것을 다음 제작으로 표시 금지).
   assert(preview.includes('C.num((state.counts||{})[id])>0)return'),'보유 유닛 제외 없음');

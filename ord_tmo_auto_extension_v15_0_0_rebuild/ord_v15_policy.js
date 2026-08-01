@@ -6,7 +6,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.8.1';
+const VERSION='19.9.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -108,10 +108,21 @@ function groupRows(route,role,checkpoint,roundInput){
   const BOSS_POWER_KEYS=new Set(['single','end','singleEndExpected','attack','toki','stunFull']);
   const bossPowerOpen=rows=>rows.some(row=>row.required!==false&&!row.waived&&BOSS_POWER_KEYS.has(row.key)&&num(row.gap)>0);
   const bossWindow=currentRound>=50;
-  const head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows),binary:binaryOpen(rows),bossPowerRows:bossPowerOpen(rows),behind:groupPaceBehind(rows,currentRound)}));
+  // v19.9(사용자 교정): 물딜은 방깎이 우선이다 — "최소 스턴 잡고 풀이감을
+  // 잡은 뒤에 스턴 1.5를 채우는 거지, 먼저 채우는 건 별로 좋지 않다.
+  // 방깎이 높으면 몹이 조금 새더라도 딜로 찍어누를 수 있는데, 방깎이 낮고
+  // 몹을 잡고 있으면 못 녹여서 결국 죽는다."  그래서 물딜에서 1.5스턴만
+  // 남은 그룹은 마감 뒤처짐 스왑에도, 50라+ 보스 화력 부양에도 위로 올라올
+  // 수 없다 — 방깎·0.5스턴·이감·광보잡 그룹 뒤에 항상 고정된다.  필수
+  // 여부(하드 게이트)는 ord_core 가 그대로 유지하므로 1.5는 버려지는 게
+  // 아니라 마지막에 채워진다.
+  const physicalFillLast=route&&route.key==='physical';
+  const stunFillLast=rows=>rows.some(row=>row.key==='stunFull')&&rows.every(row=>row.key==='stunFull'||row.required===false||row.waived);
+  const head=groups.slice(0,1),tail=groups.slice(1).map((rows,offset)=>({rows,offset,rel:relativeGap(rows),binary:binaryOpen(rows),bossPowerRows:bossPowerOpen(rows),behind:groupPaceBehind(rows,currentRound),fillLast:physicalFillLast&&stunFillLast(rows)}));
   const survivalCrisis=tail.some(item=>!item.bossPowerRows&&item.rel>.3);
-  for(const item of tail)item.bossPower=bossWindow&&!survivalCrisis&&item.bossPowerRows;
+  for(const item of tail)item.bossPower=bossWindow&&!survivalCrisis&&item.bossPowerRows&&!item.fillLast;
   tail.sort((a,b)=>{
+    if(a.fillLast!==b.fillLast)return a.fillLast?1:-1;
     if(bossPhase&&a.binary!==b.binary)return a.binary?-1:1;
     if(a.bossPower!==b.bossPower)return a.bossPower?-1:1;
     const aNearlyDone=a.rel<=.1,bNearlyDone=b.rel<=.1;
