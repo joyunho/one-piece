@@ -50,7 +50,12 @@ const RUNS=Object.freeze([
   {key:'0728c',file:'ORD_2305_20260728_081549_clear.ordlog.json',  outcome:'clear'},
   // v18.0.0으로 실제 플레이한 첫 판.  53라에 죽었고, 고정한 상위가 TMO
   // 읽기에서 20번 빠지면서 역할표가 계속 무너진 것이 원인이었다.
-  {key:'0728d',file:'ORD_2305_20260728_170254_active.ordlog.json',outcome:'loss'}
+  {key:'0728d',file:'ORD_2305_20260728_170254_active.ordlog.json',outcome:'loss'},
+  // v19.9.1로 플레이한 둘째 클리어 — 첫 마딜 단끝(1상위) 클리어.  메인
+  // (S)타시기(암브·물마), 나스쥬로 설정(이감 목표 117).  마지막 판정 기준
+  // 이감 90/117 · 스턴 1.01/1.5 · 단끝 2/3 로 열린 채 이겼다(사용자 보고).
+  // 파일은 결과 입력 전 내보내기라 status 는 active 지만 실제 결과는 클리어.
+  {key:'0801c',file:'ORD_2305_20260801_023132_clear.ordlog.json',outcome:'clear'}
 ]);
 
 function num(value){const n=Number(value);return Number.isFinite(n)?n:0;}
