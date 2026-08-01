@@ -140,8 +140,49 @@ function ensureScanAlarm() {
 ensureScanAlarm();
 if (chrome.runtime.onInstalled) chrome.runtime.onInstalled.addListener(ensureScanAlarm);
 if (chrome.runtime.onStartup) chrome.runtime.onStartup.addListener(ensureScanAlarm);
+// v19.9.5(A안 3단계 — 매핑 표본): 게임 중 /datas 는 보유 유닛을 "인게임
+// 로우코드→수량"으로 준다(0801 실측).  흔함 5종만 카탈로그 id 와 일치했고
+// 나머지(위습 포함)는 다른 코드 체계다 — 추측 대신, 같은 순간의 DOM 패
+// (카탈로그 id→수량)와 /datas(로우코드→수량)를 쌍으로 저장해 두면 수량
+// 변화 대조로 매핑이 유일하게 풀린다.  판이 진행되며 수량이 바뀔 때만
+// 표본이 늘고(해시 중복 제거), 최대 48쌍이면 한 판으로 충분하다.
+let lastMapSampleHash = '';
+async function collectLocalMapSample() {
+  try {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 3000);
+    let payload = null;
+    try {
+      const response = await fetch('http://127.0.0.1:25625/datas', {signal: controller.signal, cache: 'no-store'});
+      clearTimeout(timer);
+      payload = JSON.parse(await response.text());
+    } catch (_) { clearTimeout(timer); return; }
+    const live = payload && typeof payload.units === 'object' && payload.units ? payload.units : null;
+    if (!live || !Object.keys(live).length) return;
+    const liveHash = JSON.stringify(live);
+    if (liveHash === lastMapSampleHash) return;
+    const stored = await get(['ordLatestSnapshot', 'ordLocalMapSamples']);
+    const snapshot = stored.ordLatestSnapshot;
+    // DOM 패가 신선할 때만 쌍이 된다 — 죽은 스냅샷과 짝지으면 오염 표본이다.
+    if (!snapshot || Date.now() - (Number(snapshot.bridgeAt) || 0) > 12000) return;
+    const dom = {};
+    let kinds = 0;
+    for (const [id, count] of Object.entries(snapshot.counts || {})) {
+      const value = Number(count) || 0;
+      if (value <= 0) continue;
+      dom[id] = value;
+      if (++kinds >= 160) break;
+    }
+    if (!kinds) return;
+    lastMapSampleHash = liveHash;
+    const samples = Array.isArray(stored.ordLocalMapSamples) ? stored.ordLocalMapSamples : [];
+    samples.push({at: Date.now(), live, dom});
+    await set({ordLocalMapSamples: samples.slice(-48)});
+  } catch (_) {}
+}
 if (chrome.alarms && chrome.alarms.onAlarm) chrome.alarms.onAlarm.addListener(alarm => {
   if (!alarm || (alarm.name !== SCAN_ALARM && alarm.name !== SCAN_ALARM_B)) return;
+  enqueue(collectLocalMapSample).catch(() => {});
   enqueue(async () => {
     const current = await get([SOURCE_KEY]);
     const tabId = Number(current[SOURCE_KEY]) || 0;

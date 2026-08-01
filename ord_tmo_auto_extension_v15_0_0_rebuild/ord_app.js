@@ -2850,9 +2850,12 @@ class App{
     // 형태(경로·메서드·바디·응답)가 여기 있으면 판정이 끝난다.
     try{
       if(typeof chrome!=='undefined'&&chrome.storage&&chrome.storage.local){
-        this._localTapLog=await new Promise(resolve=>chrome.storage.local.get(['ordLocalTapLog'],value=>resolve(Array.isArray(value&&value.ordLocalTapLog)?value.ordLocalTapLog:[])));
+        const stored=await new Promise(resolve=>chrome.storage.local.get(['ordLocalTapLog','ordLocalMapSamples'],value=>resolve(value||{})));
+        this._localTapLog=Array.isArray(stored.ordLocalTapLog)?stored.ordLocalTapLog:[];
+        // v19.9.5(A안 3단계): 게임 중 자동 수집된 DOM↔로컬 매핑 표본.
+        this._localMapSamples=Array.isArray(stored.ordLocalMapSamples)?stored.ordLocalMapSamples:[];
       }
-    }catch(_){this._localTapLog=[];}
+    }catch(_){this._localTapLog=[];this._localMapSamples=[];}
     try{
       let result=null;
       if(typeof chrome!=='undefined'&&chrome.runtime&&chrome.runtime.sendMessage&&this.config.source!=='standalone-manual'){
@@ -2885,8 +2888,23 @@ class App{
           }
         }
       }catch(_){}
-      let json=false;try{JSON.parse(text);json=true;}catch(_){}
-      finish({state:'done',status:C.num(result.status),contentType:String(result.contentType||''),size:C.num(result.size),json,idHits,codeSamples,snippet:text.slice(0,1600),full:text});
+      let json=false,parsed=null;try{parsed=JSON.parse(text);json=true;}catch(_){}
+      // v19.9.5(A안 3단계): {units:{코드:수량}} 형태면 코드별 해석 여부를
+      // 직접 나눠 보여준다 — "어떤 코드가 안 풀리는지"가 매핑 작업의 목록이다.
+      let matchedCodes=[],unmatchedCodes=[];
+      try{
+        const live=parsed&&typeof parsed.units==='object'&&parsed.units?parsed.units:null;
+        if(live){
+          const db=this.catalogDb(),known=new Set();
+          for(const unit of db.units){known.add(String(unit.id));for(const code of unit.codes||[])known.add(String(code));}
+          const RESOURCE=new Set(['GOLD','LUMBER','FOOD']);
+          for(const code of Object.keys(live)){
+            if(RESOURCE.has(code))continue;
+            (known.has(code)?matchedCodes:unmatchedCodes).push(code);
+          }
+        }
+      }catch(_){}
+      finish({state:'done',status:C.num(result.status),contentType:String(result.contentType||''),size:C.num(result.size),json,idHits,codeSamples,matchedCodes,unmatchedCodes,snippet:text.slice(0,1600),full:text});
     }catch(error){finish({state:'error',error:String(error&&error.message||error)});}
   }
   renderV199LocalProbe(){
@@ -2903,7 +2921,11 @@ class App{
     const tap=Array.isArray(this._localTapLog)?this._localTapLog:[];
     const tapRows=tap.map(row=>`<div class="tap-row"><b>${C.esc(String(row.method||'GET'))} ${C.esc(String(row.url||''))}</b>${row.body?`<small>바디: ${C.esc(String(row.body))}</small>`:''}<small>HTTP ${C.num(row.status)} · ${C.num(row.size)}자 · ${row.at?new Date(C.num(row.at)).toLocaleTimeString():''}</small><pre>${C.esc(String(row.snippet||'').slice(0,400))}</pre></div>`).join('');
     const tapHtml=`<div class="v199-tap"><b>페이지 실측 요청 · 최근 ${tap.length}건</b>${tap.length?tapRows:'<p class="probe-note">아직 기록 없음 — TMO 탭을 한 번 열어 두면(게임 중이면 더 좋습니다) 페이지가 로컬 서버로 보내는 요청이 여기 자동으로 잡힙니다. 그 뒤 이 버튼을 다시 누르세요.</p>'}</div>`;
-    return`<section class="ord-panel v199-local-probe"><div class="panel-head"><div><h2>로컬 서버 직접 읽기 시험</h2><p>tmo.gg 페이지가 읽는 로컬 데이터(127.0.0.1:25625/datas)를 코치가 직접 읽을 수 있는지 확인합니다 — 되면 TMO 탭 없이 동작하는 구조(A안)로 갈 수 있습니다.</p></div><button class="primary" data-act="local-probe" ${probe&&probe.state==='running'?'disabled':''}>${probe&&probe.state==='running'?'읽는 중…':'지금 시험'}</button></div>${body}${tapHtml}</section>`;
+    // v19.9.5(A안 3단계): 코드별 해석 결과 + 매핑 표본 수집 현황.
+    const codeHtml=probe&&probe.state==='done'&&(probe.matchedCodes||probe.unmatchedCodes)?`<p class="probe-note">해석 가능 ${C.num((probe.matchedCodes||[]).length)}종${(probe.matchedCodes||[]).length?` (${C.esc((probe.matchedCodes||[]).slice(0,10).join(', '))}${(probe.matchedCodes||[]).length>10?' 외':''})`:''} · <b>미해석 ${C.num((probe.unmatchedCodes||[]).length)}종${(probe.unmatchedCodes||[]).length?` (${C.esc((probe.unmatchedCodes||[]).slice(0,14).join(', '))}${(probe.unmatchedCodes||[]).length>14?' 외':''})`:''}</b> — 미해석 코드는 아래 매핑 표본이 쌓이면 수량 대조로 풀립니다.</p>`:'';
+    const samples=Array.isArray(this._localMapSamples)?this._localMapSamples:[];
+    const samplesHtml=`<div class="v199-tap"><b>매핑 표본 · ${samples.length}쌍 수집됨 (게임 중 자동 · TMO 탭과 게임이 같이 살아 있을 때 15초마다)</b>${samples.length?`<p class="probe-note">패가 바뀔 때마다 "같은 순간의 DOM 패 ↔ 로컬 코드" 쌍이 저장됩니다. 한 판 분량(20쌍+)이 모이면 아래 전체를 복사해 붙여넣어 주세요 — 수량 변화 대조로 미해석 코드의 매핑 표를 만듭니다.</p><details><summary>매핑 표본 전체 복사 (${samples.length}쌍)</summary><textarea readonly rows="8">${C.esc(JSON.stringify(samples))}</textarea></details>`:'<p class="probe-note">아직 표본 없음 — 게임을 돌리면서 TMO 탭을 살려 두면 자동으로 쌓입니다.</p>'}</div>`;
+    return`<section class="ord-panel v199-local-probe"><div class="panel-head"><div><h2>로컬 서버 직접 읽기 시험</h2><p>tmo.gg 페이지가 읽는 로컬 데이터(127.0.0.1:25625/datas)를 코치가 직접 읽을 수 있는지 확인합니다 — 되면 TMO 탭 없이 동작하는 구조(A안)로 갈 수 있습니다.</p></div><button class="primary" data-act="local-probe" ${probe&&probe.state==='running'?'disabled':''}>${probe&&probe.state==='running'?'읽는 중…':'지금 시험'}</button></div>${body}${codeHtml}${samplesHtml}${tapHtml}</section>`;
   }
   renderData(state,plan,health){
     const s=state.snapshot||{},collection=s.collection||{},discovery=s.countDiscovery||{},diagnostic=this.state.connectionDiagnostic||{},errors=[].concat(collection.errors||[],discovery.errors||[]),rejected=diagnostic.reason==='invalid-snapshot'&&C.num(diagnostic.bridgeAt)>=C.num(s.bridgeAt),age=value=>C.num(value)<999?`${C.num(value)}초 전`:'없음',specials=Object.entries(C.SPECIAL_IDS).map(([id,name])=>`<label><span>${C.esc(name)}</span><input data-count="${id}" type="number" min="0" value="${C.num(state.counts[id])}"></label>`).join('');

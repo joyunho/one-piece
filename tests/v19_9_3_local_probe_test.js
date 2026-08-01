@@ -91,5 +91,32 @@ await check('③ 페이지 실측 네트워크 탭 — 관찰 전용·로컬 한
   assert(app.includes('ordLocalTapLog'),'진단 화면이 기록을 안 읽음');
 });
 
+await check('④ 매핑 표본 수집기 + 유도 도구(v19.9.5 · 런타임)',()=>{
+  // 0801 실측: 게임 중 /datas 는 인게임 로우코드로 말한다(흔함 5종만 카탈로그
+  // id 일치).  같은 순간의 DOM 패와 쌍으로 저장해 수량 궤적 대조로 푼다.
+  const bg=read('background.js');
+  assert(bg.includes('collectLocalMapSample'),'표본 수집기 없음');
+  assert(bg.includes('ordLocalMapSamples')&&bg.includes('slice(-48)'),'표본 링버퍼 상한 없음');
+  assert(bg.includes('12000'),'DOM 신선도 게이트 없음');
+  assert(bg.includes('lastMapSampleHash'),'변화 없는 표본 중복 저장 방지 없음');
+  assert(app.includes('매핑 표본'),'진단 화면 표본 표시 없음');
+  assert(app.includes('unmatchedCodes'),'미해석 코드 목록 없음');
+  assert(app.includes("['GOLD', 'LUMBER', 'FOOD']")||app.includes("['GOLD','LUMBER','FOOD']"),'재화 키 제외 없음');
+  // 유도 도구: 합성 표본으로 궤적 대조가 실제로 풀리는지 돌려 본다.
+  const {execFileSync}=require('child_process'),os=require('os');
+  const tmp=path.join(os.tmpdir(),`ord-map-samples-${process.pid}.json`);
+  fs.writeFileSync(tmp,JSON.stringify([
+    {at:1,live:{XI0e:5,'600h':1,S60h:2,GOLD:50},dom:{'810e':5,'600h':1,'100h':2}},
+    {at:2,live:{XI0e:7,'600h':1,S60h:3},dom:{'810e':7,'600h':1,'100h':3}},
+    {at:3,live:{XI0e:4,'600h':2,S60h:3},dom:{'810e':4,'600h':2,'100h':3}}
+  ]));
+  try{
+    const out=execFileSync(process.execPath,[path.join(__dirname,'..','tools','derive_local_map.js'),tmp],{encoding:'utf8'});
+    assert(out.includes('XI0e → 810e'),'위습 궤적 대조 실패');
+    assert(out.includes('S60h → 100h'),'유닛 궤적 대조 실패');
+    assert(out.includes('"600h": "600h"'),'직결 코드가 매핑 표에 없음');
+  }finally{try{fs.unlinkSync(tmp);}catch(_){}}
+});
+
 console.log(`\n${checks}/${checks} v19.9.3 local probe checks passed.`);
 })().catch(error=>{console.error('FAIL',error&&error.message||error);process.exit(1);});
