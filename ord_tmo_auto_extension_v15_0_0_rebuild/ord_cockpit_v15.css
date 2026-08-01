@@ -2537,3 +2537,16 @@ button:focus-visible,select:focus-visible{
   .v159-skip-warn,.v159-single-closer{margin-top:4px;padding:4px 8px}
   .v159-endgame{margin-top:4px;padding:5px 9px}
 }
+/* v19.9.2: 회복 목표 조합식 + 여유 0 경고 라벨.
+   행 기본 스타일이 b 를 블록으로 만들므로 조합식 안에서는 인라인으로 되돌린다
+   — 아니면 재료가 한 줄씩 세로로 떨어져 카드가 세로로 폭주한다. */
+.v151-recovery-row .v159-recovery-recipe{display:block;color:#8fa5bd;font-size:9.5px;line-height:1.4;white-space:normal}
+.v151-recovery-row .v159-recovery-recipe b,.v151-recovery-row .v159-recovery-recipe i{display:inline;font-size:inherit}
+.v151-recovery-row .v159-recovery-recipe b{font-weight:800}
+.v151-recovery-row .v159-recovery-recipe b.owned{color:#8ef0c0}
+.v151-recovery-row .v159-recovery-recipe b.missing{color:#ffc9c4}
+.v151-recovery-row .v159-recovery-recipe i{font-style:normal;color:#5c7290}
+.v153-role b small.v159-snug{color:#f3d58e;font-size:9px}
+@media (max-height:1120px) and (min-width:1240px){
+  .v151-recovery-row .v159-recovery-recipe{font-size:9px}
+}

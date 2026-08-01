@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v19.9.1-decision-engine-manual">
+  <meta name="ord-helper" content="v19.9.2-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.305 악몽 수동 도우미">
-  <title>원랜디 2.305 악몽 실전 판단 코치 v19.9.1 · 수동 모드</title>
+  <title>원랜디 2.305 악몽 실전 판단 코치 v19.9.2 · 수동 모드</title>
   <style data-source="ord_app.css">
 :root{color-scheme:dark;--bg:#060b18;--panel:#0d162a;--panel2:#101d35;--line:#223454;--text:#eef5ff;--muted:#91a2bd;--blue:#4f7cff;--cyan:#25c2e7;--green:#27d17f;--amber:#f3b84b;--red:#ef6262;--violet:#8b67ff;--shadow:0 20px 55px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 10% 0,#122a5a 0,#060b18 35%,#040812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-break:keep-all;overflow-wrap:anywhere}button,input,select{font:inherit}button{cursor:pointer}.ord-app{min-height:100vh;padding:18px;max-width:1860px;margin:0 auto}.ord-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px;border:1px solid rgba(112,154,255,.26);border-radius:24px;background:linear-gradient(135deg,rgba(66,83,222,.34),rgba(17,64,94,.3));box-shadow:var(--shadow)}.ord-kicker{font-size:11px;letter-spacing:.14em;color:#9bb7ff;font-weight:900}.ord-header h1{margin:5px 0 3px;font-size:29px;line-height:1.15}.ord-header p{margin:0;color:var(--muted);font-size:13px}.ord-head-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:720px}.ord-head-status>*{border:1px solid var(--line);border-radius:999px;background:rgba(6,11,24,.7);color:#d9e8ff;padding:8px 12px;font-size:12px;font-weight:800;white-space:nowrap}.ord-head-status .good{border-color:rgba(39,209,127,.45);color:#a8f7ce}.ord-head-status .warn{border-color:rgba(243,184,75,.45);color:#ffe1a1}.ord-head-status button{background:#1b2b4d}.ord-tabs{display:flex;gap:8px;margin:14px 0}.ord-tabs button,.purpose-buttons button,.two-button button,.round-box button,.action-buttons button,.prep-list button,.mini-cards button,.ghost,.primary{border:1px solid var(--line);border-radius:11px;background:#111d32;color:#dce9ff;padding:9px 13px;font-weight:850}.ord-tabs button.on,.purpose-buttons button.on,.primary{border-color:transparent;background:linear-gradient(135deg,var(--violet),var(--blue));color:white}.ord-layout{display:grid;grid-template-columns:294px minmax(0,1fr);gap:14px;align-items:start}.ord-side{display:grid;gap:12px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;padding-right:3px;min-width:0}.side-card,.ord-panel{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(15,26,48,.96),rgba(9,16,31,.96));box-shadow:0 14px 38px rgba(0,0,0,.18);min-width:0}.side-card{padding:14px}.side-card b{font-size:14px}.side-title{display:flex;justify-content:space-between;gap:8px}.side-title span{font-size:11px;color:var(--cyan)}.side-card label{display:grid;gap:5px;color:var(--muted);font-size:11px;margin-top:11px}.side-card input,.side-card select,.form-grid input{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#071020;color:var(--text);padding:9px}.side-card small{display:block;color:var(--muted);font-size:10.5px;line-height:1.45;margin-top:6px}.round-box{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding:10px;border:1px solid rgba(37,194,231,.3);border-radius:13px;background:rgba(10,39,62,.35)}.round-box strong{font-size:13px;min-width:0}.round-box div{display:flex;gap:4px}.round-box button{padding:6px 8px;font-size:11px}.side-card details{margin-top:10px}.side-card summary,.detail-modal summary{cursor:pointer;color:#cbd9ef;font-size:11px;font-weight:800}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.two-button{display:flex;gap:6px;margin-top:10px}.two-button button{flex:1;font-size:11px;padding:8px}.two-button .on{border-color:var(--green);color:#c5ffe0;background:rgba(39,209,127,.1)}.two-button .danger.on{border-color:var(--red);color:#ffc1c1;background:rgba(239,98,98,.1)}.stat-row{display:flex;justify-content:space-between;align-items:center}.stat-row b{font-size:24px;color:#ffe7a3}.lock-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.lock-list>span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(139,103,255,.35);border-radius:999px;padding:5px 8px;background:rgba(139,103,255,.1);font-size:10px}.lock-list button{border:0;background:none;color:#ffaaaa;font-weight:900}.side-card.compact{padding-bottom:10px}.common-line{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;margin-top:7px;font-size:11px}.common-line i{width:8px;height:8px;border-radius:50%}.common-line b{font-size:11px}.ord-main{display:grid;gap:13px;min-width:0}.milestone{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 19px;border:1px solid rgba(37,194,231,.4);border-radius:21px;background:linear-gradient(135deg,rgba(6,47,78,.78),rgba(31,25,87,.56));min-width:0}.milestone small{color:#61daf5;font-weight:900}.milestone h2{margin:3px 0 5px;font-size:24px}.milestone p{margin:0;color:#abc0df;font-size:12px}.purpose-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.purpose-buttons button{font-size:11px}.top-two{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:13px}.ord-panel{padding:17px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px}.panel-head small{color:#72d8ef;font-size:10px;font-weight:900}.panel-head h2{margin:2px 0 4px;font-size:20px}.panel-head p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.45}.count-pill,.mode-pill,.control-badge{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;white-space:nowrap}.mode-pill.physical{color:#ffcb9a;border-color:#e48e45}.mode-pill.magic{color:#a9c9ff;border-color:#5c84d8}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.profile-grid>div,.spec-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px;min-width:0}.profile-grid small,.spec-grid small{display:block;color:var(--muted);font-size:10px}.profile-grid b{display:block;margin-top:5px;font-size:12px;line-height:1.45}.synergy-line{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.synergy-line small{width:100%;color:var(--muted)}.synergy-line span{border:1px solid rgba(39,209,127,.3);border-radius:999px;padding:5px 8px;font-size:10px;color:#b8f7d5}.upper-focus details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.upper-focus details p{color:#aebbd0;font-size:11px}.control-badge.safe{color:#a9f7cc;border-color:rgba(39,209,127,.45)}.control-badge.edge{color:#ffe2a4;border-color:rgba(243,184,75,.45)}.control-badge.danger{color:#ffb4b4;border-color:rgba(239,98,98,.45)}.spec-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.spec-grid b{display:block;font-size:21px;margin:4px 0}.spec-grid span{color:#8193ae;font-size:9.5px}.deficit-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}.deficit-line>b{font-size:11px}.deficit-line span{border:1px solid rgba(243,184,75,.32);border-radius:999px;padding:5px 8px;color:#ffd78d;font-size:10px}.deficit-line .ok{color:#a9f7cc;border-color:rgba(39,209,127,.3)}.state-intro{display:flex;justify-content:space-between;gap:15px;align-items:center}.state-intro h2{margin:4px 0}.state-intro p{color:var(--muted);margin:0;font-size:12px}.control{min-width:260px;border:1px solid var(--line);border-radius:15px;padding:12px}.control b,.control span{display:block}.control span{font-size:10px;color:var(--muted);margin-top:4px}.control.safe{border-color:rgba(39,209,127,.35)}.control.edge{border-color:rgba(243,184,75,.35)}.control.danger{border-color:rgba(239,98,98,.35)}.mini-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mini-cards article{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.mini-cards img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mini-cards b,.mini-cards span,.mini-cards small{display:block;min-width:0}.mini-cards b{font-size:12px}.mini-cards span{font-size:10px;color:#9fb1ca}.mini-cards small{font-size:9px;color:#7085a4}.mini-cards button{padding:7px;font-size:10px}.action-list{display:grid;gap:8px}.action-row{display:grid;grid-template-columns:42px 48px minmax(0,1fr) 124px auto;gap:11px;align-items:center;border:1px solid rgba(55,84,132,.8);border-radius:16px;padding:11px;background:linear-gradient(90deg,rgba(12,27,50,.95),rgba(8,17,33,.95));min-width:0}.action-row .rank{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));font-weight:950}.action-row>img{width:46px;height:46px;border-radius:12px;object-fit:cover}.action-main{min-width:0}.unit-title{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.unit-title b{font-size:14px}.unit-title span{font-size:10px;color:#8da1bd}.role-tags{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.role-tags>span,.role-tags i{border:1px solid #284266;border-radius:999px;padding:4px 7px;font-size:9.5px;font-style:normal;color:#bcd3f2}.role-tags i{border-color:color-mix(in srgb,var(--pc) 60%,#223454);box-shadow:inset 3px 0 var(--pc)}.action-main p{margin:0;color:#91a6c2;font-size:10.5px}.action-cost{border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}.action-cost b{display:block;font-size:22px;color:#ffe1a1}.action-cost small{display:block;color:#7f91ab;font-size:9px}.action-cost span{display:block;margin-top:4px;font-size:9px}.action-cost .good{color:#9ff1c5}.action-cost .warn{color:#ffd083}.action-cost .bad{color:#ffaaaa}.action-buttons{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.action-buttons button{font-size:10px;padding:8px}.empty{padding:20px;border:1px dashed #2c4266;border-radius:14px;text-align:center;color:#8193ad}.prep-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prep-list>div{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.prep-list img{width:38px;height:38px;border-radius:10px;object-fit:cover}.prep-list b,.prep-list small{display:block}.prep-list b{font-size:12px}.prep-list small{color:#8195b2;font-size:9.5px}.prep-list em{font-style:normal;color:#ffd587;font-size:9.5px}.prep-list button{font-size:9px;padding:6px}.rare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rare-columns>div{border:1px solid var(--line);border-radius:14px;padding:11px}.rare-columns h3{margin:0 0 8px;font-size:12px}.rare-columns .use{border-color:rgba(39,209,127,.3)}.rare-columns .hold{border-color:rgba(243,184,75,.3)}.rare-columns .reroll{border-color:rgba(239,98,98,.3)}.rare-columns>div>div{display:grid;grid-template-columns:28px 1fr auto;gap:7px;align-items:center;margin-top:6px;font-size:10px}.rare-columns img{width:28px;height:28px;border-radius:8px}.rare-panel>small{display:block;margin-top:9px;color:#7f91aa;font-size:9.5px}.owned-chips{display:flex;gap:7px;flex-wrap:wrap}.owned-chips button{display:flex;align-items:center;gap:7px;max-width:260px;border:1px solid var(--line);border-radius:12px;background:#091326;color:#dceaff;padding:7px 9px}.owned-chips img{width:30px;height:30px;border-radius:8px}.owned-chips span{font-size:10px;text-align:left}.deck-page,.data-page{display:grid;gap:13px}.raw-ability-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.raw-ability-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px;background:#091326;font-size:10px;min-width:0}.raw-ability-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.raw-ability-grid>div>b{flex:0 0 auto;white-space:nowrap}.raw-ability-grid b{color:#d9ecff}.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.owned-grid button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#091326;color:#e3efff;padding:9px;text-align:left}.owned-grid img{width:36px;height:36px;border-radius:9px}.owned-grid span,.owned-grid small{display:block}.owned-grid span{font-size:11px}.owned-grid small{font-size:9px;color:#8296b4}.owned-grid.small button{grid-template-columns:32px 1fr auto}.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.diag-grid>div{border:1px solid var(--line);border-radius:12px;padding:10px;background:#091326}.diag-grid small,.diag-grid b{display:block}.diag-grid small{color:#8395b0;font-size:9px}.diag-grid b{font-size:11px;margin-top:4px}.data-page pre{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#050b16;padding:11px;color:#9fb5d0;font-size:10px}.manual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.manual-grid label{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;font-size:10px}.manual-grid input{width:100%;border:1px solid var(--line);border-radius:8px;background:#050b16;color:white;padding:7px}.modal-back{position:fixed;inset:0;z-index:9999;background:rgba(1,4,12,.8);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px}.detail-modal{width:min(900px,96vw);max-height:92vh;overflow:auto;border:1px solid #30486f;border-radius:24px;background:#081121;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.65);position:relative}.modal-x{position:absolute;right:15px;top:15px;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#111d31;color:white;font-size:20px}.detail-modal header{display:flex;gap:12px;align-items:center;padding-right:50px}.detail-modal header img{width:54px;height:54px;border-radius:14px}.detail-modal h2{margin:0;font-size:19px}.detail-modal header p{margin:4px 0 0;color:#8ea4c1;font-size:10px}.detail-hero{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:15px 0}.detail-hero>div,.missing-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px}.detail-hero small,.detail-hero b,.detail-hero span{display:block}.detail-hero small{color:#8296b4;font-size:9px}.detail-hero b{margin:4px 0;font-size:16px}.detail-hero span{font-size:10px;color:#a9bad0}.detail-modal section{margin-top:14px}.detail-modal h3{font-size:12px}.direct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.direct-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:10px;min-width:0}.direct-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.direct-grid>div>b{flex:0 0 auto;white-space:nowrap}.missing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.missing-grid small,.missing-grid b{display:block}.missing-grid small{color:#8296b4;font-size:9px}.missing-grid b{font-size:10px;line-height:1.55;margin-top:5px}.detail-modal details{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px}.detail-modal details p{font-size:10px;color:#9cb0cb}.detail-modal .close{margin-top:14px}.ord-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;border-radius:14px;padding:11px 16px;background:linear-gradient(135deg,var(--violet),var(--blue));box-shadow:var(--shadow);font-weight:900;font-size:12px}
@@ -2766,6 +2766,16 @@ button:focus-visible,select:focus-visible{
   .v159-skip-warn,.v159-single-closer{margin-top:4px;padding:4px 8px}
   .v159-endgame{margin-top:4px;padding:5px 9px}
 }
+/* v19.9.2: 회복 목표 조합식 + 여유 0 경고 라벨. */
+.v151-recovery-row .v159-recovery-recipe{display:block;color:#8fa5bd;font-size:9.5px;line-height:1.4;white-space:normal}
+.v151-recovery-row .v159-recovery-recipe b{font-weight:800}
+.v151-recovery-row .v159-recovery-recipe b.owned{color:#8ef0c0}
+.v151-recovery-row .v159-recovery-recipe b.missing{color:#ffc9c4}
+.v151-recovery-row .v159-recovery-recipe i{font-style:normal;color:#5c7290}
+.v153-role b small.v159-snug{color:#f3d58e;font-size:9px}
+@media (max-height:1120px) and (min-width:1240px){
+  .v151-recovery-row .v159-recovery-recipe{font-size:9px}
+}
 
   </style>
 </head>
@@ -3204,7 +3214,7 @@ window.ORD_META_STATS={"schema":"ord-meta-stats-v1","source":"tmo_nightmare_all_
 (function(global){
 'use strict';
 
-const VERSION='19.9.1';
+const VERSION='19.9.2';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -3256,7 +3266,7 @@ const UI_NAME_OVERRIDES={
   'Q20h':'라분(전설)','U20h':'검은수염(전설)','Z90h':'네코(전설)','R20h':'로브 루치(전설)','Y20h':'루나메(전설)',
   'X20h':'블랙마리아(전설)','430h':'상디(전설)','730h':'슈가(전설)','S20h':'조로(전설)','I30h':'제파(전설)',
   'N30h':'료쿠규(히든)','M30h':'사보(히든)','740h':'피셔타이거(히든)','J30h':'시류(히든)','Z30h':'아카이누(히든)',
-  // v19.9.1(사용자 규칙): 블마 왜곡은 W 폼 3형태(스턴/이감40/데미지) 배타 —
+  // v19.9.2(사용자 규칙): 블마 왜곡은 W 폼 3형태(스턴/이감40/데미지) 배타 —
   // 코칭은 이감폼 기준(스턴 0).  라벨로 폼 전제를 밝힌다.
   'J70h':'캐럿(변화)','unit_1752903381904_1445':'블랙마리아(왜곡·이감폼 기준)','V30h':'코알라(왜곡)','IC0h':'퀸(왜곡)',
   '840h':'페로나(왜곡)','unit_1779015610844_6407':'바제스(왜곡)','U30h':'레드포스호(해적선)',
@@ -3644,7 +3654,7 @@ const STUN_RESEARCH={
   'KB0H':{displayStun:1.092,capture:82.75},'KB0H_':{displayStun:1.092,capture:82.75},'760h':{displayStun:.64,capture:64.29},'B50h':{displayStun:.999,capture:79.97},'C50h':{displayStun:.863,capture:75.05},'unit_1767356778906_9384':{displayStun:1.312,capture:87.89},
   'F50h':{displayStun:.548,capture:58.58},'unit_1761060487951_749':{displayStun:.421,capture:49.2},'unit_1761062338921_7460':{displayStun:.633,capture:63.87},
   'unit_1761061031358_4977':{displayStun:.736,capture:69.39},'unit_1761062663657_987':{displayStun:2.168,capture:96.95},'unit_1761126198374_11':{displayStun:.908,capture:76.81},
-  // v19.9.1(사용자 규칙): 블랙마리아 왜곡은 W 폼 3형태(스턴/이감40/데미지)가
+  // v19.9.2(사용자 규칙): 블랙마리아 왜곡은 W 폼 3형태(스턴/이감40/데미지)가
   // 상호 배타다 — 이감폼을 쓰는 덱 기준으로 계산하므로 스턴은 0.  0731 판의
   // 스턴 1.25는 이 0.748 이중 계산이 부풀린 값이었다.
   'unit_1752903381904_1445':{displayStun:0,capture:0},'IC0h':{displayStun:.427,capture:49.73},'unit_1779016778159_2512':{displayStun:.317,capture:40}
@@ -4194,9 +4204,20 @@ function ownedDisplayUnits(state,pred){const raw=ownedUnits(state,pred),out=[],v
 function ownedRoleEntries(state){
   const out=[],variants=new Map();for(const u of state.db.units){const count=num(state.counts[u.id]);if(count<=0||!isRoleBearingUnit(u))continue;if(isUpper(u)&&UPPER_VARIANT_CANONICAL[u.id]){const key=canonicalUpperId(u.id),previous=variants.get(key);if(!previous||upperVariantPriority(u.id)>upperVariantPriority(previous.unit.id))variants.set(key,{unit:u,count:1});}else out.push({unit:u,count});}return out.concat([...variants.values()]);
 }
+// v19.9.2(사용자 교정 + 데이터팩 교차검증): 네코마무시(전설 Z90h)의 보스·
+// 광폭 잡기는 물딜 전용 크레딧이다.  사용자 데이터팩(legendary_support_index,
+// confidence high)이 네코의 마딜 역할을 빈 배열로 명시하고("보스·광폭
+// 체력비례 고정데미지"는 물딜 역할 분류), 0801 단끝 패배가 네코 단독 광보잡
+// 의존으로 실전에서 뚫렸다(사용자: "네코마무시는 보잡 성능이 별로").
+// 마딜 역할표·기여도·플래너에서만 제외하고 물딜 크레딧은 그대로 둔다.
+const MAGIC_BOSS_CREDIT_EXCLUDED=Object.freeze(new Set(['Z90h']));
+function bossCreditFor(u,mode){
+  if(mode==='magic'&&u&&MAGIC_BOSS_CREDIT_EXCLUDED.has(String(u.id)))return{boss:false,frenzy:false};
+  const r=roleProfile(u);return{boss:!!r.boss,frenzy:!!r.frenzy};
+}
 function ownedRoleCounts(state,mode){
   const entries=ownedRoleEntries(state);let main=0,stun=0,slow=0,triggerSlow=0,triggerSlowSources=0,armor=0,triggerArmor=0,singleArmor=0,stackArmor=0,armorBreak=0,armorBreakUnits=0,single=0,end=0,singleEndUnits=0,singleEndExpected=0,singleEndMax=0,singleEndLargest=0,toki=0,boss=0,frenzy=0,utility=0,subdamage=0,magicDef=0,magicAmp=0,explosionAmp=0,attack=0,triggerAttack=0,speed=0,regen=0,mana=0,deletion=0,total=0;let vegaSeen=false;
-  for(const entry of entries){const u=entry.unit,count=isUpper(u)&&/베가펑크/.test(nameOf(u))?(vegaSeen?0:1):entry.count;if(isUpper(u)&&/베가펑크/.test(nameOf(u)))vegaSeen=true;if(count<=0)continue;const r=roleProfile(u),finish=magicFinishProfile(u),n=nameOf(u);total+=count;if(isUpper(u)&&(r.family===mode||r.family==='neutral'))main+=count;stun+=r.stun*count;slow+=r.slow*count;triggerSlow+=r.triggerSlow*count;if(r.triggerSlow>0)triggerSlowSources+=count;armor+=r.armor*count;triggerArmor+=r.triggerArmor*count;singleArmor+=r.singleArmor*count;stackArmor+=r.stackArmor*count;armorBreak+=num(r.armorBreakWeight)*count;if(r.armorBreak)armorBreakUnits+=count;single+=r.single*count;end+=r.end*count;if(finish.directCredit>0)singleEndUnits+=count;singleEndExpected+=finish.directCredit*count;singleEndMax+=finish.maxCredit*count;singleEndLargest=Math.max(singleEndLargest,finish.directCredit);if(/^토키(?:\s|\()/.test(n))toki+=count;if(r.boss)boss+=count;if(r.frenzy)frenzy+=count;if(r.utility)utility+=count;if(r.supportDamage)subdamage+=count;magicDef+=r.magicDef*count;magicAmp+=r.magicAmp*count;explosionAmp+=r.explosionAmp*count;attack+=(r.attack-r.attackPenalty)*count;triggerAttack+=r.triggerAttack*count;speed+=r.speed*count;regen+=r.regen*count;mana+=r.mana*count;if(r.deletion)deletion+=count;}
+  for(const entry of entries){const u=entry.unit,count=isUpper(u)&&/베가펑크/.test(nameOf(u))?(vegaSeen?0:1):entry.count;if(isUpper(u)&&/베가펑크/.test(nameOf(u)))vegaSeen=true;if(count<=0)continue;const r=roleProfile(u),finish=magicFinishProfile(u),n=nameOf(u);total+=count;if(isUpper(u)&&(r.family===mode||r.family==='neutral'))main+=count;stun+=r.stun*count;slow+=r.slow*count;triggerSlow+=r.triggerSlow*count;if(r.triggerSlow>0)triggerSlowSources+=count;armor+=r.armor*count;triggerArmor+=r.triggerArmor*count;singleArmor+=r.singleArmor*count;stackArmor+=r.stackArmor*count;armorBreak+=num(r.armorBreakWeight)*count;if(r.armorBreak)armorBreakUnits+=count;single+=r.single*count;end+=r.end*count;if(finish.directCredit>0)singleEndUnits+=count;singleEndExpected+=finish.directCredit*count;singleEndMax+=finish.maxCredit*count;singleEndLargest=Math.max(singleEndLargest,finish.directCredit);if(/^토키(?:\s|\()/.test(n))toki+=count;const bossCredit=bossCreditFor(u,mode);if(bossCredit.boss)boss+=count;if(bossCredit.frenzy)frenzy+=count;if(r.utility)utility+=count;if(r.supportDamage)subdamage+=count;magicDef+=r.magicDef*count;magicAmp+=r.magicAmp*count;explosionAmp+=r.explosionAmp*count;attack+=(r.attack-r.attackPenalty)*count;triggerAttack+=r.triggerAttack*count;speed+=r.speed*count;regen+=r.regen*count;mana+=r.mana*count;if(r.deletion)deletion+=count;}
   return{main,stun:round6(stun),slow:round2(slow),triggerSlow:round2(triggerSlow),triggerSlowSources,armor:round2(armor),triggerArmor:round2(triggerArmor),singleArmor:round2(singleArmor),stackArmor:round2(stackArmor),armorBreak:round2(armorBreak),armorBreakUnits,single:round2(single),end:round2(end),singleEnd:round2(single+end),singleEndUnits:round2(singleEndUnits),singleEndExpected:round2(singleEndExpected),singleEndMax:round2(singleEndMax),singleEndLargest:round2(singleEndLargest),singleEndStable:round2(Math.max(0,singleEndExpected-singleEndLargest)),toki:round2(toki),boss,frenzy,bossFrenzy:Math.min(boss,frenzy),utility,subdamage,magicDef:round2(magicDef),magicAmp:round2(magicAmp),explosionAmp:round2(explosionAmp),attack:round2(attack),triggerAttack:round2(triggerAttack),speed:round2(speed),regen:round2(regen),mana:round2(mana),deletion,total};
 }
 function ownedRawRoleCounts(state){
@@ -4420,7 +4441,7 @@ function axisSummary(rows){
   return out;
 }
 function roleContribution(u,mode){
-  const r=roleProfile(u),magic=mode==='magic',finish=magicFinishProfile(u);return{main:isUpper(u)&&(r.family===mode||r.family==='neutral')?1:0,stun:r.stun,stunBase:Math.min(.5,r.stun),stunFull:r.stun,slow:r.slow+r.triggerSlow,armor:r.armor,triggerArmor:r.triggerArmor,boss:r.boss?1:0,frenzy:r.frenzy?1:0,bossFrenzy:r.boss&&r.frenzy?1:0,toki:magic&&/^토키(?:\s|\()/.test(nameOf(u))?1:0,single:magic?r.single:0,end:magic?r.end:0,singleEnd:magic?r.single+r.end:0,singleEndUnits:magic&&finish.directCredit>0?1:0,singleEndExpected:magic?finish.directCredit:0,singleEndMax:magic?finish.maxCredit:0,magicSupport:r.magicDef+r.magicAmp+r.explosionAmp,armorBreak:r.armorBreak?1:0,attack:r.attack-r.attackPenalty+r.triggerAttack*.65,speed:r.speed,regen:r.regen,mana:r.mana,deletion:r.deletion?1:0,utility:r.utility?1:0,subdamage:r.supportDamage?1:0};
+  const r=roleProfile(u),magic=mode==='magic',finish=magicFinishProfile(u),bossCredit=bossCreditFor(u,mode);return{main:isUpper(u)&&(r.family===mode||r.family==='neutral')?1:0,stun:r.stun,stunBase:Math.min(.5,r.stun),stunFull:r.stun,slow:r.slow+r.triggerSlow,armor:r.armor,triggerArmor:r.triggerArmor,boss:bossCredit.boss?1:0,frenzy:bossCredit.frenzy?1:0,bossFrenzy:bossCredit.boss&&bossCredit.frenzy?1:0,toki:magic&&/^토키(?:\s|\()/.test(nameOf(u))?1:0,single:magic?r.single:0,end:magic?r.end:0,singleEnd:magic?r.single+r.end:0,singleEndUnits:magic&&finish.directCredit>0?1:0,singleEndExpected:magic?finish.directCredit:0,singleEndMax:magic?finish.maxCredit:0,magicSupport:r.magicDef+r.magicAmp+r.explosionAmp,armorBreak:r.armorBreak?1:0,attack:r.attack-r.attackPenalty+r.triggerAttack*.65,speed:r.speed,regen:r.regen,mana:r.mana,deletion:r.deletion?1:0,utility:r.utility?1:0,subdamage:r.supportDamage?1:0};
 }
 function coverageScore(contrib,def){let score=0;const covers=[];for(const d of def.rows){const v=num(contrib[d.key]);if(v>0){score+=d.weight*Math.min(1,v/Math.max(.01,d.gap));covers.push(d.label);}}return{score:round2(score),covers};}
 function netCoverageScore(beforeDef,afterDef){
@@ -4604,7 +4625,7 @@ function gameFlow(state,locks,settings){
 function milestonePurpose(round,hasUpper,hasLockedUpper){if(hasUpper||hasLockedUpper)return'spec';if(num(round)<=7)return'rare';if(num(round)<=20)return'story';return'upper';}
 function phaseForRound(round){round=num(round)||1;if(round<=7)return{key:'rare',label:'첫 희귀 + 선택 위습',note:'7라운드 안에 첫 희귀를 완성합니다.'};if(round<=20)return{key:'story',label:'첫 전설·히든',note:'첫 전설 또는 히든을 늦어도 20라 전에 완성합니다.'};if(round<=25)return{key:'route',label:'상위·딜 계통 결정',note:'스토리 보상 희귀·고급도박 유입이 끝난 전체 패(희귀 8장 전후)로 상위와 물딜·마딜을 결정합니다. 유입 전에는 선택 위습 소비를 아끼세요.'};if(round<=30)return{key:'upper',label:'상위 + 라인 전설',note:'상위 하나와 희귀보다 강한 라인 방어 전설을 마련합니다.'};if(round<=50)return{key:'spec',label:'50라 전 9환산 보강',note:'상위 결손을 채우며 실제 전설 환산 9기를 보수적 구조 최소선으로 맞춥니다. 패 불리기는 흔함·안흔이 나오는 하급도박이 효율적입니다.'};return{key:'finish',label:'최종 9기+ 마감',note:'전설·히든, 해적선, 희귀 2기, 변화됨 중 최저비용 경로로 마지막 스펙을 채웁니다.'};}
 function roundDuration(round,settings){return BOSS_ROUNDS.has(round)?num(settings.roundBossSeconds)||60:num(settings.roundNormalSeconds)||35;}
-// v19.9.1(사용자 규칙): 라운드는 65가 최대다 — 0731 로그는 타이머가 80라까지
+// v19.9.2(사용자 규칙): 라운드는 65가 최대다 — 0731 로그는 타이머가 80라까지
 // 걸어가며 죽은 판을 24라운드나 더 판정했다.  시계·수동 모두 65에서 멈춘다.
 const MAX_ROUND=65;
 function roundClock(settings,now){
@@ -4731,7 +4752,7 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);
 
 </script>
@@ -4744,7 +4765,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.9.1';
+const VERSION='19.9.2';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
@@ -5880,7 +5901,7 @@ function deferredReason(state,row,best,settings){
 
 function addUnitRole(spec,u,mode){
   const out=Object.assign({},spec),r=C.roleProfile(u),finish=C.magicFinishProfile?C.magicFinishProfile(u):{directCredit:0,maxCredit:0},add=(key,value)=>{out[key]=round(num(out[key])+num(value),key==='stun'?6:2);};
-  if(C.isUpper(u)&&(unitFamily(u)===mode||unitFamily(u)==='neutral'))add('main',1);add('stun',r.stun);add('slow',r.slow);add('triggerSlow',r.triggerSlow);if(num(r.triggerSlow)>0)add('triggerSlowSources',1);add('armor',r.armor);add('triggerArmor',r.triggerArmor);add('singleArmor',r.singleArmor);add('stackArmor',r.stackArmor);add('single',mode==='magic'?r.single:0);add('end',mode==='magic'?r.end:0);if(mode==='magic'&&num(finish.directCredit)>0)add('singleEndUnits',1);if(mode==='magic'){add('singleEndExpected',finish.directCredit);add('singleEndMax',finish.maxCredit);out.singleEndLargest=Math.max(num(out.singleEndLargest),num(finish.directCredit));out.singleEndStable=round(Math.max(0,num(out.singleEndExpected)-num(out.singleEndLargest)));}if(mode==='magic'&&isToki(u))add('toki',1);add('boss',r.boss?1:0);add('frenzy',r.frenzy?1:0);add('attack',r.attack-num(r.attackPenalty));add('triggerAttack',r.triggerAttack);add('speed',r.speed);add('regen',r.regen);add('mana',r.mana);add('armorBreak',r.armorBreak?1:0);add('utility',r.utility?1:0);add('subdamage',r.supportDamage?1:0);add('magicDef',mode==='magic'?r.magicDef:0);add('magicAmp',mode==='magic'?r.magicAmp:0);add('explosionAmp',mode==='magic'?r.explosionAmp:0);add('deletion',r.deletion?1:0);out.singleEnd=round(num(out.single)+num(out.end));out.bossFrenzy=Math.min(num(out.boss),num(out.frenzy));return out;
+  if(C.isUpper(u)&&(unitFamily(u)===mode||unitFamily(u)==='neutral'))add('main',1);add('stun',r.stun);add('slow',r.slow);add('triggerSlow',r.triggerSlow);if(num(r.triggerSlow)>0)add('triggerSlowSources',1);add('armor',r.armor);add('triggerArmor',r.triggerArmor);add('singleArmor',r.singleArmor);add('stackArmor',r.stackArmor);add('single',mode==='magic'?r.single:0);add('end',mode==='magic'?r.end:0);if(mode==='magic'&&num(finish.directCredit)>0)add('singleEndUnits',1);if(mode==='magic'){add('singleEndExpected',finish.directCredit);add('singleEndMax',finish.maxCredit);out.singleEndLargest=Math.max(num(out.singleEndLargest),num(finish.directCredit));out.singleEndStable=round(Math.max(0,num(out.singleEndExpected)-num(out.singleEndLargest)));}if(mode==='magic'&&isToki(u))add('toki',1);const bossCredit=C.bossCreditFor?C.bossCreditFor(u,mode):{boss:r.boss,frenzy:r.frenzy};add('boss',bossCredit.boss?1:0);add('frenzy',bossCredit.frenzy?1:0);add('attack',r.attack-num(r.attackPenalty));add('triggerAttack',r.triggerAttack);add('speed',r.speed);add('regen',r.regen);add('mana',r.mana);add('armorBreak',r.armorBreak?1:0);add('utility',r.utility?1:0);add('subdamage',r.supportDamage?1:0);add('magicDef',mode==='magic'?r.magicDef:0);add('magicAmp',mode==='magic'?r.magicAmp:0);add('explosionAmp',mode==='magic'?r.explosionAmp:0);add('deletion',r.deletion?1:0);out.singleEnd=round(num(out.single)+num(out.end));out.bossFrenzy=Math.min(num(out.boss),num(out.frenzy));return out;
 }
 
 function deferredFutureFeasibility(state,best,lineup){
@@ -6374,7 +6395,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.9.1';
+const VERSION='19.9.2';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -6504,7 +6525,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.9.1';
+const VERSION='19.9.2';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -6578,7 +6599,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.9.1';
+const VERSION='19.9.2';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
@@ -6771,7 +6792,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.9.1';
+const VERSION='19.9.2';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -8713,7 +8734,7 @@ function purposeLabel(p){return p==='rare'?'첫 희귀':p==='story'?'전설·히
 function statusTone(key){return key==='ready'?'good':key==='blocked'?'bad':'warn';}
 function tierLabel(u){return C.groupName(u).replace(/\s*물딜은.*$/,'').replace(/🚁/g,'').trim();}
 function displayNameOf(u){return(C.displayNameOf||C.nameOf)(u);}
-// v19.9.1(사용자 요청): 조합식에는 능력치 주석을 쓰지 않는다 — "슈가 (마젠0.6)"
+// v19.9.2(사용자 요청): 조합식에는 능력치 주석을 쓰지 않는다 — "슈가 (마젠0.6)"
 // → "슈가".  공백 뒤 여는 괄호부터 끝까지만 지우므로 "(D)드래곤"처럼 괄호로
 // 시작하는 본명은 건드리지 않는다.
 function recipeNameOf(name){return String(name||'').replace(/\s+\(.*\)\s*$/,'');}
@@ -9747,7 +9768,7 @@ class App{
       // 끊겨도 "무엇이 모자랐는지"는 계속 보인다.
       const lastRows=((this.observedDeficits?this.observedDeficits(plan):plan&&plan.deficits)||{}).clearRows||[];
       const lastChips=lastRows.filter(row=>C.num(row.gap)>0).slice(0,5).map(row=>`<span><b>${C.esc(row.key==='control'?'제어력':row.label)}</b><em>부족 ${fmt(row.gap)}</em></span>`).join('');
-      const recoveryHtml=this.renderV151Recovery(decision,'HOLD');
+      const recoveryHtml=this.renderV151Recovery(decision,'HOLD',state);
       return`<div class="v151-action blocked"><span class="v151-state">판단 잠금</span><div class="v151-action-copy"><i>!</i><div><b>${C.esc(health.label)}</b><p>${C.esc(health.note||'TMO 현재 패를 다시 읽어 주세요.')}</p></div></div><div class="v151-inline-actions"><button class="primary" data-act="connection">TMO 다시 읽기</button>${health.key==='waiting'?'<button data-act="accept-snapshot">현재 보이는 패로 계속</button>':''}</div>${lastChips?`<div class="v158-blocked-spec"><small>마지막 유효 패 기준 · 남은 필수 결손</small><div>${lastChips}</div></div>`:''}${recoveryHtml}</div>`;
     }
     if(branch.awaiting)return`<div class="v151-action choice"><span class="v151-state">사용자 선택 필요</span><b class="v151-action-title">첫 전설 뒤 진행 방향</b><p>한 기를 더 만들지, 메인 상위를 준비할지 선택하면 즉시 다시 계산합니다.</p><div class="v151-inline-actions"><button data-act="post-legend-route" data-value="legend">전설·히든 하나 더</button><button class="primary" data-act="post-legend-route" data-value="upper">상위 준비</button></div></div>`;
@@ -9820,12 +9841,12 @@ class App{
       // 색점 칩으로 전부 보여준다(상위 4개 절단 제거, 최대 8종).
       let solve=shown&&shown.quote&&shown.quote.solve||null;
       if(!solve&&shown&&shown.id&&state&&state.db){try{solve=C.recipeSolve(state.db,shown.id,state.counts||{});}catch(_){solve=null;}}
-      // v19.9.1(사용자 요청 "조합이 지금 할 일에도 떴으면"): 엔진 견적의
+      // v19.9.2(사용자 요청 "조합이 지금 할 일에도 떴으면"): 엔진 견적의
       // solve 에는 direct(직접 조합식)가 없는 경우가 있어 조합 줄이 통째로
       // 빠졌다 — 없으면 레시피를 직접 풀어 채운다.
       if(solve&&!(solve.direct||[]).length&&shown&&shown.id&&state&&state.db){try{const fresh=C.recipeSolve(state.db,shown.id,state.counts||{});if((fresh.direct||[]).length)solve=Object.assign({},solve,{direct:fresh.direct});}catch(_){}}
       if(!solve)return'';
-      // v19.9.1(사용자 요청): 제작 카드와 같은 "조합 · A + B" 형식 — 능력치
+      // v19.9.2(사용자 요청): 제작 카드와 같은 "조합 · A + B" 형식 — 능력치
       // 주석 없이 이름만, 보유 충족 여부는 색으로.
       const direct=(solve.direct||[]).slice(0,6).map(item=>{const need=Math.max(1,C.num(item.count));return`<em class="${C.num(item.owned)>=need?'ok':'gap'}">${C.esc(recipeNameOf(C.materialName(state.db,item.id)))}${need>1?`×${need}`:''}</em>`;}).join('<i class="v159-plus">+</i>');
       const lowestEntries=Object.entries(solve.lowestMissing||{}).map(([mid,count])=>({id:mid,name:C.materialName(state.db,mid),count:C.num(count)})).filter(item=>item.count>0).sort((a,b)=>b.count-a.count);
@@ -9856,15 +9877,25 @@ class App{
       }
       if(!warns.length)return'';
       return`<div class="v158-consume-warn">${this.v153Icon('warn')}<span>이 제작은 열린 결손을 닫을 수 있는 희귀를 소모합니다 — <b>${C.esc(warns.slice(0,3).join(' · '))}</b>. 그 결손의 다른 마감 수단이 있는지 먼저 확인하세요.</span></div>`;
-    })()}${unit&&this.commandInfo(unit).hasVerified?this.renderCommandLine(unit):''}${this.renderV151Recovery(decision,status)}${this.v157SecondUpperCallout(state,decision)}${this.v157LongshotHint(state,status)}${this.v151ActionFacts(state,decision)}<div class="v151-action-foot"><small>${C.esc(stop)}</small><div>${shown?`<button data-act="detail" data-id="${C.esc(shown.id)}">재료</button>`:''}${button}</div></div></div>`;
+    })()}${unit&&this.commandInfo(unit).hasVerified?this.renderCommandLine(unit):''}${this.renderV151Recovery(decision,status,state)}${this.v157SecondUpperCallout(state,decision)}${this.v157LongshotHint(state,status)}${this.v151ActionFacts(state,decision)}<div class="v151-action-foot"><small>${C.esc(stop)}</small><div>${shown?`<button data-act="detail" data-id="${C.esc(shown.id)}">재료</button>`:''}${button}</div></div></div>`;
   }
 
-  renderV151Recovery(decision,status){
+  renderV151Recovery(decision,status,state){
     // The empty action board was the root failure of every recorded loss.
     // Whenever the engine cannot prove a craft, it must still say what to
     // hunt for: the nearest units that close each open required role.
     const recovery=decision&&decision.recovery,targets=recovery&&recovery.targets||[];
     if(!targets.length||status==='ACT_NOW'||status==='SYNC_BLOCKED')return'';
+    // v19.9.2(사용자 요청 "지금 할 일에도 조합식"): 소비 보류(HOLD) 상태의
+    // 지금 할 일은 회복 목표만 보인다 — 목표마다 직접 조합식을 함께 단다
+    // (부족: 은 모아야 할 재료, 조합·은 최종 공식).  능력치 주석은 뺀다.
+    const recipeFor=row=>{
+      if(!state||!state.db||!row||!row.id)return'';
+      let solve=null;try{solve=C.recipeSolve(state.db,row.id,state.counts||{});}catch(_){return'';}
+      const direct=(solve.direct||[]).slice(0,6);
+      if(!direct.length)return'';
+      return`<small class="v159-recovery-recipe">조합 · ${direct.map(item=>{const need=Math.max(1,C.num(item.count));return`<b class="${C.num(item.owned)>=need?'owned':'missing'}">${C.esc(recipeNameOf(C.materialName(state.db,item.id)))}${need>1?`×${need}`:''}</b>`;}).join(' <i>+</i> ')}</small>`;
+    };
     // v19.9(개선 ②): 회복 목표에 오른 유닛도 추천 이행으로 본다.
     const recommendedIds=this._v199RecommendedIds||(this._v199RecommendedIds=new Map()),nowMs=Date.now();
     for(const row of targets)if(row&&row.id)recommendedIds.set(String(row.id),nowMs);
@@ -9875,7 +9906,7 @@ class App{
     for(const row of targets){const key=String(row&&(row.roleKey||row.roleLabel)||'');if(!key)continue;if(!byRole.has(key))byRole.set(key,[]);byRole.get(key).push(row);}
     const single=[...byRole.values()].filter(list=>list.length===1&&C.num(list[0].wispGap)>8).map(list=>list[0]).slice(0,2);
     const singleHtml=single.map(row=>`<div class="v159-single-closer">${this.v153Icon('warn')}<span><b>${C.esc(row.roleLabel||'역할')}</b>을(를) 닫을 남은 수단이 <b>${C.esc(row.name)}</b> 하나뿐입니다 — 선위 ${C.num(row.wispCost)} 필요(지금 ${C.num(row.wispGap)} 부족). 리롤·판매 선위를 지금부터 여기에 모으세요.</span></div>`).join('');
-    const rows=targets.slice(0,4).map(row=>{const missing=(row.missing||[]).slice(0,3).map(item=>`${item.name}${C.num(item.count)>1?`×${C.num(item.count)}`:''}`).join(' · ');return`<button type="button" class="v151-recovery-row" data-act="detail" data-id="${C.esc(row.id)}" aria-label="${C.esc(row.name)} 재료 상세 보기"><i>${C.esc(row.roleLabel||'역할')}</i><span><b>${C.esc(row.name)}</b><small>${missing?`부족: ${C.esc(missing)}`:'재료 충족 · 선위 대기'}</small></span><em>선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</em></button>`;}).join('');
+    const rows=targets.slice(0,4).map(row=>{const missing=(row.missing||[]).slice(0,3).map(item=>`${item.name}${C.num(item.count)>1?`×${C.num(item.count)}`:''}`).join(' · ');return`<button type="button" class="v151-recovery-row" data-act="detail" data-id="${C.esc(row.id)}" aria-label="${C.esc(row.name)} 재료 상세 보기"><i>${C.esc(row.roleLabel||'역할')}</i><span><b>${C.esc(row.name)}</b><small>${missing?`부족: ${C.esc(missing)}`:'재료 충족 · 선위 대기'}</small>${recipeFor(row)}</span><em>선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</em></button>`;}).join('');
     return`<div class="v151-recovery"><small>회복 목표 · ${C.esc(recovery.note||'남은 필수 역할을 닫는 최근접 후보')}</small>${singleHtml}${rows}</div>`;
   }
 
@@ -10937,8 +10968,12 @@ class App{
       const overshoot=ok&&C.num(row.current)>C.num(row.target)+5?` · +${fmt(C.num(row.current)-C.num(row.target))} 초과`:'';
       const relaxed=row.meta&&row.meta.relaxedBySlow&&row.required===false?' · 이감 충족으로 필수 해제(마딜 v18.9 교정)':''
         ,fillLast=row.meta&&row.meta.fillLast&&gap>0?' · 방깎·이감 뒤 마지막에 채움(v19.9 교정)':''
-        ,slowSplit=row.key==='slow'&&overshoot?this.v199SlowSplit(state):'';
-      return`<div class="v153-role ${tone} ${row.key===leadKey?'lead':''}" data-role="${C.esc(row.key)}" style="--metric:${ratio.toFixed(1)}%">${this.v153Icon(ICON[row.key]||'gear')}<b>${C.esc(row.label)}${row.key===leadKey?'<i>최우선</i>':''}${note?`<small>${C.esc(note)}</small>`:''}${relaxed?`<small class="relaxed">${C.esc(relaxed.slice(3))}</small>`:''}${fillLast?`<small class="relaxed">${C.esc(fillLast.slice(3))}</small>`:''}${slowSplit?`<small class="v159-slow-split">${C.esc(slowSplit)}</small>`:''}</b><strong>${waiting?'현재 계산 대기':fmt(row.current)}<em>/ 목표 ${fmt(row.target)}</em></strong><span><strong>${waiting?'계산 대기':ok?`충족${overshoot}`:`부족 ${fmt(gap)}`}</strong></span></div>`;
+        ,slowSplit=row.key==='slow'&&overshoot?this.v199SlowSplit(state):''
+        // v19.9.2(0801 패배 포렌식 "보잡이 부족했"): 광보잡·토키 같은 기 수
+        // 역할이 정확히 목표치면 화면은 내내 "충족"만 보였다 — 여유 0(한 기
+        // 의존)임을 명시한다.  기록: 광보잡 1 마딜은 1승 1패, 2는 1승 0패.
+        ,snug=ok&&['bossFrenzy','toki'].includes(row.key)&&C.num(row.current)<C.num(row.target)+1?' · 여유 0 — 한 기 잃으면 열립니다':'';
+      return`<div class="v153-role ${tone} ${row.key===leadKey?'lead':''}" data-role="${C.esc(row.key)}" style="--metric:${ratio.toFixed(1)}%">${this.v153Icon(ICON[row.key]||'gear')}<b>${C.esc(row.label)}${row.key===leadKey?'<i>최우선</i>':''}${note?`<small>${C.esc(note)}</small>`:''}${relaxed?`<small class="relaxed">${C.esc(relaxed.slice(3))}</small>`:''}${fillLast?`<small class="relaxed">${C.esc(fillLast.slice(3))}</small>`:''}${slowSplit?`<small class="v159-slow-split">${C.esc(slowSplit)}</small>`:''}${snug?`<small class="v159-snug">${C.esc(snug.slice(3))}</small>`:''}</b><strong>${waiting?'현재 계산 대기':fmt(row.current)}<em>/ 목표 ${fmt(row.target)}</em></strong><span><strong>${waiting?'계산 대기':ok?`충족${overshoot}`:`부족 ${fmt(gap)}`}</strong></span></div>`;
     };
 
     if(!rows.some(r=>r.key==='slow')){
@@ -11117,7 +11152,7 @@ class App{
       // v19.9(사용자 요청): "뭐랑 뭐랑 뭐랑 조합해야 하는지" — TMO 레시피의
       // 직접 조합식(direct stuffs)을 그대로 보인다.  보유분이 재료 수를 채우면
       // owned, 아니면 missing 으로 칠한다.
-      // v19.9.1(사용자 요청): 능력치 주석은 빼고(recipeNameOf) 잘리지 않게
+      // v19.9.2(사용자 요청): 능력치 주석은 빼고(recipeNameOf) 잘리지 않게
       // 두 줄까지 감싼다(CSS line-clamp).  절단 상한도 4→6 재료.
       const direct=(row.solve&&row.solve.direct||[]).slice(0,6);
       const recipeLine=direct.length?`<div class="v159-recipe">${this.v153Icon('gear')}<span>조합 · ${direct.map(item=>{const need=Math.max(1,C.num(item.count));const label=`${C.esc(recipeNameOf(C.materialName(db,item.id)))}${need>1?`×${need}`:''}`;return`<b class="${C.num(item.owned)>=need?'owned':'missing'}">${label}</b>`;}).join('<i>+</i>')}</span></div>`:'';

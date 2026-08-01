@@ -139,7 +139,7 @@ check('⑦ MAIN world 언스로틀 — 워커 타이머 치환·안전 폴백·�
   const unthrottleCode=unthrottle.replace(/\/\/[^\n]*/g,'');
   assert(!/fetch\(|XMLHttpRequest|127\.0\.0\.1/.test(unthrottleCode),'언스로틀러가 네트워크를 만짐 — 타이머 치환만 해야 한다');
   // content: 숨김 상태에서 틱 신호를 받아 스캔한다(간격 상한 포함).
-  // v19.9.1: 틱 스캔은 조여지는 schedule(setTimeout)이 아니라 즉시 publish 다
+  // v19.9.2: 틱 스캔은 조여지는 schedule(setTimeout)이 아니라 즉시 publish 다
   // — 상세 계약은 v19_9_1_connection_test 가 잰다.
   assert(content.includes("event.data.__ord !== 'tmo-poll-tick'"),'content 틱 수신 없음');
   assert(content.includes("publish(false, 'worker-tick')"),'틱 스캔 없음');

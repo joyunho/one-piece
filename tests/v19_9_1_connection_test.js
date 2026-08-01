@@ -55,4 +55,4 @@ check('③ 지금 할 일 조합 줄 + 능력치 주석 제거 + 두 줄 랩',()
   assert(app.includes("replace(/\\s+\\(.*\\)\\s*$/,'')"),'소스의 제거 규칙이 검증된 규칙과 다름');
 });
 
-console.log(`\n${checks}/${checks} v19.9.1 connection/recipe checks passed.`);
+console.log(`\n${checks}/${checks} v19.9.2 connection/recipe checks passed.`);

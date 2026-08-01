@@ -211,16 +211,16 @@ function snapshotAtSeq(file,seq){
   assert.strictEqual(sanji.upperPreparation.rareClearedTypes,1);
   assert.strictEqual(sanji.upperPreparation.wispCost,3);
   assert.strictEqual(sanji.safePrefix.actions[0].id,'H90H');
-  assert(sanji.readiness>=70,'Sanji no longer closes enough of the R30 role sheet');
-
-  // A티어가 S티어를 넘는 예외는 "보유 희귀를 지금 실제로 비우고,
-  // 저위습이며, safePrefix 첫 행동이고, 역할 준비도까지 충분"할 때뿐.
-  assert(
-    sanji.angleBand>=2,
-    'the current-hand Rare angle was downgraded because preparation ignored the feasible safePrefix'
-  );
-  assert.strictEqual(sanji.effectiveTierRank,bigMom.effectiveTierRank);
-  assert.strictEqual(ranked[0].upperId,'H90H');
+  // v19.9.2(네코 마딜 보잡 제외): 이 픽스처에서 상디의 R30 역할표 준비도는
+  // 계획 라인업이 네코마무시를 광보잡 마감으로 세는 데 기대고 있었다(실측
+  // 76→60).  사용자 데이터팩이 네코의 마딜 역할을 부정하므로 그 준비도는
+  // 유령이었다 — 상디는 '아주 좋은 각' 문턱(70) 아래로 내려가고, A티어가
+  // S티어를 넘는 예외도 함께 꺼진다.  예외 규칙 자체는 그대로다: 준비도가
+  // 진짜로 70을 넘는 각이 오면 다시 승격된다.
+  assert(sanji.readiness<70,'유령 광보잡이 준비도를 다시 부풀리고 있다 — 네코 마딜 제외가 풀렸는지 확인하라');
+  assert(sanji.angleBand<2,'준비도 미달인데 각 승격이 남아 있다');
+  assert(bigMom.effectiveTierRank>sanji.effectiveTierRank,'예외 없이 S티어가 A티어 위여야 한다');
+  assert.strictEqual(ranked[0].upperId,'Q40h');
 
   // 키드도 희귀를 쓰고 2위습이지만 준비도 64라 "아주 좋은 각"은 아니다.
   // 따라서 단순 재료 근접성만으로 S티어 빅맘을 넘으면 안 된다.

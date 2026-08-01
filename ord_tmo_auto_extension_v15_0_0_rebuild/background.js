@@ -132,7 +132,7 @@ const SCAN_ALARM = 'ord-background-scan';
 const SCAN_ALARM_B = 'ord-background-scan-b';
 function ensureScanAlarm() {
   try { chrome.alarms.create(SCAN_ALARM, {periodInMinutes: 0.5}); } catch (_) {}
-  // v19.9.1(사용자 보고 "연결이 자꾸 끊긴다"): 알람 최소 주기는 30초라 워커
+  // v19.9.2(사용자 보고 "연결이 자꾸 끊긴다"): 알람 최소 주기는 30초라 워커
   // 틱이 죽은 환경에서는 최악 30초 공백이 남았다 — 15초 어긋난 두 번째
   // 알람으로 보험 두드림 간격을 ~15초로 줄인다.
   try { chrome.alarms.create(SCAN_ALARM_B, {when: Date.now() + 15000, periodInMinutes: 0.5}); } catch (_) {}
@@ -148,7 +148,7 @@ if (chrome.alarms && chrome.alarms.onAlarm) chrome.alarms.onAlarm.addListener(al
     if (!tabId) return;
     chrome.tabs.sendMessage(tabId, {type: 'ORD_BACKGROUND_TICK'}, () => {
       if (!chrome.runtime.lastError) return;
-      // v19.9.1(사용자 보고 "연결이 자꾸 끊긴다"): 받을 콘텐츠 스크립트가
+      // v19.9.2(사용자 보고 "연결이 자꾸 끊긴다"): 받을 콘텐츠 스크립트가
       // 없다 = 페이지 새로고침·복원·크래시로 스크립트가 죽은 것.  예전에는
       // 사용자가 팝업에서 동기화를 눌러야 살아났다 — 고정 탭이 여전히
       // 도우미 URL 이면 여기서 자동 재주입하고 즉시 다시 두드린다.

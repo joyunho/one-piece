@@ -1,6 +1,6 @@
 'use strict';
 
-// v19.9.1 compact popup; parser protocol remains v13-compatible.
+// v19.9.2 compact popup; parser protocol remains v13-compatible.
 const state = document.getElementById('state');
 const detail = document.getElementById('detail');
 const testButton = document.getElementById('test');

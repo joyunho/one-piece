@@ -22,7 +22,8 @@ const css=read('ord_cockpit_v15.css');
 check('① 판단 잠금 상태가 마지막 패 결손·회복 목표를 채운다',()=>{
   assert(app.includes('v158-blocked-spec'),'잠금 상태 결손 요약 없음');
   assert(app.includes('마지막 유효 패 기준'),'라벨 없음');
-  assert(/if\(!health\.ready\)\{[\s\S]{0,900}renderV151Recovery\(decision,'HOLD'\)/.test(app),'잠금 상태 회복 목표 없음');
+  // v19.9.2: 회복 목표에 조합식이 붙으면서 state 인자가 추가됐다.
+  assert(/if\(!health\.ready\)\{[\s\S]{0,900}renderV151Recovery\(decision,'HOLD',state\)/.test(app),'잠금 상태 회복 목표 없음');
   assert(css.includes('.v158-blocked-spec'),'스타일 없음');
 });
 

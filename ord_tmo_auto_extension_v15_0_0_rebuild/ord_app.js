@@ -109,7 +109,7 @@ function purposeLabel(p){return p==='rare'?'첫 희귀':p==='story'?'전설·히
 function statusTone(key){return key==='ready'?'good':key==='blocked'?'bad':'warn';}
 function tierLabel(u){return C.groupName(u).replace(/\s*물딜은.*$/,'').replace(/🚁/g,'').trim();}
 function displayNameOf(u){return(C.displayNameOf||C.nameOf)(u);}
-// v19.9.1(사용자 요청): 조합식에는 능력치 주석을 쓰지 않는다 — "슈가 (마젠0.6)"
+// v19.9.2(사용자 요청): 조합식에는 능력치 주석을 쓰지 않는다 — "슈가 (마젠0.6)"
 // → "슈가".  공백 뒤 여는 괄호부터 끝까지만 지우므로 "(D)드래곤"처럼 괄호로
 // 시작하는 본명은 건드리지 않는다.
 function recipeNameOf(name){return String(name||'').replace(/\s+\(.*\)\s*$/,'');}
@@ -1143,7 +1143,7 @@ class App{
       // 끊겨도 "무엇이 모자랐는지"는 계속 보인다.
       const lastRows=((this.observedDeficits?this.observedDeficits(plan):plan&&plan.deficits)||{}).clearRows||[];
       const lastChips=lastRows.filter(row=>C.num(row.gap)>0).slice(0,5).map(row=>`<span><b>${C.esc(row.key==='control'?'제어력':row.label)}</b><em>부족 ${fmt(row.gap)}</em></span>`).join('');
-      const recoveryHtml=this.renderV151Recovery(decision,'HOLD');
+      const recoveryHtml=this.renderV151Recovery(decision,'HOLD',state);
       return`<div class="v151-action blocked"><span class="v151-state">판단 잠금</span><div class="v151-action-copy"><i>!</i><div><b>${C.esc(health.label)}</b><p>${C.esc(health.note||'TMO 현재 패를 다시 읽어 주세요.')}</p></div></div><div class="v151-inline-actions"><button class="primary" data-act="connection">TMO 다시 읽기</button>${health.key==='waiting'?'<button data-act="accept-snapshot">현재 보이는 패로 계속</button>':''}</div>${lastChips?`<div class="v158-blocked-spec"><small>마지막 유효 패 기준 · 남은 필수 결손</small><div>${lastChips}</div></div>`:''}${recoveryHtml}</div>`;
     }
     if(branch.awaiting)return`<div class="v151-action choice"><span class="v151-state">사용자 선택 필요</span><b class="v151-action-title">첫 전설 뒤 진행 방향</b><p>한 기를 더 만들지, 메인 상위를 준비할지 선택하면 즉시 다시 계산합니다.</p><div class="v151-inline-actions"><button data-act="post-legend-route" data-value="legend">전설·히든 하나 더</button><button class="primary" data-act="post-legend-route" data-value="upper">상위 준비</button></div></div>`;
@@ -1216,12 +1216,12 @@ class App{
       // 색점 칩으로 전부 보여준다(상위 4개 절단 제거, 최대 8종).
       let solve=shown&&shown.quote&&shown.quote.solve||null;
       if(!solve&&shown&&shown.id&&state&&state.db){try{solve=C.recipeSolve(state.db,shown.id,state.counts||{});}catch(_){solve=null;}}
-      // v19.9.1(사용자 요청 "조합이 지금 할 일에도 떴으면"): 엔진 견적의
+      // v19.9.2(사용자 요청 "조합이 지금 할 일에도 떴으면"): 엔진 견적의
       // solve 에는 direct(직접 조합식)가 없는 경우가 있어 조합 줄이 통째로
       // 빠졌다 — 없으면 레시피를 직접 풀어 채운다.
       if(solve&&!(solve.direct||[]).length&&shown&&shown.id&&state&&state.db){try{const fresh=C.recipeSolve(state.db,shown.id,state.counts||{});if((fresh.direct||[]).length)solve=Object.assign({},solve,{direct:fresh.direct});}catch(_){}}
       if(!solve)return'';
-      // v19.9.1(사용자 요청): 제작 카드와 같은 "조합 · A + B" 형식 — 능력치
+      // v19.9.2(사용자 요청): 제작 카드와 같은 "조합 · A + B" 형식 — 능력치
       // 주석 없이 이름만, 보유 충족 여부는 색으로.
       const direct=(solve.direct||[]).slice(0,6).map(item=>{const need=Math.max(1,C.num(item.count));return`<em class="${C.num(item.owned)>=need?'ok':'gap'}">${C.esc(recipeNameOf(C.materialName(state.db,item.id)))}${need>1?`×${need}`:''}</em>`;}).join('<i class="v159-plus">+</i>');
       const lowestEntries=Object.entries(solve.lowestMissing||{}).map(([mid,count])=>({id:mid,name:C.materialName(state.db,mid),count:C.num(count)})).filter(item=>item.count>0).sort((a,b)=>b.count-a.count);
@@ -1252,15 +1252,25 @@ class App{
       }
       if(!warns.length)return'';
       return`<div class="v158-consume-warn">${this.v153Icon('warn')}<span>이 제작은 열린 결손을 닫을 수 있는 희귀를 소모합니다 — <b>${C.esc(warns.slice(0,3).join(' · '))}</b>. 그 결손의 다른 마감 수단이 있는지 먼저 확인하세요.</span></div>`;
-    })()}${unit&&this.commandInfo(unit).hasVerified?this.renderCommandLine(unit):''}${this.renderV151Recovery(decision,status)}${this.v157SecondUpperCallout(state,decision)}${this.v157LongshotHint(state,status)}${this.v151ActionFacts(state,decision)}<div class="v151-action-foot"><small>${C.esc(stop)}</small><div>${shown?`<button data-act="detail" data-id="${C.esc(shown.id)}">재료</button>`:''}${button}</div></div></div>`;
+    })()}${unit&&this.commandInfo(unit).hasVerified?this.renderCommandLine(unit):''}${this.renderV151Recovery(decision,status,state)}${this.v157SecondUpperCallout(state,decision)}${this.v157LongshotHint(state,status)}${this.v151ActionFacts(state,decision)}<div class="v151-action-foot"><small>${C.esc(stop)}</small><div>${shown?`<button data-act="detail" data-id="${C.esc(shown.id)}">재료</button>`:''}${button}</div></div></div>`;
   }
 
-  renderV151Recovery(decision,status){
+  renderV151Recovery(decision,status,state){
     // The empty action board was the root failure of every recorded loss.
     // Whenever the engine cannot prove a craft, it must still say what to
     // hunt for: the nearest units that close each open required role.
     const recovery=decision&&decision.recovery,targets=recovery&&recovery.targets||[];
     if(!targets.length||status==='ACT_NOW'||status==='SYNC_BLOCKED')return'';
+    // v19.9.2(사용자 요청 "지금 할 일에도 조합식"): 소비 보류(HOLD) 상태의
+    // 지금 할 일은 회복 목표만 보인다 — 목표마다 직접 조합식을 함께 단다
+    // (부족: 은 모아야 할 재료, 조합·은 최종 공식).  능력치 주석은 뺀다.
+    const recipeFor=row=>{
+      if(!state||!state.db||!row||!row.id)return'';
+      let solve=null;try{solve=C.recipeSolve(state.db,row.id,state.counts||{});}catch(_){return'';}
+      const direct=(solve.direct||[]).slice(0,6);
+      if(!direct.length)return'';
+      return`<small class="v159-recovery-recipe">조합 · ${direct.map(item=>{const need=Math.max(1,C.num(item.count));return`<b class="${C.num(item.owned)>=need?'owned':'missing'}">${C.esc(recipeNameOf(C.materialName(state.db,item.id)))}${need>1?`×${need}`:''}</b>`;}).join(' <i>+</i> ')}</small>`;
+    };
     // v19.9(개선 ②): 회복 목표에 오른 유닛도 추천 이행으로 본다.
     const recommendedIds=this._v199RecommendedIds||(this._v199RecommendedIds=new Map()),nowMs=Date.now();
     for(const row of targets)if(row&&row.id)recommendedIds.set(String(row.id),nowMs);
@@ -1271,7 +1281,7 @@ class App{
     for(const row of targets){const key=String(row&&(row.roleKey||row.roleLabel)||'');if(!key)continue;if(!byRole.has(key))byRole.set(key,[]);byRole.get(key).push(row);}
     const single=[...byRole.values()].filter(list=>list.length===1&&C.num(list[0].wispGap)>8).map(list=>list[0]).slice(0,2);
     const singleHtml=single.map(row=>`<div class="v159-single-closer">${this.v153Icon('warn')}<span><b>${C.esc(row.roleLabel||'역할')}</b>을(를) 닫을 남은 수단이 <b>${C.esc(row.name)}</b> 하나뿐입니다 — 선위 ${C.num(row.wispCost)} 필요(지금 ${C.num(row.wispGap)} 부족). 리롤·판매 선위를 지금부터 여기에 모으세요.</span></div>`).join('');
-    const rows=targets.slice(0,4).map(row=>{const missing=(row.missing||[]).slice(0,3).map(item=>`${item.name}${C.num(item.count)>1?`×${C.num(item.count)}`:''}`).join(' · ');return`<button type="button" class="v151-recovery-row" data-act="detail" data-id="${C.esc(row.id)}" aria-label="${C.esc(row.name)} 재료 상세 보기"><i>${C.esc(row.roleLabel||'역할')}</i><span><b>${C.esc(row.name)}</b><small>${missing?`부족: ${C.esc(missing)}`:'재료 충족 · 선위 대기'}</small></span><em>선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</em></button>`;}).join('');
+    const rows=targets.slice(0,4).map(row=>{const missing=(row.missing||[]).slice(0,3).map(item=>`${item.name}${C.num(item.count)>1?`×${C.num(item.count)}`:''}`).join(' · ');return`<button type="button" class="v151-recovery-row" data-act="detail" data-id="${C.esc(row.id)}" aria-label="${C.esc(row.name)} 재료 상세 보기"><i>${C.esc(row.roleLabel||'역할')}</i><span><b>${C.esc(row.name)}</b><small>${missing?`부족: ${C.esc(missing)}`:'재료 충족 · 선위 대기'}</small>${recipeFor(row)}</span><em>선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</em></button>`;}).join('');
     return`<div class="v151-recovery"><small>회복 목표 · ${C.esc(recovery.note||'남은 필수 역할을 닫는 최근접 후보')}</small>${singleHtml}${rows}</div>`;
   }
 
@@ -2333,8 +2343,12 @@ class App{
       const overshoot=ok&&C.num(row.current)>C.num(row.target)+5?` · +${fmt(C.num(row.current)-C.num(row.target))} 초과`:'';
       const relaxed=row.meta&&row.meta.relaxedBySlow&&row.required===false?' · 이감 충족으로 필수 해제(마딜 v18.9 교정)':''
         ,fillLast=row.meta&&row.meta.fillLast&&gap>0?' · 방깎·이감 뒤 마지막에 채움(v19.9 교정)':''
-        ,slowSplit=row.key==='slow'&&overshoot?this.v199SlowSplit(state):'';
-      return`<div class="v153-role ${tone} ${row.key===leadKey?'lead':''}" data-role="${C.esc(row.key)}" style="--metric:${ratio.toFixed(1)}%">${this.v153Icon(ICON[row.key]||'gear')}<b>${C.esc(row.label)}${row.key===leadKey?'<i>최우선</i>':''}${note?`<small>${C.esc(note)}</small>`:''}${relaxed?`<small class="relaxed">${C.esc(relaxed.slice(3))}</small>`:''}${fillLast?`<small class="relaxed">${C.esc(fillLast.slice(3))}</small>`:''}${slowSplit?`<small class="v159-slow-split">${C.esc(slowSplit)}</small>`:''}</b><strong>${waiting?'현재 계산 대기':fmt(row.current)}<em>/ 목표 ${fmt(row.target)}</em></strong><span><strong>${waiting?'계산 대기':ok?`충족${overshoot}`:`부족 ${fmt(gap)}`}</strong></span></div>`;
+        ,slowSplit=row.key==='slow'&&overshoot?this.v199SlowSplit(state):''
+        // v19.9.2(0801 패배 포렌식 "보잡이 부족했"): 광보잡·토키 같은 기 수
+        // 역할이 정확히 목표치면 화면은 내내 "충족"만 보였다 — 여유 0(한 기
+        // 의존)임을 명시한다.  기록: 광보잡 1 마딜은 1승 1패, 2는 1승 0패.
+        ,snug=ok&&['bossFrenzy','toki'].includes(row.key)&&C.num(row.current)<C.num(row.target)+1?' · 여유 0 — 한 기 잃으면 열립니다':'';
+      return`<div class="v153-role ${tone} ${row.key===leadKey?'lead':''}" data-role="${C.esc(row.key)}" style="--metric:${ratio.toFixed(1)}%">${this.v153Icon(ICON[row.key]||'gear')}<b>${C.esc(row.label)}${row.key===leadKey?'<i>최우선</i>':''}${note?`<small>${C.esc(note)}</small>`:''}${relaxed?`<small class="relaxed">${C.esc(relaxed.slice(3))}</small>`:''}${fillLast?`<small class="relaxed">${C.esc(fillLast.slice(3))}</small>`:''}${slowSplit?`<small class="v159-slow-split">${C.esc(slowSplit)}</small>`:''}${snug?`<small class="v159-snug">${C.esc(snug.slice(3))}</small>`:''}</b><strong>${waiting?'현재 계산 대기':fmt(row.current)}<em>/ 목표 ${fmt(row.target)}</em></strong><span><strong>${waiting?'계산 대기':ok?`충족${overshoot}`:`부족 ${fmt(gap)}`}</strong></span></div>`;
     };
 
     if(!rows.some(r=>r.key==='slow')){
@@ -2513,7 +2527,7 @@ class App{
       // v19.9(사용자 요청): "뭐랑 뭐랑 뭐랑 조합해야 하는지" — TMO 레시피의
       // 직접 조합식(direct stuffs)을 그대로 보인다.  보유분이 재료 수를 채우면
       // owned, 아니면 missing 으로 칠한다.
-      // v19.9.1(사용자 요청): 능력치 주석은 빼고(recipeNameOf) 잘리지 않게
+      // v19.9.2(사용자 요청): 능력치 주석은 빼고(recipeNameOf) 잘리지 않게
       // 두 줄까지 감싼다(CSS line-clamp).  절단 상한도 4→6 재료.
       const direct=(row.solve&&row.solve.direct||[]).slice(0,6);
       const recipeLine=direct.length?`<div class="v159-recipe">${this.v153Icon('gear')}<span>조합 · ${direct.map(item=>{const need=Math.max(1,C.num(item.count));const label=`${C.esc(recipeNameOf(C.materialName(db,item.id)))}${need>1?`×${need}`:''}`;return`<b class="${C.num(item.owned)>=need?'owned':'missing'}">${label}</b>`;}).join('<i>+</i>')}</span></div>`:'';
