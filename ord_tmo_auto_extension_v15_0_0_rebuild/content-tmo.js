@@ -11,7 +11,7 @@
     return;
   }
 
-  const VERSION = '19.9.3';
+  const VERSION = '19.9.4';
   const PARSER = 'ord-tmo-parser-v13-adapter';
   const SESSION = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
   const HELPER_ADAPTERS = Object.freeze({
@@ -884,7 +884,7 @@
     style.textContent = ':host{all:initial;position:fixed;right:14px;bottom:14px;z-index:2147483647;font-family:system-ui,sans-serif}.card{width:310px;padding:11px;border:1px solid #33476a;border-radius:15px;background:rgba(5,10,23,.94);color:#eaf3ff;box-shadow:0 18px 55px rgba(0,0,0,.45)}.top{display:flex;justify-content:space-between;align-items:center}.title{font-size:13px;font-weight:900}.dot{width:9px;height:9px;border-radius:50%;background:#f3b84b}.dot.ok{background:#27d17f;box-shadow:0 0 12px #27d17f}.meta{margin-top:5px;color:#8fa2bd;font-size:10px;line-height:1.45}.btn{margin-top:8px;width:100%;border:0;border-radius:10px;padding:8px;background:linear-gradient(135deg,#7b5fff,#25bfe6);color:white;font-weight:900;cursor:pointer}';
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = '<div class="top"><span class="title">ORD 실전 판단 코치 v19.9.3</span><span class="dot"></span></div><div class="meta">수집 대기 중 · TMO.GG 데스크톱 프로그램을 먼저 실행하세요</div><button class="btn">실전 코치 열기</button>';
+    card.innerHTML = '<div class="top"><span class="title">ORD 실전 판단 코치 v19.9.4</span><span class="dot"></span></div><div class="meta">수집 대기 중 · TMO.GG 데스크톱 프로그램을 먼저 실행하세요</div><button class="btn">실전 코치 열기</button>';
     card.querySelector('.btn').onclick = () => send({type: 'ORD_OPEN_DASHBOARD'});
     shadow.append(style, card);
     document.documentElement.appendChild(host);
@@ -985,6 +985,29 @@
     if (now - lastWorkerTickScanAt < 2500) return;
     lastWorkerTickScanAt = now;
     try { publish(false, 'worker-tick'); } catch (_) {}
+  });
+  // v19.9.4(A안 실측): MAIN world 네트워크 탭(ord_page_nettap)이 잡은 "페이지가
+  // 실제로 보낸 로컬 요청"을 백그라운드 링버퍼로 전달한다.  페이지는 이 주소를
+  // 초 단위로 폴링하므로 같은 내용은 10초에 한 번만 전달한다.
+  const localTapMemo = new Map();
+  addEventListener('message', event => {
+    if (event.source !== window || !event.data || event.data.__ord !== 'tmo-local-request') return;
+    const data = event.data;
+    const entry = {
+      at: Date.now(),
+      kind: String(data.kind || ''),
+      url: String(data.url || '').slice(0, 300),
+      method: String(data.method || 'GET').slice(0, 10),
+      body: String(data.body || '').slice(0, 300),
+      status: Number(data.status) || 0,
+      size: Number(data.size) || 0,
+      snippet: String(data.snippet || '').slice(0, 600)
+    };
+    const key = `${entry.method} ${entry.url} ${entry.status} ${entry.size} ${entry.snippet.slice(0, 80)}`;
+    const now = Date.now();
+    if (now - (localTapMemo.get(key) || 0) < 10000) return;
+    localTapMemo.set(key, now);
+    send({type: 'ORD_LOCAL_TAP', entry});
   });
   document.addEventListener('input', event => {
     if (event.target && event.target.closest && !event.target.closest('#ord-tmo-sync-badge') && numericInput(event.target)) schedule(false, 'input');

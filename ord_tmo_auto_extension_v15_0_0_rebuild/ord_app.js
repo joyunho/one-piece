@@ -2845,6 +2845,14 @@ class App{
     this.render();
     const url='http://127.0.0.1:25625/datas';
     const finish=result=>{this._localProbe=result;this.render();};
+    // v19.9.4(A안 실측): 네트워크 탭이 기록한 "페이지가 실제로 보낸 로컬
+    // 요청"도 함께 불러온다 — /datas 가 비어 나와도 페이지의 진짜 호출
+    // 형태(경로·메서드·바디·응답)가 여기 있으면 판정이 끝난다.
+    try{
+      if(typeof chrome!=='undefined'&&chrome.storage&&chrome.storage.local){
+        this._localTapLog=await new Promise(resolve=>chrome.storage.local.get(['ordLocalTapLog'],value=>resolve(Array.isArray(value&&value.ordLocalTapLog)?value.ordLocalTapLog:[])));
+      }
+    }catch(_){this._localTapLog=[];}
     try{
       let result=null;
       if(typeof chrome!=='undefined'&&chrome.runtime&&chrome.runtime.sendMessage&&this.config.source!=='standalone-manual'){
@@ -2883,11 +2891,19 @@ class App{
   }
   renderV199LocalProbe(){
     const probe=this._localProbe||null;
+    // v19.9.4: 200 + 빈 응답(`{}`) 실측 대응 — 전송로는 뚫렸으니, 비어 나오면
+    // 그 사실을 해석해 주고 페이지의 실측 요청 기록으로 안내한다.
+    const emptyNote=probe&&probe.state==='done'&&C.num(probe.size)<=4?'<p class="probe-note"><b>전송로는 뚫렸는데 응답이 비어 있습니다.</b> 게임(워크래프트)이 실제로 돌아가는 중에 다시 눌러 보세요 — 그래도 비면, 아래 "페이지 실측 요청"이 페이지의 진짜 호출 형태를 보여줍니다(TMO 탭을 잠깐 열어 두면 자동으로 채워집니다).</p>':'';
     const body=!probe?'<p class="probe-note">아직 시험 전입니다. TMO 데스크톱 프로그램(코치 로그의 Horse 서버)이 켜져 있는 상태에서 눌러 주세요.</p>'
       :probe.state==='running'?'<p class="probe-note">127.0.0.1:25625/datas 응답 대기 중…</p>'
       :probe.state==='error'?`<div class="probe-fail"><b>읽기 실패</b><span>${C.esc(probe.error||'')}</span><small>TMO 프로그램이 꺼져 있으면 정상적인 실패입니다. 켜져 있는데도 이 메시지가 나오면, 이 문구 그대로가 판정 자료입니다 — 복사해서 알려 주세요.</small></div>`
-      :`<div class="probe-ok"><div class="diag-grid"><div><small>HTTP</small><b>${C.num(probe.status)}</b></div><div><small>크기</small><b>${C.num(probe.size)}자</b></div><div><small>JSON 해석</small><b>${probe.json?'성공':'실패/부분'}</b></div><div><small>카탈로그 코드 일치</small><b>${C.num(probe.idHits)}종${C.num(probe.idHits)>=20?' — 직접 읽기 유력':''}</b></div></div>${probe.codeSamples&&probe.codeSamples.length?`<p class="probe-note">발견 코드 예: ${C.esc(probe.codeSamples.join(', '))}</p>`:''}<pre>${C.esc(String(probe.snippet||''))}</pre><details><summary>전체 응답 보기·복사 (${C.num(probe.size)>200000?'앞 200,000자':'전체'} — 이걸 붙여넣어 주세요)</summary><textarea readonly rows="10">${C.esc(String(probe.full||''))}</textarea></details></div>`;
-    return`<section class="ord-panel v199-local-probe"><div class="panel-head"><div><h2>로컬 서버 직접 읽기 시험</h2><p>tmo.gg 페이지가 읽는 로컬 데이터(127.0.0.1:25625/datas)를 코치가 직접 읽을 수 있는지 확인합니다 — 되면 TMO 탭 없이 동작하는 구조(A안)로 갈 수 있습니다.</p></div><button class="primary" data-act="local-probe" ${probe&&probe.state==='running'?'disabled':''}>${probe&&probe.state==='running'?'읽는 중…':'지금 시험'}</button></div>${body}</section>`;
+      :`<div class="probe-ok"><div class="diag-grid"><div><small>HTTP</small><b>${C.num(probe.status)}</b></div><div><small>크기</small><b>${C.num(probe.size)}자</b></div><div><small>JSON 해석</small><b>${probe.json?'성공':'실패/부분'}</b></div><div><small>카탈로그 코드 일치</small><b>${C.num(probe.idHits)}종${C.num(probe.idHits)>=20?' — 직접 읽기 유력':''}</b></div></div>${emptyNote}${probe.codeSamples&&probe.codeSamples.length?`<p class="probe-note">발견 코드 예: ${C.esc(probe.codeSamples.join(', '))}</p>`:''}<pre>${C.esc(String(probe.snippet||''))}</pre><details><summary>전체 응답 보기·복사 (${C.num(probe.size)>200000?'앞 200,000자':'전체'} — 이걸 붙여넣어 주세요)</summary><textarea readonly rows="10">${C.esc(String(probe.full||''))}</textarea></details></div>`;
+    // v19.9.4(A안 실측): 페이지가 실제로 보낸 로컬 요청 — 경로·메서드·바디·
+    // 응답 조각.  /datas 가 비어도 여기 다른 형태의 호출이 잡히면 그게 정답이다.
+    const tap=Array.isArray(this._localTapLog)?this._localTapLog:[];
+    const tapRows=tap.map(row=>`<div class="tap-row"><b>${C.esc(String(row.method||'GET'))} ${C.esc(String(row.url||''))}</b>${row.body?`<small>바디: ${C.esc(String(row.body))}</small>`:''}<small>HTTP ${C.num(row.status)} · ${C.num(row.size)}자 · ${row.at?new Date(C.num(row.at)).toLocaleTimeString():''}</small><pre>${C.esc(String(row.snippet||'').slice(0,400))}</pre></div>`).join('');
+    const tapHtml=`<div class="v199-tap"><b>페이지 실측 요청 · 최근 ${tap.length}건</b>${tap.length?tapRows:'<p class="probe-note">아직 기록 없음 — TMO 탭을 한 번 열어 두면(게임 중이면 더 좋습니다) 페이지가 로컬 서버로 보내는 요청이 여기 자동으로 잡힙니다. 그 뒤 이 버튼을 다시 누르세요.</p>'}</div>`;
+    return`<section class="ord-panel v199-local-probe"><div class="panel-head"><div><h2>로컬 서버 직접 읽기 시험</h2><p>tmo.gg 페이지가 읽는 로컬 데이터(127.0.0.1:25625/datas)를 코치가 직접 읽을 수 있는지 확인합니다 — 되면 TMO 탭 없이 동작하는 구조(A안)로 갈 수 있습니다.</p></div><button class="primary" data-act="local-probe" ${probe&&probe.state==='running'?'disabled':''}>${probe&&probe.state==='running'?'읽는 중…':'지금 시험'}</button></div>${body}${tapHtml}</section>`;
   }
   renderData(state,plan,health){
     const s=state.snapshot||{},collection=s.collection||{},discovery=s.countDiscovery||{},diagnostic=this.state.connectionDiagnostic||{},errors=[].concat(collection.errors||[],discovery.errors||[]),rejected=diagnostic.reason==='invalid-snapshot'&&C.num(diagnostic.bridgeAt)>=C.num(s.bridgeAt),age=value=>C.num(value)<999?`${C.num(value)}초 전`:'없음',specials=Object.entries(C.SPECIAL_IDS).map(([id,name])=>`<label><span>${C.esc(name)}</span><input data-count="${id}" type="number" min="0" value="${C.num(state.counts[id])}"></label>`).join('');

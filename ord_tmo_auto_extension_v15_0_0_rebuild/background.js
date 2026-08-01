@@ -226,6 +226,22 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
     return true;
   }
 
+  // v19.9.4(A안 실측): 페이지가 실제로 보낸 로컬 요청 링버퍼(최근 8건).
+  // 같은 (메서드·주소·상태·크기) 요청은 최신 것 하나만 남긴다 — 폴링이라
+  // 내용이 바뀌는 순간(빈 응답 → 데이터)만 줄이 늘어난다.
+  if (message && message.type === 'ORD_LOCAL_TAP' && message.entry) {
+    enqueue(async () => {
+      const stored = await get(['ordLocalTapLog']);
+      const log = Array.isArray(stored.ordLocalTapLog) ? stored.ordLocalTapLog : [];
+      const entry = message.entry;
+      const keyOf = row => `${row && row.method} ${row && row.url} ${row && row.status} ${row && row.size}`;
+      const next = [entry].concat(log.filter(row => keyOf(row) !== keyOf(entry))).slice(0, 8);
+      await set({ordLocalTapLog: next});
+      reply({ok: true, kept: next.length});
+    }).catch(error => reply({ok: false, error: String(error)}));
+    return true;
+  }
+
   if (message && message.type === 'ORD_PIN_SOURCE') {
     const tabId = Number(message.tabId) || 0;
     const helperId = String(message.helperId || '');

@@ -2559,3 +2559,10 @@ button:focus-visible,select:focus-visible{
 .v199-local-probe .probe-ok pre{max-height:220px;overflow:auto;border:1px solid var(--v153-line);border-radius:11px;padding:10px;background:rgba(7,18,32,.68);font-size:11px;line-height:1.5;white-space:pre-wrap;word-break:break-all}
 .v199-local-probe textarea{width:100%;margin-top:8px;border:1px solid var(--v153-line);border-radius:11px;padding:10px;background:rgba(7,18,32,.68);color:#cfe1f5;font-size:11px;font-family:ui-monospace,monospace}
 .v199-local-probe details summary{cursor:pointer;color:#89e7f7;font-size:12px;margin-top:8px}
+/* v19.9.4: 페이지 실측 요청 기록(연결 진단 · A안 판정 자료). */
+.v199-tap{margin-top:12px;border-top:1px dashed var(--v153-line);padding-top:10px}
+.v199-tap>b{display:block;font-size:12px;margin-bottom:6px;color:#89e7f7}
+.v199-tap .tap-row{border:1px solid var(--v153-line);border-radius:11px;padding:8px 10px;margin-bottom:6px;background:rgba(7,18,32,.55)}
+.v199-tap .tap-row b{display:block;font-size:11.5px;word-break:break-all}
+.v199-tap .tap-row small{display:block;color:var(--v153-muted);font-size:10.5px;margin-top:2px;word-break:break-all}
+.v199-tap .tap-row pre{margin:6px 0 0;max-height:90px;overflow:auto;border-radius:8px;padding:7px;background:rgba(5,12,22,.8);font-size:10.5px;white-space:pre-wrap;word-break:break-all}
