@@ -52,7 +52,12 @@ check('① 물딜 1.5스턴 — 항상 필수 + 마지막 순서(fillLast), 마�
   assert(!('relaxedBySlow' in (row.meta||{})),'물딜에 v18.9 완화 표식이 남아 있다');
   const dual=C.clearProfileDetails(Object.assign({},base,{main:2}),'magic',{gorosei:'none',magicRoute:'dual',_resolvedMagicRoute:'dual'});
   const mrow=dual.requirements.find(r=>r.key==='stunFull');
-  assert.strictEqual(mrow.required,false,'마딜의 v18.9 완화(이감 충족 시 해제)는 유지돼야 한다');
+  // v19.9.7(0802 패배 포렌식 "스턴이 새서"): 마딜의 v18.9 완화(이감 충족 시
+  // 해제)는 46라 이감 충족 → 스턴 결손 소멸 → 0.51 스턴 단끝 전멸을 만들었다.
+  // 물딜과 같은 계약으로 교정: 항상 필수, 순서만 최후(fillLast).
+  assert.strictEqual(mrow.required,true,'마딜 1.5스턴은 이감이 차도 필수다(v19.9.7 · 0802 교정)');
+  assert.strictEqual(mrow.meta&&mrow.meta.fillLast,true,'마딜 stunFull 에 fillLast 표식이 없다');
+  assert(!('relaxedBySlow' in (mrow.meta||{})),'마딜에 v18.9 완화 표식이 남아 있다');
   // 정책: 보스 창(55라)에서도 물딜 stunFull 그룹은 열린 방깎·이감 위로
   // 올라올 수 없다 — 예전에는 BOSS_POWER 부양이 stunFull 을 앞세웠다.
   const rows=[
@@ -61,7 +66,9 @@ check('① 물딜 1.5스턴 — 항상 필수 + 마지막 순서(fillLast), 마�
     {key:'stunBase',label:'0.5스턴',current:.5,target:.5,gap:0,required:true},
     {key:'slow',label:'이감',current:90,target:102,gap:12,required:true},
     {key:'bossFrenzy',label:'광보잡',current:2,target:2,gap:0,required:true},
-    {key:'stunFull',label:'1.5스턴',current:.5,target:1.5,gap:1,required:true}
+    // v19.9.7: fillLast 는 코어 행 meta 가 진실이다(물딜 전용 게이트 폐지) —
+    // 실제 코어 행과 같게 meta 를 싣는다.
+    {key:'stunFull',label:'1.5스턴',current:.5,target:1.5,gap:1,required:true,meta:{lastPriority:true,fillLast:true}}
   ];
   const groups=P._test.groupRows(P.ROUTES.physical,{deficits:{requirements:rows}},P.checkpointFor(55),55);
   const sfIndex=groups.findIndex(group=>group.keys.includes('stunFull'));

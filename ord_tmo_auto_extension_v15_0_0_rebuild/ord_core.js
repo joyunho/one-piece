@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='19.9.6';
+const VERSION='19.9.7';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1127,15 +1127,17 @@ function clearProfileDetails(spec,mode,settings){
     ];
     return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorCurrent),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 0.5스턴과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 2기 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
   }
-  // v18.9: 마딜도 이감 충족 시 1.5스턴 필수를 해제한다.
-  const magicSlowSatisfied=num(ctl.slow)>=num(slowTarget);
+  // v19.9.7(0802 패배 포렌식 "스턴이 새서 죽었어"): v18.9 는 이감 충족 시
+  // 1.5스턴 필수를 해제했다("그 자리는 딜러가 낫다").  0802 실전에서 46라에
+  // 이감이 목표를 채우는 순간 이 규칙이 stunFull 을 체크리스트에서 지웠고,
+  // 스턴 0.51~0.61 인 채 단끝에 들어가 60라에 전멸했다(0801c 클리어는 이감
+  // 90/117 미충족이라 이 규칙이 발동한 적 자체가 없다).  물딜 v19.9.0 과
+  // 같은 사상으로 교정한다: 순서는 딜·이감 뒤 마지막이되, 해제는 없다.
   const singleEndExpected=spec.singleEndExpected!=null?num(spec.singleEndExpected):0,singleEndStable=spec.singleEndStable!=null?num(spec.singleEndStable):Math.max(0,singleEndExpected-num(spec.singleEndLargest)),singleEndMaximum=spec.singleEndMax!=null?num(spec.singleEndMax):singleEndExpected,dual=[
     {key:'main',label:'상위 딜러 2',current:num(spec.main),target:2,weight:110},
     {key:'stunBase',label:'최소 0.5 스턴',current:stunBase,target:.5,weight:110},
     {key:'slow',label:`이감 ${slowTarget}%`,current:ctl.slow,target:slowTarget,weight:95},
-    // v18.9(사용자 교정): 이감이 목표를 채웠으면 1.5스턴은 권장으로 내린다 —
-    // 그 자리는 딜러가 낫다.  0.5스턴 최소선은 그대로 필수다.
-    {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85,required:magicSlowSatisfied?false:true,recommended:magicSlowSatisfied,meta:{relaxedBySlow:magicSlowSatisfied}},
+    {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85,required:true,meta:{lastPriority:true,fillLast:true}},
     {key:'bossFrenzy',label:'광보잡',current:bossFrenzy,target:1,weight:70},
     {key:'toki',label:'토키',current:num(spec.toki),target:1,weight:70}
   ],singleEnd=[
@@ -1143,7 +1145,7 @@ function clearProfileDetails(spec,mode,settings){
     {key:'bossFrenzy',label:'광보잡',current:bossFrenzy,target:1,weight:110},
     {key:'stunBase',label:'최소 0.5 스턴',current:stunBase,target:.5,weight:110},
     {key:'slow',label:`이감 ${slowTarget}%`,current:ctl.slow,target:slowTarget,weight:95},
-    {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85,required:magicSlowSatisfied?false:true,recommended:magicSlowSatisfied,meta:{relaxedBySlow:magicSlowSatisfied}},
+    {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85,required:true,meta:{lastPriority:true,fillLast:true}},
     {key:'singleEndExpected',label:'검증된 보조 단일·끝딜',current:singleEndExpected,target:3,weight:70,meta:{stable:round2(singleEndStable),maximum:round2(singleEndMaximum),verifiedUnits:num(spec.singleEndUnits)}},
     // v17.6(감사 P0-3): 합산 환산만 검사하면 단일 전용 3기(끝딜 0)나
     // 끝딜 전용 3기도 통과한다.  사용자 기준 악몽 스펙(단일 2~3 ·
@@ -1151,7 +1153,7 @@ function clearProfileDetails(spec,mode,settings){
     {key:'single',label:'단일딜 환산 2',current:num(spec.single),target:2,weight:68},
     {key:'end',label:'끝딜 환산 1',current:num(spec.end),target:1,weight:66}
   ],dualDistance=routeDistance(dual),singleEndDistance=routeDistance(singleEnd),requested=normalizeMagicRoute(settings._resolvedMagicRoute||settings.magicRoute),selected=requested==='auto'?(dualDistance<=singleEndDistance?'dual':'singleEnd'):requested,requirements=selected==='dual'?dual:singleEnd;
-  return{mode,key:selected,label:selected==='dual'?'마딜 2상위 + 토키':'마딜 1상위 + 단일·끝딜',requested,requirements,distance:selected==='dual'?dualDistance:singleEndDistance,slowTarget,stunTarget:1.5,singleEndFloor:3,singleEndStable:3,priority:selected==='dual'?['main','stunBase','slow','stunFull','bossFrenzy','toki']:['bossFrenzy','stunBase','slow','stunFull','singleEndExpected'],routes:{dual:{key:'dual',label:'2상위 + 토키',distance:dualDistance,requirements:dual},singleEnd:{key:'singleEnd',label:'1상위 + 단·끝 3~4',distance:singleEndDistance,requirements:singleEnd}},note:selected==='dual'?'두 번째 상위와 0.5스턴을 최우선으로 보고, 토키·광보잡을 마감합니다.':'광보잡과 0.5스턴을 먼저 지키고, 단·끝은 메인 상위를 제외한 직접 abilities 기여만 합산합니다.'};
+  return{mode,key:selected,label:selected==='dual'?'마딜 2상위 + 토키':'마딜 1상위 + 단일·끝딜',requested,requirements,distance:selected==='dual'?dualDistance:singleEndDistance,slowTarget,stunTarget:1.5,singleEndFloor:3,singleEndStable:3,priority:selected==='dual'?['main','stunBase','slow','bossFrenzy','toki','stunFull']:['bossFrenzy','stunBase','slow','singleEndExpected','stunFull'],routes:{dual:{key:'dual',label:'2상위 + 토키',distance:dualDistance,requirements:dual},singleEnd:{key:'singleEnd',label:'1상위 + 단·끝 3~4',distance:singleEndDistance,requirements:singleEnd}},note:selected==='dual'?'두 번째 상위와 0.5스턴을 최우선으로 보고, 토키·광보잡을 마감한 뒤 1.5스턴을 마지막에 반드시 채웁니다.':'광보잡과 0.5스턴을 먼저 지키고, 단·끝은 메인 상위를 제외한 직접 abilities 기여만 합산합니다. 1.5스턴은 마지막에 반드시 채웁니다.'};
 }
 // v18: 역할 요구치를 축으로 나눈다.
 //
@@ -1442,7 +1444,9 @@ function supportClearStage(row,plan){
   // The display must preserve the same equal-priority gates as the party
   // planner. In particular, physical armor and the minimum 0.5 stun are one
   // stage, as are safe slow and boss/frenzy coverage.
-  const mode=plan&&plan.mode,route=plan&&plan.resolvedMagicRoute||plan&&plan.deficits&&plan.deficits.route||plan&&plan.settings&&plan.settings._resolvedMagicRoute||'singleEnd',priority=mode==='physical'?[['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']]:[['main'],['bossFrenzy','stunBase'],['slow'],['stunFull'],['singleEndExpected','single','end']],missing=new Set(clearRows.map(item=>item.key)),grouped=new Set(),groups=[];
+  // v19.9.7(0802 교정): 마딜도 물딜과 같이 stunFull 은 마지막 그룹이다 —
+  // 순서만 뒤로 갈 뿐 필수 해제는 없다.
+  const mode=plan&&plan.mode,route=plan&&plan.resolvedMagicRoute||plan&&plan.deficits&&plan.deficits.route||plan&&plan.settings&&plan.settings._resolvedMagicRoute||'singleEnd',priority=mode==='physical'?[['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected','single','end'],['stunFull']],missing=new Set(clearRows.map(item=>item.key)),grouped=new Set(),groups=[];
   for(const keys of priority){const active=keys.filter(key=>missing.has(key));if(active.length){groups.push(active);active.forEach(key=>grouped.add(key));}}
   for(const need of clearRows)if(!grouped.has(need.key))groups.push([need.key]);
   for(let index=0;index<groups.length;index++){

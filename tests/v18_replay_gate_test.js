@@ -127,4 +127,27 @@ test('둘째 클리어(0801 단끝)는 생존 축이 열린 채 이겼다 — �
   assert.strictEqual(last.survivalPass,false,'마지막 라운드 생존 축이 닫혀 있다 — 이 판의 교훈이 사라진다');
 });
 
-console.log(`V18_REPLAY_GATE ${passed}/7 passed`);
+test('셋째 패배(0802)에서 이감이 차도 1.5스턴 결손은 화면에서 사라지지 않는다',()=>{
+  // v19.9.7 실측: 0802 판은 46라에 이감 100 을 채우는 순간 v18.9 완화가
+  // stunFull 필수를 해제해 결손이 체크리스트에서 소멸했고, 스턴 0.51~0.61 인
+  // 채 단끝에 들어가 60라에 전멸했다("스턴이 새서 죽었어").  같은 판을 현재
+  // 엔진에 다시 먹이면 46~60라 전부에서 stunFull 이 필수 결손으로 남아야
+  // 완화 폐기가 실제 화면을 바꾼 것이다.
+  const C=global.ORDCore;
+  const run=R.loadRun('0802L');
+  const lateMagic=run.rounds.filter(step=>step.round>=46&&step.settings.mode==='magic');
+  assert(lateMagic.length>=10,`46라 이후 마딜 라운드가 ${lateMagic.length}개뿐이다 — 로그가 바뀌었는지 확인하라`);
+  for(const step of lateMagic){
+    const settings=Object.assign({},step.settings,{manualCounts:{},magicRoute:'singleEnd',_resolvedMagicRoute:'singleEnd'});
+    const ns=C.normalizeState(global.ORD_TMO_UNITS,step.snapshot,settings);
+    const spec=C.currentSpec(ns,'magic',settings);
+    assert(C.num(spec.stun)<1.5,`r${step.round}: 재생 스턴이 ${spec.stun} — 이 판의 결손 전제가 깨졌다`);
+    const def=C.deficits(spec,'magic',settings);
+    const row=(def.clearRows||[]).find(item=>item.key==='stunFull');
+    assert(row,`r${step.round}: 이감 충족 후 stunFull 결손이 화면 목록에서 사라졌다 (v18.9 완화 재발)`);
+    assert.strictEqual(row.required,true,`r${step.round}: stunFull 이 필수가 아니다`);
+    assert(C.num(row.gap)>0,`r${step.round}: stunFull gap 이 0 이다`);
+  }
+});
+
+console.log(`V18_REPLAY_GATE ${passed}/8 passed`);

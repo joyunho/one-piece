@@ -2339,17 +2339,18 @@ class App{
       // v19.8(포렌식 ④): 0731 판에서 이감 142.5/102 를 화면이 그냥 "충족"
       // 으로만 보여 "엔진이 이감을 쫓는다"는 오해를 낳았다 — 초과분을 명시
       // 한다(초과는 번들 부수 효과·수동 제작이지 엔진 가점이 아니다).
-      // 1.5스턴이 이감 충족으로 해제된 것(마딜 한정, v18.9 사용자 교정)도
-      // 라벨로 밝힌다.  물딜은 v19.9 부터 해제 없이 "마지막에 채움"이다.
+      // v19.9.7(0802 패배 포렌식): 1.5스턴 해제 라벨 제거 — 마딜도 이감이
+      // 차면 해제되는 게 아니라 물딜처럼 "마지막에 반드시 채움"이 됐다.
+      // 0802 판은 46라 이감 충족과 함께 스턴 결손이 화면에서 사라진 채
+      // 0.51로 단끝에 들어가 죽었다.
       const overshoot=ok&&C.num(row.current)>C.num(row.target)+5?` · +${fmt(C.num(row.current)-C.num(row.target))} 초과`:'';
-      const relaxed=row.meta&&row.meta.relaxedBySlow&&row.required===false?' · 이감 충족으로 필수 해제(마딜 v18.9 교정)':''
-        ,fillLast=row.meta&&row.meta.fillLast&&gap>0?' · 방깎·이감 뒤 마지막에 채움(v19.9 교정)':''
+      const fillLast=row.meta&&row.meta.fillLast&&gap>0?' · 앞 순위를 채운 뒤 마지막에 반드시 채움(v19.9 교정)':''
         ,slowSplit=row.key==='slow'&&overshoot?this.v199SlowSplit(state):''
         // v19.9.2(0801 패배 포렌식 "보잡이 부족했"): 광보잡·토키 같은 기 수
         // 역할이 정확히 목표치면 화면은 내내 "충족"만 보였다 — 여유 0(한 기
         // 의존)임을 명시한다.  기록: 광보잡 1 마딜은 1승 1패, 2는 1승 0패.
         ,snug=ok&&['bossFrenzy','toki'].includes(row.key)&&C.num(row.current)<C.num(row.target)+1?' · 여유 0 — 한 기 잃으면 열립니다':'';
-      return`<div class="v153-role ${tone} ${row.key===leadKey?'lead':''}" data-role="${C.esc(row.key)}" style="--metric:${ratio.toFixed(1)}%">${this.v153Icon(ICON[row.key]||'gear')}<b>${C.esc(row.label)}${row.key===leadKey?'<i>최우선</i>':''}${note?`<small>${C.esc(note)}</small>`:''}${relaxed?`<small class="relaxed">${C.esc(relaxed.slice(3))}</small>`:''}${fillLast?`<small class="relaxed">${C.esc(fillLast.slice(3))}</small>`:''}${slowSplit?`<small class="v159-slow-split">${C.esc(slowSplit)}</small>`:''}${snug?`<small class="v159-snug">${C.esc(snug.slice(3))}</small>`:''}</b><strong>${waiting?'현재 계산 대기':fmt(row.current)}<em>/ 목표 ${fmt(row.target)}</em></strong><span><strong>${waiting?'계산 대기':ok?`충족${overshoot}`:`부족 ${fmt(gap)}`}</strong></span></div>`;
+      return`<div class="v153-role ${tone} ${row.key===leadKey?'lead':''}" data-role="${C.esc(row.key)}" style="--metric:${ratio.toFixed(1)}%">${this.v153Icon(ICON[row.key]||'gear')}<b>${C.esc(row.label)}${row.key===leadKey?'<i>최우선</i>':''}${note?`<small>${C.esc(note)}</small>`:''}${fillLast?`<small class="relaxed">${C.esc(fillLast.slice(3))}</small>`:''}${slowSplit?`<small class="v159-slow-split">${C.esc(slowSplit)}</small>`:''}${snug?`<small class="v159-snug">${C.esc(snug.slice(3))}</small>`:''}</b><strong>${waiting?'현재 계산 대기':fmt(row.current)}<em>/ 목표 ${fmt(row.target)}</em></strong><span><strong>${waiting?'계산 대기':ok?`충족${overshoot}`:`부족 ${fmt(gap)}`}</strong></span></div>`;
     };
 
     if(!rows.some(r=>r.key==='slow')){

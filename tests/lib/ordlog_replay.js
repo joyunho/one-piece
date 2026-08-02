@@ -55,7 +55,13 @@ const RUNS=Object.freeze([
   // (S)타시기(암브·물마), 나스쥬로 설정(이감 목표 117).  마지막 판정 기준
   // 이감 90/117 · 스턴 1.01/1.5 · 단끝 2/3 로 열린 채 이겼다(사용자 보고).
   // 파일은 결과 입력 전 내보내기라 status 는 active 지만 실제 결과는 클리어.
-  {key:'0801c',file:'ORD_2305_20260801_023132_clear.ordlog.json',outcome:'clear'}
+  {key:'0801c',file:'ORD_2305_20260801_023132_clear.ordlog.json',outcome:'clear'},
+  // v19.9.6(로컬 직결 첫 판)으로 플레이한 패배 — "스턴이 새서 죽었어".
+  // 46라에 이감이 목표(사투르누스 100)를 채우자 v18.9 완화가 1.5스턴 필수를
+  // 해제해 결손이 화면에서 사라졌고, 스턴 0.51~0.61 인 채 단끝에 들어가
+  // 60라에 전멸했다.  v19.9.7 이 그 완화를 폐기했다 — 게이트가 이 판으로
+  // "이감이 차도 스턴 결손은 계속 보인다"는 계약을 잰다.
+  {key:'0802L',file:'ORD_2305_20260802_162235_active.ordlog.json',outcome:'loss'}
 ]);
 
 function num(value){const n=Number(value);return Number.isFinite(n)?n:0;}

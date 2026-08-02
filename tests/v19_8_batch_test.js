@@ -57,7 +57,10 @@ check('③ 희귀→전설 6칸 + 내 희귀 사용 + 노리기 채움',()=>{
 check('④ 포렌식 대응 — 생존 자원 소모 경고(런타임) · 초과·해제 라벨',()=>{
   assert(app.includes('v158-consume-warn'),'소모 경고 마크업 없음');
   assert(app.includes('초과'),'이감 초과 라벨 없음');
-  assert(app.includes('relaxedBySlow'),'1.5스턴 해제 라벨 없음');
+  // v19.9.7(0802 교정): 해제 라벨은 규칙 폐기와 함께 사라졌다 — 대신
+  // "마지막에 반드시 채움"(fillLast) 라벨이 물딜·마딜 공통으로 남는다.
+  assert(!app.includes('relaxedBySlow'),'폐기된 v18.9 해제 라벨이 남아 있다');
+  assert(app.includes('마지막에 반드시 채움'),'fillLast 라벨 없음');
   // 런타임: 광보잡 결손이 열린 채 광보잡 희귀(아카이누 P10h)를 소모하는
   // 제작 카드 — 0731 r19 센고쿠 케이스 재현.
   const context={console};context.window=context;vm.createContext(context);

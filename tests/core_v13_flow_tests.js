@@ -171,7 +171,8 @@ test('magic dual route requires two uppers, Toki, 1.5 stun, 102 slow and boss/fr
   assert.strictEqual(missing.route,'dual');
   assert.deepStrictEqual(missing.clearRows.map(x=>x.key),['toki']);
   assert.deepStrictEqual(ready.clearRows,[]);
-  assert.deepStrictEqual(ready.profile.priority,['main','stunBase','slow','stunFull','bossFrenzy','toki']);
+  // v19.9.7(0802 교정): 마딜도 stunFull 이 마지막 순서다 — 해제가 아니라 순서.
+  assert.deepStrictEqual(ready.profile.priority,['main','stunBase','slow','bossFrenzy','toki','stunFull']);
 });
 
 test('magic single/end route requires three verified support credits and keeps the one-unit-drop floor optional',()=>{
@@ -184,7 +185,8 @@ test('magic single/end route requires three verified support credits and keeps t
   const singleOnly=C.deficits(magicSpec({main:1,toki:0,single:3,end:0,singleEndUnits:3,singleEnd:3,singleEndExpected:3,singleEndMax:3,singleEndLargest:1,singleEndStable:2}),'magic',settings);
   assert(singleOnly.clearRows.some(x=>x.key==='end'),'단일 전용 3기가 끝딜 하드 컷을 통과하면 안 된다');
   assert(three.buildRows.some(x=>x.key==='singleEndStable'&&x.target===3&&x.recommended));
-  assert.deepStrictEqual(three.profile.priority,['bossFrenzy','stunBase','slow','stunFull','singleEndExpected']);
+  // v19.9.7(0802 교정): 마딜도 stunFull 이 마지막 순서다 — 해제가 아니라 순서.
+  assert.deepStrictEqual(three.profile.priority,['bossFrenzy','stunBase','slow','singleEndExpected','stunFull']);
 });
 
 test('auto magic route cannot declare the old incomplete profile fully ready',()=>{
