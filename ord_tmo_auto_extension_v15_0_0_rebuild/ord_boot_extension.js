@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v19.9.5 live cockpit bridge; connector protocol stays v13.
+  // v19.9.6 live cockpit bridge; connector protocol stays v13.
   // v19.4(사용자 요청): 도우미 번호 무관 — 숫자 id 전부 후보. 여러 탭이면
   // 주 도우미(32172) 우선.
   const PATTERNS = [
@@ -199,8 +199,98 @@
     }
     window.ORD_APP = app;
 
+    // ===== v19.9.6(A안): 로컬 직결 수집기 =====
+    // TMO 데스크톱의 Horse 서버(/datas)를 배경 경유로 직접 읽어 DOM 호환
+    // 스냅샷을 합성한다.  성공 수신이 신선한 동안(8초)은 로컬이 수량의
+    // 유일한 원본이고, TMO 탭 DOM 패는 완성도%·현재 능력치 보강용으로만
+    // 쌓인다 — 두 소스를 번갈아 적용하면 시차 수량이 오르내려 감지(리롤
+    // 해제·수동 제작 경고·상위 관측)가 흔들리기 때문이다.
+    const LM = window.ORD_LOCAL_MAP || null;
+    const localCatalogIds = new Set((window.ORD_TMO_UNITS || []).map(unit => String(unit.id)));
+    const local = {
+      sessionId: 'local-' + Date.now().toString(36),
+      seq: 0,
+      lastHash: '',
+      dataChangedAt: 0,
+      auto: null,
+      autoLoaded: false,
+      lastGoodAt: 0,
+      lastTriedAt: 0,
+      domStash: null,
+      busy: false,
+      timer: 0
+    };
+    const localFresh = () => !!LM && Date.now() - local.lastGoodAt <= 8000;
+    async function localAutoState() {
+      if (local.autoLoaded) return local.auto;
+      const stored = await get(['ordLocalAutoRound']);
+      // 자동 라운드 세대는 storage 에 남긴다 — 판 중간에 대시보드를 새로
+      // 고쳐도 세대가 이어져 라운드가 1로 되돌아가지 않는다.
+      local.auto = stored.ordLocalAutoRound && typeof stored.ordLocalAutoRound === 'object' ? stored.ordLocalAutoRound : null;
+      local.autoLoaded = true;
+      return local.auto;
+    }
+    function persistLocalAuto() {
+      try { chrome.storage.local.set({ordLocalAutoRound: local.auto}); } catch (_) {}
+    }
+    function handleLocalUnits(units) {
+      if (!LM) return false;
+      const now = Date.now();
+      const translated = LM.translate(units || null, localCatalogIds);
+      if (!translated.matched) {
+        // 아는 코드가 하나도 없으면(게임 꺼짐·메뉴) 판이 없는 것이다.
+        // 마지막 보드는 얼려 두고(결과 입력용) 자동 라운드만 비활성 전이.
+        if (local.auto && local.auto.active) {
+          local.auto = LM.nextLocalAutoRound(local.auto, 0, 0, now);
+          persistLocalAuto();
+        }
+        return false;
+      }
+      const hash = LM.countsHash(translated);
+      if (hash !== local.lastHash) {
+        local.lastHash = hash;
+        local.seq += 1;
+        local.dataChangedAt = now;
+      }
+      if (!local.dataChangedAt) local.dataChangedAt = now;
+      const auto = LM.nextLocalAutoRound(local.auto, translated.playableUnitCount, local.dataChangedAt, now);
+      const autoChanged = !local.auto || auto.generation !== Number(local.auto.generation) || auto.active !== (local.auto.active === true);
+      local.auto = auto;
+      if (autoChanged) persistLocalAuto();
+      const snapshot = LM.buildLocalSnapshot({
+        translated,
+        catalog: window.ORD_TMO_UNITS || [],
+        domStash: local.domStash,
+        sessionId: local.sessionId,
+        seq: Math.max(1, local.seq),
+        dataChangedAt: local.dataChangedAt,
+        autoRound: auto,
+        now
+      });
+      local.lastGoodAt = now;
+      try { app.updateSnapshot(snapshot); }
+      catch (error) { console.error(error); }
+      return true;
+    }
+    async function localPoll() {
+      if (!LM || local.busy) return;
+      local.busy = true;
+      try {
+        await localAutoState();
+        local.lastTriedAt = Date.now();
+        // 127.0.0.1 fetch 는 background 한 곳에만 있다(주소 허용목록 유지).
+        const result = await runtime({type: 'ORD_LOCAL_PROBE', url: LM.LOCAL_DATAS_URL});
+        if (!result || result.ok !== true) return;
+        let payload = null;
+        try { payload = JSON.parse(String(result.text || '')); } catch (_) { return; }
+        handleLocalUnits(payload && typeof payload.units === 'object' ? payload.units : null);
+      } finally { local.busy = false; }
+    }
+
     const clearSource = () => {
       if (!app.state.snapshot) return;
+      // 로컬 직결 스냅샷은 TMO 탭 소속이 아니다 — 탭 재고정으로 지우지 않는다.
+      if (app.state.snapshot.source === 'local-direct') return;
       app.state.snapshot = null;
       app.state.liveAt = 0;
       app.setMessage('TMO 원본 탭이 바뀌어 현재 패를 다시 확인합니다.');
@@ -208,6 +298,10 @@
     };
     const apply = snapshot => {
       if (!sourceMatches(snapshot)) return;
+      // v19.9.6(A안): DOM 패는 항상 보강 저장고에 쌓고, 로컬 직결이
+      // 신선하면 수량 적용은 건너뛴다(로컬이 원본).
+      local.domStash = snapshot;
+      if (localFresh()) return;
       try { app.updateSnapshot(snapshot); }
       catch (error) {
         console.error(error);
@@ -241,6 +335,18 @@
       if (changes.ordLatestDiagnostic) {
         app.state.connectionDiagnostic = changes.ordLatestDiagnostic.newValue || null;
         if (app.state.tab === 'data') scheduleRender();
+      }
+      // v19.9.6(A안): 숨김 대시보드 보험 — 페이지 타이머가 분당 1회로
+      // 조여져도 storage 이벤트는 즉시 온다.  background 15초 알람이 저장한
+      // /datas 원본으로 합성한다(보일 때는 2.5초 자체 폴링이 더 빠르다).
+      if (changes.ordLocalDirectFeed && LM) {
+        const feed = changes.ordLocalDirectFeed.newValue;
+        if (feed && feed.ok === true && (document.hidden || Date.now() - local.lastTriedAt > 5000)) {
+          localAutoState().then(() => {
+            try { handleLocalUnits(feed.units && typeof feed.units === 'object' ? feed.units : null); }
+            catch (error) { console.error(error); }
+          });
+        }
       }
       if (nextSnapshot) apply(withHeartbeat(nextSnapshot, nextHeartbeat));
       else if (nextHeartbeat) touch(nextHeartbeat);
@@ -301,7 +407,16 @@
         }
       }
     } else {
-      setTimeout(() => app.toast('tmo.gg 도우미 탭을 열고 연결해 주세요. 숫자 번호는 자동 인식됩니다(주: 32172).'), 300);
+      // v19.9.6(A안): 로컬 직결이 살아 있으면 TMO 탭 안내는 필요 없다 —
+      // 첫 로컬 폴링이 끝날 시간을 준 뒤에만 띄운다.
+      setTimeout(() => {
+        if (!localFresh()) app.toast('tmo.gg 도우미 탭을 열거나 TMO.GG 데스크톱 앱을 실행해 주세요. 게임 중에는 로컬 직결(/datas)로 탭 없이도 수집됩니다.');
+      }, 1500);
+    }
+
+    if (LM) {
+      local.timer = setInterval(() => { if (!document.hidden) localPoll(); }, 2500);
+      localPoll();
     }
 
     monitorId = setInterval(async () => {
@@ -335,6 +450,7 @@
 
     addEventListener('beforeunload', () => {
       clearInterval(monitorId);
+      clearInterval(local.timer);
       clearTimeout(renderTimer);
     }, {once: true});
   });

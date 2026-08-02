@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='19.9.5';
+const VERSION='19.9.6';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1522,6 +1522,16 @@ function snapshotHealth(snapshot,now){
   const result=(key,label,ready,note)=>({key,label,ready,ageSec,bridgeAgeSec:ageSec,scanAgeSec,dataAgeSec,note});
   if(!bridgeAt)return result('missing','TMO 미수신',false,'TMO.GG 데스크톱 프로그램과 32172 조합도우미를 먼저 연 뒤 다시 읽기를 눌러주세요. 기존 34366도 호환됩니다.');
   if(s.source==='manual'&&num(s.unitCount)>=80)return result('partial','오프라인 수동 모드',true,'자동 진행도·능력치 없이 수동으로 입력한 보유 유닛을 기준으로 계산합니다.');
+  // v19.9.6(A안): 로컬 직결 — TMO 데스크톱 /datas 를 확장이 직접 읽는다.
+  // 서버가 보유 유닛 전수를 주므로 DOM 파싱용 게이트(300~380종·전량 커버)
+  // 대신 신선도·위습 계약만 본다.  %·현재 능력치는 TMO 탭 보강 항목이다.
+  if(s.source==='local-direct'){
+    if(ageSec>12)return result('stale','로컬 직결 수신 끊김',false,`마지막 /datas 읽기 ${ageSec}초 전입니다. TMO.GG 데스크톱 앱 실행 여부를 확인하세요. 오래된 추천은 숨겼습니다.`);
+    if(s.wispCountFound!==true)return result('error','로컬 직결 위습 수량 미확인',false,'위습 수량 없이 제작 가능 여부를 판정하지 않습니다. 다시 읽기를 기다리거나 수동 보정하세요.');
+    if(ageSec>7)return result('lag','로컬 직결 수신 지연',true,`마지막 /datas 읽기 ${ageSec}초 전입니다. 12초를 넘으면 추천을 자동으로 숨깁니다.`);
+    if(num(s.abilityCount)<3)return result('partial','로컬 직결 · %·능력치는 TMO 탭 보강 대기',true,'게임 데이터를 /datas 로 직접 읽는 중입니다. 완성도%·현재 능력치는 TMO 조합도우미 탭이 열려 있으면 자동 보강됩니다.');
+    return result('ok','로컬 직결 실시간',true,'TMO 화면 없이 게임 데이터를 직접 읽고 있으며, 완성도%·현재 능력치는 TMO 탭에서 보강 중입니다.');
+  }
   if(s.source!=='tmo')return result('error','알 수 없는 데이터 원본',false,'지원하는 TMO 연동 또는 동봉 수동 실행 파일에서 다시 시작해 주세요.');
   // v19.7.1(외부 감사): 커넥터 전 구간이 숫자 번호를 받는데 최종 상태 판정만
   // 32172/34366 고정이라 다른 번호가 여기서 다시 죽었다 — 같은 규칙으로 통일.

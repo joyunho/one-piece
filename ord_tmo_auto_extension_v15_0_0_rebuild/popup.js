@@ -1,6 +1,6 @@
 'use strict';
 
-// v19.9.5 compact popup; parser protocol remains v13-compatible.
+// v19.9.6 compact popup; parser protocol remains v13-compatible.
 const state = document.getElementById('state');
 const detail = document.getElementById('detail');
 const testButton = document.getElementById('test');
@@ -112,6 +112,16 @@ function renderStored(value) {
   const warning = (collection.errors || []).slice(0, 2).join(', ');
   detail.textContent = `스캔 ${scanAt ? Math.max(0, Math.floor((Date.now() - scanAt) / 1000)) : '?'}초 전 · 실제 패 변화 ${dataAge < 9999 ? dataAge + '초 전' : '없음'} · 관찰 ${snapshot.sessionId}:${snapshot.seq}${warning ? ' · 경고 ' + warning : ''}`;
 }
+// v19.9.6(A안): background 15초 알람이 저장한 /datas 원본이 신선하면 TMO
+// 탭 없이도 게임 데이터가 흐르고 있다는 뜻이다 — 팝업에서 바로 보여준다.
+function localDirectLine(value) {
+  const feed = value && value.ordLocalDirectFeed;
+  if (!feed || feed.ok !== true || !feed.units) return '';
+  const age = Math.max(0, Math.floor((Date.now() - (Number(feed.at) || 0)) / 1000));
+  if (age > 35) return '';
+  const kinds = Object.keys(feed.units).length;
+  return `로컬 직결 ✓ ${kinds}종 · ${age}초 전`;
+}
 function refreshStatus() {
   chrome.storage.local.get([
     'ordLatestSnapshot',
@@ -119,8 +129,13 @@ function refreshStatus() {
     'ordLatestDiagnostic',
     'ordLatestReject',
     'ordPinnedTmoTabId',
-    'ordPinnedSourceEpoch'
-  ], renderStored);
+    'ordPinnedSourceEpoch',
+    'ordLocalDirectFeed'
+  ], value => {
+    renderStored(value);
+    const line = localDirectLine(value);
+    if (line) detail.textContent = (detail.textContent ? detail.textContent + ' · ' : '') + line;
+  });
 }
 
 document.getElementById('open').onclick = () => runtime({type: 'ORD_OPEN_DASHBOARD'});
@@ -186,6 +201,6 @@ testButton.onclick = async () => {
 };
 
 chrome.storage.onChanged.addListener((changes, area) => {
-  if (area === 'local' && (changes.ordLatestSnapshot || changes.ordLatestHeartbeat || changes.ordLatestDiagnostic || changes.ordLatestReject)) refreshStatus();
+  if (area === 'local' && (changes.ordLatestSnapshot || changes.ordLatestHeartbeat || changes.ordLatestDiagnostic || changes.ordLatestReject || changes.ordLocalDirectFeed)) refreshStatus();
 });
 refreshStatus();

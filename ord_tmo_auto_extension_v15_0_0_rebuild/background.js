@@ -152,12 +152,18 @@ async function collectLocalMapSample() {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), 3000);
     let payload = null;
+    let fetched = false;
     try {
       const response = await fetch('http://127.0.0.1:25625/datas', {signal: controller.signal, cache: 'no-store'});
       clearTimeout(timer);
       payload = JSON.parse(await response.text());
-    } catch (_) { clearTimeout(timer); return; }
-    const live = payload && typeof payload.units === 'object' && payload.units ? payload.units : null;
+      fetched = true;
+    } catch (_) { clearTimeout(timer); }
+    const live = fetched && payload && typeof payload.units === 'object' && payload.units ? payload.units : null;
+    // v19.9.6(A안): /datas 원본을 항상 저장 — 숨김 대시보드는 자체 타이머가
+    // 분당 1회로 조여져도 이 storage 이벤트로 15초 안에 로컬 직결 스냅샷을
+    // 합성한다.  fetch 실패는 ok:false 로 남겨 브리지가 무시하게 한다.
+    try { await set({ordLocalDirectFeed: {at: Date.now(), ok: !!live, units: live}}); } catch (_) {}
     if (!live || !Object.keys(live).length) return;
     const liveHash = JSON.stringify(live);
     if (liveHash === lastMapSampleHash) return;
