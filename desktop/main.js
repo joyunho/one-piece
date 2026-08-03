@@ -1,5 +1,5 @@
 'use strict';
-// v19.11.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
+// v19.11.1 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
 //
 // 확장(크롬) 없이 코치를 독립 프로그램으로 돌린다.  브라우저 제약
 // (타이머 조임·MV3 정책·CORS)이 사라지므로 보험 장치 없이 단순하다:
@@ -76,7 +76,10 @@ function createWindow() {
     }
   });
   win.removeMenu();
-  win.loadFile(path.join(__dirname, '..', 'ord_tmo_auto_extension_v15_0_0_rebuild', 'ord_helper_desktop.html'));
+  // 배포본은 자산이 앱 안(ui/)에 실려 있고, 개발 실행은 저장소 원본을 읽는다.
+  const bundledPage = path.join(__dirname, 'ui', 'ord_helper_desktop.html');
+  const repoPage = path.join(__dirname, '..', 'ord_tmo_auto_extension_v15_0_0_rebuild', 'ord_helper_desktop.html');
+  win.loadFile(fs.existsSync(bundledPage) ? bundledPage : repoPage);
   win.on('closed', () => { win = null; });
 }
 

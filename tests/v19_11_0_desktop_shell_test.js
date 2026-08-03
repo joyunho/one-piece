@@ -88,4 +88,22 @@ check('③ 자동 저장·프로브 — 데스크톱 경로 배선',()=>{
   assert(pkg.devDependencies&&pkg.devDependencies.electron,'electron 의존성 없음');
 });
 
+check('④ exe 패키징 — 자산 복사 계약 + win32 빌드 스크립트',()=>{
+  const buildUi=fs.readFileSync(path.join(ROOT,'desktop/build_ui.js'),'utf8');
+  const packWin=fs.readFileSync(path.join(ROOT,'desktop/package_win.js'),'utf8');
+  new vm.Script(buildUi,{filename:'build_ui.js'});
+  new vm.Script(packWin,{filename:'package_win.js'});
+  // 복사 목록은 페이지 파싱으로 만들고, 로컬 파일명이 아닌 참조는 거부한다.
+  assert(buildUi.includes('ord_helper_desktop.html')&&buildUi.includes('matchAll'),'페이지 파싱 복사가 아님');
+  assert(buildUi.includes('^[\\w.-]+$'),'외부 참조 거부 가드 없음');
+  assert(buildUi.includes('ord_direction_worker.js'),'런타임 워커가 복사 목록에 없음');
+  // 패키지에는 앱 파일만 싣는다 — node_modules·빌드 도구는 제외.
+  for(const pin of ['node_modules','build_ui','package_win','win32','ORDCoach'])assert(packWin.includes(pin),`패키징 계약 누락: ${pin}`);
+  const pkg=JSON.parse(fs.readFileSync(path.join(ROOT,'desktop/package.json'),'utf8'));
+  assert(pkg.scripts&&/build_ui\.js.*package_win\.js/.test(String(pkg.scripts['dist:win'])),'dist:win 스크립트 없음');
+  assert(pkg.devDependencies&&pkg.devDependencies['@electron/packager'],'@electron/packager 의존성 없음');
+  // 배포본은 앱 내 ui/ 페이지를 우선 로드한다(저장소 상대 경로는 개발 전용).
+  assert(main.includes("'ui', 'ord_helper_desktop.html'")&&main.includes('existsSync'),'번들 ui 우선 로드 없음');
+});
+
 console.log(`\n${checks} checks passed (v19.11.0 데스크톱 셸)`);
