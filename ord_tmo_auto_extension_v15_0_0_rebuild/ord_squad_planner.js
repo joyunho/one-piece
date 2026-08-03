@@ -6,8 +6,11 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.9.7';
+const VERSION='19.9.8';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
+// v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
+// 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
+let SEARCH_STUN_EARLY=false;
 const ROUTE_LABELS={physical:'물딜',dual:'마딜 2상위+토키',singleEnd:'마딜 1상위+단끝'};
 const STUN_OVERSUPPLY_PENALTY=420;
 const SLOW_OVERSUPPLY_PENALTY=4;
@@ -324,8 +327,8 @@ function decorateLegendEquivalent(result,settings){
 function squadDecisionSummary(state,result){
   const coverage=result&&result.roleCoverage&&result.roleCoverage.planned||{},rows=coverage.rows||[],spec=coverage.spec||{},row=key=>rows.find(item=>item.key===key)||{},tiers={},source=result&&result.handFit&&result.handFit.tiers||{};
   for(const tier of HAND_TIERS){const data=source[tier]||{},items=(data.rows||[]).filter(item=>num(item.initial)>0),assigned=num(data.assigned!=null?data.assigned:num(data.spent)+num(data.reserved));tiers[tier]={initial:num(data.initial),assigned,remaining:num(data.remaining),left:items.filter(item=>num(item.remaining)>0).map(item=>({id:item.id,name:item.name||displayNameOf(state.db.byId.get(item.id)),count:num(item.remaining)}))};}
-  const armor=row('armor'),main=row('main'),stunBase=row('stunBase'),slow=row('slow'),boss=row('bossFrenzy'),stunFull=row('stunFull'),toki=row('toki'),finish=row('singleEndExpected'),physical=result&&result.mode==='physical',dual=!physical&&result.magicRoute==='dual',primaryReady=physical?num(armor.gap)<=0&&num(stunBase.gap)<=0:dual?num(main.gap)<=0&&num(stunBase.gap)<=0:num(boss.gap)<=0&&num(stunBase.gap)<=0,secondaryReady=physical?num(slow.gap)<=0&&num(boss.gap)<=0:num(slow.gap)<=0,routeReady=physical?primaryReady&&secondaryReady:dual?primaryReady&&secondaryReady&&num(stunFull.gap)<=0&&num(boss.gap)<=0&&num(toki.gap)<=0:primaryReady&&secondaryReady&&num(stunFull.gap)<=0&&num(finish.gap)<=0,priorityGroups=physical?[['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:dual?[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']]:[['bossFrenzy','stunBase'],['slow'],['stunFull'],['singleEndExpected']];
-  const reason=physical?(primaryReady&&secondaryReady&&num(stunFull.gap)>0?'방깎·최소 스턴·이감·광보잡을 먼저 지켜 1.5스턴은 후순위로 보류했습니다.':primaryReady&&!secondaryReady?'방깎과 최소 스턴은 고정하고 이감·광보잡 결손을 먼저 보강합니다.':'상시 방깎과 최소 0.5스턴을 가장 먼저 맞춥니다.'):dual?'상위 2기와 최소 0.5스턴을 먼저 지키고, 이감 → 1.5스턴 → 광보잡·토키 순서로 판정합니다.':'광보잡과 최소 0.5스턴을 먼저 지키고, 이감 → 1.5스턴 → 검증된 보조 단·끝 순서로 판정합니다.';
+  const armor=row('armor'),main=row('main'),stunBase=row('stunBase'),slow=row('slow'),boss=row('bossFrenzy'),stunFull=row('stunFull'),toki=row('toki'),finish=row('singleEndExpected'),physical=result&&result.mode==='physical',dual=!physical&&result.magicRoute==='dual',primaryReady=physical?num(armor.gap)<=0&&num(stunBase.gap)<=0:dual?num(main.gap)<=0&&num(stunBase.gap)<=0:num(boss.gap)<=0&&num(stunBase.gap)<=0,secondaryReady=physical?num(slow.gap)<=0&&num(boss.gap)<=0:num(slow.gap)<=0,routeReady=physical?primaryReady&&secondaryReady:dual?primaryReady&&secondaryReady&&num(stunFull.gap)<=0&&num(boss.gap)<=0&&num(toki.gap)<=0:primaryReady&&secondaryReady&&num(stunFull.gap)<=0&&num(finish.gap)<=0,priorityGroups=physical?[['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:dual?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['bossFrenzy','stunBase'],['slow'],['singleEndExpected'],['stunFull']];
+  const reason=physical?(primaryReady&&secondaryReady&&num(stunFull.gap)>0?'방깎·최소 스턴·이감·광보잡을 먼저 지켜 1.5스턴은 후순위로 보류했습니다.':primaryReady&&!secondaryReady?'방깎과 최소 스턴은 고정하고 이감·광보잡 결손을 먼저 보강합니다.':'상시 방깎과 최소 0.7스턴을 가장 먼저 맞춥니다.'):dual?'상위 2기와 최소 0.7스턴을 먼저 지키고, 이감 → 광보잡·토키 → 1.5스턴(마지막 필수) 순서로 판정합니다.':'광보잡과 최소 0.7스턴을 먼저 지키고, 이감 → 검증된 보조 단·끝 → 1.5스턴(마지막 필수) 순서로 판정합니다.';
   return{policy:physical?'physical-operational':dual?'magic-dual':'magic-single-end',counts:{board:num(result&&result.plannedBoardCount),boardTarget:num(result&&result.targetBoardCount),equivalent:num(result&&result.plannedCount),equivalentTarget:num(result&&result.targetCount)},priorityGroups,spec:{armor:num(spec.armor),triggerArmor:num(spec.triggerArmor),stun:num(spec.stun),staticSlow:num(spec.slow),triggerSlow:num(spec.triggerSlow),creditedSlow:num(slow.current),bossFrenzy:Math.min(num(spec.boss),num(spec.frenzy)),main:num(spec.main),toki:num(spec.toki),singleEndExpected:num(spec.singleEndExpected),singleEndStable:num(spec.singleEndStable),singleEndMax:num(spec.singleEndMax)},gates:{primaryReady,secondaryReady,operationalReady:routeReady,armorTarget:num(armor.target),mainTarget:num(main.target),stunBaseTarget:num(stunBase.target),slowTarget:num(slow.target),bossFrenzyTarget:num(boss.target),tokiTarget:num(toki.target),finishTarget:num(finish.target),comfortStunTarget:num(stunFull.target),comfortStunGap:num(stunFull.gap)},tiers,reason};
 }
 
@@ -367,7 +370,7 @@ function checkpointRequirementKeys(mode,route,dueRound){
   //
   // 이 행은 core에서 required:false(권장)로 선언돼 있는데 여기서만 하드
   // 게이트로 쓰이고 있었다.  그 불일치가 "좋은각·완벽각 실전 0건"의
-  // 마지막 자물쇠였다: 첫 클리어 보드는 생존 5행(main·광보잡·0.5스턴·
+  // 마지막 자물쇠였다: 첫 클리어 보드는 생존 5행(main·광보잡·최소 스턴·
   // 이감·1.5스턴)을 전부 닫았는데 singleEndStable만 1/3이라 checkpointPass가
   // false였고, 그 하나 때문에 각 판정 전체가 잠겼다.
   //
@@ -395,7 +398,7 @@ function activeCheckpoint(checkpoints,roundNow){
 // copies remain rerollable.
 function directRareRoleReservation(unit,available,liveDef,mode,liveSpec){
   const pool=Math.max(0,num(available)),requirements=liveDef&&liveDef.requirements||[],contribution=unit&&C.roleContribution?C.roleContribution(unit,mode):{},relevant=requirements.filter(row=>(row.required||row.recommended)&&num(contribution[row.key])>0);if(!pool||!relevant.length)return{count:0,labels:[]};
-  // `stunBase.current` is deliberately capped at 0.5. Subtracting a Rare's
+  // `stunBase.current` is deliberately capped at the STUN_BASE_FLOOR (0.7). Subtracting a Rare's
   // stun from that capped number made a 1.9-stun board look as if removing one
   // Jozu reopened the minimum-stun gate. Use the uncapped live stun for both
   // stun rows; every other role keeps the route's credited current value.
@@ -438,7 +441,7 @@ function exactPrefixCheckpoint(roundNow,stage,mode,route,rareRemaining){
   const definitions=[{key:'r30',dueRound:30,equivalent:4},{key:'r40',dueRound:40,equivalent:6},{key:'r45',dueRound:45,equivalent:8},{key:'r50',dueRound:50,equivalent:9}],pass=def=>stage.legendEquivalent>=def.equivalent&&(def.dueRound===30?stage.upperCount>=1&&stage.nonUpperFinalCount>=1:checkpointStagePass(stage,mode,route,def.dueRound))&&(def.dueRound<45||rareRemaining<=0),overdue=definitions.find(def=>def.dueRound<=roundNow&&!pass(def));return overdue||definitions.find(def=>def.dueRound>roundNow)||definitions[definitions.length-1];
 }
 function checkpointDebtVector(stage,mode,route,dueRound){
-  const keys=new Set(checkpointRequirementKeys(mode,route,dueRound)),requirements=stage&&stage.requirements&&stage.requirements.rows||[],byKey=new Map(requirements.map(row=>[row.key,row])),groups=mode==='physical'?[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']]:[['main'],['bossFrenzy','stunBase'],['slow'],['stunFull'],['singleEndStable','singleEndExpected']],vector=[];
+  const keys=new Set(checkpointRequirementKeys(mode,route,dueRound)),requirements=stage&&stage.requirements&&stage.requirements.rows||[],byKey=new Map(requirements.map(row=>[row.key,row])),groups=mode==='physical'?[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndStable','singleEndExpected'],['stunFull']],vector=[];
   for(const group of groups){const selected=group.filter(key=>keys.has(key)).map(key=>byKey.get(key)||{key,target:1,gap:Infinity});if(!selected.length)continue;const missed=selected.filter(row=>num(row.gap)>0).length,debt=selected.reduce((total,row)=>total+num(row.gap)/Math.max(.01,num(row.target)||1),0);vector.push(missed,round(debt,6));}return vector;
 }
 function exactPrefixMetrics(state,node,mode,route,settings,fixed){
@@ -547,7 +550,7 @@ function requirementRows(spec,lineup,mode,route,settings,mainUpper){
   const profileSettings=Object.assign({},settings,{magicRoute:route,_resolvedMagicRoute:route,_upperUnit:mainUpper||null}),ctl=C.controlState?C.controlState(spec,mode,profileSettings):null,profile=C.clearProfileDetails?C.clearProfileDetails(spec,mode,profileSettings):null,rows=[];
   const add=(key,label,current,target,weight,required=true,meta={})=>rows.push({key,label,current:round(current,3),target:round(target,3),gap:round(Math.max(0,target-current),3),weight,required,status:current>=target?'ok':current>=target*.7?'warn':'bad',meta});
   if(profile&&Array.isArray(profile.requirements))for(const row of profile.requirements)add(row.key,row.label,row.current,row.target,row.weight,row.required!==false,row.meta||{});
-  else{const triggerWeight=num(C&&C.CONTROL_ENVELOPE&&C.CONTROL_ENVELOPE.triggerSafeWeightOne)||.5;add('main','상위 딜러',spec.main,mode==='magic'&&route==='dual'?2:1,120);add('stunBase','최소 0.5 스턴',Math.min(.5,num(spec.stun)),.5,110);add('slow','이감 102%',num(spec.slow)+num(spec.triggerSlow)*triggerWeight,targetSlow(settings,mode),95);add('stunFull','충분한 1.5 스턴',spec.stun,1.5,78);}
+  else{const triggerWeight=num(C&&C.CONTROL_ENVELOPE&&C.CONTROL_ENVELOPE.triggerSafeWeightOne)||.5;add('main','상위 딜러',spec.main,mode==='magic'&&route==='dual'?2:1,120);add('stunBase','최소 0.7 스턴',Math.min(num(C&&C.STUN_BASE_FLOOR)||.7,num(spec.stun)),num(C&&C.STUN_BASE_FLOOR)||.7,110);add('slow','이감 102%',num(spec.slow)+num(spec.triggerSlow)*triggerWeight,targetSlow(settings,mode),95);add('stunFull','충분한 1.5 스턴',spec.stun,1.5,78);}
   if(mode==='physical'&&!rows.some(row=>row.key==='bossFrenzy'))add('bossFrenzy','광보잡',Math.min(num(spec.boss),num(spec.frenzy)),1,95,true);
   if(mode==='magic'&&route==='singleEnd')add('singleEndStable','한 기 누락 후 단일·끝딜 하한',num(spec.singleEndStable),3,34,false,{maximum:num(spec.singleEndMax)});
   if(mode==='magic')add('magicSupport','마딜 증폭·마방깎',num(spec.magicDef)+num(spec.magicAmp)+num(spec.explosionAmp),1,32,false);
@@ -741,11 +744,13 @@ function buildStaticRows(state,mode,route,settings,policy,fixed,initialReq){
   // fills the cap; this is especially important for the 3~4 single/end units.
   const orderedRequirements=initialReq.rows.slice().sort((a,b)=>(a.key==='singleEndExpected'?-1:0)-(b.key==='singleEndExpected'?-1:0));for(const req of orderedRequirements){const ranked=rows.filter(x=>requirementVectorValue(x.vector,req.key,initialReq)>0).sort((a,b)=>requirementVectorValue(b.vector,req.key,initialReq)-requirementVectorValue(a.vector,req.key,initialReq)||b.score-a.score),limit=req.key==='singleEndExpected'?8:3;if(req.key==='singleEndExpected')for(const row of ranked.filter(x=>!C.isUpper(x.unit)).slice(0,8))push(row);for(const row of ranked.slice(0,limit))push(row);}
   // Keep low-stun role alternatives inside the bounded beam. Otherwise an
-  // early 0.5-stun gap can fill the entire shortlist with stunners, leaving no
-  // sensible damage/buffer/armor candidates for slots 6~9 after 1.5 is met.
+  // early minimum-stun gap can fill the entire shortlist with stunners, leaving
+  // no sensible damage/buffer/armor candidates for slots 6~9 after 1.5 is met.
+  // v19.9.8: 최소선 0.7 상향 — targetStun 밴드 앵커도 코어 상수를 따른다.
+  const STUN_FLOOR=num(C&&C.STUN_BASE_FLOOR)||.7;
   const lowStun=rows.filter(x=>!C.isUpper(x.unit)&&num(x.vector.stun)<=.05).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||num(b.resourceScore)-num(a.resourceScore)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id));for(const row of lowStun.slice(0,9))push(row);
   const lightStun=rows.filter(x=>!C.isUpper(x.unit)&&num(x.vector.stun)>.05&&num(x.vector.stun)<=.35).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||num(b.resourceScore)-num(a.resourceScore)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id));for(const row of lightStun.slice(0,4))push(row);
-  const targetStun=rows.filter(x=>!C.isUpper(x.unit)&&num(x.vector.stun)>.35&&num(x.vector.stun)<=.8).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||Math.abs(num(a.vector.stun)-.5)-Math.abs(num(b.vector.stun)-.5)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id));for(const row of targetStun.slice(0,5))push(row);
+  const targetStun=rows.filter(x=>!C.isUpper(x.unit)&&num(x.vector.stun)>.35&&num(x.vector.stun)<=1).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||Math.abs(num(a.vector.stun)-STUN_FLOOR)-Math.abs(num(b.vector.stun)-STUN_FLOOR)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id));for(const row of targetStun.slice(0,5))push(row);
   const combinedRole=rows.filter(x=>!C.isUpper(x.unit)).sort((a,b)=>staticPotential(b.vector,initialReq)-staticPotential(a.vector,initialReq)||num(b.resourceScore)-num(a.resourceScore)||compareAffinity(a.unit,b.unit)||compareText(a.unit.id,b.unit.id));for(const row of combinedRole.slice(0,12))push(row);
   for(const row of rows.filter(x=>!C.isUpper(x.unit)).slice(0,10))push(row);
   for(const row of rows.filter(x=>C.isUpper(x.unit)).slice(0,5))push(row);
@@ -871,7 +876,15 @@ function nodeSignature(node,state){
   return node.actions.map(x=>x.id).sort().join('|')+`@${node.wisp}#${stock}`;
 }
 function requirementPriorityVector(requirements){
-  const rows=requirements&&requirements.rows||[],byKey=new Map(rows.filter(row=>row.required).map(row=>[row.key,row])),route=requirements&&requirements.route||'physical',groups=route==='physical'?[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']]:[['main'],['bossFrenzy','stunBase'],['slow'],['stunFull'],['singleEndExpected']],vector=[];
+  const rows=requirements&&requirements.rows||[],byKey=new Map(rows.filter(row=>row.required).map(row=>[row.key,row])),route=requirements&&requirements.route||'physical',
+  // v19.9.8(최소 스턴 0.7 상향): 스턴풀을 늘 마지막 그룹으로 미루는 이
+  // 벡터가 빔 가지치기를 지배하므로, 최소선이 오르자 "낮은 스턴 상위 +
+  // 스턴 전설 2기"로만 완성되는 패의 경로가 조기 탈락해 완성 가능한 판을
+  // 미완성으로 내놓았다(full_hand_fit 픽스처 실측).  1차 탐색이 미완성일
+  // 때만 스턴을 생존 그룹에 합쳐 다시 찾는 구제 모드를 둔다 — 화면의
+  // fillLast(마지막에 반드시 채움) 순서는 그대로고, 탐색만 미리 자금을
+  // 댄다.  "마지막"은 순서지 포기가 아니다.
+  groups=SEARCH_STUN_EARLY?(route==='physical'?[['main'],['armor','stunBase','stunFull'],['slow','bossFrenzy']]:route==='dual'?[['main','stunBase','stunFull'],['slow'],['bossFrenzy','toki']]:[['main'],['bossFrenzy','stunBase','stunFull'],['slow'],['singleEndExpected']]):(route==='physical'?[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected'],['stunFull']]),vector=[];
   for(const keys of groups){const selected=keys.map(key=>byKey.get(key)).filter(Boolean),missed=selected.filter(row=>num(row.gap)>0).length,debt=selected.reduce((total,row)=>total+num(row.gap)/Math.max(.01,num(row.target)),0);vector.push(missed,round(debt,6));}return vector;
 }
 function comparePriorityVectors(a,b){const left=a||[],right=b||[],length=Math.max(left.length,right.length);for(let index=0;index<length;index++){const av=num(left[index]),bv=num(right[index]);if(av!==bv)return av-bv;}return 0;}
@@ -922,13 +935,30 @@ function boundedBeam(nodes,limit){
 
 function searchRoute(state,mode,route,settings,policy,fixed){
   const target=settings.targetSquadCount,liveSpec=C.currentSpec(state,mode,Object.assign({},settings,{_upperUnit:mainUpperFor(state,state.counts,fixed)})),baseSpec=finalOnlySpec(state,state.counts,mode),initial=evaluateNode(state,{counts:clone(state.counts),wisp:num(state.counts[C.WISP_ID]),spec:baseSpec,actions:[]},mode,route,settings,fixed,target);initial.target=target;
-  const staticData=buildStaticRows(state,mode,route,settings,policy,fixed,initial.requirements),maxDepth=Math.min(DEFAULTS.maxDepth,Math.max(3,target-initial.projectedCount+4));let beam=[initial],archive=[initial];
-  for(let depth=0;depth<maxDepth;depth++){
-    const children=[];
-    for(const node of beam){if(node.complete)continue;const ranked=staticData.shortlist.filter(row=>!num(node.counts[row.unit.id])&&!ruleBlocked(state,node,row.unit,mode,route,settings,fixed)).map(row=>({row,rank:quickRank(state,row,node,fixed,policy)})).filter(item=>Number.isFinite(item.rank)).sort((a,b)=>b.rank-a.rank||compareAffinity(a.row.unit,b.row.unit)||compareText(a.row.unit.id,b.row.unit.id)).map(item=>item.row),branches=diverseBranchRows(ranked,node.requirements,DEFAULTS.branchWidth);
-      for(const row of branches){const next=expandNode(state,node,row,mode,route,settings,fixed,target,policy);if(!next)continue;next.target=target;children.push(next);}
+  const staticData=buildStaticRows(state,mode,route,settings,policy,fixed,initial.requirements),maxDepth=Math.min(DEFAULTS.maxDepth,Math.max(3,target-initial.projectedCount+4));
+  const runBeam=()=>{
+    let beam=[initial];const found=[];
+    for(let depth=0;depth<maxDepth;depth++){
+      const children=[];
+      for(const node of beam){if(node.complete)continue;const ranked=staticData.shortlist.filter(row=>!num(node.counts[row.unit.id])&&!ruleBlocked(state,node,row.unit,mode,route,settings,fixed)).map(row=>({row,rank:quickRank(state,row,node,fixed,policy)})).filter(item=>Number.isFinite(item.rank)).sort((a,b)=>b.rank-a.rank||compareAffinity(a.row.unit,b.row.unit)||compareText(a.row.unit.id,b.row.unit.id)).map(item=>item.row),branches=diverseBranchRows(ranked,node.requirements,DEFAULTS.branchWidth);
+        for(const row of branches){const next=expandNode(state,node,row,mode,route,settings,fixed,target,policy);if(!next)continue;next.target=target;children.push(next);}
+      }
+      if(!children.length)break;const dedup=new Map();for(const node of children){const key=nodeSignature(node,state),old=dedup.get(key);if(!old||nodeCompare(node,old)<0)dedup.set(key,node);}beam=boundedBeam([...dedup.values()],DEFAULTS.beamWidth);found.push(...beam);if(beam.every(x=>x.complete))break;
     }
-    if(!children.length)break;const dedup=new Map();for(const node of children){const key=nodeSignature(node,state),old=dedup.get(key);if(!old||nodeCompare(node,old)<0)dedup.set(key,node);}beam=boundedBeam([...dedup.values()],DEFAULTS.beamWidth);archive.push(...beam);if(beam.every(x=>x.complete))break;
+    return found;
+  };
+  let archive=[initial].concat(runBeam());
+  // v19.9.8(스턴 최소선 0.7 상향): 스턴풀은 화면 순서상 마지막(fillLast)이라
+  // 가지치기 비교에서도 늘 뒤로 밀리는데, 최소선이 오르자 "낮은 스턴 상위 +
+  // 스턴 전설 여러 기"로만 1.5가 닫히는 패의 경로가 빔에서 조기 탈락해
+  // 완성 가능한 판을 미완성으로 내놓았다.  1차가 미완성이면 스턴을 생존
+  // 그룹에 합친 우선순위로 한 번 더 찾는다 — "마지막에 반드시 채움"의
+  // '반드시'를 탐색이 보증한다.  구제안이 완성이면 nodeCompare 의 첫 키
+  // (complete)가 알아서 그쪽을 고른다.
+  if(!archive.some(node=>node.complete)){
+    SEARCH_STUN_EARLY=true;
+    try{archive=archive.concat(runBeam());}
+    finally{SEARCH_STUN_EARLY=false;}
   }
   archive.sort(nodeCompare);return{best:archive[0],alternates:archive.filter(x=>nodeSignature(x,state)!==nodeSignature(archive[0],state)).slice(0,5),staticData,route,liveSpec};
 }
@@ -1597,7 +1627,7 @@ function directionLaneCompare(a,b){
   return checkpoint||upperBlueprintCompare(a,b);
 }
 function rankDeckDirections(input,options){
-  input=input||{};options=options||{};const started=Date.now(),settings=Object.assign({},input.settings||{}),baseSettings=normalizeSettings(input),state=makeState(input,baseSettings),candidateCap=Math.max(3,Math.min(12,num(options.candidateCap)||(options.exact===true?12:8))),physicalPool=directionUpperShortlist(state,'physical',candidateCap,{settings:Object.assign({},baseSettings,{mode:'physical',magicRoute:'physical'})}),magicPool=directionUpperShortlist(state,'magic',candidateCap),physicalIds=physicalPool.ids,magicIds=magicPool.ids,limit=Math.max(1,Math.min(2,num(options.perLane)||2)),run=(mode,route,ids)=>rankUpperBlueprints(Object.assign({},input,{settings:Object.assign({},settings,{mode,magicRoute:route,targetSquadCount:9,targetLegendEquivalent:9})}),{candidateIds:ids}),physicalRanked=run('physical','physical',physicalIds),dualRanked=run('magic','dual',magicIds),singleRanked=run('magic','singleEnd',magicIds),buildLane=(key,rows,anchors)=>{const seeded=[],seen=new Set(),push=row=>{if(row&&!seen.has(row.upperId)){seen.add(row.upperId);seeded.push(row);}};push((rows||[]).find(row=>row&&row.safePrefix&&row.safePrefix.checkpointPass));push(rows&&rows[0]);for(const id of anchors||[])push((rows||[]).find(row=>row.upperId===id));for(const row of rows||[])push(row);if(options.exact===true){const verifyCap=Math.max(1,Math.min(4,num(options.exactVerifyCap)||2)),verified=seeded.slice(0,verifyCap).map(row=>exactDirectionRow(input,state,key,row)).filter(Boolean).sort(directionLaneCompare),rest=seeded.slice(verifyCap);return uniqueDirectionRows(state,key,verified.concat(rest),limit);}return uniqueDirectionRows(state,key,seeded,limit);},physical=buildLane('physical',physicalRanked,[physicalIds[0]]),singleAnchor=singleRanked[0]&&singleRanked[0].upperId,dual=buildLane('dual',dualRanked,[singleAnchor,magicIds[0]]),singleEnd=buildLane('singleEnd',singleRanked,[magicIds[0]]),lanes=[{key:'physical',mode:'physical',route:'physical',label:'물딜 1상위',priority:'상위 → 상시 방깎 180 = 최소 0.5스턴 → 이감 = 광보잡 → 1.5스턴',rows:physical},{key:'dual',mode:'magic',route:'dual',label:'마딜 2상위·토키',priority:'상위 2기 = 최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키',rows:dual},{key:'singleEnd',mode:'magic',route:'singleEnd',label:'마딜 1상위·단끝',priority:'광보잡 = 최소 0.5스턴 → 이감 → 1.5스턴 → 검증된 보조 단·끝',rows:singleEnd}],viable=lanes.flatMap(lane=>(lane.rows||[]).filter(row=>row&&row.projectedComplete)),leading=lanes.map(lane=>lane.rows[0]).filter(row=>row&&row.projectedComplete),dominant=leading.length===1?leading[0].directionKey:'',checkpointLeaders=lanes.map(lane=>({lane,row:lane.rows&&lane.rows[0]})).filter(item=>item.row&&item.row.safePrefix&&item.row.safePrefix.checkpointPass),checkpointUpperKeys=[...new Set(checkpointLeaders.map(item=>String(item.row.upperCanonicalId||canonicalUpper(state.db.byId.get(item.row.upperId)))))],provisionalDirection=checkpointUpperKeys.length===1&&checkpointLeaders.length?{upperId:checkpointLeaders[0].row.upperId,upperCanonicalId:checkpointUpperKeys[0],upperName:checkpointLeaders[0].row.upperName,routeKeys:[...new Set(checkpointLeaders.map(item=>item.lane.key))],checkpoint:checkpointLeaders[0].row.safePrefix.checkpoint,actions:(checkpointLeaders[0].row.safePrefix.actions||[]).map(action=>({id:action.id,name:action.name,wispCost:action.wispCost}))}:null;let safeReroll=[];
+  input=input||{};options=options||{};const started=Date.now(),settings=Object.assign({},input.settings||{}),baseSettings=normalizeSettings(input),state=makeState(input,baseSettings),candidateCap=Math.max(3,Math.min(12,num(options.candidateCap)||(options.exact===true?12:8))),physicalPool=directionUpperShortlist(state,'physical',candidateCap,{settings:Object.assign({},baseSettings,{mode:'physical',magicRoute:'physical'})}),magicPool=directionUpperShortlist(state,'magic',candidateCap),physicalIds=physicalPool.ids,magicIds=magicPool.ids,limit=Math.max(1,Math.min(2,num(options.perLane)||2)),run=(mode,route,ids)=>rankUpperBlueprints(Object.assign({},input,{settings:Object.assign({},settings,{mode,magicRoute:route,targetSquadCount:9,targetLegendEquivalent:9})}),{candidateIds:ids}),physicalRanked=run('physical','physical',physicalIds),dualRanked=run('magic','dual',magicIds),singleRanked=run('magic','singleEnd',magicIds),buildLane=(key,rows,anchors)=>{const seeded=[],seen=new Set(),push=row=>{if(row&&!seen.has(row.upperId)){seen.add(row.upperId);seeded.push(row);}};push((rows||[]).find(row=>row&&row.safePrefix&&row.safePrefix.checkpointPass));push(rows&&rows[0]);for(const id of anchors||[])push((rows||[]).find(row=>row.upperId===id));for(const row of rows||[])push(row);if(options.exact===true){const verifyCap=Math.max(1,Math.min(4,num(options.exactVerifyCap)||2)),verified=seeded.slice(0,verifyCap).map(row=>exactDirectionRow(input,state,key,row)).filter(Boolean).sort(directionLaneCompare),rest=seeded.slice(verifyCap);return uniqueDirectionRows(state,key,verified.concat(rest),limit);}return uniqueDirectionRows(state,key,seeded,limit);},physical=buildLane('physical',physicalRanked,[physicalIds[0]]),singleAnchor=singleRanked[0]&&singleRanked[0].upperId,dual=buildLane('dual',dualRanked,[singleAnchor,magicIds[0]]),singleEnd=buildLane('singleEnd',singleRanked,[magicIds[0]]),lanes=[{key:'physical',mode:'physical',route:'physical',label:'물딜 1상위',priority:'상위 → 상시 방깎 180 = 최소 0.7스턴 → 이감 = 광보잡 → 1.5스턴',rows:physical},{key:'dual',mode:'magic',route:'dual',label:'마딜 2상위·토키',priority:'상위 2기 = 최소 0.7스턴 → 이감 → 광보잡·토키 → 1.5스턴(마지막 필수)',rows:dual},{key:'singleEnd',mode:'magic',route:'singleEnd',label:'마딜 1상위·단끝',priority:'광보잡 = 최소 0.7스턴 → 이감 → 검증된 보조 단·끝 → 1.5스턴(마지막 필수)',rows:singleEnd}],viable=lanes.flatMap(lane=>(lane.rows||[]).filter(row=>row&&row.projectedComplete)),leading=lanes.map(lane=>lane.rows[0]).filter(row=>row&&row.projectedComplete),dominant=leading.length===1?leading[0].directionKey:'',checkpointLeaders=lanes.map(lane=>({lane,row:lane.rows&&lane.rows[0]})).filter(item=>item.row&&item.row.safePrefix&&item.row.safePrefix.checkpointPass),checkpointUpperKeys=[...new Set(checkpointLeaders.map(item=>String(item.row.upperCanonicalId||canonicalUpper(state.db.byId.get(item.row.upperId)))))],provisionalDirection=checkpointUpperKeys.length===1&&checkpointLeaders.length?{upperId:checkpointLeaders[0].row.upperId,upperCanonicalId:checkpointUpperKeys[0],upperName:checkpointLeaders[0].row.upperName,routeKeys:[...new Set(checkpointLeaders.map(item=>item.lane.key))],checkpoint:checkpointLeaders[0].row.safePrefix.checkpoint,actions:(checkpointLeaders[0].row.safePrefix.actions||[]).map(action=>({id:action.id,name:action.name,wispCost:action.wispCost}))}:null;let safeReroll=[];
   if(viable.length){const maps=viable.map(row=>new Map(row.unusedRare.map(item=>[item.id,item]))),ids=[...maps[0].keys()].filter(id=>maps.every(map=>map.has(id)));safeReroll=ids.map(id=>Object.assign({},maps[0].get(id),{count:Math.min(...maps.map(map=>num(map.get(id)&&map.get(id).count)))})).filter(item=>item.count>0);}
   return{version:VERSION,lanes,dominant,provisionalDirection,decision:dominant?'single-dominant':provisionalDirection?'provisional-upper':'hold',reason:dominant?'현재 패에서 정적 역할표까지 닫힌 방향이 하나뿐입니다. 보스 화력은 별도 미검증입니다.':provisionalDirection?`${provisionalDirection.upperName} 경로만 현재 패로 다음 체크포인트를 닫습니다. 세부 마딜 경로가 겹치면 이후 패에서 다시 나눕니다.`:'서로 다른 운영 경로를 전역 1위로 억지 정렬하지 않습니다. 각 방향의 현재 확정 행동과 위험을 비교하세요.',safeReroll,evaluatedCandidates:{physical:physicalIds.length,magic:magicIds.length},candidateCoverage:{physicalDeficits:physicalPool.deficitBest||[]},availableCandidates:{physical:physicalPool.total,magic:magicPool.total},elapsedMs:Date.now()-started};
 }

@@ -114,7 +114,7 @@ test('survival checkpoints require eight equivalents at R45 and nine at R50',()=
   assert.strictEqual(P._test.exactPrefixCheckpoint(50,t50Eight.actual,'physical','physical',0).equivalent,9);
 });
 
-test('physical R50 blocks the 0.5-stun minimum and accepts 1.5 only as an unverified structural pass',()=>{
+test('physical R50 blocks a below-floor 0.5-stun board and accepts 1.5 only as an unverified structural pass',()=>{
   const half=timeline(9,.5,50),full=timeline(9,1.5,50);
   const halfCheckpoint=half.checkpoints.find(row=>row.key==='r50');
   const fullCheckpoint=full.checkpoints.find(row=>row.key==='r50');

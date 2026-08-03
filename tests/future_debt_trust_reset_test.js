@@ -181,7 +181,7 @@ test('role-sheet completion is never presented as verified boss damage',()=>{
     rows:[
       {key:'main',label:'상위 딜러',required:true,gap:0},
       {key:'armor',label:'상시 풀방깎',required:true,gap:0},
-      {key:'stunBase',label:'최소 0.5 스턴',required:true,gap:0},
+      {key:'stunBase',label:'최소 0.7 스턴',required:true,gap:0},
       {key:'slow',label:'이감 102%',required:true,gap:0},
       {key:'bossFrenzy',label:'광보잡',required:true,gap:0}
     ]

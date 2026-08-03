@@ -128,7 +128,8 @@ test('manual rare-reward history cannot advance or alter the TMO-driven flow',()
 });
 
 test('physical clear hard-gates armor at 180 and requires 1.5 stun as the last-priority gate (v17.7)',()=>{
-  const at179=C.deficits(physicalSpec({armor:179,stun:.5}),'physical',baseSettings({mode:'physical'})),at180=C.deficits(physicalSpec({armor:180,stun:.5}),'physical',baseSettings({mode:'physical'})),full=C.deficits(physicalSpec({armor:180,stun:1.5}),'physical',baseSettings({mode:'physical'}));
+  // v19.9.8: 최소선이 0.5→0.7 로 올라 '최소만 채운 패'는 스턴 0.7 이다.
+  const at179=C.deficits(physicalSpec({armor:179,stun:.7}),'physical',baseSettings({mode:'physical'})),at180=C.deficits(physicalSpec({armor:180,stun:.7}),'physical',baseSettings({mode:'physical'})),full=C.deficits(physicalSpec({armor:180,stun:1.5}),'physical',baseSettings({mode:'physical'}));
   assert(at179.clearRows.some(x=>x.key==='armor'&&x.target===180&&x.gap===1));
   // v17.7: 물딜 1.5스턴은 마지막 우선순위의 필수 하드 게이트였다.
   // v18.9 는 이감 충족 시 이 게이트를 권장으로 내렸지만, v19.9(사용자 교정)가
@@ -138,15 +139,16 @@ test('physical clear hard-gates armor at 180 and requires 1.5 stun as the last-p
   assert.deepStrictEqual(at180.clearRows.map(x=>x.key),['stunFull'],'이감 충족 + 방깎 180 이면 남는 필수 결손은 1.5스턴뿐이다');
   const relaxed=at180.requirements.find(x=>x.key==='stunFull');
   assert.strictEqual(relaxed.required,true,'물딜 1.5스턴은 이감이 차도 필수로 남는다(v19.9)');
-  assert(relaxed.gap>0,'스턴 0.5 픽스처인데 1.5 결손이 없다');
+  assert(relaxed.gap>0,'스턴 0.7 픽스처인데 1.5 결손이 없다');
   assert.deepStrictEqual(full.clearRows,[]);
   assert.deepStrictEqual([at180.profile.armorTarget,at180.profile.armorIdeal],[180,211]);
   const comfort=at180.requirements.find(row=>row.key==='stunFull');
-  assert.deepStrictEqual([comfort.required,comfort.target,comfort.gap],[true,1.5,1]);
+  // v19.9.8: 최소선 픽스처가 0.7 이라 1.5 결손은 0.8 남는다.
+  assert.deepStrictEqual([comfort.required,comfort.target,comfort.gap],[true,1.5,.8]);
   assert.deepStrictEqual(at180.profile.priority,['armor','stunBase','slow','bossFrenzy','stunFull']);
 });
 
-test('physical priority pairs armor with 0.5 stun, then slow with boss/frenzy, before optional stun',()=>{
+test('physical priority pairs armor with the minimum stun, then slow with boss/frenzy, before optional stun',()=>{
   const d=C.deficits(physicalSpec({armor:0,stun:0,slow:0}),'physical',baseSettings({mode:'physical'})),weight=Object.fromEntries(d.requirements.map(x=>[x.key,x.weight]));
   assert.strictEqual(weight.armor,weight.stunBase);
   assert.strictEqual(weight.slow,weight.bossFrenzy);

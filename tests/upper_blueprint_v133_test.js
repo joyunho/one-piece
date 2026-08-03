@@ -94,19 +94,22 @@ test('upper ranking sequentially consumes an owned first legend instead of doubl
 
 test('Absalom exception stays buildable in both rank and preview without showing zombie hard-missing',()=>{
   const counts=stockedCounts();counts['010h']=0;counts['unit_1767884889420_456']=0;const state=stateFromCounts(counts),ranked=rank(state,['A50h'])[0];
-  // v17.7: full 1.5 stun is now a required physical gate this synthetic hand
-  // cannot close (its lineage-legal ceiling is 1.435), so the plan is honestly
-  // incomplete — the Absalom exception itself must still quote A50h with no
-  // zombie hard-missing rows.
+  // v17.7: full 1.5 stun is a required physical gate.  v19.9.8(최소 스턴
+  // 0.7): 최소선이 오르자 엔진이 다른 혈통(바르톨로메오 0.9 라인)으로 스턴
+  // 1.501 을 닫는 설계를 1위로 골랐다 — 예전 주석의 '상한 1.435'는 이전
+  // 설계 계열의 상한이었다.  대신 광보잡이 1/2 로 열려 계획은 여전히
+  // 정직하게 미완성이고, 압살롬 예외는 좀비 하드 결손 없이 A50h 를 그대로
+  // 제시해야 한다.
   assert(ranked&&ranked.plan.finalLineup.some(row=>row.id==='A50h'));
   assert.strictEqual(ranked.clearComplete,false);
   const openRows=ranked.plan.roleCoverage.planned.rows.filter(row=>row.gap>0);
   // v18.8(사용자 교정): 광보잡 2기 요구가 들어오면서 이 픽스처의 1위 설계도가
-  // 바뀌었다.  새 설계도는 보잡 2기를 확보하는 대신 이감을 95/102 로 남긴다 —
-  // 엔진이 새 제약 아래 내린 교환이다.  이 검사가 지키려는 건 "압살롬 예외
-  // 설계도가 정직하게 미완성으로 남는다"이므로, 열린 행이 스턴 게이트 하나뿐이
-  // 아니게 된 사실을 그대로 적는다(닫힌 척하지 않는 것이 계약이다).
-  assert.deepStrictEqual(openRows.map(row=>row.key),['slow','stunFull'],'미완성 사유가 예상과 다르다');
+  // 바뀌었다.  v19.9.8(최소 스턴 0.7): 최소선이 오르자 엔진은 다시 교환을
+  // 바꿨다 — 이감·1.5스턴을 닫는 대신 광보잡을 1/2 로 남기는 설계가 1위가
+  // 됐다.  이 검사가 지키려는 건 "압살롬 예외 설계도가 정직하게 미완성으로
+  // 남는다"이므로, 어떤 행이 열렸는지는 엔진의 교환 그대로 적는다(닫힌 척
+  // 하지 않는 것이 계약이다).
+  assert.deepStrictEqual(openRows.map(row=>row.key),['bossFrenzy'],'미완성 사유가 예상과 다르다');
   assert(openRows.every(row=>row.gap>0),'열린 행은 실제로 부족해야 한다');
   assert.deepStrictEqual(ranked.plan.actions[0].solve.hardMissing,[]);
   const preview=P.planFinalSquad({state,settings:settings({upperPreviewId:'A50h'}),upperBlueprint:ranked.blueprint});

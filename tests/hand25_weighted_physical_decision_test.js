@@ -78,11 +78,15 @@ assert.strictEqual(result.safePrefix.checkpointPass,false);
 replaySafePrefix(state,result.safePrefix);
 
 // UI 상단의 제어 판정도 플래너와 같은 하드 최소선을 사용해야 합니다.
-// 예전 연구값 0.748 때문에 0.5스턴 조합을 "위험권"으로 되돌리면 안 됩니다.
-const minimumControl=C.controlState({main:1,armor:180,stun:.5,slow:102,triggerSlow:0,boss:1,frenzy:1},'physical',{gorosei:'none'});
+// v19.9.8(사용자 실측 "아오키지 원스턴은 불가능"): 하드 최소선이 0.5→0.7 로
+// 올랐다 — 0.7 이 edge(최소선)이고, 0.5 는 이제 위험권이 맞다(0802 판이
+// 스턴 0.51 로 새서 죽은 실측 그대로).
+const minimumControl=C.controlState({main:1,armor:180,stun:.7,slow:102,triggerSlow:0,boss:1,frenzy:1},'physical',{gorosei:'none'});
 assert.strictEqual(minimumControl.status,'edge');
-assert.strictEqual(minimumControl.label,'물딜 0.5 최소선 · 화력 미검증');
-assert.strictEqual(minimumControl.expertStun,.5);
+assert.strictEqual(minimumControl.label,'물딜 0.7 최소선 · 화력 미검증');
+assert.strictEqual(minimumControl.expertStun,.7);
+const belowFloor=C.controlState({main:1,armor:180,stun:.5,slow:102,triggerSlow:0,boss:1,frenzy:1},'physical',{gorosei:'none'});
+assert.strictEqual(belowFloor.status,'danger','0.5스턴이 여전히 최소선을 통과한다 — 0802 교훈이 사라졌다');
 
 // 전 패를 털 수 있는 비교안도 클리어 게이트보다 앞설 수 없습니다.
 const fullHandIds=['190H','N30h','F30h','M30h','540h','unit_1752903381904_1445','unit_1779015467592_9245'];

@@ -81,9 +81,9 @@ test('physical armor and minimum stun share one hard-priority stage before hand 
     impact:{rows:[{key,label,gapBefore:1,gapAfter:0,closed:true}],regressed:[]}
   }),rows=[
     make('common-fourth',[0,0,0,2,0],'armor','상시 풀방깎'),
-    make('rare-first',[1,0,0,0,10],'stunBase','최소 0.5스턴')
+    make('rare-first',[1,0,0,0,10],'stunBase','최소 0.7스턴')
   ],profile=C.upperProfileData(state,upper,{mode:'physical',deficits:{clearRows:[
-    {key:'armor',label:'상시 풀방깎'},{key:'stunBase',label:'최소 0.5스턴'}
+    {key:'armor',label:'상시 풀방깎'},{key:'stunBase',label:'최소 0.7스턴'}
   ]},rows},null,null);
   assert.strictEqual(profile.now[0].unit.id,'rare-first','equal physical hard gates were incorrectly ordered before Rare burn');
 });

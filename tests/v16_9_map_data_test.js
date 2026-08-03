@@ -79,7 +79,10 @@ test('검증 상수: 이감 102/117 · 방깎 180/211(워큐리 190/221) · 스�
   assert.strictEqual(C.GOROSEI.warcury.armorSafe,221);
   assert.strictEqual(C.CONTROL_ENVELOPE.physicalOperationalStun,1,'스턴 운용선 1.0');
   assert.strictEqual(C.CONTROL_ENVELOPE.magicOperationalStun,1);
-  assert.strictEqual(C.CONTROL_ENVELOPE.physicalExpertStun,.5,'0.5 하드 최소 유지');
+  // v19.9.8(사용자 실측): "아오키지 원스턴은 불가능 — 적어도 0.7은 잡혀야
+  // 스턴이 잡힌다."  하드 최소선 0.5→0.7 상향.
+  assert.strictEqual(C.CONTROL_ENVELOPE.physicalExpertStun,.7,'0.7 하드 최소 유지');
+  assert.strictEqual(C.STUN_BASE_FLOOR,.7,'스턴 최소선 상수 0.7');
   assert.strictEqual(C.CONTROL_ENVELOPE.stableStun,1.5,'1.5 안정선 유지');
 });
 

@@ -47,7 +47,7 @@ test('physical seven-board/nine-equivalent plan keeps hard gates including the 1
   assert.strictEqual(result.projectedBoardCount,7);
   assert.strictEqual(result.complete,true);
   assert(byKey.armor.current>=byKey.armor.target,`armor ${byKey.armor.current}/${byKey.armor.target}`);
-  assert(byKey.stunBase.current>=.5,`minimum stun ${byKey.stunBase.current}`);
+  assert(byKey.stunBase.current>=C.num(byKey.stunBase.target)&&C.num(byKey.stunBase.target)===(C.STUN_BASE_FLOOR||.7),`minimum stun ${byKey.stunBase.current}/${byKey.stunBase.target}`);
   assert(byKey.slow.current>=102,`slow ${byKey.slow.current}`);
   assert(byKey.bossFrenzy.current>=1,`boss/frenzy ${byKey.bossFrenzy.current}`);
   // v19.9(사용자 교정): 물딜 1.5스턴은 이감이 차도 항상 필수다 — 단 마지막에
@@ -56,7 +56,7 @@ test('physical seven-board/nine-equivalent plan keeps hard gates including the 1
   // 위에서 검사하므로 required 게이트가 실제로 닫혔다는 것까지 함께 증명된다.
   assert.strictEqual(byKey.stunFull.required,true,'물딜 1.5스턴은 항상 필수다(v19.9)');
   assert(byKey.stunFull.current>=1.5-1e-9,`1.5스턴을 마지막에라도 채워야 한다: ${byKey.stunFull.current}`);
-  assert(byKey.stunBase.current>=.5,`minimum stun must hold: ${byKey.stunBase.current}`);
+  assert(byKey.stunBase.current>=C.num(byKey.stunBase.target),`minimum stun must hold: ${byKey.stunBase.current}/${byKey.stunBase.target}`);
   assert(byKey.stunFull.current<=2.05,`unnecessary stun stack ${byKey.stunFull.current}`);
   assert(coverage.excessStun<=.55,`excess stun ${coverage.excessStun}`);
   assert.strictEqual(result.wispBudget.fullPartyFeasible,true);

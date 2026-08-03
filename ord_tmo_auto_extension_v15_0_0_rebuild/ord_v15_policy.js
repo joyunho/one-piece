@@ -6,11 +6,11 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.9.7';
+const VERSION='19.9.8';
 const ROUTES=Object.freeze({
-  physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.5스턴 → 이감·광보잡 → 1.5스턴'}),
-  dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['stunFull'],['bossFrenzy','toki']],priority:'상위 2기·최소 0.5스턴 → 이감 → 1.5스턴 → 광보잡·토키'}),
-  singleEnd:Object.freeze({key:'singleEnd',mode:'magic',label:'마딜 1상위·단끝',groups:[['main'],['bossFrenzy','stunBase'],['slow'],['stunFull'],['singleEndExpected','single','end']],priority:'상위 → 광보잡·최소 0.5스턴 → 이감 → 1.5스턴 → 안정 단·끝'})
+  physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.7스턴 → 이감·광보잡 → 1.5스턴'}),
+  dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']],priority:'상위 2기·최소 0.7스턴 → 이감 → 광보잡·토키 → 1.5스턴(마지막 필수)'}),
+  singleEnd:Object.freeze({key:'singleEnd',mode:'magic',label:'마딜 1상위·단끝',groups:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected','single','end'],['stunFull']],priority:'상위 → 광보잡·최소 0.7스턴 → 이감 → 안정 단·끝 → 1.5스턴(마지막 필수)'})
 });
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -33,7 +33,7 @@ function checkpointFor(roundNow){
   return{key:'late65',label:'65라 최종 마감',dueRound:65,rareMinimum:0,equivalent:9,upper:1,nonUpper:1,rareMaximum:0,activeGroups:99};
 }
 function requirementMap(role){return new Map((role&&role.deficits&&role.deficits.requirements||[]).map(row=>[row.key,row]));}
-function fallbackRequirement(key){const labels={main:'상위 딜러',armor:'상시 풀방깎',stunBase:'최소 0.5스턴',slow:'안전 이감',bossFrenzy:'광보잡',stunFull:'충분한 1.5스턴',toki:'토키',singleEndExpected:'검증된 단일·끝딜'};return{key,label:labels[key]||key,current:0,target:1,gap:1,required:true,status:'bad'};}
+function fallbackRequirement(key){const labels={main:'상위 딜러',armor:'상시 풀방깎',stunBase:'최소 0.7스턴',slow:'안전 이감',bossFrenzy:'광보잡',stunFull:'충분한 1.5스턴',toki:'토키',singleEndExpected:'검증된 단일·끝딜'};return{key,label:labels[key]||key,current:0,target:1,gap:1,required:true,status:'bad'};}
 // v17.22: 필수 역할 그룹이 순수 사전식이면 앞 그룹이 완전히 닫힐 때까지
 // 뒤 그룹은 자원을 한 톨도 못 받는다.  물딜의 상시 방깎 180~190은 역할표
 // 전체에서 가장 큰 수치라 판이 끝날 때까지 안 닫히는 일이 흔하고, 그
@@ -44,7 +44,7 @@ function fallbackRequirement(key){const labels={main:'상위 딜러',armor:'상�
 // 써도 95에서 멈췄다(방깎 전설이 같은 하위 재료를 먼저 먹는다).
 //
 // 그래서 정적 순서 대신 "마감 대비 얼마나 뒤처졌는가"로 정렬한다.
-// 그룹마다 체크포인트 마감이 있고(방깎·0.5스턴 40라, 이감·광보잡 45라,
+// 그룹마다 체크포인트 마감이 있고(방깎·최소 스턴 40라, 이감·광보잡 45라,
 // 1.5스턴·보스화력 50라), 지금 라운드에서 요구되는 진척과 실제 진척의
 // 차이가 큰 쪽이 먼저 온다.  이러면 한 그룹이 자원을 독점하지 않고
 // 번갈아 진행된다.  하드 게이트(무엇이 필수인가)는 건드리지 않는다 —
@@ -113,7 +113,7 @@ function groupRows(route,role,checkpoint,roundInput){
   // 방깎이 높으면 몹이 조금 새더라도 딜로 찍어누를 수 있는데, 방깎이 낮고
   // 몹을 잡고 있으면 못 녹여서 결국 죽는다."  그래서 물딜에서 1.5스턴만
   // 남은 그룹은 마감 뒤처짐 스왑에도, 50라+ 보스 화력 부양에도 위로 올라올
-  // 수 없다 — 방깎·0.5스턴·이감·광보잡 그룹 뒤에 항상 고정된다.  필수
+  // 수 없다 — 방깎·최소 스턴·이감·광보잡 그룹 뒤에 항상 고정된다.  필수
   // 여부(하드 게이트)는 ord_core 가 그대로 유지하므로 1.5는 버려지는 게
   // 아니라 마지막에 채워진다.
   // v19.9.7(0802 교정): fillLast 는 코어 행의 meta 가 진실이다 — 물딜 전용

@@ -27,7 +27,7 @@ assert.strictEqual(prefix.economyGuarded,true,'non-closing high-wisp candidates 
 assert(first,'an immediately craftable recovery action is required');
 assert.strictEqual(first.id,'Z20h',`expected Bartolomeo, received ${first.name}`);
 assert.strictEqual(first.wispCost,8);
-assert(stun&&stun.gap<=0,'the economical replacement did not close minimum 0.5 stun');
+assert(stun&&stun.gap<=0,'the economical replacement did not close the minimum stun floor');
 assert(!prefix.actions.some(action=>C.isWarped(action.unit)),'a warped candidate survived the economy guard');
 assert.match(prefix.note,/고비용 후보를 제외/);
 

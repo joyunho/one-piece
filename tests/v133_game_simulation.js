@@ -114,7 +114,7 @@ function finalGradeMetrics(countMap,round,gorosei='none'){
     spec,profile,deficit,armorCurrent,armorTarget,armorExcess,slowTarget,slowControl,slowRaw,slowEffective,
     slowExcess,slowExcessBenefit:0,stunCurrent,stunTarget,excessStun,
     armorMet:armorCurrent>=armorTarget,slowMet:slowControl>=slowTarget,
-    halfStunMet:stunCurrent>=.5,fullStunMet:stunCurrent>=stunTarget,
+    halfStunMet:stunCurrent>=(C.STUN_BASE_FLOOR||.7),fullStunMet:stunCurrent>=stunTarget,
     complete:deficit.clearRows.length===0,
     excessCost:excessStun/stunTarget+slowExcess/Math.max(1,slowTarget)
   };
@@ -290,7 +290,7 @@ const finalState=state(65),finalMetrics=finalGradeMetrics(counts,65),finalUnits=
 assert.strictEqual(finalMetrics.deficit.clearRows.length,0);
 assert(finalMetrics.armorCurrent>=finalMetrics.armorTarget);
 assert(finalMetrics.slowControl>=finalMetrics.slowTarget);
-assert(finalMetrics.stunCurrent>=.5&&finalMetrics.stunCurrent<=2.05);
+assert(finalMetrics.stunCurrent>=(C.STUN_BASE_FLOOR||.7)&&finalMetrics.stunCurrent<=2.05);
 assert.strictEqual(finalMetrics.slowExcessBenefit,0);
 assert.strictEqual(Planner._test.lineupMaterialOverlap(finalState,finalUnits).lineagePairs,0,'round 65 party contains a recipe-lineage collision');
 

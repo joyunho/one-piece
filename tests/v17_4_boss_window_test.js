@@ -39,7 +39,7 @@ function lateRole(){
   return{deficits:{requirements:[
     {key:'main',label:'상위 딜러',current:1,target:1,gap:0,required:true},
     {key:'bossFrenzy',label:'광보잡',current:1,target:1,gap:0,required:true},
-    {key:'stunBase',label:'최소 0.5스턴',current:.9,target:.5,gap:0,required:true},
+    {key:'stunBase',label:'최소 0.7스턴',current:.9,target:.7,gap:0,required:true},
     {key:'slow',label:'이감 117%',current:110,target:117,gap:7,required:true},
     {key:'stunFull',label:'충분한 1.5스턴',current:1.1,target:1.5,gap:.4,required:true},
     {key:'singleEndExpected',label:'검증된 단일·끝딜',current:2.5,target:3,gap:.5,required:true},

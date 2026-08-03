@@ -167,7 +167,7 @@ function finalGradeMetrics(countMap, round) {
     stunCurrent,
     stunTarget,
     armorMet: armorCurrent >= armorTarget,
-    halfStunMet: stunCurrent >= 0.5,
+    halfStunMet: stunCurrent >= (C.STUN_BASE_FLOOR || 0.7),
     slowMet: slowCurrent >= slowTarget,
     fullStunMet: stunCurrent >= stunTarget,
     complete: deficit.clearRows.length === 0,
@@ -193,7 +193,7 @@ function evaluateFinalCandidate(candidate, round) {
 }
 
 function compareFinalCandidate(a, b) {
-  // 물딜 우선순위: 방깎 = 최소 0.5스턴 > 이감·광보잡 > 충분한 1.5스턴.
+  // 물딜 우선순위: 방깎 = 최소 0.7스턴 > 이감·광보잡 > 충분한 1.5스턴.
   // 1.5스턴은 클리어 하드 게이트가 아니라 마지막 안정 보강입니다.
   for (const key of ['complete', 'armorMet', 'halfStunMet', 'slowMet']) {
     if (a.metrics[key] !== b.metrics[key]) return Number(b.metrics[key]) - Number(a.metrics[key]);
@@ -350,7 +350,7 @@ assert.strictEqual(metrics55.deficit.clearRows.length, 0,
   `round 55 physical clear gaps: ${metrics55.deficit.clearRows.map(row => row.label).join(', ')}`);
 assert(metrics55.armorCurrent >= metrics55.armorTarget, 'round 55 armor target');
 assert(metrics55.slowCurrent >= metrics55.slowTarget, 'round 55 slow target');
-assert(metrics55.stunCurrent >= 0.5, 'round 55 minimum stun target');
+assert(metrics55.stunCurrent >= (C.STUN_BASE_FLOOR || 0.7), 'round 55 minimum stun target');
 assert(metrics55.stunCurrent <= 2.05,
   `round 55 final-grade stun must avoid oversupply: ${metrics55.stunCurrent}`);
 assert.strictEqual(afterPatch.flow.phase, 'upgrade-control');
@@ -380,7 +380,7 @@ const finalDeficit = finalMetrics.deficit;
 assert.strictEqual(finalDeficit.clearRows.length, 0);
 assert(finalProfile.armorCurrent >= finalProfile.armorTarget);
 assert(finalMetrics.slowCurrent >= finalMetrics.slowTarget);
-assert(finalSpec.stun >= 0.5);
+assert(finalSpec.stun >= (C.STUN_BASE_FLOOR || 0.7));
 assert(finalSpec.stun <= 2.05, `round 65 final-grade stun oversupply: ${finalSpec.stun}`);
 
 function checkpointLine(row) {

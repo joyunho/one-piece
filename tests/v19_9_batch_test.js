@@ -63,7 +63,7 @@ check('① 물딜 1.5스턴 — 항상 필수 + 마지막 순서(fillLast), 마�
   const rows=[
     {key:'main',label:'상위',current:1,target:1,gap:0,required:true},
     {key:'armor',label:'상시 방깎',current:150,target:180,gap:30,required:true},
-    {key:'stunBase',label:'0.5스턴',current:.5,target:.5,gap:0,required:true},
+    {key:'stunBase',label:'0.7스턴',current:.7,target:.7,gap:0,required:true},
     {key:'slow',label:'이감',current:90,target:102,gap:12,required:true},
     {key:'bossFrenzy',label:'광보잡',current:2,target:2,gap:0,required:true},
     // v19.9.7: fillLast 는 코어 행 meta 가 진실이다(물딜 전용 게이트 폐지) —

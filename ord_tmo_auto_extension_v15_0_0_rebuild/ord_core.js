@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='19.9.7';
+const VERSION='19.9.8';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -77,20 +77,25 @@ const ABILITY_ALIASES={
 // v16.9: 2.305 [C] 맵 파싱 검증값 반영 —
 //  이감 102 = 풀이감 기준, 117 = 나스쥬로(적 이속 +15%) 상쇄 조건부 목표.
 //  방깎 180 = 실전선, 211 = 공개 공략 풀방깎 목표(워큐리는 몹 방어 +10).
-//  스턴 0.5 = 하드 최소, 1.0 = 운용선, 1.5 = 안정선, 2.0+ = 과투자 주의.
+//  스턴 0.7 = 하드 최소, 1.0 = 운용선, 1.5 = 안정선, 2.0+ = 과투자 주의.
 const GOROSEI={
   none:{key:'none',name:'아직 모름',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5},
   nasjuro:{key:'nasjuro',name:'나스쥬로',slowPhysical:117,slowMagic:117,armorSoft:180,armorSafe:211,stun:1.5},
   warcury:{key:'warcury',name:'워큐리',slowPhysical:102,slowMagic:102,armorSoft:190,armorSafe:221,stun:1.5},
   saturn:{key:'saturn',name:'새턴',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5}
 };
+// v19.9.8(사용자 실측): "아오키지 원스턴은 불가능한듯, 적어도 0.7은 잡혀야
+// 스턴이 잡히는 느낌 — 이것도 최소라 새긴 하는데."  0802 판이 스턴
+// 0.51~0.61 로 단끝에서 새서 죽은 데 이어, 하드 최소선 자체를 0.5→0.7 로
+// 올린다.  0.7 도 '조금은 새는' 실측 최소선이고 완성 목표는 그대로 1.5 다.
+const STUN_BASE_FLOOR=.7;
 const CONTROL_ENVELOPE={
   stableStun:1.5,
   slowFloorRatio:.88,
   physicalOperationalStun:1,
-  // 물딜은 사용자가 정한 실전 우선순위대로 0.5스턴을 하드 최소선으로
-  // 인정합니다. 1.0이 운용선, 1.5는 편안한 안정선입니다.
-  physicalExpertStun:.5,
+  // 물딜은 사용자가 정한 실전 우선순위대로 최소 스턴(STUN_BASE_FLOOR)을
+  // 하드 최소선으로 인정합니다. 1.0이 운용선, 1.5는 편안한 안정선입니다.
+  physicalExpertStun:STUN_BASE_FLOOR,
   magicOperationalStun:1,
   efficientStunCap:1.5,
   triggerSafeWeightOne:.5,
@@ -100,7 +105,7 @@ const CONTROL_ENVELOPE={
 };
 const CONTROL_PROFILES={
   physical:{
-    operational:{slow:1,stun:1,expertStun:.5},
+    operational:{slow:1,stun:1,expertStun:STUN_BASE_FLOOR},
     stable:{slow:1,stun:1.5},
     conditional:{slow:.88,stun:1.5}
   },
@@ -1053,17 +1058,17 @@ function controlEnvelope(slow,stun,targetSlow,targetStun,mode,meta){
   const route=stable?'comfortable':operational?'operational':expertPhysical?'expert-physical':conditional?'conditional-slow':'danger';let note;
   if(stable)note=`풀이감 + 유효 스턴 ${stableStun}의 편안한 제어 안정선입니다. 추가 스턴은 추천하지 않습니다.`;
   else if(operational)note=`역할표 운영 진입선입니다. ${profileMode==='physical'?'방깎·보잡·실제 보스 화력':'단끝·광보잡·두 번째 상위'}이 남았다면 스턴보다 그 역할을 먼저 채우세요. 보스 처치 보장은 별도입니다.`;
-  else if(expertPhysical)note=`물딜 0.5스턴 하드 최소선입니다. 상시 방깎·광보잡·풀이감은 갖췄지만 보스 DPS 실측이 없으면 클리어 판정으로 쓰지 않습니다. 1.5스턴은 마지막 안정 보강입니다.`;
+  else if(expertPhysical)note=`물딜 0.7스턴 하드 최소선입니다(0.7도 조금은 새는 실측 최소선). 상시 방깎·광보잡·풀이감은 갖췄지만 보스 DPS 실측이 없으면 클리어 판정으로 쓰지 않습니다. 1.5스턴은 마지막 안정 보강입니다.`;
   else if(conditional)note=`이감 ${round2(slow)}은 조건부 운영권입니다. 스턴을 2까지 올리지 말고 이감 ${requiredSlow}을 먼저 맞추세요.`;
   else if(!floorSlow)note=`이감 ${round2(slow)}은 위험권입니다. 유효 스턴 ${stun}이 높아도 안정권으로 올리지 않으며 이감 +${slowGap}을 먼저 권합니다.`;
   else if(!fullSlow)note=`이감이 ${requiredSlow}에 못 미칩니다. 두 번째 스턴보다 이감 +${slowGap}을 먼저 채우세요.`;
   else note=`풀이감은 갖췄습니다. 운영 가능선까지 유효 스턴 +${rawStunGap}이 필요합니다.`;
   const captureRate=stunCaptureRate(stun),captureAtHalf=stunCaptureRate(.5),captureAtExpert=stunCaptureRate(expertStun),captureAtOperational=stunCaptureRate(operationalStun),captureAtOne=stunCaptureRate(1),captureAtStable=stunCaptureRate(stableStun),captureAtTwo=stunCaptureRate(2);
-  return{status:stable?'safe':edge?'edge':'danger',label:stable?'편안한 제어 안정선':operational?'역할표 운영 진입선':expertPhysical?'물딜 0.5 최소선 · 화력 미검증':conditional?'조건부 운영권':'위험권',route,profileMode,slow,stableSlow:slow,stun,staticSlow,triggerSlow,conditionalSlow,expectedSlow:conditionalSlow,maxSlow,triggerSlowSources:num(m.triggerSlowSources),triggerSafeWeight:num(m.triggerSafeWeight),triggerExpectedWeight:num(m.triggerExpectedWeight),captureRate,targetSlow:round2(targetSlow),targetStun:round2(targetStun),safeFullStun:stableStun,edgeFullStun:operationalStun,operationalStun,expertStun,expertPhysical,stableStun,safeLowSlow:slowFloor,safeLowStun:stableStun,dangerExampleSlow:Math.round(targetSlow*.49),dangerExampleStun:2,mixedMinSlow:slowFloor,mixedMinStun:operationalStun,slowOverrideTarget:targetSlow,stunOverrideTarget:null,requiredSlow,requiredStun,edgeRequiredStun:operationalStun,slowGap,stunGap,rawStunGap,recommendStun,controlCompletion:round2(controlCompletion),clearCompletion:stable?1:edge?0.9:round2(controlCompletion),slowRatio:round2(slowRatio),conditionalSlowRatio:round2(conditionalSlow/targetSlow),stunRatio:round2(stun/targetStun),slowCredit:round2(slowProgress),stunCredit:round2(clamp(stun/stableStun,0,1)),envelopeScore:round2(controlCompletion),mixedFloorPassed:floorSlow,mixedSafe:stable,slowOverride:false,stunOverride:false,efficientStunCap:r.efficientStunCap,overEfficientStun:stun>r.efficientStunCap+.0005,damageReady,finishReady,alternatives,captureBenchmarks:{half:captureAtHalf,expert:captureAtExpert,operational:captureAtOperational,one:captureAtOne,stable:captureAtStable,two:captureAtTwo,gainOneToStable:round2(captureAtStable-captureAtOne),gainStableToTwo:round2(captureAtTwo-captureAtStable)},note};
+  return{status:stable?'safe':edge?'edge':'danger',label:stable?'편안한 제어 안정선':operational?'역할표 운영 진입선':expertPhysical?'물딜 0.7 최소선 · 화력 미검증':conditional?'조건부 운영권':'위험권',route,profileMode,slow,stableSlow:slow,stun,staticSlow,triggerSlow,conditionalSlow,expectedSlow:conditionalSlow,maxSlow,triggerSlowSources:num(m.triggerSlowSources),triggerSafeWeight:num(m.triggerSafeWeight),triggerExpectedWeight:num(m.triggerExpectedWeight),captureRate,targetSlow:round2(targetSlow),targetStun:round2(targetStun),safeFullStun:stableStun,edgeFullStun:operationalStun,operationalStun,expertStun,expertPhysical,stableStun,safeLowSlow:slowFloor,safeLowStun:stableStun,dangerExampleSlow:Math.round(targetSlow*.49),dangerExampleStun:2,mixedMinSlow:slowFloor,mixedMinStun:operationalStun,slowOverrideTarget:targetSlow,stunOverrideTarget:null,requiredSlow,requiredStun,edgeRequiredStun:operationalStun,slowGap,stunGap,rawStunGap,recommendStun,controlCompletion:round2(controlCompletion),clearCompletion:stable?1:edge?0.9:round2(controlCompletion),slowRatio:round2(slowRatio),conditionalSlowRatio:round2(conditionalSlow/targetSlow),stunRatio:round2(stun/targetStun),slowCredit:round2(slowProgress),stunCredit:round2(clamp(stun/stableStun,0,1)),envelopeScore:round2(controlCompletion),mixedFloorPassed:floorSlow,mixedSafe:stable,slowOverride:false,stunOverride:false,efficientStunCap:r.efficientStunCap,overEfficientStun:stun>r.efficientStunCap+.0005,damageReady,finishReady,alternatives,captureBenchmarks:{half:captureAtHalf,expert:captureAtExpert,operational:captureAtOperational,one:captureAtOne,stable:captureAtStable,two:captureAtTwo,gainOneToStable:round2(captureAtStable-captureAtOne),gainStableToTwo:round2(captureAtTwo-captureAtStable)},note};
 }
 function controlState(spec,mode,settings){
   const g=GOROSEI[settings&&settings.gorosei]||GOROSEI.none,targetSlow=mode==='magic'?g.slowMagic:g.slowPhysical,staticSlow=Math.max(0,num(spec.slow)),triggerSlow=Math.max(0,num(spec.triggerSlow)),triggerSlowSources=Math.max(triggerSlow>0?1:0,num(spec.triggerSlowSources)),multi=triggerSlowSources>=2,safeWeight=triggerSlow?multi?CONTROL_ENVELOPE.triggerSafeWeightMulti:CONTROL_ENVELOPE.triggerSafeWeightOne:1,expectedWeight=triggerSlow?multi?CONTROL_ENVELOPE.triggerExpectedWeightMulti:CONTROL_ENVELOPE.triggerExpectedWeightOne:1,stableSlow=staticSlow+triggerSlow*safeWeight,conditionalSlow=staticSlow+triggerSlow*expectedWeight;
-  // 발동 방깎은 끊길 수 있으므로 0.5스턴 예외를 여는 풀방깎 판정에도
+  // 발동 방깎은 끊길 수 있으므로 최소 스턴 예외를 여는 풀방깎 판정에도
   // 넣지 않습니다. 상시 방깎만 하드 게이트를 닫고 발동 수치는 참고값입니다.
   // 물딜은 상시 방깎 180~210 구간의 진입선(워큐리 190)을 먼저
   // 확보합니다. 210을 하드 게이트로 두면 1.5스턴을 채우려다 방깎과
@@ -1084,7 +1089,7 @@ function routeDistance(requirements){
   return round2((requirements||[]).filter(r=>r.required!==false).reduce((sum,r)=>sum+num(r.weight)*clamp((num(r.target)-num(r.current))/Math.max(.01,num(r.target)),0,1),0));
 }
 function clearProfileDetails(spec,mode,settings){
-  spec=spec||{};settings=settings||{};mode=mode==='magic'?'magic':'physical';const g=GOROSEI[settings.gorosei]||GOROSEI.none,ctl=controlState(spec,mode,settings),slowTarget=mode==='magic'?g.slowMagic:g.slowPhysical,stun=num(spec.stun),stunBase=Math.min(.5,Math.max(0,stun)),stunFull=Math.max(0,stun),bossFrenzy=Math.min(num(spec.boss),num(spec.frenzy));
+  spec=spec||{};settings=settings||{};mode=mode==='magic'?'magic':'physical';const g=GOROSEI[settings.gorosei]||GOROSEI.none,ctl=controlState(spec,mode,settings),slowTarget=mode==='magic'?g.slowMagic:g.slowPhysical,stun=num(spec.stun),stunBase=Math.min(STUN_BASE_FLOOR,Math.max(0,stun)),stunFull=Math.max(0,stun),bossFrenzy=Math.min(num(spec.boss),num(spec.frenzy));
   if(mode==='physical'){
     const upper=settings._upperUnit||null,exceptionEligible=physicalArmorException(upper),buffReady=enoughPhysicalBuffs(spec,settings),exceptionActive=exceptionEligible&&buffReady,armorFloor=exceptionActive?120:g.armorSoft,armorIdeal=exceptionActive?120:g.armorSafe,armorTarget=armorFloor,armorCurrent=num(spec.armor),triggerArmor=Math.max(0,num(spec.triggerArmor)),armorExpected=armorCurrent+triggerArmor*.65,armorMaximum=armorCurrent+triggerArmor;
     const secondUpperCommitted=!!String(settings.secondUpperId||'');
@@ -1098,7 +1103,7 @@ function clearProfileDetails(spec,mode,settings){
       // 유지한다(ord_squad_planner: expectedUpperCount / routeBoardTarget).
       {key:'main',label:secondUpperCommitted?'상위 딜러 2':'상위 딜러',current:num(spec.main),target:secondUpperCommitted?2:1,weight:120},
       {key:'armor',label:exceptionActive?'버프 예외 상시 방깎':'상시 풀방깎',current:armorCurrent,target:armorTarget,weight:110,meta:{floor:armorFloor,safe:armorIdeal,ideal:armorIdeal,range:exceptionActive?'120+':`${armorFloor}~${armorIdeal}`,static:round2(armorCurrent),trigger:round2(triggerArmor),expected:round2(armorExpected),maximum:round2(armorMaximum),conditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget}},
-      {key:'stunBase',label:'최소 0.5 스턴',current:stunBase,target:.5,weight:110},
+      {key:'stunBase',label:'최소 0.7 스턴',current:stunBase,target:STUN_BASE_FLOOR,weight:110},
       {key:'slow',label:`이감 ${slowTarget}%`,current:ctl.slow,target:slowTarget,weight:95},
       // v18.8(사용자 교정): 물딜은 광보잡이 2기 필요하다.
       //
@@ -1120,12 +1125,12 @@ function clearProfileDetails(spec,mode,settings){
       // 녹여서 결국 죽는다."
       //
       // 그래서 v18.9 의 '이감 충족 시 필수 해제'는 물딜에서 폐기한다(마딜은
-      // 유지) — 1.5는 버리는 게 아니라 방깎→0.5스턴→이감→광보잡이 닫힌 뒤
+      // v19.9.7 에서 폐기) — 1.5는 버리는 게 아니라 방깎→최소 스턴→이감→광보잡이 닫힌 뒤
       // 마지막으로 채우는 필수 게이트다.  순서 고정은 ord_v15_policy 의 물딜
       // 그룹 정렬(fillLast)이 맡고, 여기서는 필수 여부만 선언한다.
       {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:35,required:true,meta:{lastPriority:true,fillLast:true}}
     ];
-    return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorCurrent),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 0.5스턴과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 2기 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
+    return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorCurrent),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 최소 0.7스턴(그 밑은 스턴이 안 잡히는 실측 최소선)과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 2기 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
   }
   // v19.9.7(0802 패배 포렌식 "스턴이 새서 죽었어"): v18.9 는 이감 충족 시
   // 1.5스턴 필수를 해제했다("그 자리는 딜러가 낫다").  0802 실전에서 46라에
@@ -1135,7 +1140,7 @@ function clearProfileDetails(spec,mode,settings){
   // 같은 사상으로 교정한다: 순서는 딜·이감 뒤 마지막이되, 해제는 없다.
   const singleEndExpected=spec.singleEndExpected!=null?num(spec.singleEndExpected):0,singleEndStable=spec.singleEndStable!=null?num(spec.singleEndStable):Math.max(0,singleEndExpected-num(spec.singleEndLargest)),singleEndMaximum=spec.singleEndMax!=null?num(spec.singleEndMax):singleEndExpected,dual=[
     {key:'main',label:'상위 딜러 2',current:num(spec.main),target:2,weight:110},
-    {key:'stunBase',label:'최소 0.5 스턴',current:stunBase,target:.5,weight:110},
+    {key:'stunBase',label:'최소 0.7 스턴',current:stunBase,target:STUN_BASE_FLOOR,weight:110},
     {key:'slow',label:`이감 ${slowTarget}%`,current:ctl.slow,target:slowTarget,weight:95},
     {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85,required:true,meta:{lastPriority:true,fillLast:true}},
     {key:'bossFrenzy',label:'광보잡',current:bossFrenzy,target:1,weight:70},
@@ -1143,7 +1148,7 @@ function clearProfileDetails(spec,mode,settings){
   ],singleEnd=[
     {key:'main',label:'상위 딜러 1',current:num(spec.main),target:1,weight:120},
     {key:'bossFrenzy',label:'광보잡',current:bossFrenzy,target:1,weight:110},
-    {key:'stunBase',label:'최소 0.5 스턴',current:stunBase,target:.5,weight:110},
+    {key:'stunBase',label:'최소 0.7 스턴',current:stunBase,target:STUN_BASE_FLOOR,weight:110},
     {key:'slow',label:`이감 ${slowTarget}%`,current:ctl.slow,target:slowTarget,weight:95},
     {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:85,required:true,meta:{lastPriority:true,fillLast:true}},
     {key:'singleEndExpected',label:'검증된 보조 단일·끝딜',current:singleEndExpected,target:3,weight:70,meta:{stable:round2(singleEndStable),maximum:round2(singleEndMaximum),verifiedUnits:num(spec.singleEndUnits)}},
@@ -1153,7 +1158,7 @@ function clearProfileDetails(spec,mode,settings){
     {key:'single',label:'단일딜 환산 2',current:num(spec.single),target:2,weight:68},
     {key:'end',label:'끝딜 환산 1',current:num(spec.end),target:1,weight:66}
   ],dualDistance=routeDistance(dual),singleEndDistance=routeDistance(singleEnd),requested=normalizeMagicRoute(settings._resolvedMagicRoute||settings.magicRoute),selected=requested==='auto'?(dualDistance<=singleEndDistance?'dual':'singleEnd'):requested,requirements=selected==='dual'?dual:singleEnd;
-  return{mode,key:selected,label:selected==='dual'?'마딜 2상위 + 토키':'마딜 1상위 + 단일·끝딜',requested,requirements,distance:selected==='dual'?dualDistance:singleEndDistance,slowTarget,stunTarget:1.5,singleEndFloor:3,singleEndStable:3,priority:selected==='dual'?['main','stunBase','slow','bossFrenzy','toki','stunFull']:['bossFrenzy','stunBase','slow','singleEndExpected','stunFull'],routes:{dual:{key:'dual',label:'2상위 + 토키',distance:dualDistance,requirements:dual},singleEnd:{key:'singleEnd',label:'1상위 + 단·끝 3~4',distance:singleEndDistance,requirements:singleEnd}},note:selected==='dual'?'두 번째 상위와 0.5스턴을 최우선으로 보고, 토키·광보잡을 마감한 뒤 1.5스턴을 마지막에 반드시 채웁니다.':'광보잡과 0.5스턴을 먼저 지키고, 단·끝은 메인 상위를 제외한 직접 abilities 기여만 합산합니다. 1.5스턴은 마지막에 반드시 채웁니다.'};
+  return{mode,key:selected,label:selected==='dual'?'마딜 2상위 + 토키':'마딜 1상위 + 단일·끝딜',requested,requirements,distance:selected==='dual'?dualDistance:singleEndDistance,slowTarget,stunTarget:1.5,singleEndFloor:3,singleEndStable:3,priority:selected==='dual'?['main','stunBase','slow','bossFrenzy','toki','stunFull']:['bossFrenzy','stunBase','slow','singleEndExpected','stunFull'],routes:{dual:{key:'dual',label:'2상위 + 토키',distance:dualDistance,requirements:dual},singleEnd:{key:'singleEnd',label:'1상위 + 단·끝 3~4',distance:singleEndDistance,requirements:singleEnd}},note:selected==='dual'?'두 번째 상위와 최소 0.7스턴을 최우선으로 보고, 토키·광보잡을 마감한 뒤 1.5스턴을 마지막에 반드시 채웁니다.':'광보잡과 최소 0.7스턴을 먼저 지키고, 단·끝은 메인 상위를 제외한 직접 abilities 기여만 합산합니다. 1.5스턴은 마지막에 반드시 채웁니다.'};
 }
 // v18: 역할 요구치를 축으로 나눈다.
 //
@@ -1230,7 +1235,7 @@ function axisSummary(rows){
   return out;
 }
 function roleContribution(u,mode){
-  const r=roleProfile(u),magic=mode==='magic',finish=magicFinishProfile(u),bossCredit=bossCreditFor(u,mode);return{main:isUpper(u)&&(r.family===mode||r.family==='neutral')?1:0,stun:r.stun,stunBase:Math.min(.5,r.stun),stunFull:r.stun,slow:r.slow+r.triggerSlow,armor:r.armor,triggerArmor:r.triggerArmor,boss:bossCredit.boss?1:0,frenzy:bossCredit.frenzy?1:0,bossFrenzy:bossCredit.boss&&bossCredit.frenzy?1:0,toki:magic&&/^토키(?:\s|\()/.test(nameOf(u))?1:0,single:magic?r.single:0,end:magic?r.end:0,singleEnd:magic?r.single+r.end:0,singleEndUnits:magic&&finish.directCredit>0?1:0,singleEndExpected:magic?finish.directCredit:0,singleEndMax:magic?finish.maxCredit:0,magicSupport:r.magicDef+r.magicAmp+r.explosionAmp,armorBreak:r.armorBreak?1:0,attack:r.attack-r.attackPenalty+r.triggerAttack*.65,speed:r.speed,regen:r.regen,mana:r.mana,deletion:r.deletion?1:0,utility:r.utility?1:0,subdamage:r.supportDamage?1:0};
+  const r=roleProfile(u),magic=mode==='magic',finish=magicFinishProfile(u),bossCredit=bossCreditFor(u,mode);return{main:isUpper(u)&&(r.family===mode||r.family==='neutral')?1:0,stun:r.stun,stunBase:Math.min(STUN_BASE_FLOOR,r.stun),stunFull:r.stun,slow:r.slow+r.triggerSlow,armor:r.armor,triggerArmor:r.triggerArmor,boss:bossCredit.boss?1:0,frenzy:bossCredit.frenzy?1:0,bossFrenzy:bossCredit.boss&&bossCredit.frenzy?1:0,toki:magic&&/^토키(?:\s|\()/.test(nameOf(u))?1:0,single:magic?r.single:0,end:magic?r.end:0,singleEnd:magic?r.single+r.end:0,singleEndUnits:magic&&finish.directCredit>0?1:0,singleEndExpected:magic?finish.directCredit:0,singleEndMax:magic?finish.maxCredit:0,magicSupport:r.magicDef+r.magicAmp+r.explosionAmp,armorBreak:r.armorBreak?1:0,attack:r.attack-r.attackPenalty+r.triggerAttack*.65,speed:r.speed,regen:r.regen,mana:r.mana,deletion:r.deletion?1:0,utility:r.utility?1:0,subdamage:r.supportDamage?1:0};
 }
 function coverageScore(contrib,def){let score=0;const covers=[];for(const d of def.rows){const v=num(contrib[d.key]);if(v>0){score+=d.weight*Math.min(1,v/Math.max(.01,d.gap));covers.push(d.label);}}return{score:round2(score),covers};}
 function netCoverageScore(beforeDef,afterDef){
@@ -1442,7 +1447,7 @@ function supportClearStage(row,plan){
   if(regressed.length)return{index:clearRows.length+2,level:2,label:`필수 후퇴 · ${regressed.map(item=>item.label).slice(0,2).join(' · ')}`};
   if(!clearRows.length)return{index:0,level:0,label:'필수 조건 동급'};
   // The display must preserve the same equal-priority gates as the party
-  // planner. In particular, physical armor and the minimum 0.5 stun are one
+  // planner. In particular, physical armor and the minimum stun floor are one
   // stage, as are safe slow and boss/frenzy coverage.
   // v19.9.7(0802 교정): 마딜도 물딜과 같이 stunFull 은 마지막 그룹이다 —
   // 순서만 뒤로 갈 뿐 필수 해제는 없다.
@@ -1553,5 +1558,5 @@ function snapshotHealth(snapshot,now){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,snapshotHealth,debugFixture};
 })(window);
