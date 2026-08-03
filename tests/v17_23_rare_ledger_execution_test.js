@@ -32,15 +32,23 @@ const useRare=rare('ledger-rare-use','즉시 사용 희귀');
 const allocationRare=rare('ledger-rare-allocation','파티 예약 희귀');
 const deadlineRare=rare('ledger-rare-deadline','마감 예약 희귀');
 const unusedRare=rare('ledger-rare-unused','미사용 희귀');
+// v19.10(P0-2): 보유하지 않은 특수재료('hard' 티어 — 위습 대체·재귀 제작
+// 불가) — 구 판단 전설의 즉시 제작 가능성을 끊는다.
+const absentRare={id:'ledger-hard-mat',name:'부재 특수재료',groupName:'특수재료',abilities:{},stuffs:[]};
 const plannedLegend={
   id:'ledger-planned-legend',name:'파티 첫 전설',groupName:'전설 [물딜]',
   abilities:{'방어력 감소':20},stuffs:[{id:useRare.id,count:1}]
 };
 const rawLegend={
   id:'ledger-raw-legend',name:'구 판단 전설',groupName:'전설 [물딜]',
-  abilities:{'이동속도 감소':10},stuffs:[{id:unusedRare.id,count:1}]
+  // v19.10(P0-2 원장): '미사용 희귀'가 즉시 제작 가능 전설의 재료면 새
+  // 원장 규칙이 리롤을 막는다(제작 후보 ∩ 리롤 = ∅).  이 픽스처의 의도는
+  // "진짜 사용처 없는 희귀에 리롤이 배정된다"이므로, 보유하지 않은 하드
+  // 재료를 추가해 즉시 제작 가능성을 끊는다 — 리롤 배정 메커니즘 검증은
+  // 그대로 산다.
+  abilities:{'이동속도 감소':10},stuffs:[{id:unusedRare.id,count:1},{id:absentRare.id,count:1}]
 };
-const catalog=[useRare,allocationRare,deadlineRare,unusedRare,plannedLegend,rawLegend];
+const catalog=[useRare,allocationRare,deadlineRare,unusedRare,plannedLegend,rawLegend,absentRare];
 
 function modelFor(counts){
   const units=catalog.map(unit=>Object.assign({},unit,{

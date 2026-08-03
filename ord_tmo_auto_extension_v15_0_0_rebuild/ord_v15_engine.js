@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.9.9';
+const VERSION='19.10.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -158,11 +158,21 @@ function lineageConflictKeys(model,lineup){const keys=new Set();for(let left=0;l
 function introducesLineageConflict(model,before,after){const prior=lineageConflictKeys(model,before);for(const key of lineageConflictKeys(model,after))if(!prior.has(key))return true;return false;}
 function ownedFinals(model,counts){return M.finalEntries(model,counts||model.effective.counts);}
 function upperAllowed(model,unit,route,locks,counts){
-  if(!C.isUpper(unit))return true;const lock=lockedUpper(locks),owned=new Set(model.knowledge.db.uppers.filter(other=>num(counts[other.id])>0).map(other=>C.canonicalUpperId(other.id))),key=C.canonicalUpperId(unit.id),lockedKey=lock&&C.canonicalUpperId(lock.id),maxUpper=route.key==='dual'?2:1;
+  if(!C.isUpper(unit))return true;const lock=lockedUpper(locks),owned=new Set(model.knowledge.db.uppers.filter(other=>num(counts[other.id])>0).map(other=>C.canonicalUpperId(other.id))),key=C.canonicalUpperId(unit.id),lockedKey=lock&&C.canonicalUpperId(lock.id),maxUpper=C.upperSlotLimit?C.upperSlotLimit(route.key,model.settings):route.key==='dual'?2:1;
   if(owned.has(key)||owned.size>=maxUpper)return false;
   // A confirmed but unfinished upper is a commitment, not a soft score bonus.
   // Until it is actually observed, no other upper may become the authority action.
   if(lockedKey&&!owned.has(lockedKey)&&lockedKey!==key)return false;
+  // v19.10(검증 수리): 물딜 2상위는 '수'만이 아니라 '정체'다 — 메인을 이미
+  // 보유한 뒤 열리는 두 번째 슬롯은 사용자가 확정한 그 상위만 쓸 수 있다.
+  // 아니면 더 싼 임의 상위가 권위 행동이 되고, 그걸 만들면 원장 불변식
+  // (서로 다른 상위 2기)이 정작 확정 상위를 영구 차단한다.
+  if(route.key!=='dual'&&owned.size>=1){
+    const second=String(model.settings&&model.settings.secondUpperId||'');
+    if(!second)return false;
+    const secondKey=C.canonicalUpperId(second);
+    if(key!==secondKey)return false;
+  }
   return true;
 }
 function allCandidates(model,route,locks,counts){return model.knowledge.db.legendish.concat(model.knowledge.db.uppers).filter(unit=>unit&&!pseudoUnit(unit)&&routeFamilyOk(unit,route)&&upperAllowed(model,unit,route,locks,counts));}
@@ -594,10 +604,29 @@ function currentHandAngleCompare(left,right){
   if(a.wispCost!==b.wispCost)return a.wispCost-b.wispCost;
   return clearValueCompare(left,right);
 }
+// v19.10(외부 점검 4-2): 티어를 아예 안 보는 각 비교 — 첫 probe 자리는
+// 이 비교의 1위가 가져간다.  S/A 후보가 probe 를 전부 차지하면 C/D
+// 완벽각(희귀 여러 종 즉시 소비·저선위)이 정밀 평가 전에 잘리고,
+// 정밀 평가를 못 받으면 +2티어 승급도 영원히 실행되지 않는다.
+function currentHandAngleBlindCompare(left,right){
+  const a=currentHandAngleMetrics(left),b=currentHandAngleMetrics(right);
+  if(a.wispBand!==b.wispBand)return b.wispBand-a.wispBand;
+  if(a.rareTypes!==b.rareTypes)return b.rareTypes-a.rareTypes;
+  if(a.rareUsed!==b.rareUsed)return b.rareUsed-a.rareUsed;
+  if(a.wispCost!==b.wispCost)return a.wispCost-b.wispCost;
+  return clearValueCompare(left,right);
+}
 function currentHandAngleProbes(rows,limit=2){
-  const sorted=(rows||[]).filter(row=>currentHandAngleMetrics(row).eligible).sort(currentHandAngleCompare),out=[],seenTier=new Set(),seenId=new Set();
+  const eligible=(rows||[]).filter(row=>currentHandAngleMetrics(row).eligible);
+  const sorted=eligible.slice().sort(currentHandAngleCompare),out=[],seenTier=new Set(),seenId=new Set();
   for(const row of sorted){const tier=String(row&&row.powerTier&&row.powerTier.letter||'?');if(seenTier.has(tier))continue;seenTier.add(tier);seenId.add(String(row.id));out.push(row);if(out.length>=limit)return out;}
   for(const row of sorted){if(seenId.has(String(row.id)))continue;seenId.add(String(row.id));out.push(row);if(out.length>=limit)break;}
+  // v19.10(검증 수리): 티어 무관 최고각은 기존 티어 워크의 슬롯을 뺏지
+  // 않고 추가 슬롯(+1)로 붙는다 — 뺏으면 이 probe 가 지키려던 'A티어
+  // 각 대표'(R30 카이도 케이스)가 도로 잘린다.  호출부 take/push 가
+  // 상한을 관리하므로 limit+1 반환은 안전하다.
+  const blindBest=eligible.slice().sort(currentHandAngleBlindCompare)[0];
+  if(blindBest&&!seenId.has(String(blindBest.id)))out.push(blindBest);
   return out;
 }
 // 계획 전 예비 정렬 — 티어를 먼저 본다.  낮은 티어가 "가깝다"는 이유로

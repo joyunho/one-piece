@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.9.9';
+const VERSION='19.10.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 // v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
 // 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
@@ -258,10 +258,11 @@ function normalizeSettings(input){
 // 2상위 경로라 그대로다.
 function committedSecondUpper(settings){return!!String(settings&&settings.secondUpperId||'');}
 function expectedUpperCount(mode,route,settings){
-  if(mode==='magic'&&route==='dual')return 2;
-  // 마딜 단끝은 단·끝 3기를 위한 자리가 필요한 1상위 경로다.  2상위로 가려면
-  // 마딜 2상위(dual) 경로를 고르는 것이 맞아서, 여기서는 확정을 세지 않는다.
-  if(route==='physical'&&committedSecondUpper(settings))return 2;
+  // v19.10(외부 점검 4-4): 실행 엔진과 같은 단일 규칙(C.upperSlotLimit)을
+  // 소비한다.  마딜 단끝은 단·끝 3기를 위한 자리가 필요한 1상위 경로다 —
+  // 2상위로 가려면 dual 경로를 고르는 것이 맞아서 확정을 세지 않는다.
+  if(mode==='magic'&&route==='dual')return C.upperSlotLimit?C.upperSlotLimit('dual',settings):2;
+  if(route==='physical')return C.upperSlotLimit?C.upperSlotLimit('physical',settings):(committedSecondUpper(settings)?2:1);
   return 1;
 }
 function maxUpperCount(mode,route,settings){return expectedUpperCount(mode,route,settings);}

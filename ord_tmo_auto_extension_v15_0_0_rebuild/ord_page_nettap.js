@@ -19,6 +19,16 @@
   window.__ORD_TMO_NETTAP__ = true;
 
   const LOCAL = /^https?:\/\/127\.0\.0\.1:25625\//;
+  // v19.10(외부 점검 9-4): 상시 본문 복제·문자열화 비용을 줄인다 — 같은
+  // (경로·상태·크기) 응답은 10초 안에 다시 읽지 않는다.  변화 순간(빈
+  // 응답→데이터, 크기 변동)은 그대로 잡히므로 진단 가치는 유지된다.
+  let lastKey = '', lastAt = 0;
+  function sampled(url, status, size) {
+    const key = url + '|' + status + '|' + size, now = Date.now();
+    if (key === lastKey && now - lastAt < 10000) return false;
+    lastKey = key; lastAt = now;
+    return true;
+  }
   function report(entry) {
     try { window.postMessage(Object.assign({__ord: 'tmo-local-request'}, entry), '*'); } catch (_) {}
   }
@@ -36,7 +46,7 @@
           try { body = typeof (init && init.body) === 'string' ? init.body.slice(0, 300) : ''; } catch (_) {}
           promise.then(response => {
             try {
-              response.clone().text().then(text => report({kind: 'fetch', url, method, body, status: response.status, size: text.length, snippet: snippetOf(text)})).catch(() => {});
+              response.clone().text().then(text => { if (sampled(url, response.status, text.length)) report({kind: 'fetch', url, method, body, status: response.status, size: text.length, snippet: snippetOf(text)}); }).catch(() => {});
             } catch (_) {}
           }).catch(() => {});
         }
@@ -66,7 +76,7 @@
               try {
                 let text = '';
                 try { text = typeof xhr.responseText === 'string' ? xhr.responseText : ''; } catch (_) {}
-                report({kind: 'xhr', url: xhr.__ordTapUrl, method: xhr.__ordTapMethod, body: tapBody, status: xhr.status, size: text.length, snippet: snippetOf(text)});
+                if (sampled(xhr.__ordTapUrl, xhr.status, text.length)) report({kind: 'xhr', url: xhr.__ordTapUrl, method: xhr.__ordTapMethod, body: tapBody, status: xhr.status, size: text.length, snippet: snippetOf(text)});
               } catch (_) {}
             });
           }

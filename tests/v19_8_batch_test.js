@@ -44,7 +44,10 @@ check('② 다음 제작 큐 — 5개 상한(v19.9) + 소스 사슬 + 보존 섹
 
 check('③ 희귀→전설 6칸 + 내 희귀 사용 + 노리기 채움',()=>{
   const craft=app.slice(app.indexOf('renderV153CraftableLegends(state,plan){'),app.indexOf('renderV153UnusedRare(state,plan){'));
-  assert(craft.includes('rows.slice(0,6)'),'6칸이 아님');
+  // v19.10(외부 점검 8-1): 보유 희귀 사용 카드와 노리기 카드가 구역으로
+  // 분리됐다 — 6칸 상한은 사용 카드 기준.
+  assert(craft.includes('nowRows.slice(0,6)'),'6칸이 아님');
+  assert(craft.includes('v1910-upcoming-head'),'노리기 구역 분리 없음');
   assert(craft.includes('내 희귀 사용'),'사용 희귀 명시 없음');
   assert(craft.includes('rows.length>6'),'전체 보기 임계 갱신 안 됨');
   const rowsFn=app.slice(app.indexOf('v153RareCraftRows(state,plan){'),app.indexOf('renderV152RareCraftable(state,plan){'));
