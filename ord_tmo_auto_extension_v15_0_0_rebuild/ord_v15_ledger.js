@@ -6,7 +6,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.9.8';
+const VERSION='19.9.9';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -34,6 +34,12 @@ function ruleBlocks(model,unit,counts,options,solve,prerequisite){
   if(!unit)reasons.push('유닛 정보 없음');
   if(unit&&num(counts[unit.id])>0)reasons.push('이미 보유');
   if(unit&&C.isUpper(unit)&&db.uppers.some(other=>num(counts[other.id])>0&&C.canonicalUpperId(other.id)===C.canonicalUpperId(unit.id)))reasons.push('같은 상위 경로 이미 보유');
+  // v19.9.9(외부 점검 P0-3): 게임 규칙상 상위는 2기까지다.  서로 다른
+  // 상위 2기를 이미 보유했으면 새 경로의 세 번째 상위는 원장 불변식으로
+  // 차단한다 — 플래너 경로 제한과 별개로, 수동 저격·낡은 lock·UI 오작동이
+  // 겹쳐도 quote 가 feasible 을 내지 못하게 원장 자체가 막는다.  기존
+  // 계보의 강화·변형은 위 canonical 검사(같은 경로)가 이미 다룬다.
+  if(unit&&C.isUpper(unit)){const ownedCanonical=new Set(db.uppers.filter(other=>num(counts[other.id])>0).map(other=>C.canonicalUpperId(other.id)));if(ownedCanonical.size>=2&&!ownedCanonical.has(C.canonicalUpperId(unit.id)))reasons.push('서로 다른 상위 2기 보유 — 세 번째 상위 불가');}
   if(unit&&C.isChanged(unit)&&round<50)reasons.push('변화됨은 50라부터');
   // v17.25: 해적선 완성체는 라운드로 잠그지 않는다. 실제 해적선 재료가
   // 있어야 prerequisite가 열리므로, 상위 확정 뒤 현재 패에서 0선위로

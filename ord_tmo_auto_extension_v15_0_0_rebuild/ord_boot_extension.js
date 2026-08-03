@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v19.9.8 live cockpit bridge; connector protocol stays v13.
+  // v19.9.9 live cockpit bridge; connector protocol stays v13.
   // v19.4(사용자 요청): 도우미 번호 무관 — 숫자 id 전부 후보. 여러 탭이면
   // 주 도우미(32172) 우선.
   const PATTERNS = [
@@ -207,6 +207,10 @@
     // 해제·수동 제작 경고·상위 관측)가 흔들리기 때문이다.
     const LM = window.ORD_LOCAL_MAP || null;
     const localCatalogIds = new Set((window.ORD_TMO_UNITS || []).map(unit => String(unit.id)));
+    // v19.9.9(외부 점검 P0-1): 카탈로그 unit.codes 역색인 — 합성 id
+    // (세라핌·왜곡·초월 등) 60종의 로우코드를 카탈로그가 이미 알고 있다.
+    // 폼 변형 충돌은 캐노니컬 동일성으로 첫 형태에 귀속시킨다.
+    const localCodeIndex = LM && window.ORDCore ? LM.buildCodeIndex(window.ORD_TMO_UNITS || [], window.ORDCore.canonicalUpperId) : null;
     const local = {
       sessionId: 'local-' + Date.now().toString(36),
       seq: 0,
@@ -236,7 +240,7 @@
     function handleLocalUnits(units) {
       if (!LM) return false;
       const now = Date.now();
-      const translated = LM.translate(units || null, localCatalogIds);
+      const translated = LM.translate(units || null, localCatalogIds, localCodeIndex);
       if (!translated.matched) {
         // 아는 코드가 하나도 없으면(게임 꺼짐·메뉴) 판이 없는 것이다.
         // 마지막 보드는 얼려 두고(결과 입력용) 자동 라운드만 비활성 전이.

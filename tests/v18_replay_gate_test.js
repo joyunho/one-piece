@@ -1,6 +1,6 @@
 'use strict';
 
-// v18 회귀 게이트 — 실전 로그 6판을 통째로 다시 돌린다.
+// v18 회귀 게이트 — 등재된 실전 로그 전부(RUNS)를 통째로 다시 돌린다.
 //
 // 지금까지 회귀 검증은 로그에서 문제가 된 라운드 한둘을 뽑아 fixture로
 // 굳히는 방식이었다.  그 방식은 이미 아는 증상만 잡는다.  "68라운드 중
@@ -22,7 +22,7 @@
 //   ③ 마감 시점이 신호다 — 첫 클리어(0728c)만 50라 전에 생존 축을
 //      닫았다(r49).  두 축을 모두 닫고도 진 0724는 r56에 닫았다.
 //
-// 이 테스트는 느리다(6판 × 60여 라운드를 살아 있는 엔진에 먹인다).
+// 이 테스트는 느리다(등재 판 전부 × 60여 라운드를 살아 있는 엔진에 먹인다).
 // 느린 값을 치르는 이유는 이게 이 프로젝트에서 유일하게 "판 전체가
 // 어떻게 흘렀는가"를 재는 계측이기 때문이다.
 
@@ -32,7 +32,7 @@ const R=require('./lib/ordlog_replay.js');
 let passed=0;
 function test(name,fn){fn();passed+=1;console.log(`PASS ${name}`);}
 
-// 6판을 한 번만 돌리고 결과를 공유한다.
+// 등재 판 전부를 한 번만 돌리고 결과를 공유한다.
 const started=Date.now();
 const results=R.RUNS.map(run=>R.replayRun(run.key));
 const byKey=new Map(results.map(row=>[row.key,row]));

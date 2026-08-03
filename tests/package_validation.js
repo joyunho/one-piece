@@ -57,7 +57,7 @@ for(const script of manifest.content_scripts){
   assert.strictEqual(unthrottle.run_at,'document_start','unthrottle must wrap timers before page scripts run');
 }
 
-for(const file of ['background.js','content-tmo.js','ord_page_unthrottle.js','ord_upper_playbook.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_core.js','ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_boot_extension.js','popup.js']){
+for(const file of ['background.js','content-tmo.js','ord_page_unthrottle.js','ord_page_nettap.js','ord_local_code_map.js','ord_upper_playbook.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_core.js','ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_boot_extension.js','popup.js']){
   new vm.Script(read(file),{filename:file});
 }
 const helper=read('ord_helper.html'),popup=read('popup.html');

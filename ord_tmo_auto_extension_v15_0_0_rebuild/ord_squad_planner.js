@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.9.8';
+const VERSION='19.9.9';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 // v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
 // 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
@@ -381,7 +381,10 @@ function checkpointRequirementKeys(mode,route,dueRound){
   return['main','bossFrenzy','stunBase','slow','stunFull'];
 }
 function checkpointRequirementRows(stage,mode,route,dueRound){
-  const rows=stage&&stage.requirements&&stage.requirements.rows||[],byKey=new Map(rows.map(row=>[row.key,row]));return checkpointRequirementKeys(mode,route,dueRound).map(key=>byKey.get(key)||{key,label:key,gap:Infinity});
+  // v19.9.9(외부 점검 P1): 필수 행이 없으면 gap:Infinity 를 줬는데 하류의
+  // num() 이 Infinity 를 0으로 정규화해 "부족 무한대"가 "부족 0"이 되는
+  // fail-open 이었다 — 유한 대부채(999)로 바꿔 누락이 항상 미충족으로 남는다.
+  const rows=stage&&stage.requirements&&stage.requirements.rows||[],byKey=new Map(rows.map(row=>[row.key,row]));return checkpointRequirementKeys(mode,route,dueRound).map(key=>byKey.get(key)||{key,label:key,target:1,gap:999,required:true,missingRow:true});
 }
 function checkpointStagePass(stage,mode,route,dueRound){
   const rows=checkpointRequirementRows(stage,mode,route,dueRound),strategyPass=dueRound<50||!!(stage&&stage.damageCore&&stage.damageCore.rows||[]).filter(row=>row&&row.upperId).every(row=>row.pass);return rows.every(row=>Number.isFinite(num(row.gap))&&num(row.gap)<=0)&&strategyPass;
@@ -442,7 +445,9 @@ function exactPrefixCheckpoint(roundNow,stage,mode,route,rareRemaining){
 }
 function checkpointDebtVector(stage,mode,route,dueRound){
   const keys=new Set(checkpointRequirementKeys(mode,route,dueRound)),requirements=stage&&stage.requirements&&stage.requirements.rows||[],byKey=new Map(requirements.map(row=>[row.key,row])),groups=mode==='physical'?[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndStable','singleEndExpected'],['stunFull']],vector=[];
-  for(const group of groups){const selected=group.filter(key=>keys.has(key)).map(key=>byKey.get(key)||{key,target:1,gap:Infinity});if(!selected.length)continue;const missed=selected.filter(row=>num(row.gap)>0).length,debt=selected.reduce((total,row)=>total+num(row.gap)/Math.max(.01,num(row.target)||1),0);vector.push(missed,round(debt,6));}return vector;
+  // v19.9.9(외부 점검 P1): Infinity 는 num() 에서 0이 된다 — 위와 같은
+  // fail-open 봉합(누락 행 = 유한 대부채 999).
+  for(const group of groups){const selected=group.filter(key=>keys.has(key)).map(key=>byKey.get(key)||{key,target:1,gap:999,missingRow:true});if(!selected.length)continue;const missed=selected.filter(row=>num(row.gap)>0).length,debt=selected.reduce((total,row)=>total+num(row.gap)/Math.max(.01,num(row.target)||1),0);vector.push(missed,round(debt,6));}return vector;
 }
 function exactPrefixMetrics(state,node,mode,route,settings,fixed){
   const roundNow=Math.max(1,num(settings&&settings.currentRound)||25),stage=exactPrefixStage(state,node,mode,route,settings,fixed),rareRemaining=state.db.rares.reduce((total,unit)=>total+Math.max(0,num(node.counts[unit.id])),0),checkpoint=exactPrefixCheckpoint(roundNow,stage,mode,route,rareRemaining),used=node.used||consumptionTotals(node.actions||[],state),lineUnits=finalEntries(state,node.counts),storyProxy=Math.round(lineUnits.reduce((total,unit)=>total+clearAffinity(unit),0)*10000)/10000,fixedMissing=(fixed||[]).filter(id=>{const unit=state.db.byId.get(id);return unit&&!lineUnits.some(owned=>lineupKey(owned)===lineupKey(unit));}).length,vector=[],gateVector=[],checkpointDebts=checkpoint.dueRound===30?[]:checkpointDebtVector(stage,mode,route,checkpoint.dueRound),checkpointMisses=checkpointDebts.filter((value,index)=>index%2===0),strategyMisses=(stage.damageCore&&stage.damageCore.rows||[]).filter(row=>row&&row.upperId).map(row=>row.pass?0:1),equivalentGap=Math.max(0,checkpoint.equivalent-stage.legendEquivalent);

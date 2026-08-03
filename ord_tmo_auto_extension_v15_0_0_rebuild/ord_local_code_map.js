@@ -74,24 +74,64 @@
     return (hash >>> 0).toString(16);
   }
 
-  // /datas units(로우코드→수량) → 카탈로그 id→수량.  catalogIds 는 Set.
-  function translate(liveUnits, catalogIds) {
-    var counts = {}, unknown = [], ignored = 0, matched = 0;
+  // v19.9.9(외부 점검 P0-1): 합성 id('unit_...') 유닛 73종 중 60종은
+  // 카탈로그가 이미 로우코드를 들고 있다(unit.codes) — 세라핌·왜곡·
+  // 초월 등 실전 제작 대상이 전부 여기다.  궤적 대조로 3종만 확정하고
+  // 나머지를 미해석으로 버리던 공백을 codes 역색인으로 닫는다.
+  //   · 1:1 코드 → 자동 매핑.
+  //   · 1:N 코드 중 전원이 같은 상위의 폼 변형(190H 쵸파/몬스터포인트,
+  //     DA0h 카이도/용폼, G90H 상디/제르마)이면 첫 형태로 매핑한다 —
+  //     인게임에선 같은 유닛의 폼 전환이라 로우코드가 하나다.
+  //   · 진짜 다른 유닛이 코드를 공유하면(AA0H 베가펑크 4종, BA0H)
+  //     매핑하지 않고 미해석으로 남긴다 — 틀린 매핑이 무매핑보다 나쁘다.
+  function buildCodeIndex(catalog, canonicalOf) {
+    var byCode = {};
+    var list = Array.isArray(catalog) ? catalog : [];
+    for (var u = 0; u < list.length; u += 1) {
+      var unit = list[u];
+      var codes = unit && Array.isArray(unit.codes) ? unit.codes : [];
+      for (var c = 0; c < codes.length; c += 1) {
+        var code = String(codes[c] || '');
+        if (!code) continue;
+        if (!byCode[code]) byCode[code] = [];
+        if (byCode[code].indexOf(String(unit.id)) < 0) byCode[code].push(String(unit.id));
+      }
+    }
+    var map = {}, ambiguous = [], ignoredConflicts = [];
+    for (var key in byCode) {
+      var ids = byCode[key];
+      if (ids.length === 1) map[key] = ids[0];
+      else if (typeof canonicalOf === 'function') {
+        var canon = {};
+        for (var i = 0; i < ids.length; i += 1) canon[String(canonicalOf(ids[i]))] = true;
+        if (Object.keys(canon).length === 1) map[key] = ids[0];
+        else ambiguous.push(key);
+      } else ambiguous.push(key);
+      if (map[key] && IGNORE_SET[key] === true) ignoredConflicts.push(key);
+    }
+    return {map: map, ambiguous: ambiguous, ignoredConflicts: ignoredConflicts};
+  }
+
+  // /datas units(로우코드→수량) → 카탈로그 id→수량.  catalogIds 는 Set,
+  // codeIndex 는 buildCodeIndex 결과(없으면 직결+CODE_MAP 만 사용).
+  function translate(liveUnits, catalogIds, codeIndex) {
+    var counts = {}, unknown = [], unknownCounts = {}, ignored = 0, matched = 0;
     var wisp = 0, wispFound = false, playableUnitCount = 0;
+    var indexMap = codeIndex && codeIndex.map || null;
     var entries = liveUnits && typeof liveUnits === 'object' ? Object.keys(liveUnits) : [];
     for (var k = 0; k < entries.length; k += 1) {
       var code = entries[k];
       var count = Math.max(0, num(liveUnits[code]));
       if (IGNORE_SET[code] === true) { ignored += 1; continue; }
-      var id = CODE_MAP[code] || (catalogIds && catalogIds.has(code) ? code : '');
-      if (!id) { unknown.push(code); continue; }
+      var id = CODE_MAP[code] || (catalogIds && catalogIds.has(code) ? code : '') || (indexMap && indexMap[code]) || '';
+      if (!id) { unknown.push(code); unknownCounts[code] = count; continue; }
       counts[id] = (counts[id] || 0) + count;
       matched += 1;
       if (id === '810e') { wisp += count; wispFound = true; }
       else if (SPECIAL_SET[id] !== true) playableUnitCount += count;
     }
-    return {counts: counts, matched: matched, unknown: unknown, ignored: ignored,
-      wisp: wisp, wispFound: wispFound, playableUnitCount: playableUnitCount};
+    return {counts: counts, matched: matched, unknown: unknown, unknownCounts: unknownCounts,
+      ignored: ignored, wisp: wisp, wispFound: wispFound, playableUnitCount: playableUnitCount};
   }
 
   function countsHash(translated) {
@@ -99,6 +139,12 @@
     var keys = Object.keys(counts).sort();
     var parts = [];
     for (var k = 0; k < keys.length; k += 1) parts.push(keys[k] + ':' + counts[keys[k]]);
+    // v19.9.9(외부 점검 P0-1): 미해석 코드도 해시에 넣는다 — 안 넣으면
+    // 미해석 유닛이 새로 생겨도 seq·dataChangedAt 이 안 움직여, 신선한
+    // 로컬이 DOM 까지 눌러둔 채 화면이 옛 패에 머문다.
+    var unknownCounts = translated && translated.unknownCounts || {};
+    var unknownKeys = Object.keys(unknownCounts).sort();
+    for (var q = 0; q < unknownKeys.length; q += 1) parts.push('?' + unknownKeys[q] + ':' + unknownCounts[unknownKeys[q]]);
     return fnv1a(parts.join('|'));
   }
 
@@ -240,12 +286,13 @@
   }
 
   global.ORD_LOCAL_MAP = {
-    VERSION: '19.9.6',
+    VERSION: '19.9.9',
     LOCAL_DATAS_URL: LOCAL_DATAS_URL,
     LOCAL_SOURCE_EPOCH: LOCAL_SOURCE_EPOCH,
     CODE_MAP: CODE_MAP,
     IGNORE_CODES: IGNORE_CODES,
     SPECIAL_IDS: SPECIAL_IDS,
+    buildCodeIndex: buildCodeIndex,
     translate: translate,
     countsHash: countsHash,
     nextLocalAutoRound: nextLocalAutoRound,

@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='19.9.8';
+const VERSION='19.9.9';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1538,6 +1538,10 @@ function snapshotHealth(snapshot,now){
     if(ageSec>12)return result('stale','로컬 직결 수신 끊김',false,`마지막 /datas 읽기 ${ageSec}초 전입니다. TMO.GG 데스크톱 앱 실행 여부를 확인하세요. 오래된 추천은 숨겼습니다.`);
     if(s.wispCountFound!==true)return result('error','로컬 직결 위습 수량 미확인',false,'위습 수량 없이 제작 가능 여부를 판정하지 않습니다. 다시 읽기를 기다리거나 수동 보정하세요.');
     if(ageSec>7)return result('lag','로컬 직결 수신 지연',true,`마지막 /datas 읽기 ${ageSec}초 전입니다. 12초를 넘으면 추천을 자동으로 숨깁니다.`);
+    // v19.9.9(외부 점검 P0-1): 미해석 코드가 남아 있으면 숨기지 않는다 —
+    // 아는 코드 수량은 정상이지만, 방금 만든 유닛이 그 미해석일 수 있다.
+    {const unknownCount=(s.localDirect&&s.localDirect.unknownCodes||[]).length;
+    if(unknownCount>0)return result('partial',`로컬 직결 · 미해석 코드 ${unknownCount}종`,true,'아는 코드의 수량은 정상 수집 중입니다. 방금 만든 유닛이 화면에 없으면 연결 진단의 미해석 코드를 확인하세요 — 표본 대조로 매핑을 추가할 수 있습니다.');}
     if(num(s.abilityCount)<3)return result('partial','로컬 직결 · %·능력치는 TMO 탭 보강 대기',true,'게임 데이터를 /datas 로 직접 읽는 중입니다. 완성도%·현재 능력치는 TMO 조합도우미 탭이 열려 있으면 자동 보강됩니다.');
     return result('ok','로컬 직결 실시간',true,'TMO 화면 없이 게임 데이터를 직접 읽고 있으며, 완성도%·현재 능력치는 TMO 탭에서 보강 중입니다.');
   }
