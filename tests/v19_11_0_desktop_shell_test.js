@@ -1,0 +1,91 @@
+'use strict';
+// v19.11.0 계약 — 데스크톱 셸(Electron) 프로토타입.
+//
+// ① 보안 계약(정적): 네트워크는 메인 프로세스의 127.0.0.1:25625 한 곳,
+//    loadFile 만, contextIsolation:true / nodeIntegration:false, 저장
+//    파일명 살균 + .ordlog.json 강제, preload 는 화이트리스트 API 만 노출.
+// ② 부트 런타임: ORD_DESKTOP.onDatas 로 들어온 /datas 원본이 확장과 같은
+//    번역·합성 경로(ORD_LOCAL_MAP)를 타고 local-direct 스냅샷이 된다.
+//    자동 라운드 세대는 localStorage 에 영속된다.
+// ③ ordlog 자동 저장 배선과 진단 프로브의 데스크톱 경로.
+const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
+const ROOT=path.join(__dirname,'..');
+const EXT=path.join(ROOT,'ord_tmo_auto_extension_v15_0_0_rebuild');
+const read=file=>fs.readFileSync(path.join(EXT,file),'utf8');
+const main=fs.readFileSync(path.join(ROOT,'desktop/main.js'),'utf8');
+const preload=fs.readFileSync(path.join(ROOT,'desktop/preload.js'),'utf8');
+const bootDesktop=read('ord_boot_desktop.js');
+const helperDesktop=read('ord_helper_desktop.html');
+const app=read('ord_app.js');
+let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS ',name);};
+
+check('① 보안 계약 — 단일 로컬 호스트·loadFile·격리·파일명 살균',()=>{
+  new vm.Script(main,{filename:'main.js'});
+  new vm.Script(preload,{filename:'preload.js'});
+  assert(main.includes("DATAS_HOST = '127.0.0.1'")&&main.includes('DATAS_PORT = 25625'),'로컬 호스트 하드코딩 없음');
+  assert(!/https?:\/\/(?!127\.0\.0\.1)/.test(main),'메인에 외부 주소 잔존');
+  assert(main.includes('loadFile')&&!main.includes('loadURL'),'원격 로드 경로 존재');
+  assert(main.includes('contextIsolation: true')&&main.includes('nodeIntegration: false'),'렌더러 격리 계약 없음');
+  assert(main.includes("replace(/[^\\w.-]/g, '')")&&main.includes(".ordlog.json"),'저장 파일명 살균 없음');
+  // preload 화이트리스트 — 이 네 API 외 노출 금지.
+  for(const api of ['onDatas','probe','toggleOverlay','saveRunLog'])assert(preload.includes(api),`preload API 누락: ${api}`);
+  assert(!preload.includes('require(')||preload.split('require(').length===2,'preload 가 electron 외 모듈을 당김');
+  assert(helperDesktop.includes('ord_boot_desktop.js')&&!helperDesktop.includes('ord_boot_extension.js'),'데스크톱 헬퍼 부트 배선 오류');
+  // 표류 방지 — 데스크톱 헬퍼는 부트 스크립트·meta 표식만 다르고 나머지는
+  // ord_helper.html 과 자산 하나까지 같아야 한다(스크립트 추가 시 동반 수정 강제).
+  const helper=read('ord_helper.html');
+  const norm=(html,boot,meta)=>html.replace(boot,'BOOT').replace(meta,'META');
+  assert.strictEqual(
+    norm(helperDesktop,'ord_boot_desktop.js',/v[\d.]+-desktop-shell/),
+    norm(helper,'ord_boot_extension.js',/v[\d.]+-decision-engine/),
+    '데스크톱 헬퍼가 ord_helper.html 과 표류 — 스크립트 목록을 맞춰라');
+});
+
+check('② 부트 런타임 — /datas → 번역·합성 → local-direct 스냅샷 + 세대 영속',()=>{
+  const context={console,setTimeout,clearTimeout,setInterval:()=>0};
+  context.window=context;vm.createContext(context);
+  const storage={};
+  context.localStorage={getItem:key=>Object.prototype.hasOwnProperty.call(storage,key)?storage[key]:null,setItem:(key,value)=>{storage[key]=String(value);},removeItem:key=>{delete storage[key];}};
+  for(const file of ['ord_units_data.js','ord_local_code_map.js','ord_data_patch.js','ord_core.js'])vm.runInContext(read(file),context,{filename:file});
+  // 무거운 실제 앱 대신 스텁 — 부트가 계약대로 updateSnapshot 을 부르는지만 본다.
+  const applied=[];
+  context.ORDApp={create:()=>({state:{},updateSnapshot(snapshot){applied.push(snapshot);},toast(){},render(){}})};
+  let feed=null;const saved=[];
+  context.ORD_DESKTOP={onDatas(cb){feed=cb;},probe:async()=>({ok:true}),saveRunLog:(name,text)=>{saved.push({name,size:String(text).length});return Promise.resolve({ok:true});},toggleOverlay:async()=>true};
+  const listeners={};
+  context.document={addEventListener:(type,cb)=>{listeners[type]=cb;},getElementById:()=>({replaceChildren(){}}),createElement:()=>({style:{}})};
+  vm.runInContext(bootDesktop,context,{filename:'ord_boot_desktop.js'});
+  listeners['DOMContentLoaded']();
+  assert(typeof feed==='function','onDatas 구독이 없다');
+  // 세라핌 포함 실전 꼴 페이로드 — codes 역색인 경유까지 검증.
+  feed({units:{'300h':3,'810e':9,'3A0h':1,'GOLD':500}});
+  assert.strictEqual(applied.length,1,'스냅샷이 적용되지 않음');
+  const snapshot=applied[0];
+  assert.strictEqual(snapshot.source,'local-direct');
+  assert.strictEqual(snapshot.counts['300h'],3);
+  assert.strictEqual(snapshot.wispCount,9);
+  const seraph=Object.keys(snapshot.counts).find(id=>/^unit_/.test(id));
+  assert(seraph,'세라핌 합성 id 매핑이 안 탐');
+  assert(snapshot.autoRound&&snapshot.autoRound.active===true,'자동 라운드 비활성');
+  assert(storage.ordDesktopAutoRound,'자동 라운드 세대가 localStorage 에 영속되지 않음');
+  // 같은 데이터 재수신 → seq 유지, 다른 데이터 → seq 증가.
+  feed({units:{'300h':3,'810e':9,'3A0h':1,'GOLD':500}});
+  feed({units:{'300h':4,'810e':9,'3A0h':1}});
+  assert.strictEqual(applied[applied.length-1].seq,applied[0].seq+1,'데이터 변화가 seq 를 안 올림');
+  // 빈 응답(게임 꺼짐)은 적용하지 않고 세대만 비활성 전이.
+  const before=applied.length;
+  feed({units:{}});
+  assert.strictEqual(applied.length,before,'빈 응답이 보드를 덮어씀');
+  assert(JSON.parse(storage.ordDesktopAutoRound).active===false,'게임 꺼짐 전이가 영속되지 않음');
+});
+
+check('③ 자동 저장·프로브 — 데스크톱 경로 배선',()=>{
+  assert(bootDesktop.includes('saveRunLog')&&bootDesktop.includes('exportJson'),'ordlog 자동 저장 배선 없음');
+  assert(bootDesktop.includes('60000'),'자동 저장 주기 없음');
+  assert(app.includes('window.ORD_DESKTOP&&window.ORD_DESKTOP.probe'),'진단 프로브 데스크톱 경로 없음');
+  const pkg=JSON.parse(fs.readFileSync(path.join(ROOT,'desktop/package.json'),'utf8'));
+  assert.strictEqual(pkg.main,'main.js');
+  assert(pkg.devDependencies&&pkg.devDependencies.electron,'electron 의존성 없음');
+});
+
+console.log(`\n${checks} checks passed (v19.11.0 데스크톱 셸)`);

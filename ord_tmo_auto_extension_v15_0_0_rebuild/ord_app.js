@@ -2910,7 +2910,13 @@ class App{
     }catch(_){this._localTapLog=[];this._localMapSamples=[];}
     try{
       let result=null;
-      if(typeof chrome!=='undefined'&&chrome.runtime&&chrome.runtime.sendMessage&&this.config.source!=='standalone-manual'){
+      // v19.11(데스크톱 셸): Electron 렌더러는 fetch 를 하지 않는다 —
+      // 메인 프로세스 프로브(화이트리스트 API)를 우선 쓴다.
+      if(typeof window!=='undefined'&&window.ORD_DESKTOP&&window.ORD_DESKTOP.probe){
+        const desktop=await window.ORD_DESKTOP.probe();
+        const text=desktop&&desktop.ok?JSON.stringify(desktop.payload||{}):'';
+        result=desktop&&desktop.ok?{ok:true,status:C.num(desktop.status)||200,contentType:'application/json',size:text.length,text}:{ok:false,error:String(desktop&&desktop.error||'로컬 서버 응답 없음')};
+      }else if(typeof chrome!=='undefined'&&chrome.runtime&&chrome.runtime.sendMessage&&this.config.source!=='standalone-manual'){
         result=await new Promise(resolve=>chrome.runtime.sendMessage({type:'ORD_LOCAL_PROBE',url},response=>{
           const error=chrome.runtime.lastError;
           resolve(error?{ok:false,error:error.message}:response||{ok:false,error:'백그라운드 응답 없음'});
