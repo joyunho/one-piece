@@ -104,6 +104,23 @@ check('④ exe 패키징 — 자산 복사 계약 + win32 빌드 스크립트',(
   assert(pkg.devDependencies&&pkg.devDependencies['@electron/packager'],'@electron/packager 의존성 없음');
   // 배포본은 앱 내 ui/ 페이지를 우선 로드한다(저장소 상대 경로는 개발 전용).
   assert(main.includes("'ui', 'ord_helper_desktop.html'")&&main.includes('existsSync'),'번들 ui 우선 로드 없음');
+  // v19.14.1: dist:win 은 어떤 경로로 실행돼도 결과물을 바탕화면에 복사
+  // 한다 — win32 전용 가드(리눅스 CI 빌드는 건너뜀) + OneDrive 대응.
+  assert(packWin.includes("process.platform === 'win32'"),'바탕화면 복사 win32 가드 없음');
+  assert(packWin.includes("GetFolderPath(\\'Desktop\\')"),'바탕화면 경로 해석 없음');
+  assert(packWin.includes('ORD악몽코치')&&packWin.includes('CreateShortcut'),'바탕화면 복사·바로가기 없음');
+});
+
+check('⑥ 오버레이 미니 패널 — 우상단 축소·게임 클릭 보존',()=>{
+  // v19.14.1: 전체 창 항상-위(게임 가림·클릭 강탈)를 폐기 — 오버레이는
+  // 작업영역 우상단의 작은 창으로 줄고, 렌더러는 컴팩트 클래스를 받는다.
+  assert(main.includes('getDisplayMatching')&&main.includes('setBounds'),'미니 패널 배치 없음');
+  assert(main.includes("send('ord-overlay-mode'"),'오버레이 모드 이벤트 없음');
+  assert(main.includes('savedBounds')&&main.includes('win.setBounds(savedBounds)'),'원래 창 복원 없음');
+  assert(preload.includes('onOverlayMode')&&preload.includes("on('ord-overlay-mode'"),'preload 오버레이 구독 없음');
+  assert(bootDesktop.includes("classList.toggle('ord-overlay-mode'"),'부트 컴팩트 클래스 배선 없음');
+  const css=read('ord_cockpit_v15.css');
+  assert(css.includes('body.ord-overlay-mode')&&css.includes('not([data-region="next-action"])'),'컴팩트 CSS 없음');
 });
 
 check('⑤ 설치·업데이트 스크립트 — 바탕화면 설치 계약',()=>{

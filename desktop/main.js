@@ -1,11 +1,12 @@
 'use strict';
-// v19.14.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
+// v19.14.1 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
 //
 // 확장(크롬) 없이 코치를 독립 프로그램으로 돌린다.  브라우저 제약
 // (타이머 조임·MV3 정책·CORS)이 사라지므로 보험 장치 없이 단순하다:
 //  · 메인 프로세스가 TMO 데스크톱의 /datas 를 1초마다 읽어 렌더러로
 //    민다(렌더러는 fetch 를 하지 않는다 — 네트워크는 이 파일 한 곳).
-//  · F8 = 오버레이 토글(항상 위 + 반투명) — 게임 위에 코치를 띄운다.
+//  · F8 = 오버레이 토글 — 코치가 우상단 미니 패널(항상 위)로 줄고,
+//    나머지 화면은 게임이 그대로 보이고 클릭된다.  다시 F8 = 원상 복구.
 //  · ordlog 자동 저장 — 렌더러가 요청하면 문서 폴더에 기록한다.
 //
 // 보안 계약(테스트 고정):
@@ -14,7 +15,7 @@
 //  · contextIsolation:true / nodeIntegration:false — 렌더러는 preload 가
 //    노출한 API 외에 아무것도 못 만진다.
 //  · 저장 파일명은 [\w.-]+ 만 허용하고 .ordlog.json 으로 강제한다.
-const {app, BrowserWindow, ipcMain, globalShortcut} = require('electron');
+const {app, BrowserWindow, ipcMain, globalShortcut, screen} = require('electron');
 const path = require('path');
 const http = require('http');
 const fs = require('fs');
@@ -26,6 +27,7 @@ const POLL_MS = 1000;
 let win = null;
 let pollTimer = null;
 let overlayOn = false;
+let savedBounds = null;
 
 function fetchDatas() {
   return new Promise(resolve => {
@@ -56,11 +58,27 @@ function startPolling() {
 }
 function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
 
+// v19.14.1(실사용 낙제 교정): 전체 창 항상-위는 게임을 가리고 클릭까지
+// 먹었다.  오버레이 = 우상단 미니 패널 — 코치가 작은 창으로 줄어 항상
+// 위에 뜨고, 나머지 화면은 게임이 그대로 보이고 클릭된다.  렌더러는
+// ord-overlay-mode 이벤트를 받아 컴팩트 표시(지금 할 일·결손만)로 바뀐다.
 function toggleOverlay() {
   if (!win || win.isDestroyed()) return overlayOn;
   overlayOn = !overlayOn;
-  win.setAlwaysOnTop(overlayOn, 'screen-saver');
-  win.setOpacity(overlayOn ? 0.94 : 1);
+  if (overlayOn) {
+    savedBounds = win.getBounds();
+    const area = screen.getDisplayMatching(savedBounds).workArea;
+    const width = 460;
+    const height = Math.min(860, area.height - 24);
+    win.setBounds({x: area.x + area.width - width - 12, y: area.y + 12, width, height});
+    win.setAlwaysOnTop(true, 'screen-saver');
+    win.setOpacity(0.97);
+  } else {
+    win.setAlwaysOnTop(false);
+    win.setOpacity(1);
+    if (savedBounds) win.setBounds(savedBounds);
+  }
+  try { win.webContents.send('ord-overlay-mode', overlayOn); } catch (_) {}
   return overlayOn;
 }
 

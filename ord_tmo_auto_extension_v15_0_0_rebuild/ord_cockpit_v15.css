@@ -2583,3 +2583,14 @@ button:focus-visible,select:focus-visible{
   .v153-craft-cards>button:nth-child(n+4):not(.recommended){display:none}
   .v1910-upcoming-head,.v153-craft-cards.upcoming-zone{display:none}
 }
+
+/* v19.14.1 오버레이 미니 패널 — F8: 우상단 축소 창(항상 위).  게임은
+   그대로 보이고 클릭되므로, 좁은 창에 "지금 할 일" 축만 남긴다. */
+body.ord-overlay-mode{font-size:13px;}
+body.ord-overlay-mode .v155-dashboard{display:block !important;padding:8px !important;}
+body.ord-overlay-mode .v155-dashboard>section:not([data-region="next-action"]){display:none !important;}
+body.ord-overlay-mode .v155-action-layout{display:block !important;}
+body.ord-overlay-mode .v155-decision-rail{display:none !important;}
+body.ord-overlay-mode .v153-status{flex-wrap:wrap;gap:6px;padding:6px 8px;}
+body.ord-overlay-mode .v153-brand small{display:none;}
+body.ord-overlay-mode .v153-panel{margin:0 !important;}
