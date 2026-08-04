@@ -106,4 +106,20 @@ check('④ exe 패키징 — 자산 복사 계약 + win32 빌드 스크립트',(
   assert(main.includes("'ui', 'ord_helper_desktop.html'")&&main.includes('existsSync'),'번들 ui 우선 로드 없음');
 });
 
+check('⑤ 설치·업데이트 스크립트 — 바탕화면 설치 계약',()=>{
+  // bat 는 ASCII 전용(코드페이지 무관), ps1 은 UTF-8 BOM(PS5.1 한글) 필수.
+  const bat=fs.readFileSync(path.join(ROOT,'바탕화면에_설치.bat'),'latin1');
+  assert(/^[\x00-\x7F]*$/.test(bat),'bat에 비ASCII 문자 — 코드페이지 깨짐 위험');
+  assert(bat.includes('tools\\desktop_install.ps1')&&bat.includes('-ExecutionPolicy Bypass'),'설치 bat 배선 오류');
+  const update=fs.readFileSync(path.join(ROOT,'업데이트.bat'),'latin1');
+  assert(/^[\x00-\x7F]*$/.test(update),'업데이트.bat에 비ASCII 문자');
+  assert(update.includes('git pull')&&update.includes('desktop_install.ps1'),'업데이트 bat 배선 오류');
+  const raw=fs.readFileSync(path.join(ROOT,'tools/desktop_install.ps1'));
+  assert(raw[0]===0xEF&&raw[1]===0xBB&&raw[2]===0xBF,'ps1 UTF-8 BOM 없음 — PowerShell 5.1 한글 깨짐');
+  const ps1=raw.toString('utf8');
+  assert(ps1.includes("GetFolderPath('Desktop')"),'OneDrive 바탕화면 리디렉션 대응 없음');
+  assert(ps1.includes('dist:win')&&ps1.includes('CreateShortcut')&&ps1.includes('OpenJS.NodeJS.LTS'),'설치 절차 누락');
+  assert(ps1.includes('ORDCoach-win32-x64'),'빌드 산출물 경로 불일치');
+});
+
 console.log(`\n${checks} checks passed (v19.11.0 데스크톱 셸)`);

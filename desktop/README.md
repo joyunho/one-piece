@@ -1,9 +1,43 @@
-# ORD 악몽 코치 — 데스크톱 셸 (v19.12.0 프로토타입)
+# ORD 악몽 코치 — 데스크톱 셸 (v19.12.1 프로토타입)
 
 크롬 확장 없이 코치를 독립 프로그램으로 돌립니다.  TMO.GG **데스크톱
 앱**(로컬 서버)만 켜져 있으면 되고, tmo.gg 탭은 필요 없습니다.
 
-## 실행 (Windows)
+## 완전 처음부터 한 번에 (포맷 직후 — git·Node 전부 자동)
+
+**PowerShell**(시작 → "powershell")을 열고 아래를 통째로 붙여넣으세요:
+
+```powershell
+winget install --id Git.Git -e --accept-source-agreements --accept-package-agreements
+$env:Path = "$env:ProgramFiles\Git\cmd;$env:Path"
+cd $env:USERPROFILE
+git clone https://github.com/joyunho/one-piece.git
+cd one-piece
+powershell -NoProfile -ExecutionPolicy Bypass -File .\tools\desktop_install.ps1
+```
+
+git 설치 → 저장소 받기 → Node 자동 설치 → exe 빌드 →
+**바탕화면\ORD악몽코치** 복사 + "ORD 악몽 코치" 바로가기까지 전부
+자동입니다.  (clone 때 GitHub 로그인 창이 한 번 뜰 수 있습니다.)
+
+이후 업데이트는 `%USERPROFILE%\one-piece\` 폴더의 **`업데이트.bat`**
+더블클릭 한 번 — git pull + 재빌드 + 바탕화면 교체가 자동입니다.
+
+## 설치 — git·Node 없이 (권장)
+
+1. 브라우저에서 github.com/joyunho/one-piece → 초록 **Code** 버튼 →
+   **Download ZIP** → 압축 풀기 (아무 위치나).
+2. 압축 푼 폴더에서 **`바탕화면에_설치.bat`** 더블클릭.
+   - Node.js가 없으면 winget으로 자동 설치합니다.
+   - exe를 빌드해 **바탕화면\ORD악몽코치\** 로 복사하고
+     "ORD 악몽 코치" 바로가기를 만듭니다.
+3. 이후에는 바탕화면 바로가기만 실행하면 됩니다.
+   (TMO.GG 데스크톱 프로그램 먼저 → 코치 → 게임. F8 = 오버레이)
+
+업데이트가 나오면 새 ZIP을 받아 같은 bat를 다시 더블클릭하면
+바탕화면 설치본이 통째로 교체됩니다.
+
+## 실행 (개발용, Windows)
 
 Node.js 18+ 가 설치돼 있어야 합니다.
 
