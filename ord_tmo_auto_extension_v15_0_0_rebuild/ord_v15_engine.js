@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.11.1';
+const VERSION='19.12.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -242,7 +242,7 @@ function completionDecision(model,units,milestone){
     if(feasibleBest){deadlineEscape={passedName:nameOf(best.unit),passedCompletion:round(best.completion,1),dueRound};best=feasibleBest;}
   }
   if(!best)return{version:VERSION,state:'HOLD',authority:true,label:`${label} 후보 없음`,reason:'특수 선행재료가 없거나 조합 데이터를 확인할 수 없습니다.',action:null,alternatives:[],unknowns:[]};
-  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',completionReason=`${escapeNote}${projected?`${label} 후보는 152킬 특별함 포함 예상 TMO 완성도 ${round(best.completion,1)}%로 가장 가깝습니다. 원 TMO ${round(best.completionDetail.originalTmoPercent,1)}%에서 레시피 환산 +${round(best.completionDetail.delta,1)}%p입니다.`:`${label} 후보는 원 TMO 완성도 ${round(best.completion,1)}%${deadlineEscape?'로 즉시 제작 가능합니다':'로 가장 가깝습니다'}.`}`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible?'ACT_NOW':'PREPARE';
+  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',completionReason=`${escapeNote}${projected?`${label} 후보는 152킬 특별함 포함 예상 TMO 완성도 ${round(best.completion,1)}%로 가장 가깝습니다. 원 TMO ${round(best.completionDetail.originalTmoPercent,1)}%에서 레시피 환산 +${round(best.completionDetail.delta,1)}%p입니다.`:num(best.completion)<=0?`${label} 후보 중 부족 재료·선위가 가장 적습니다. (TMO 완성도 보강 없음 — 데스크톱 셸이거나 TMO 탭이 닫혀 있으면 %는 0으로 옵니다.)`:`${label} 후보는 원 TMO 완성도 ${round(best.completion,1)}%${deadlineEscape?'로 즉시 제작 가능합니다':'로 가장 가깝습니다'}.`}`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible?'ACT_NOW':'PREPARE';
   const candidate={id:best.unit.id,name:nameOf(best.unit),unit:best.unit,row,quote:best.quote,completion:best.completionDetail,wispCost:best.quote.wisp.cost,wispAfter:best.quote.wisp.after,result:'completion-rule',stopCondition:`선택 위습이 ${best.quote.wisp.cost}개보다 적거나 패가 바뀌면 만들지 말고 다시 동기화`};
   return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:item.completionDetail&&item.completionDetail.isProjected?`예상 TMO ${round(item.completion,1)}% · 원본 ${round(item.completionDetail.originalTmoPercent,1)}%`:`원 TMO ${round(item.completion,1)}%` })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
 }
@@ -309,16 +309,30 @@ function protectCriticalBudget(model,route,locks,assessment,rows,counts){
     const best=source.filter(row=>row.quote.feasible&&num(C.roleContribution(row.unit,route.mode)[req.key])>0).sort((a,b)=>a.quote.wisp.cost-b.quote.wisp.cost||num(b.potential)-num(a.potential)||nameOf(a.unit).localeCompare(nameOf(b.unit),'ko'))[0];
     if(best)closers.set(req.key,{key:req.key,label:req.label,row:best});
   }
-  if(!closers.size)return none;
-  const criticalIds=[...new Set([...closers.values()].map(item=>item.row.unit.id))],kept=[];
+  // v19.12(0804 패배): 지금 제작 가능한 마감 후보(closer)가 없는 필수
+  // 결손은 종전엔 예약에서 통째로 빠졌다 — 그 결과 47라+ 제작 스프리가
+  // 마지막 이감 기여 유닛(아오키지·스모커·나미크리마)을 재료로 소비해
+  // 이감이 89→75로 더 내려갔다.  closer가 없는 결손은 "현재 보유 기여
+  // 총량을 줄이는 제작"을 걸러 보드에 남은 기여라도 지킨다.
+  const starved=open.filter(req=>!closers.has(req.key));
+  const db=model.knowledge?model.knowledge.db:model.db,unitById=starved.length?new Map((db&&db.units||[]).map(unit=>[String(unit.id),unit])):null;
+  const ledgerSum=(map,key)=>{let total=0;for(const [id,count] of Object.entries(map||{})){const owned=num(count);if(owned<=0)continue;const unit=unitById.get(String(id));if(!unit)continue;total+=num(C.roleContribution(unit,route.mode)[key])*owned;}return total;};
+  const baseLedger=starved.length?Object.fromEntries(starved.map(req=>[req.key,ledgerSum(counts,req.key)])):{};
+  if(!closers.size&&!starved.length)return none;
+  const criticalIds=[...new Set([...closers.values()].map(item=>item.row.unit.id))],kept=[],starvedDropped=[];
   for(const row of source){
     if(!row.quote.feasible||criticalIds.includes(row.unit.id)){kept.push(row);continue;}
     const contribution=C.roleContribution(row.unit,route.mode);
     const preserves=[...closers.values()].every(item=>num(contribution[item.key])>0||L.quote(model,item.row.unit,row.quote.after,{availableRound:model.round.value}).feasible);
-    if(preserves)kept.push(row);
+    const keepsStarved=starved.every(req=>ledgerSum(row.quote.after,req.key)>=baseLedger[req.key]-1e-9);
+    if(preserves&&keepsStarved)kept.push(row);
+    else if(preserves&&!keepsStarved)starvedDropped.push(row);
   }
+  // 데드락 방지 — 걸러낸 결과 제작 가능한 행이 하나도 안 남으면 보유
+  // 기여 보호는 풀고(경고는 승인 문구의 harmNote가 잇는다) 원래 예약만 적용한다.
+  if(starvedDropped.length&&!kept.some(row=>row.quote.feasible))kept.push(...starvedDropped);
   if(kept.length===source.length)return Object.assign({},none,{criticalIds});
-  const labels=[...closers.values()].map(item=>item.label);
+  const labels=[...new Set([...closers.values()].map(item=>item.label).concat(starved.map(req=>req.label)))];
   return{applied:true,reason:`남은 필수 결손(${labels.slice(0,3).join(' · ')})의 최저 선위 마감 경로를 예약하고, 이를 굶기는 제작을 제외했습니다.`,criticalIds,rows:kept,filteredIds:source.filter(row=>!kept.includes(row)).map(row=>row.unit.id)};
 }
 // v16 recovery ladder: when no craft is provable, still name the nearest unit
@@ -1145,8 +1159,21 @@ function buildDecision(input){
   // 아니다.  안전선은 noHarm — 어떤 필수 역할의 결손도 다시 열리지
   // 않아야 한다(충족 초과분 안에서의 소모는 허용).
   firepowerUpgrade=first.quote.feasible&&openRequiredKeys.size===0&&roundNow>=50&&noHarm&&equivalentGain>=0&&combatGain>0,
-  commit=first.quote.feasible&&(best.regression===0&&(improves&&meaningfulProgress&&(!pathLoss||budgetProtected||freeRepair||requiredRepair)||surplusUpgrade)||firepowerUpgrade),reasonParts=deltas.filter(row=>row.gapGain>0).slice(0,3).map(row=>row.closed?`${row.label} 충족`:`${row.label} ${round(row.before)}→${round(row.after)}`),result=firstAssessment.structuralPass?'structural-only':'progress-only',guardReason=budgetProtected?`${searched.budgetGuard.reason} `:freeRepair&&pathLoss?'선택 위습을 쓰지 않고 필수 역할을 회귀 없이 보강합니다. ':'',reason=reasonParts.length?`${guardReason}${reasonParts.join(' · ')}. ${best.reserve.remaining}선위를 남겨 후속 필수 역할 경로를 보호합니다.`:firepowerUpgrade&&!improves&&!surplusUpgrade?`필수 역할은 모두 충족 — 검증된 전투 기여 점수 ${round(combatBefore,1)}→${round(combatAfter,1)}를 회귀 없이 올립니다. 실제 보스 DPS는 자동 측정하지 않으므로 화력 충분 판정은 하지 않습니다.`:surplusUpgrade&&!improves?`남은 필수 결손은 현재 패로 닫을 수 없습니다. 회귀 없이 스펙을 더 올리는 제작에 여유 자원을 씁니다.`:`${guardReason}현재 마감과 전체 필수 조건을 동시에 개선하는 현재 패 경로입니다.`,row=makeRow(searchModel,first.quote,firstAssessment,reason),action={id:first.quote.targetId,name:nameOf(first.quote.unit),unit:first.quote.unit,row,quote:first.quote,wispCost:first.quote.wisp.cost,wispAfter:first.quote.wisp.after,result,reason,deltas,stopCondition:`${Object.keys(first.quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${first.quote.wisp.cost}개 미만이면 만들지 말고 다시 동기화`,path:first.quote.targetId?best.sequence.map(step=>({id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost})):[]},rare=rareDisposition(searchModel,route,locks,searched),alternatives=searched.paths.slice(1,3).map(path=>{const step=path.sequence[0];return{id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost,reason:exclusionReason(best,path),residual:path.assessment.blockers.slice(0,3)};}),state=commit?'ACT_NOW':rare.safeReroll?'REROLL_ONE':'HOLD',compactGuard=searched.budgetGuard?{applied:!!searched.budgetGuard.applied,reason:searched.budgetGuard.reason||'',criticalIds:(searched.budgetGuard.criticalIds||[]).slice(),filteredIds:(searched.budgetGuard.filteredIds||[]).slice()}:null;
-  return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:state==='ACT_NOW'?null:recoveryPlan(searchModel,route,locks,searched.initialAssessment),upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
+  // v19.12(0804 패배): 승인(ACT_NOW) 상태에서도 열린 필수 결손의 회복
+  // 목표를 계속 계산한다 — 0804 판은 단끝 조각이 승인되는 15라운드 내내
+  // 이감 노리기 안내가 0이었다.  회복 목표의 최저 선위는 아래 예약 문구
+  // 정직화에도 쓴다.
+  openRecovery=recoveryPlan(searchModel,route,locks,searched.initialAssessment,{limit:6}),
+  requiredHarm=deltas.filter(item=>num(item.gapGain)<0&&openRequiredKeys.has(item.key)).slice(0,2),
+  recoveryNeedMin=(openRecovery&&openRecovery.targets||[]).reduce((minimum,target)=>{const need=Math.max(num(target.wispCost),num(target.wispGap));return need>0?Math.min(minimum,need):minimum;},Infinity),
+  commit=first.quote.feasible&&(best.regression===0&&(improves&&meaningfulProgress&&(!pathLoss||budgetProtected||freeRepair||requiredRepair)||surplusUpgrade)||firepowerUpgrade),reasonParts=deltas.filter(row=>row.gapGain>0).slice(0,3).map(row=>row.closed?`${row.label} 충족`:`${row.label} ${round(row.before)}→${round(row.after)}`),result=firstAssessment.structuralPass?'structural-only':'progress-only',guardReason=budgetProtected?`${searched.budgetGuard.reason} `:freeRepair&&pathLoss?'선택 위습을 쓰지 않고 필수 역할을 회귀 없이 보강합니다. ':'',
+  // v19.12: "N선위를 남겨 보호" — 남은 선위로 열린 필수 결손을 실제로
+  // 닫을 수 없으면 보호한다고 말하지 않는다 ("0선위를 남겨 보호합니다"가
+  // 0804 패배 로그에 그대로 찍혀 있었다).
+  reserveNote=openRequiredKeys.size===0?`${best.reserve.remaining}선위를 남겨 후속 필수 역할 경로를 보호합니다.`:Number.isFinite(recoveryNeedMin)&&num(best.reserve.remaining)<recoveryNeedMin?`경고 — 남은 선위 ${best.reserve.remaining}로는 열린 필수 결손 마감(최소 ${recoveryNeedMin}선위)이 닫히지 않습니다. 회복 목표 재료·선위부터 확보하세요.`:`${best.reserve.remaining}선위를 남겨 열린 필수 결손 마감 경로를 보호합니다.`,
+  harmNote=requiredHarm.length?` 주의: 이 제작으로 ${requiredHarm.map(item=>`${item.label} ${round(item.before)}→${round(item.after)}`).join(' · ')} — 열린 필수 결손이 더 벌어집니다.`:'',
+  reason=reasonParts.length?`${guardReason}${reasonParts.join(' · ')}. ${reserveNote}${harmNote}`:firepowerUpgrade&&!improves&&!surplusUpgrade?`필수 역할은 모두 충족 — 검증된 전투 기여 점수 ${round(combatBefore,1)}→${round(combatAfter,1)}를 회귀 없이 올립니다. 실제 보스 DPS는 자동 측정하지 않으므로 화력 충분 판정은 하지 않습니다.`:surplusUpgrade&&!improves?`남은 필수 결손은 현재 패로 닫을 수 없습니다. 회귀 없이 스펙을 더 올리는 제작에 여유 자원을 씁니다.`:`${guardReason}현재 마감과 전체 필수 조건을 동시에 개선하는 현재 패 경로입니다.${harmNote}`,row=makeRow(searchModel,first.quote,firstAssessment,reason),action={id:first.quote.targetId,name:nameOf(first.quote.unit),unit:first.quote.unit,row,quote:first.quote,wispCost:first.quote.wisp.cost,wispAfter:first.quote.wisp.after,result,reason,deltas,stopCondition:`${Object.keys(first.quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${first.quote.wisp.cost}개 미만이면 만들지 말고 다시 동기화`,path:first.quote.targetId?best.sequence.map(step=>({id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost})):[]},rare=rareDisposition(searchModel,route,locks,searched),alternatives=searched.paths.slice(1,3).map(path=>{const step=path.sequence[0];return{id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost,reason:exclusionReason(best,path),residual:path.assessment.blockers.slice(0,3)};}),state=commit?'ACT_NOW':rare.safeReroll?'REROLL_ONE':'HOLD',compactGuard=searched.budgetGuard?{applied:!!searched.budgetGuard.applied,reason:searched.budgetGuard.reason||'',criticalIds:(searched.budgetGuard.criticalIds||[]).slice(),filteredIds:(searched.budgetGuard.filteredIds||[]).slice()}:null;
+  return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:openRecovery,upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
 return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,stickyPath,continuableStep,withStickyCandidate,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};

@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v19.11.1 live cockpit bridge; connector protocol stays v13.
+  // v19.12.0 live cockpit bridge; connector protocol stays v13.
   // v19.4(사용자 요청): 도우미 번호 무관 — 숫자 id 전부 후보. 여러 탭이면
   // 주 도우미(32172) 우선.
   const PATTERNS = [
@@ -250,6 +250,11 @@
         }
         return false;
       }
+      // v19.12: 첫 유효 수신에 이미 패가 여러 개 = 게임 시작(0→1)을 못 본
+      // 중간 합류 — 라운드가 어긋날 수 있어 앱이 보정 배너를 띄운다.
+      if (local.midJoin == null) {
+        local.midJoin = !(local.auto && local.auto.active === true) && translated.playableUnitCount >= 6;
+      }
       const hash = LM.countsHash(translated);
       if (hash !== local.lastHash) {
         local.lastHash = hash;
@@ -271,6 +276,7 @@
         autoRound: auto,
         now
       });
+      if (local.midJoin === true && snapshot.localDirect) snapshot.localDirect.midJoin = true;
       local.lastGoodAt = now;
       try { app.updateSnapshot(snapshot); }
       catch (error) { console.error(error); }

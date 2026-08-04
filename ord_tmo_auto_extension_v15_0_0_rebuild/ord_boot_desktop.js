@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v19.11.1 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
+  // v19.12.0 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
   // 직결 합성 경로를 그대로 옮기되 크롬 API 가 전혀 없다:
   //  · /datas 는 Electron 메인 프로세스가 1초마다 밀어준다(ORD_DESKTOP.onDatas).
   //  · 자동 라운드 세대는 localStorage 에 영속(판 중간 새로고침 보호).
@@ -43,6 +43,11 @@
         }
         return false;
       }
+      // v19.12: 첫 유효 수신에 이미 패가 여러 개 = 게임 시작(0→1)을 못 본
+      // 중간 합류 — 라운드가 어긋날 수 있어 앱이 보정 배너를 띄운다.
+      if (local.midJoin == null) {
+        local.midJoin = !(local.auto && local.auto.active === true) && translated.playableUnitCount >= 6;
+      }
       const hash = LM.countsHash(translated);
       if (hash !== local.lastHash) {
         local.lastHash = hash;
@@ -64,6 +69,7 @@
         autoRound: auto,
         now
       });
+      if (local.midJoin === true && snapshot.localDirect) snapshot.localDirect.midJoin = true;
       local.lastGoodAt = now;
       try { app.updateSnapshot(snapshot); }
       catch (error) { console.error(error); }
