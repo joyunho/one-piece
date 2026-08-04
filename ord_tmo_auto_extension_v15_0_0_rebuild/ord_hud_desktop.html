@@ -1,0 +1,14 @@
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="ord-helper" content="v19.15.0-desktop-hud"><title>ORD HUD</title><link rel="stylesheet" href="ord_app.css"><link rel="stylesheet" href="ord_cockpit_v15.css"><style>
+/* 인게임 HUD — 창이 아니라 게임 위에 뜬 글자·칩처럼 보여야 한다.
+   배경은 완전 투명, 콘텐츠 블록만 반투명 판.  클릭은 전부 게임으로
+   통과하므로(메인 프로세스 setIgnoreMouseEvents) 상호작용 없음. */
+html,body{background:transparent !important;margin:0;padding:0;overflow:hidden;}
+#ord-hud-root{display:flex;flex-direction:column;gap:6px;padding:6px;font-size:12.5px;pointer-events:none;}
+#ord-hud-root>*{background:rgba(8,13,24,.88) !important;border:1px solid rgba(120,150,220,.25);border-radius:10px;padding:8px !important;box-shadow:0 4px 18px rgba(0,0,0,.45);}
+#ord-hud-root .v153-hud{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+/* 클릭이 통과되는 화면에서 기능 없는 버튼은 노이즈 — 전부 숨긴다.
+   회복 목표 줄(v151-recovery-row)만 정보라서 평면 표시로 유지. */
+#ord-hud-root button:not(.v151-recovery-row){display:none !important;}
+#ord-hud-root button{pointer-events:none;}
+#ord-hud-root .v151-phase,#ord-hud-root .v151-action-foot,#ord-hud-root .v151-inline-actions{display:none !important;}
+</style></head><body><div id="ord-hud-root"></div><script src="ord_hud_desktop.js"></script></body></html>

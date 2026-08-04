@@ -121,6 +121,29 @@ check('⑥ 오버레이 미니 패널 — 우상단 축소·게임 클릭 보존
   assert(bootDesktop.includes("classList.toggle('ord-overlay-mode'"),'부트 컴팩트 클래스 배선 없음');
   const css=read('ord_cockpit_v15.css');
   assert(css.includes('body.ord-overlay-mode')&&css.includes('not([data-region="next-action"])'),'컴팩트 CSS 없음');
+  // v19.14.2: 오버레이 위치·크기 기억(사용자가 끌면 그대로 유지) + 기본
+  // 크기 축소.  조합 명령어 줄(command-line)은 게임 중 필수라 숨기지 않는다.
+  assert(main.includes('ord-overlay-bounds.json')&&main.includes('loadOverlayBounds')&&main.includes('saveOverlayBounds'),'오버레이 위치 기억 없음');
+  assert(main.includes('const width = 400'),'축소 기본 크기 아님');
+  assert(!css.includes('body.ord-overlay-mode .command-line'),'조합 명령어 줄을 숨기면 안 됨');
+  // v19.15.0: 인게임 HUD — 투명·클릭 통과·포커스 불가 창, F8.  미니
+  // 패널은 F9 로 이동(HUD 위치 잡기용).  앱 이중 구동 금지: HUD 는
+  // 메인 창이 그린 조각을 받아 표시만 한다.
+  assert(main.includes('transparent: true')&&main.includes('frame: false')&&main.includes('focusable: false'),'HUD 창 계약 없음');
+  assert(main.includes('setIgnoreMouseEvents(true)')&&main.includes('showInactive'),'클릭 통과·포커스 보존 없음');
+  assert(main.includes("register('F8', toggleHud)")&&main.includes("register('F9', toggleOverlay)"),'F8/F9 배치 없음');
+  assert(main.includes("ipcMain.on('ord-hud-state'"),'HUD 상태 중계 없음');
+  assert(preload.includes('sendHudState')&&preload.includes('onHudState'),'preload HUD API 없음');
+  assert(bootDesktop.includes('sendHudState')&&bootDesktop.includes('1500'),'부트 HUD 급전 없음');
+  const hudHtml=read('ord_hud_desktop.html');
+  assert(hudHtml.includes('background:transparent')&&hudHtml.includes('ord_hud_desktop.js'),'HUD 페이지 투명 배경·스크립트 없음');
+  assert(!/\son\w+\s*=/.test(hudHtml),'HUD 페이지에 인라인 핸들러 금지');
+  const buildUi=fs.readFileSync(path.join(ROOT,'desktop/build_ui.js'),'utf8');
+  assert(buildUi.includes('ord_hud_desktop.html')&&buildUi.includes('ord_hud_desktop.js'),'패키징에 HUD 파일 누락');
+  // 편의: HUD 켬 상태 기억(재실행 자동 복원) + 기능 없는 버튼 숨김
+  // (회복 목표 줄만 유지).
+  assert(main.includes('ord-hud-state.json')&&main.includes('saveHudState'),'HUD 상태 기억 없음');
+  assert(hudHtml.includes('button:not(.v151-recovery-row)'),'HUD 버튼 정리 없음');
 });
 
 check('⑤ 설치·업데이트 스크립트 — 바탕화면 설치 계약',()=>{

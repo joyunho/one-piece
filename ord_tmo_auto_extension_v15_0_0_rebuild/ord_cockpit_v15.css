@@ -2585,12 +2585,19 @@ button:focus-visible,select:focus-visible{
 }
 
 /* v19.14.1 오버레이 미니 패널 — F8: 우상단 축소 창(항상 위).  게임은
-   그대로 보이고 클릭되므로, 좁은 창에 "지금 할 일" 축만 남긴다. */
-body.ord-overlay-mode{font-size:13px;}
-body.ord-overlay-mode .v155-dashboard{display:block !important;padding:8px !important;}
+   그대로 보이고 클릭되므로, 좁은 창에 "지금 할 일" 축만 남긴다.
+   v19.14.2("너무 불편한데"): 더 작게 — 브랜드·계통 버튼·국면 표·용어
+   행을 숨기고 여백·글자를 줄인다.  위치·크기는 창을 끌면 기억된다. */
+body.ord-overlay-mode{font-size:12.5px;}
+body.ord-overlay-mode .v155-dashboard{display:block !important;padding:6px !important;}
 body.ord-overlay-mode .v155-dashboard>section:not([data-region="next-action"]){display:none !important;}
 body.ord-overlay-mode .v155-action-layout{display:block !important;}
 body.ord-overlay-mode .v155-decision-rail{display:none !important;}
-body.ord-overlay-mode .v153-status{flex-wrap:wrap;gap:6px;padding:6px 8px;}
-body.ord-overlay-mode .v153-brand small{display:none;}
-body.ord-overlay-mode .v153-panel{margin:0 !important;}
+body.ord-overlay-mode .v155-action-zone>header{display:none !important;}
+body.ord-overlay-mode .v153-status{flex-wrap:wrap;gap:4px;padding:4px 6px;}
+body.ord-overlay-mode .v153-brand{display:none !important;}
+body.ord-overlay-mode .v153-status button[data-act="mode"]{display:none !important;}
+body.ord-overlay-mode .v153-panel{margin:0 !important;padding:6px !important;}
+body.ord-overlay-mode .v151-phase{display:none !important;}
+body.ord-overlay-mode .v151-action{padding:8px !important;}
+body.ord-overlay-mode .v151-action-foot small{display:none;}

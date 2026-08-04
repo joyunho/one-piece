@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v19.14.1 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
+  // v19.15.0 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
   // 직결 합성 경로를 그대로 옮기되 크롬 API 가 전혀 없다:
   //  · /datas 는 Electron 메인 프로세스가 1초마다 밀어준다(ORD_DESKTOP.onDatas).
   //  · 자동 라운드 세대는 localStorage 에 영속(판 중간 새로고침 보호).
@@ -92,6 +92,23 @@
       });
     } else {
       setTimeout(() => app.toast('데스크톱 브리지가 없습니다 — preload 로드를 확인하세요.'), 400);
+    }
+
+    // v19.15.0: 인게임 HUD 급전 — 메인 창이 그린 상단 HUD 조각과 "지금
+    // 할 일" 카드를 1.5초마다 HUD 창으로 보낸다.  앱을 두 번 돌리지
+    // 않기 위한 표시 전용 복제(엔진·런로그 이중 구동 금지).
+    if (bridge && typeof bridge.sendHudState === 'function') {
+      setInterval(() => {
+        try {
+          const hud = document.querySelector('.v153-hud');
+          const action = document.querySelector('[data-region="next-action"] .v151-action');
+          bridge.sendHudState({
+            at: Date.now(),
+            hudHtml: hud ? hud.outerHTML : '',
+            actionHtml: action ? action.outerHTML : ''
+          });
+        } catch (_) {}
+      }, 1500);
     }
 
     // ordlog 자동 저장: 판이 활성인 동안 60초마다 문서 폴더에 덮어쓴다.

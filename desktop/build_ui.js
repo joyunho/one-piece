@@ -10,8 +10,9 @@ const path = require('path');
 const EXT = path.join(__dirname, '..', 'ord_tmo_auto_extension_v15_0_0_rebuild');
 const OUT = path.join(__dirname, 'ui');
 const PAGE = 'ord_helper_desktop.html';
-// 페이지가 태그로 참조하지 않지만 런타임에 상대 경로로 여는 파일들.
-const RUNTIME_EXTRA = ['ord_direction_worker.js'];
+// 페이지가 태그로 참조하지 않지만 런타임에 상대 경로로 여는 파일들 +
+// 인게임 HUD 창 페이지(v19.15.0 — 같은 css 를 상대 경로로 공유).
+const RUNTIME_EXTRA = ['ord_direction_worker.js', 'ord_hud_desktop.html', 'ord_hud_desktop.js'];
 
 const html = fs.readFileSync(path.join(EXT, PAGE), 'utf8');
 const refs = new Set(RUNTIME_EXTRA);
