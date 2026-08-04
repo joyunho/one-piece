@@ -72,7 +72,14 @@ const RUNS=Object.freeze([
   // 남겨 보호합니다" 자기모순 승인으로 단끝 조각이 마감 선위 소진, (3)
   // 47라+ 제작이 잔여 이감 기여 유닛(아오키지·스모커·나미크리마)을 재료로
   // 소비(89→75).  v19.12 가드 3종의 원 판.
-  {key:'0804L',file:'ORD_2305_20260804_061410_active.ordlog.json',outcome:'loss'}
+  {key:'0804L',file:'ORD_2305_20260804_061410_active.ordlog.json',outcome:'loss'},
+  // v19.12.1 둘째 데스크톱 판 — (S)나미 단끝(25라 확정) 패배.  역할표는
+  // 거의 완성(마지막 결손 1.5스턴 1.46/1.5)됐는데 졌다.  사인: 새 게임
+  // 버튼 없는 중간 합류라 시계가 안 켜져 라운드가 1에 15분(사용자가
+  // 수동으로 26까지 맞춤) → 이후에도 시계가 꺼진 채 25라에 22분 동결 —
+  // 50라+ 화력 승인·마감 운영·판 종료 감지가 전부 잠겼다.  v19.13 라운드
+  // 시계 자동 시작의 원 판.
+  {key:'0804bL',file:'ORD_2305_20260804_102334_active.ordlog.json',outcome:'loss'}
 ]);
 
 function num(value){const n=Number(value);return Number.isFinite(n)?n:0;}

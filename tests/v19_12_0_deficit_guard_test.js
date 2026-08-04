@@ -75,6 +75,15 @@ check('⑤ UI·부트 배선 — 중간 합류·데스크톱 2상태·TMO%·특�
   assert(app.includes('liveMatched')&&app.includes('미해석 코드만 실제 수량에서 빠집니다'),'시험 패널 실전 경로 판정 없음');
   assert(read('ord_local_code_map.js').includes('unknownCounts: Object.assign'),'스냅샷 unknownCounts 없음');
   assert(app.includes('unknownCounts:Object.assign({},snapshot.localDirect.unknownCounts'),'런로그 unknownCounts 없음');
+  // v19.13(0804b 라운드 동결): 중간 합류 채택·꺼진 시계의 라운드 보정이
+  // 시계를 켠다 — 명시적 멈춤(round-pause)만 예외.
+  assert(app.includes('roundClockPausedByUser'),'명시적 멈춤 플래그 없음');
+  const adoption=app.slice(app.indexOf('autoGeneration===0){'),app.indexOf('autoGeneration===0){')+900);
+  assert(adoption.includes('auto.active===true&&!this.state.roundStartedAt')&&adoption.includes('elapsedToRoundStart'),'콜드 채택 시계 자동 시작 없음');
+  const step=app.slice(app.indexOf("if(a==='round-step')"),app.indexOf("if(a==='round-pause')"));
+  assert(step.includes("else if(this.state.roundClockPausedByUser!==true)this.state.roundStartedAt=Date.now()"),'꺼진 시계 라운드 보정이 시계를 안 켬');
+  const pause=app.slice(app.indexOf("if(a==='round-pause')"),app.indexOf("if(a==='round-start')"));
+  assert(pause.includes('roundClockPausedByUser=true'),'멈춤이 명시적 플래그를 안 세움');
 });
 
 console.log(`\n${checks} checks passed (v19.12.0 결손 가드 · 0804L)`);
