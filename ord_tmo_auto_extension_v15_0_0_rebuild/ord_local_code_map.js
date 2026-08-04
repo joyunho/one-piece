@@ -272,6 +272,9 @@
         matched: Math.max(0, num(t.matched)),
         ignored: Math.max(0, num(t.ignored)),
         unknownCodes: (t.unknown || []).slice(0, 20),
+        // v19.12.2: 미해석 수량 궤적 — 판을 넘나드는 대조(예: V40h가
+        // 레일리(히든)인지)를 런로그만으로 할 수 있게 수량까지 싣는다.
+        unknownCounts: Object.assign({}, t.unknownCounts || {}),
         enrichedFromDomAt: domUsable ? domAt : 0
       },
       sourceTabId: 0,
@@ -286,7 +289,7 @@
   }
 
   global.ORD_LOCAL_MAP = {
-    VERSION: '19.12.1',
+    VERSION: '19.12.2',
     LOCAL_DATAS_URL: LOCAL_DATAS_URL,
     LOCAL_SOURCE_EPOCH: LOCAL_SOURCE_EPOCH,
     CODE_MAP: CODE_MAP,

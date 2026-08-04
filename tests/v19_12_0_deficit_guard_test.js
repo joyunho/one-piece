@@ -69,6 +69,12 @@ check('⑤ UI·부트 배선 — 중간 합류·데스크톱 2상태·TMO%·특�
     assert(src.includes('local.midJoin')&&src.includes('playableUnitCount >= 6'),`${boot} 중간 합류 감지 없음`);
     assert(src.includes('snapshot.localDirect.midJoin = true'),`${boot} midJoin 스냅샷 전달 없음`);
   }
+  // v19.12.2(0805 실측 V40h): 시험 패널은 실전 경로(translate)로 판정하고
+  // (원시 비교의 "미해석 13종" 과장 제거), 미해석 수량 궤적을 스냅샷·
+  // 런로그에 실어 판 간 대조를 가능하게 한다.
+  assert(app.includes('liveMatched')&&app.includes('미해석 코드만 실제 수량에서 빠집니다'),'시험 패널 실전 경로 판정 없음');
+  assert(read('ord_local_code_map.js').includes('unknownCounts: Object.assign'),'스냅샷 unknownCounts 없음');
+  assert(app.includes('unknownCounts:Object.assign({},snapshot.localDirect.unknownCounts'),'런로그 unknownCounts 없음');
 });
 
 console.log(`\n${checks} checks passed (v19.12.0 결손 가드 · 0804L)`);
