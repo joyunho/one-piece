@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.13.0';
+const VERSION='19.14.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -804,6 +804,19 @@ function upperRouteCandidates(model,locks){
   picked.sort(mixedPlanCompare).forEach((row,index)=>{
     if(row.blueprintEvaluation&&row.blueprintEvaluation.rank)row.blueprintEvaluation.rank=index+1;
   });
+  // v19.14(사용자 요청 "추천이 좀 더 다양했으면"): 최근 판에 쓴 메인
+  // 상위는 카드에서 뒤로 물린다.  손패 적합(eta·마감 계수)이 같은 급이면
+  // 메타·전투력 동률이 늘 같은 얼굴을 1순위로 밀어 판마다 반복됐다.
+  // 후보에서 빼지는 않는다 — 배지("N판 전 사용")와 함께 순위만 내리고,
+  // 신선한 후보가 하나도 없으면 원순위를 그대로 둔다.
+  {
+    const recentKeys=(model.settings&&Array.isArray(model.settings.recentMainUppers)?model.settings.recentMainUppers:[]).slice(0,3).map(key=>String(key||'')).filter(Boolean);
+    if(recentKeys.length&&!lock){
+      for(const row of picked){const at=recentKeys.indexOf(String(C.canonicalUpperId(row.id)));if(at>=0)row.recentUse={gamesAgo:at+1};}
+      const fresh=picked.filter(row=>!row.recentUse),used=picked.filter(row=>row.recentUse);
+      if(fresh.length&&used.length)picked.splice(0,picked.length,...fresh,...used);
+    }
+  }
   // 카드 6개와 별개로, 게이트 상위 전체(베가펑크 4종 등 정규화 대표)를
   // 칩 목록으로 내려 보낸다 — UI가 "그린블러드 확보 시 열리는 상위"를
   // 한 줄로 보여줄 수 있게.  게이트 상위는 정규 카드 자리를 차지하지
