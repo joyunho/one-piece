@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v19.15.0 live cockpit bridge; connector protocol stays v13.
+  // v19.15.1 live cockpit bridge; connector protocol stays v13.
   // v19.4(사용자 요청): 도우미 번호 무관 — 숫자 id 전부 후보. 여러 탭이면
   // 주 도우미(32172) 우선.
   const PATTERNS = [
@@ -255,7 +255,12 @@
       if (local.midJoin == null) {
         local.midJoin = !(local.auto && local.auto.active === true) && translated.playableUnitCount >= 6;
       }
-      const hash = LM.countsHash(translated);
+      // v19.15.1: 전투 임시 개체의 미해석 요동이 초단위 재판단을 만들지
+      // 않게, 연속 3회 같은 수량으로 관측된 미해석만 보드 변화로 인정.
+      const stability = LM.nextUnknownStability ? LM.nextUnknownStability(local.unknownStab, translated.unknownCounts, now) : null;
+      if (stability) local.unknownStab = stability;
+      const stableUnknown = stability ? stability.stable : null;
+      const hash = LM.countsHash(translated, stableUnknown);
       if (hash !== local.lastHash) {
         local.lastHash = hash;
         local.seq += 1;
@@ -274,6 +279,7 @@
         seq: Math.max(1, local.seq),
         dataChangedAt: local.dataChangedAt,
         autoRound: auto,
+        stableUnknown,
         now
       });
       if (local.midJoin === true && snapshot.localDirect) snapshot.localDirect.midJoin = true;

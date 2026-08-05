@@ -79,7 +79,14 @@ const RUNS=Object.freeze([
   // 수동으로 26까지 맞춤) → 이후에도 시계가 꺼진 채 25라에 22분 동결 —
   // 50라+ 화력 승인·마감 운영·판 종료 감지가 전부 잠겼다.  v19.13 라운드
   // 시계 자동 시작의 원 판.
-  {key:'0804bL',file:'ORD_2305_20260804_102334_active.ordlog.json',outcome:'loss'}
+  {key:'0804bL',file:'ORD_2305_20260804_102334_active.ordlog.json',outcome:'loss'},
+  // v19.15.0 첫 판 — (A)키드 단끝(25라 확정), 63라 라인사(사용자 보고).
+  // 라운드 시계 수리 검증 판(1라→65라 자연 진행).  생존 축(이감·스턴·
+  // 광보잡·방깎)은 전부 닫혔는데 화력·유지 축이 미달인 채 63라 진입 —
+  // 단끝 환산 2.5/3 · 단일 1.5/2 · 체젠 0.45/2(키드는 '체젠필수' 메인).
+  // 63라 승인 카드 8회 왕복(전장 임시 코드 요동)의 원 판 → v19.15.1
+  // 디바운스의 근거.
+  {key:'0805L',file:'ORD_2305_20260805_011900_active.ordlog.json',outcome:'loss'}
 ]);
 
 function num(value){const n=Number(value);return Number.isFinite(n)?n:0;}

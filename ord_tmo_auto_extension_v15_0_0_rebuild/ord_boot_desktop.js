@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v19.15.0 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
+  // v19.15.1 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
   // 직결 합성 경로를 그대로 옮기되 크롬 API 가 전혀 없다:
   //  · /datas 는 Electron 메인 프로세스가 1초마다 밀어준다(ORD_DESKTOP.onDatas).
   //  · 자동 라운드 세대는 localStorage 에 영속(판 중간 새로고침 보호).
@@ -48,7 +48,12 @@
       if (local.midJoin == null) {
         local.midJoin = !(local.auto && local.auto.active === true) && translated.playableUnitCount >= 6;
       }
-      const hash = LM.countsHash(translated);
+      // v19.15.1: 전투 임시 개체의 미해석 요동이 초단위 재판단을 만들지
+      // 않게, 연속 3회 같은 수량으로 관측된 미해석만 보드 변화로 인정.
+      const stability = LM.nextUnknownStability ? LM.nextUnknownStability(local.unknownStab, translated.unknownCounts, now) : null;
+      if (stability) local.unknownStab = stability;
+      const stableUnknown = stability ? stability.stable : null;
+      const hash = LM.countsHash(translated, stableUnknown);
       if (hash !== local.lastHash) {
         local.lastHash = hash;
         local.seq += 1;
@@ -67,6 +72,7 @@
         seq: Math.max(1, local.seq),
         dataChangedAt: local.dataChangedAt,
         autoRound: auto,
+        stableUnknown,
         now
       });
       if (local.midJoin === true && snapshot.localDirect) snapshot.localDirect.midJoin = true;

@@ -134,7 +134,7 @@
       ignored: ignored, wisp: wisp, wispFound: wispFound, playableUnitCount: playableUnitCount};
   }
 
-  function countsHash(translated) {
+  function countsHash(translated, stableUnknownCounts) {
     var counts = translated && translated.counts || {};
     var keys = Object.keys(counts).sort();
     var parts = [];
@@ -142,10 +142,35 @@
     // v19.9.9(외부 점검 P0-1): 미해석 코드도 해시에 넣는다 — 안 넣으면
     // 미해석 유닛이 새로 생겨도 seq·dataChangedAt 이 안 움직여, 신선한
     // 로컬이 DOM 까지 눌러둔 채 화면이 옛 패에 머문다.
-    var unknownCounts = translated && translated.unknownCounts || {};
+    // v19.15.1(0805 실측): 단, 전장 임시 개체(580h·T30e 등)가 초단위로
+    // 미해석 수량을 흔들어 재판단이 초마다 돌았다 — 63라에서 승인 카드가
+    // 2분간 8번 왕복한 원인.  부트가 안정화 집합(연속 3회 관측)을 주면
+    // 그것만 해시에 넣는다.  인자를 안 주면 종전 그대로(하위 호환).
+    var unknownCounts = stableUnknownCounts != null ? stableUnknownCounts : (translated && translated.unknownCounts || {});
     var unknownKeys = Object.keys(unknownCounts).sort();
     for (var q = 0; q < unknownKeys.length; q += 1) parts.push('?' + unknownKeys[q] + ':' + unknownCounts[unknownKeys[q]]);
     return fnv1a(parts.join('|'));
+  }
+
+  // v19.15.1 — 미해석 코드 안정화.  같은 수량으로 연속 STABLE_POLLS 회
+  // 관측된 미해석 코드만 '실제 보유'로 인정한다.  'e' 접미(…0e) 코드는
+  // 전원 전투 임시 개체라(실유닛 중 0e 는 위습 810e 뿐이고, 위습은
+  // 카탈로그 직결이라 여기 오지 않는다) 아예 안정 대상에서 제외한다.
+  var UNKNOWN_STABLE_POLLS = 3;
+  function nextUnknownStability(previous, unknownCounts, now) {
+    var prior = previous && typeof previous === 'object' && previous.codes ? previous.codes : {};
+    var next = {}, stable = {};
+    var live = unknownCounts && typeof unknownCounts === 'object' ? unknownCounts : {};
+    for (var code in live) {
+      if (/0e$/i.test(code)) continue;
+      var count = Math.max(0, num(live[code]));
+      if (count <= 0) continue;
+      var before = prior[code];
+      var streak = before && num(before.count) === count ? num(before.streak) + 1 : 1;
+      next[code] = {count: count, streak: streak, lastAt: num(now) || 0};
+      if (streak >= UNKNOWN_STABLE_POLLS) stable[code] = count;
+    }
+    return {codes: next, stable: stable};
   }
 
   // background nextAutoRound 와 같은 의미론 + 콜드 스타트 채택 규칙:
@@ -271,10 +296,12 @@
       localDirect: {
         matched: Math.max(0, num(t.matched)),
         ignored: Math.max(0, num(t.ignored)),
-        unknownCodes: (t.unknown || []).slice(0, 20),
+        // v19.15.1: 부트가 안정화 집합을 주면 그것만 노출 — 전투 임시
+        // 개체 요동이 건강 배지('미해석 N종')와 런로그를 흔들지 않게.
+        unknownCodes: opts.stableUnknown != null ? Object.keys(opts.stableUnknown).slice(0, 20) : (t.unknown || []).slice(0, 20),
         // v19.12.2: 미해석 수량 궤적 — 판을 넘나드는 대조(예: V40h가
         // 레일리(히든)인지)를 런로그만으로 할 수 있게 수량까지 싣는다.
-        unknownCounts: Object.assign({}, t.unknownCounts || {}),
+        unknownCounts: Object.assign({}, opts.stableUnknown != null ? opts.stableUnknown : (t.unknownCounts || {})),
         enrichedFromDomAt: domUsable ? domAt : 0
       },
       sourceTabId: 0,
@@ -289,7 +316,7 @@
   }
 
   global.ORD_LOCAL_MAP = {
-    VERSION: '19.15.0',
+    VERSION: '19.15.1',
     LOCAL_DATAS_URL: LOCAL_DATAS_URL,
     LOCAL_SOURCE_EPOCH: LOCAL_SOURCE_EPOCH,
     CODE_MAP: CODE_MAP,
@@ -299,6 +326,7 @@
     translate: translate,
     countsHash: countsHash,
     nextLocalAutoRound: nextLocalAutoRound,
+    nextUnknownStability: nextUnknownStability,
     buildLocalSnapshot: buildLocalSnapshot
   };
 })(typeof window !== 'undefined' ? window : globalThis);

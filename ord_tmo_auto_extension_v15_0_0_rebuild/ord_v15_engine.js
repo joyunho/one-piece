@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.15.0';
+const VERSION='19.15.1';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -816,6 +816,16 @@ function upperRouteCandidates(model,locks){
       const fresh=picked.filter(row=>!row.recentUse),used=picked.filter(row=>row.recentUse);
       if(fresh.length&&used.length)picked.splice(0,picked.length,...fresh,...used);
     }
+  }
+  // v19.15.1(사용자: "상위 난 재미있게 하고 싶은데 너무 정해진 걸 추천") —
+  // 지금 패로 실제 성립하는 비주류(실측 점유 2% 미만) 후보 하나에 '도전
+  // 각' 배지를 단다.  카드에 없으면 풀에서 한 장 승격한다.  순위는 건드리지
+  // 않는다 — 재미는 선택지이지 강요가 아니다.
+  {
+    const offMeta=row=>row&&row.feasible===true&&num(row.clearValue&&row.clearValue.metaShare)<2&&!row.recentUse;
+    let challenger=picked.find(offMeta);
+    if(!challenger){challenger=pool.find(row=>!picked.includes(row)&&offMeta(row));if(challenger)pin(challenger);}
+    if(challenger)challenger.challengeAngle=true;
   }
   // 카드 6개와 별개로, 게이트 상위 전체(베가펑크 4종 등 정규화 대표)를
   // 칩 목록으로 내려 보낸다 — UI가 "그린블러드 확보 시 열리는 상위"를

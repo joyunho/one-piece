@@ -85,11 +85,19 @@ test('확신 등급이 모든 라운드에 붙는다',()=>{
 test('생존 축이 이긴 판과 진 판을 가른다',()=>{
   const clearClosed=clear.totals.survivalClosedRounds.length;
   assert(clearClosed>0,'클리어한 판이 생존 축을 한 번도 못 닫았다면 축 분류가 틀렸다');
-  // 진 판 5개 중 생존 축을 닫아 본 판은 0724 하나뿐이고 그것도 클리어보다
-  // 훨씬 짧았다.  "대부분의 패배는 생존 축을 못 닫아서"라는 관계가 유지돼야 한다.
+  // v18 원계약은 "패배는 생존 축을 못 닫아서"(생존 닫힌 패배 ≤1)였다.
+  // v19.15.1(0805L 63라 라인사): 코치가 생존 축(이감·스턴·광보잡·방깎)을
+  // 잘 닫게 되면서 패배가 화력·유지 축으로 이동했다 — 0805L 은 생존을
+  // 13라운드 닫고도 단끝 2.5/3 · 단일 1.5/2 · 체젠 0.45/2 로 죽었다.
+  // 유지할 관계를 강화형으로 바꾼다: 생존을 닫고 진 판은 반드시 화력
+  // 축이 열려 있어야 한다.  생존·화력이 모두 닫혔는데 진 판이 나오면
+  // 그때가 축 분류의 진짜 실패다.
   const closedLosses=losses.filter(run=>run.totals.survivalClosedRounds.length>0);
-  assert(closedLosses.length<=1,
-    `생존 축을 닫고도 진 판이 ${closedLosses.length}개다 — 생존 축이 승패를 설명하지 못한다`);
+  for(const run of closedLosses){
+    const terminal=run.rounds.filter(row=>!row.error).slice(-8);
+    assert(terminal.length>0&&!terminal.every(row=>row.firepowerPass===true),
+      `${run.key}: 생존·화력 축이 모두 닫혔는데 졌다 — 축 분류가 승패를 설명하지 못한다`);
+  }
   for(const run of losses)
     assert(run.totals.survivalClosedRounds.length<clearClosed,
       `${run.key}(패)가 클리어한 판보다 생존 축을 오래 유지했다`);
