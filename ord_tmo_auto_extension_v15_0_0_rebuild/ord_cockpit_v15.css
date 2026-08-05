@@ -2605,3 +2605,11 @@ body.ord-overlay-mode .v151-action-foot small{display:none;}
 /* v19.15.1 — 보류 카드 명시 배너 + 도전 각 배지 */
 .v1915-hold-banner{background:rgba(255,170,60,.12);border:1px solid rgba(255,170,60,.45);color:#ffd9a0;border-radius:8px;padding:7px 10px;margin-bottom:8px;font-size:12.5px;line-height:1.45;}
 .v1915-challenge{background:rgba(90,220,160,.14) !important;border-color:rgba(90,220,160,.5) !important;color:#9df0c6 !important;}
+
+/* v19.16 — 클리어 조합 실측 표시 */
+.v1916-clear small{opacity:.75;}
+.v1916-clear-audit{margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(90,140,255,.08);border:1px solid rgba(120,150,220,.25);font-size:12.5px;}
+.v1916-clear-audit small{opacity:.7;display:block;margin-bottom:3px;}
+.v1916-clear-audit p{margin:2px 0;}
+.v1916-clear-audit p.warn{color:#ffc98a;}
+.v1916-clear-audit p.ok{color:#9df0c6;}

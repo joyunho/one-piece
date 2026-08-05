@@ -33,6 +33,7 @@ const scriptFiles = [
   'ord_upper_skill_digest.js',
   'ord_upper_skill_dps.js',
   'ord_meta_stats.js',
+  'ord_clear_stats.js',
   'ord_core.js',
   'ord_squad_planner.js',
   'ord_v15_model.js',

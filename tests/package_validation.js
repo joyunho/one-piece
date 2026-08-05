@@ -178,7 +178,8 @@ for(const match of manual.matchAll(/<script data-source="([^"]+)">([\s\S]*?)<\/s
 // 스크립트가 조용히 늘거나 줄지 않았는가"를 지키는 계약이라, 바뀔 때마다
 // 이유를 남기고 갱신한다.
 // v19.5: 상위 플레이북(ord_upper_playbook.js)이 들어와 21 → 22.
-assert.strictEqual(manualScripts,22,'manual inline script count changed');
+// v19.16: 클리어 실측(ord_clear_stats.js)이 들어와 22 → 23.
+assert.strictEqual(manualScripts,23,'manual inline script count changed');
 // v19.5(점검 결함): 신선도 대조 목록에 ord_icons.js 가 빠져 있어 아이콘 팩이
 // 낡아도 무검출이었다 — 번들 스크립트 전부를 대조한다.
 for(const file of ['ord_icons.js','ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_upper_playbook.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js']){
