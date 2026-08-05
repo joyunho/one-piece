@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='19.16.0';
+const VERSION='19.17.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1442,6 +1442,23 @@ function supportTierUse(state,row){
   for(const key of Object.keys(used))used[key]=round2(used[key]);
   return used;
 }
+// v19.17(A2): 전략 필수(mechanic) — 체젠필수·암브필수·보조딜필수 같은
+// 상위 전제 — 는 상위 스킬이 작동하기 위한 선행 조건인데, 정적 경로
+// 그룹에 키가 없다는 이유로 늘 꼬리 그룹에 앉았다(0805 키드: 체젠
+// 0.45/2인 채 단끝 조각부터 승인).  전제 그룹은 화력만으로 이루어진
+// 그룹(단·끝·1.5스턴) 앞에 끼운다 — 생존·제어 뒤, 화력 앞.  생존 키와
+// 섞인 그룹(구제 모드의 stunFull 합류)은 화력 그룹으로 치지 않는다.
+// 정책 groupRows 의 삽입 규칙과 같아야 한다.
+const FIREPOWER_ONLY_KEYS=new Set(['single','end','singleEnd','singleEndExpected','singleEndStable','singleEndMax','stunFull']);
+function insertMechanicPriorityGroup(groups,keys){
+  const covered=new Set((groups||[]).flat()),fresh=(keys||[]).filter(key=>key&&!covered.has(key));
+  if(!fresh.length)return groups;
+  const cut=(groups||[]).findIndex(group=>group.length&&group.every(key=>FIREPOWER_ONLY_KEYS.has(key)));
+  const next=(groups||[]).slice();next.splice(cut<0?next.length:cut,0,fresh);return next;
+}
+function mechanicRequirementKeys(rows){
+  return[...new Set((rows||[]).filter(row=>row&&row.required!==false&&!row.waived&&(row.mechanic===true||row.meta&&row.meta.mechanic===true)).map(row=>row.key))];
+}
 function supportClearStage(row,plan){
   const clearRows=plan&&plan.deficits&&plan.deficits.clearRows||[],impact=row&&row.impact||{},impactRows=impact.rows||[],byKey=new Map(impactRows.map(item=>[item.key,item])),regressed=(impact.regressed||[]).filter(item=>item.required);
   if(regressed.length)return{index:clearRows.length+2,level:2,label:`필수 후퇴 · ${regressed.map(item=>item.label).slice(0,2).join(' · ')}`};
@@ -1451,7 +1468,7 @@ function supportClearStage(row,plan){
   // stage, as are safe slow and boss/frenzy coverage.
   // v19.9.7(0802 교정): 마딜도 물딜과 같이 stunFull 은 마지막 그룹이다 —
   // 순서만 뒤로 갈 뿐 필수 해제는 없다.
-  const mode=plan&&plan.mode,route=plan&&plan.resolvedMagicRoute||plan&&plan.deficits&&plan.deficits.route||plan&&plan.settings&&plan.settings._resolvedMagicRoute||'singleEnd',priority=mode==='physical'?[['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected','single','end'],['stunFull']],missing=new Set(clearRows.map(item=>item.key)),grouped=new Set(),groups=[];
+  const mode=plan&&plan.mode,route=plan&&plan.resolvedMagicRoute||plan&&plan.deficits&&plan.deficits.route||plan&&plan.settings&&plan.settings._resolvedMagicRoute||'singleEnd',basePriority=mode==='physical'?[['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected','single','end'],['stunFull']],priority=insertMechanicPriorityGroup(basePriority,mechanicRequirementKeys(clearRows)),missing=new Set(clearRows.map(item=>item.key)),grouped=new Set(),groups=[];
   for(const keys of priority){const active=keys.filter(key=>missing.has(key));if(active.length){groups.push(active);active.forEach(key=>grouped.add(key));}}
   for(const need of clearRows)if(!grouped.has(need.key))groups.push([need.key]);
   for(let index=0;index<groups.length;index++){
@@ -1467,6 +1484,10 @@ function compareSupportRows(a,b){
   for(const tier of ['rare','special','uncommon','common'])if(num(a.tierUse&&a.tierUse[tier])!==num(b.tierUse&&b.tierUse[tier]))return num(b.tierUse&&b.tierUse[tier])-num(a.tierUse&&a.tierUse[tier]);
   const aw=num(a.solve&&a.solve.wispCost),bw=num(b.solve&&b.solve.wispCost);if(aw!==bw)return aw-bw;
   if(!!a.pairSynergy!==!!b.pairSynergy)return Number(!!b.pairSynergy)-Number(!!a.pairSynergy);if(num(a.coverage)!==num(b.coverage))return num(b.coverage)-num(a.coverage);
+  // v19.17(A1): 클리어 실측 파트너 지분은 마지막 타이브레이크다 — 역할
+  // 수학(가용성·필수 단계·티어·선위·시너지·기여)이 전부 같을 때만
+  // 실전에서 더 자주 함께 클리어한 쪽을 앞세운다.  게이트·목표 불변.
+  if(num(a.metaPartnerShare)!==num(b.metaPartnerShare))return num(b.metaPartnerShare)-num(a.metaPartnerShare);
   return nameOf(a.unit).localeCompare(nameOf(b.unit),'ko');
 }
 // v17.27(사용자 요청): "지금 가진 희귀함으로 만들 수 있는 전설급 유닛".
@@ -1516,7 +1537,7 @@ function rareCraftableLegends(state,options){
   return out;
 }
 function upperProfileData(state,upper,plan,upperMemo,synergyMemo){
-  if(!upper)return null;plan=plan||{};const memo=upperMemoFor(upper,upperMemo),role=roleProfile(upper),facts=skillFacts(upper),strategy=upperStrategy(upper),mode=familyOf(upper)==='neutral'?plan.mode:familyOf(upper),supports=(plan.rows||[]).filter(row=>row&&row.unit&&row.unit.id!==upper.id&&canonicalUpperId(row.unit.id)!==canonicalUpperId(upper.id)&&num(state.counts[row.unit.id])<=0).filter(row=>num(row.coverage)>0||row.pairSynergy).map(row=>Object.assign({},row,{tierUse:supportTierUse(state,row),supportStage:supportClearStage(row,plan)})).sort(compareSupportRows);
+  if(!upper)return null;plan=plan||{};const memo=upperMemoFor(upper,upperMemo),role=roleProfile(upper),facts=skillFacts(upper),strategy=upperStrategy(upper),mode=familyOf(upper)==='neutral'?plan.mode:familyOf(upper),supports=(plan.rows||[]).filter(row=>row&&row.unit&&row.unit.id!==upper.id&&canonicalUpperId(row.unit.id)!==canonicalUpperId(upper.id)&&num(state.counts[row.unit.id])<=0).filter(row=>num(row.coverage)>0||row.pairSynergy).map(row=>Object.assign({},row,{tierUse:supportTierUse(state,row),supportStage:supportClearStage(row,plan),metaPartnerShare:partnerShareFor(upper.id,row.unit)})).sort(compareSupportRows);
   supports.forEach((row,index)=>{row.supportRank=index+1;row.supportStageLabel=row.supportStage.label;});
   return{upper,memo,role,facts,strategy,mode,rankedSupports:supports,now:supports.filter(row=>row.feasible&&row.valueStatus!=='hold').slice(0,3),later:supports.filter(row=>!row.feasible||row.valueStatus==='hold').slice(0,5)};
 }
@@ -1577,7 +1598,16 @@ function clearStatsFor(upperId){
   if(!stats||!stats.byUpper)return null;
   return stats.byUpper[String(canonicalUpperId(upperId))]||null;
 }
+// v19.17(A1): 이 상위의 클리어 실측 파트너 지분(%).  91,833판에서 함께
+// 클리어한 빈도로, 보조 후보 정렬의 후순위 타이브레이크와 표시에만
+// 쓴다 — 게이트·목표는 바꾸지 않는다(위 purpose 경계 동일).
+function partnerShareFor(upperId,unitOrId){
+  const stats=clearStatsFor(upperId);if(!stats)return 0;
+  const id=String(unitOrId&&unitOrId.id||unitOrId||'');if(!id)return 0;
+  const hit=(stats.partners||[]).find(item=>String(item.id)===id);
+  return hit?num(hit.share):0;
+}
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,partnerShareFor,insertMechanicPriorityGroup,mechanicRequirementKeys,debugFixture};
 })(window);

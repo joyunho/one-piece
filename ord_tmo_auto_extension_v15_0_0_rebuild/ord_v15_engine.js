@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.16.0';
+const VERSION='19.17.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -340,7 +340,12 @@ function protectCriticalBudget(model,route,locks,assessment,rows,counts){
 // wisp distance.  A silent HOLD is never an acceptable answer.
 function recoveryPlan(model,route,locks,assessment,options){
   if(!route||!assessment)return null;
-  const limit=options&&options.limit||4,counts=model.effective.counts,open=(assessment.requirements||[]).filter(row=>num(row.gap)>0&&!row.waived);
+  const limit=options&&options.limit||4,counts=model.effective.counts,open=(assessment.requirements||[]).filter(row=>num(row.gap)>0&&!row.waived)
+    // v19.17(A2): 회복 목표도 정책 그룹 순서(생존→전제→화력→1.5스턴)를
+    // 따른다 — 삽입 순서 그대로면 전략 전제(체젠 등)가 늘 꼬리라, limit 에
+    // 걸리거나 화력 조각 뒤로 밀렸다(0805 키드).  priority 는 policy
+    // evaluate 가 그룹 인덱스로 매긴다.
+    .sort((a,b)=>(num(a.priority)||99)-(num(b.priority)||99));
   if(!open.length)return null;
   const universe=actionUniverse(model,route,locks,assessment,counts),targets=[],seen=new Set();
   for(const req of open){
@@ -433,8 +438,11 @@ function supportNodeRank(node){const tier=node.resources.tiers,overlap=node.over
 function compareSupportNodes(left,right){const vector=P.compareVector(left.rankVector,right.rankVector);if(vector)return vector;return(left.steps||[]).map(step=>step.quote.targetId).join('|').localeCompare((right.steps||[]).map(step=>step.quote.targetId).join('|'));}
 function makeSupportNode(model,counts,assessment,steps,warpedCount){const resources=resourceTotals(steps),overlap=lineupOverlap(model,ownedFinals(model,counts)),node={counts,assessment,steps,resources,warpedCount:num(warpedCount),overlap,rankVector:[]};supportNodeRank(node);return node;}
 function supportUniverse(model,route,locks,counts,assessment){
-  const beforeLineup=ownedFinals(model,counts),lock=lockedUpper(locks),staticRows=allCandidates(model,route,locks,counts).map(unit=>{const potential=potentialScore(unit,assessment,route,lock),profile=recipeProfile(model,unit);return{unit,potential,profile};}).filter(row=>row.potential>0).sort((left,right)=>right.potential-left.potential||sum(right.profile.rare)-sum(left.profile.rare)||sum(right.profile.special)-sum(left.profile.special)||num(model.effective.percent[right.unit.id])-num(model.effective.percent[left.unit.id])||nameOf(left.unit).localeCompare(nameOf(right.unit),'ko')).slice(0,SUPPORT_STATIC_PROBE_CAP),rows=[];for(const prepared of staticRows){const unit=prepared.unit,quote=L.quote(model,unit,counts,{availableRound:model.round.value});if(!quote.feasible||introducesLineageConflict(model,beforeLineup,ownedFinals(model,quote.after)))continue;const after=P.evaluate(model,quote.after,route,{round:model.round.value,locks});if(!safeRoleImprovement(assessment,after))continue;const tiers=quote.tiers&&quote.tiers.totals||{},potential=prepared.potential;rows.push({unit,quote,after,potential,tiers,warpedRequired:!!(C.requiresWarpedCraft&&C.requiresWarpedCraft(model.knowledge.db,unit,counts))});}
-  rows.sort((left,right)=>P.compareVector(left.after.fullVector,right.after.fullVector)||right.potential-left.potential||-num(left.tiers.rare)+num(right.tiers.rare)||-num(left.tiers.special)+num(right.tiers.special)||-num(left.tiers.uncommon)+num(right.tiers.uncommon)||-num(left.tiers.common)+num(right.tiers.common)||left.quote.wisp.cost-right.quote.wisp.cost||nameOf(left.unit).localeCompare(nameOf(right.unit),'ko'));return rows.slice(0,SUPPORT_CANDIDATE_CAP);
+  // v19.17(A1): 확정 상위의 클리어 실측 파트너 지분은 후순위 타이브레이크
+  // 전용 — 역할 벡터·잠재 점수가 같을 때만 실전에서 함께 클리어한 쪽을
+  // 앞세운다(예: 키드 ↔ 모비딕호 60.9%).  게이트·목표 불변.
+  const beforeLineup=ownedFinals(model,counts),lock=lockedUpper(locks),partnerShare=unit=>C.partnerShareFor?C.partnerShareFor(lock&&lock.id,unit):0,staticRows=allCandidates(model,route,locks,counts).map(unit=>{const potential=potentialScore(unit,assessment,route,lock),profile=recipeProfile(model,unit);return{unit,potential,profile};}).filter(row=>row.potential>0).sort((left,right)=>right.potential-left.potential||partnerShare(right.unit)-partnerShare(left.unit)||sum(right.profile.rare)-sum(left.profile.rare)||sum(right.profile.special)-sum(left.profile.special)||num(model.effective.percent[right.unit.id])-num(model.effective.percent[left.unit.id])||nameOf(left.unit).localeCompare(nameOf(right.unit),'ko')).slice(0,SUPPORT_STATIC_PROBE_CAP),rows=[];for(const prepared of staticRows){const unit=prepared.unit,quote=L.quote(model,unit,counts,{availableRound:model.round.value});if(!quote.feasible||introducesLineageConflict(model,beforeLineup,ownedFinals(model,quote.after)))continue;const after=P.evaluate(model,quote.after,route,{round:model.round.value,locks});if(!safeRoleImprovement(assessment,after))continue;const tiers=quote.tiers&&quote.tiers.totals||{},potential=prepared.potential;rows.push({unit,quote,after,potential,tiers,warpedRequired:!!(C.requiresWarpedCraft&&C.requiresWarpedCraft(model.knowledge.db,unit,counts))});}
+  rows.sort((left,right)=>P.compareVector(left.after.fullVector,right.after.fullVector)||right.potential-left.potential||partnerShare(right.unit)-partnerShare(left.unit)||-num(left.tiers.rare)+num(right.tiers.rare)||-num(left.tiers.special)+num(right.tiers.special)||-num(left.tiers.uncommon)+num(right.tiers.uncommon)||-num(left.tiers.common)+num(right.tiers.common)||left.quote.wisp.cost-right.quote.wisp.cost||nameOf(left.unit).localeCompare(nameOf(right.unit),'ko'));return rows.slice(0,SUPPORT_CANDIDATE_CAP);
 }
 function projectSupportPrefix(model,row,route){
   // v17.12: 특수재료 게이트 상위의 quote는 크레딧 재시도 값이므로 정확
@@ -575,7 +583,10 @@ function plannerState(model){
   return{db:knowledge.db,units:knowledge.units||knowledge.db&&knowledge.db.units||[],counts:clone(effective.counts),rawCounts:clone(effective.rawCounts||effective.counts),currentAbilities:clone(effective.currentAbilities),percent:clone(effective.percent),wisp:num(effective.counts&&effective.counts[C.WISP_ID])};
 }
 function blueprintSupportRows(model,ranking){
-  const plan=ranking&&ranking.plan||{},actionById=new Map(),rows=[],seen=new Set(),memoById=new Map((ranking&&ranking.memoPackage&&ranking.memoPackage.hits||[]).map(item=>[String(item.id),item]));
+  const plan=ranking&&ranking.plan||{},actionById=new Map(),rows=[],seen=new Set(),memoById=new Map((ranking&&ranking.memoPackage&&ranking.memoPackage.hits||[]).map(item=>[String(item.id),item])),
+  // v19.17(A1): 상위별 클리어 실측 파트너 지분 — 메모(전수 근거) 다음의
+  // 타이브레이크로만 쓴다.  표시용으로 행에도 싣는다.
+  rankingUpperId=String(ranking&&(ranking.upperId||ranking.id)||'');
   for(const action of [].concat(plan.safePrefix&&plan.safePrefix.actions||[],plan.actions||[]))if(action&&action.id&&!actionById.has(action.id))actionById.set(action.id,action);
   for(const item of plan.finalLineup||[]){
     // Worker compact rows used to carry `{unit:{id}}`.  That truthy stub won
@@ -585,9 +596,9 @@ function blueprintSupportRows(model,ranking){
     const id=String(item&&item.id||item&&item.unit&&item.unit.id||''),unit=model.knowledge.db.byId.get(id)||item&&item.unit;
     if(!unit||!id||C.isUpper(unit)||pseudoUnit(unit)||seen.has(id))continue;
     seen.add(id);const action=actionById.get(id),role=C.summarizeRoles?C.summarizeRoles({role:C.roleProfile(unit)},plan.mode):'',memo=memoById.get(id);
-    rows.push({id,name:nameOf(unit),status:String(item.status||action&&'planned'||'future'),role,wispCost:num(action&&action.wispCost),order:rows.length+1,memoMatched:!!memo,memoRank:num(memo&&memo.rank),memoReason:String(memo&&memo.reason||'')});
+    rows.push({id,name:nameOf(unit),status:String(item.status||action&&'planned'||'future'),role,wispCost:num(action&&action.wispCost),order:rows.length+1,memoMatched:!!memo,memoRank:num(memo&&memo.rank),memoReason:String(memo&&memo.reason||''),partnerShare:C.partnerShareFor?C.partnerShareFor(rankingUpperId,id):0});
   }
-  return rows.sort((left,right)=>Number(right.memoMatched)-Number(left.memoMatched)||(left.memoRank||999)-(right.memoRank||999)||left.order-right.order).slice(0,3).map((row,index)=>Object.assign({},row,{displayOrder:index+1}));
+  return rows.sort((left,right)=>Number(right.memoMatched)-Number(left.memoMatched)||(left.memoRank||999)-(right.memoRank||999)||num(right.partnerShare)-num(left.partnerShare)||left.order-right.order).slice(0,3).map((row,index)=>Object.assign({},row,{displayOrder:index+1}));
 }
 function integratedUpperCompare(left,right){
   const ar=num(left.blueprintEvaluation&&left.blueprintEvaluation.rank),br=num(right.blueprintEvaluation&&right.blueprintEvaluation.rank);

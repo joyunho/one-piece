@@ -6,7 +6,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.16.0';
+const VERSION='19.17.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.7스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']],priority:'상위 2기·최소 0.7스턴 → 이감 → 광보잡·토키 → 1.5스턴(마지막 필수)'}),
@@ -82,7 +82,17 @@ function groupRows(route,role,checkpoint,roundInput){
   // never referenced them — the recorded '단일 1/2' deficit could not be acted
   // on.  Append every uncovered required row as a trailing group.
   const extras=[...map.values()].filter(row=>row&&row.required!==false&&!covered.has(row.key));
-  if(extras.length)groups.push(extras);
+  // v19.17(A2): 전략 필수(mechanic — 체젠·암브·보조딜 등 상위 전제)는
+  // 꼬리가 아니라 화력만으로 이루어진 그룹(단·끝·1.5스턴) 앞에 선다.
+  // 0805 키드 판: 체젠 2 필수가 늘 마지막 그룹이라 단끝 조각부터 승인돼
+  // 체젠 0.45/2로 63라 라인사.  전제는 상위 스킬이 작동하기 위한 선행
+  // 조건이므로 생존·제어 뒤, 화력 앞이 맞다.  ord_core 의
+  // insertMechanicPriorityGroup 과 같은 규칙이다.
+  const isMechanicRow=row=>row&&(row.mechanic===true||row.meta&&row.meta.mechanic===true);
+  const mechanicExtras=extras.filter(isMechanicRow),plainExtras=extras.filter(row=>!isMechanicRow(row));
+  const FIRE_ONLY_KEYS=new Set(['single','end','singleEnd','singleEndExpected','singleEndStable','singleEndMax','stunFull']);
+  if(mechanicExtras.length){const cut=groups.findIndex(rows=>rows.length&&rows.every(row=>FIRE_ONLY_KEYS.has(row&&row.key)));groups.splice(cut<0?groups.length:cut,0,mechanicExtras);}
+  if(plainExtras.length)groups.push(plainExtras);
   // v16.4: two straight losses died at round 60 with 이감 starved while an
   // almost-closed armor group kept outranking it in the static order.  When a
   // non-main group is nearly done (worst relative gap <=10%) it sinks below
@@ -106,7 +116,12 @@ function groupRows(route,role,checkpoint,roundInput){
   // lines kill you before the boss does.  The gate is state-level, not
   // pairwise, so the ordering stays a coherent total order inside the search.
   const BOSS_POWER_KEYS=new Set(['single','end','singleEndExpected','attack','toki','stunFull']);
-  const bossPowerOpen=rows=>rows.some(row=>row.required!==false&&!row.waived&&BOSS_POWER_KEYS.has(row.key)&&num(row.gap)>0);
+  // v19.17(A2): 전제(mechanic)는 보스 화력이 성립하기 위한 조건이므로
+  // 50라+ 화력 부양 창에서 화력 그룹과 함께 뜬다 — 정적 순서가 화력
+  // 앞이라, 함께 뜨면 전제가 먼저다.  또한 전제 결손은 생존 위기가
+  // 아니다(생존 위기 판정이 화력 부양을 꺼버리면 전제·화력 둘 다
+  // 꼬리로 밀린다).
+  const bossPowerOpen=rows=>rows.some(row=>row.required!==false&&!row.waived&&(BOSS_POWER_KEYS.has(row.key)||row.mechanic===true||row.meta&&row.meta.mechanic===true)&&num(row.gap)>0);
   const bossWindow=currentRound>=50;
   // v19.9(사용자 교정): 물딜은 방깎이 우선이다 — "최소 스턴 잡고 풀이감을
   // 잡은 뒤에 스턴 1.5를 채우는 거지, 먼저 채우는 건 별로 좋지 않다.

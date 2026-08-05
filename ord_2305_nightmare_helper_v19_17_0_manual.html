@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v19.16.0-decision-engine-manual">
+  <meta name="ord-helper" content="v19.17.0-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.305 악몽 수동 도우미">
-  <title>원랜디 2.305 악몽 실전 판단 코치 v19.16.0 · 수동 모드</title>
+  <title>원랜디 2.305 악몽 실전 판단 코치 v19.17.0 · 수동 모드</title>
   <style data-source="ord_app.css">
 :root{color-scheme:dark;--bg:#060b18;--panel:#0d162a;--panel2:#101d35;--line:#223454;--text:#eef5ff;--muted:#91a2bd;--blue:#4f7cff;--cyan:#25c2e7;--green:#27d17f;--amber:#f3b84b;--red:#ef6262;--violet:#8b67ff;--shadow:0 20px 55px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 10% 0,#122a5a 0,#060b18 35%,#040812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-break:keep-all;overflow-wrap:anywhere}button,input,select{font:inherit}button{cursor:pointer}.ord-app{min-height:100vh;padding:18px;max-width:1860px;margin:0 auto}.ord-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px;border:1px solid rgba(112,154,255,.26);border-radius:24px;background:linear-gradient(135deg,rgba(66,83,222,.34),rgba(17,64,94,.3));box-shadow:var(--shadow)}.ord-kicker{font-size:11px;letter-spacing:.14em;color:#9bb7ff;font-weight:900}.ord-header h1{margin:5px 0 3px;font-size:29px;line-height:1.15}.ord-header p{margin:0;color:var(--muted);font-size:13px}.ord-head-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:720px}.ord-head-status>*{border:1px solid var(--line);border-radius:999px;background:rgba(6,11,24,.7);color:#d9e8ff;padding:8px 12px;font-size:12px;font-weight:800;white-space:nowrap}.ord-head-status .good{border-color:rgba(39,209,127,.45);color:#a8f7ce}.ord-head-status .warn{border-color:rgba(243,184,75,.45);color:#ffe1a1}.ord-head-status button{background:#1b2b4d}.ord-tabs{display:flex;gap:8px;margin:14px 0}.ord-tabs button,.purpose-buttons button,.two-button button,.round-box button,.action-buttons button,.prep-list button,.mini-cards button,.ghost,.primary{border:1px solid var(--line);border-radius:11px;background:#111d32;color:#dce9ff;padding:9px 13px;font-weight:850}.ord-tabs button.on,.purpose-buttons button.on,.primary{border-color:transparent;background:linear-gradient(135deg,var(--violet),var(--blue));color:white}.ord-layout{display:grid;grid-template-columns:294px minmax(0,1fr);gap:14px;align-items:start}.ord-side{display:grid;gap:12px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;padding-right:3px;min-width:0}.side-card,.ord-panel{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(15,26,48,.96),rgba(9,16,31,.96));box-shadow:0 14px 38px rgba(0,0,0,.18);min-width:0}.side-card{padding:14px}.side-card b{font-size:14px}.side-title{display:flex;justify-content:space-between;gap:8px}.side-title span{font-size:11px;color:var(--cyan)}.side-card label{display:grid;gap:5px;color:var(--muted);font-size:11px;margin-top:11px}.side-card input,.side-card select,.form-grid input{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#071020;color:var(--text);padding:9px}.side-card small{display:block;color:var(--muted);font-size:10.5px;line-height:1.45;margin-top:6px}.round-box{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding:10px;border:1px solid rgba(37,194,231,.3);border-radius:13px;background:rgba(10,39,62,.35)}.round-box strong{font-size:13px;min-width:0}.round-box div{display:flex;gap:4px}.round-box button{padding:6px 8px;font-size:11px}.side-card details{margin-top:10px}.side-card summary,.detail-modal summary{cursor:pointer;color:#cbd9ef;font-size:11px;font-weight:800}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.two-button{display:flex;gap:6px;margin-top:10px}.two-button button{flex:1;font-size:11px;padding:8px}.two-button .on{border-color:var(--green);color:#c5ffe0;background:rgba(39,209,127,.1)}.two-button .danger.on{border-color:var(--red);color:#ffc1c1;background:rgba(239,98,98,.1)}.stat-row{display:flex;justify-content:space-between;align-items:center}.stat-row b{font-size:24px;color:#ffe7a3}.lock-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.lock-list>span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(139,103,255,.35);border-radius:999px;padding:5px 8px;background:rgba(139,103,255,.1);font-size:10px}.lock-list button{border:0;background:none;color:#ffaaaa;font-weight:900}.side-card.compact{padding-bottom:10px}.common-line{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;margin-top:7px;font-size:11px}.common-line i{width:8px;height:8px;border-radius:50%}.common-line b{font-size:11px}.ord-main{display:grid;gap:13px;min-width:0}.milestone{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 19px;border:1px solid rgba(37,194,231,.4);border-radius:21px;background:linear-gradient(135deg,rgba(6,47,78,.78),rgba(31,25,87,.56));min-width:0}.milestone small{color:#61daf5;font-weight:900}.milestone h2{margin:3px 0 5px;font-size:24px}.milestone p{margin:0;color:#abc0df;font-size:12px}.purpose-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.purpose-buttons button{font-size:11px}.top-two{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:13px}.ord-panel{padding:17px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px}.panel-head small{color:#72d8ef;font-size:10px;font-weight:900}.panel-head h2{margin:2px 0 4px;font-size:20px}.panel-head p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.45}.count-pill,.mode-pill,.control-badge{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;white-space:nowrap}.mode-pill.physical{color:#ffcb9a;border-color:#e48e45}.mode-pill.magic{color:#a9c9ff;border-color:#5c84d8}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.profile-grid>div,.spec-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px;min-width:0}.profile-grid small,.spec-grid small{display:block;color:var(--muted);font-size:10px}.profile-grid b{display:block;margin-top:5px;font-size:12px;line-height:1.45}.synergy-line{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.synergy-line small{width:100%;color:var(--muted)}.synergy-line span{border:1px solid rgba(39,209,127,.3);border-radius:999px;padding:5px 8px;font-size:10px;color:#b8f7d5}.upper-focus details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.upper-focus details p{color:#aebbd0;font-size:11px}.control-badge.safe{color:#a9f7cc;border-color:rgba(39,209,127,.45)}.control-badge.edge{color:#ffe2a4;border-color:rgba(243,184,75,.45)}.control-badge.danger{color:#ffb4b4;border-color:rgba(239,98,98,.45)}.spec-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.spec-grid b{display:block;font-size:21px;margin:4px 0}.spec-grid span{color:#8193ae;font-size:9.5px}.deficit-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}.deficit-line>b{font-size:11px}.deficit-line span{border:1px solid rgba(243,184,75,.32);border-radius:999px;padding:5px 8px;color:#ffd78d;font-size:10px}.deficit-line .ok{color:#a9f7cc;border-color:rgba(39,209,127,.3)}.state-intro{display:flex;justify-content:space-between;gap:15px;align-items:center}.state-intro h2{margin:4px 0}.state-intro p{color:var(--muted);margin:0;font-size:12px}.control{min-width:260px;border:1px solid var(--line);border-radius:15px;padding:12px}.control b,.control span{display:block}.control span{font-size:10px;color:var(--muted);margin-top:4px}.control.safe{border-color:rgba(39,209,127,.35)}.control.edge{border-color:rgba(243,184,75,.35)}.control.danger{border-color:rgba(239,98,98,.35)}.mini-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mini-cards article{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.mini-cards img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mini-cards b,.mini-cards span,.mini-cards small{display:block;min-width:0}.mini-cards b{font-size:12px}.mini-cards span{font-size:10px;color:#9fb1ca}.mini-cards small{font-size:9px;color:#7085a4}.mini-cards button{padding:7px;font-size:10px}.action-list{display:grid;gap:8px}.action-row{display:grid;grid-template-columns:42px 48px minmax(0,1fr) 124px auto;gap:11px;align-items:center;border:1px solid rgba(55,84,132,.8);border-radius:16px;padding:11px;background:linear-gradient(90deg,rgba(12,27,50,.95),rgba(8,17,33,.95));min-width:0}.action-row .rank{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));font-weight:950}.action-row>img{width:46px;height:46px;border-radius:12px;object-fit:cover}.action-main{min-width:0}.unit-title{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.unit-title b{font-size:14px}.unit-title span{font-size:10px;color:#8da1bd}.role-tags{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.role-tags>span,.role-tags i{border:1px solid #284266;border-radius:999px;padding:4px 7px;font-size:9.5px;font-style:normal;color:#bcd3f2}.role-tags i{border-color:color-mix(in srgb,var(--pc) 60%,#223454);box-shadow:inset 3px 0 var(--pc)}.action-main p{margin:0;color:#91a6c2;font-size:10.5px}.action-cost{border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}.action-cost b{display:block;font-size:22px;color:#ffe1a1}.action-cost small{display:block;color:#7f91ab;font-size:9px}.action-cost span{display:block;margin-top:4px;font-size:9px}.action-cost .good{color:#9ff1c5}.action-cost .warn{color:#ffd083}.action-cost .bad{color:#ffaaaa}.action-buttons{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.action-buttons button{font-size:10px;padding:8px}.empty{padding:20px;border:1px dashed #2c4266;border-radius:14px;text-align:center;color:#8193ad}.prep-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prep-list>div{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.prep-list img{width:38px;height:38px;border-radius:10px;object-fit:cover}.prep-list b,.prep-list small{display:block}.prep-list b{font-size:12px}.prep-list small{color:#8195b2;font-size:9.5px}.prep-list em{font-style:normal;color:#ffd587;font-size:9.5px}.prep-list button{font-size:9px;padding:6px}.rare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rare-columns>div{border:1px solid var(--line);border-radius:14px;padding:11px}.rare-columns h3{margin:0 0 8px;font-size:12px}.rare-columns .use{border-color:rgba(39,209,127,.3)}.rare-columns .hold{border-color:rgba(243,184,75,.3)}.rare-columns .reroll{border-color:rgba(239,98,98,.3)}.rare-columns>div>div{display:grid;grid-template-columns:28px 1fr auto;gap:7px;align-items:center;margin-top:6px;font-size:10px}.rare-columns img{width:28px;height:28px;border-radius:8px}.rare-panel>small{display:block;margin-top:9px;color:#7f91aa;font-size:9.5px}.owned-chips{display:flex;gap:7px;flex-wrap:wrap}.owned-chips button{display:flex;align-items:center;gap:7px;max-width:260px;border:1px solid var(--line);border-radius:12px;background:#091326;color:#dceaff;padding:7px 9px}.owned-chips img{width:30px;height:30px;border-radius:8px}.owned-chips span{font-size:10px;text-align:left}.deck-page,.data-page{display:grid;gap:13px}.raw-ability-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.raw-ability-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px;background:#091326;font-size:10px;min-width:0}.raw-ability-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.raw-ability-grid>div>b{flex:0 0 auto;white-space:nowrap}.raw-ability-grid b{color:#d9ecff}.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.owned-grid button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#091326;color:#e3efff;padding:9px;text-align:left}.owned-grid img{width:36px;height:36px;border-radius:9px}.owned-grid span,.owned-grid small{display:block}.owned-grid span{font-size:11px}.owned-grid small{font-size:9px;color:#8296b4}.owned-grid.small button{grid-template-columns:32px 1fr auto}.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.diag-grid>div{border:1px solid var(--line);border-radius:12px;padding:10px;background:#091326}.diag-grid small,.diag-grid b{display:block}.diag-grid small{color:#8395b0;font-size:9px}.diag-grid b{font-size:11px;margin-top:4px}.data-page pre{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#050b16;padding:11px;color:#9fb5d0;font-size:10px}.manual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.manual-grid label{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;font-size:10px}.manual-grid input{width:100%;border:1px solid var(--line);border-radius:8px;background:#050b16;color:white;padding:7px}.modal-back{position:fixed;inset:0;z-index:9999;background:rgba(1,4,12,.8);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px}.detail-modal{width:min(900px,96vw);max-height:92vh;overflow:auto;border:1px solid #30486f;border-radius:24px;background:#081121;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.65);position:relative}.modal-x{position:absolute;right:15px;top:15px;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#111d31;color:white;font-size:20px}.detail-modal header{display:flex;gap:12px;align-items:center;padding-right:50px}.detail-modal header img{width:54px;height:54px;border-radius:14px}.detail-modal h2{margin:0;font-size:19px}.detail-modal header p{margin:4px 0 0;color:#8ea4c1;font-size:10px}.detail-hero{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:15px 0}.detail-hero>div,.missing-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px}.detail-hero small,.detail-hero b,.detail-hero span{display:block}.detail-hero small{color:#8296b4;font-size:9px}.detail-hero b{margin:4px 0;font-size:16px}.detail-hero span{font-size:10px;color:#a9bad0}.detail-modal section{margin-top:14px}.detail-modal h3{font-size:12px}.direct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.direct-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:10px;min-width:0}.direct-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.direct-grid>div>b{flex:0 0 auto;white-space:nowrap}.missing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.missing-grid small,.missing-grid b{display:block}.missing-grid small{color:#8296b4;font-size:9px}.missing-grid b{font-size:10px;line-height:1.55;margin-top:5px}.detail-modal details{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px}.detail-modal details p{font-size:10px;color:#9cb0cb}.detail-modal .close{margin-top:14px}.ord-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;border-radius:14px;padding:11px 16px;background:linear-gradient(135deg,var(--violet),var(--blue));box-shadow:var(--shadow);font-weight:900;font-size:12px}
@@ -2838,6 +2838,8 @@ body.ord-overlay-mode .v151-action-foot small{display:none;}
 /* v19.16 — 클리어 조합 실측 표시 */
 .v1916-clear small{opacity:.75;}
 .v1916-clear-audit{margin-top:8px;padding:8px 10px;border-radius:8px;background:rgba(90,140,255,.08);border:1px solid rgba(120,150,220,.25);font-size:12.5px;}
+/* v19.17(A1): 보조 후보의 클리어 실측 파트너 지분 칩 */
+.v1917-partner{display:block;color:#8fd0a8;font-size:11.5px;}
 .v1916-clear-audit small{opacity:.7;display:block;margin-bottom:3px;}
 .v1916-clear-audit p{margin:2px 0;}
 .v1916-clear-audit p.warn{color:#ffc98a;}
@@ -3284,7 +3286,7 @@ window.ORD_CLEAR_STATS={"version":"clear-stats-v1","source":"tmo_nightmare_all_2
 (function(global){
 'use strict';
 
-const VERSION='19.16.0';
+const VERSION='19.17.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -4725,6 +4727,23 @@ function supportTierUse(state,row){
   for(const key of Object.keys(used))used[key]=round2(used[key]);
   return used;
 }
+// v19.17(A2): 전략 필수(mechanic) — 체젠필수·암브필수·보조딜필수 같은
+// 상위 전제 — 는 상위 스킬이 작동하기 위한 선행 조건인데, 정적 경로
+// 그룹에 키가 없다는 이유로 늘 꼬리 그룹에 앉았다(0805 키드: 체젠
+// 0.45/2인 채 단끝 조각부터 승인).  전제 그룹은 화력만으로 이루어진
+// 그룹(단·끝·1.5스턴) 앞에 끼운다 — 생존·제어 뒤, 화력 앞.  생존 키와
+// 섞인 그룹(구제 모드의 stunFull 합류)은 화력 그룹으로 치지 않는다.
+// 정책 groupRows 의 삽입 규칙과 같아야 한다.
+const FIREPOWER_ONLY_KEYS=new Set(['single','end','singleEnd','singleEndExpected','singleEndStable','singleEndMax','stunFull']);
+function insertMechanicPriorityGroup(groups,keys){
+  const covered=new Set((groups||[]).flat()),fresh=(keys||[]).filter(key=>key&&!covered.has(key));
+  if(!fresh.length)return groups;
+  const cut=(groups||[]).findIndex(group=>group.length&&group.every(key=>FIREPOWER_ONLY_KEYS.has(key)));
+  const next=(groups||[]).slice();next.splice(cut<0?next.length:cut,0,fresh);return next;
+}
+function mechanicRequirementKeys(rows){
+  return[...new Set((rows||[]).filter(row=>row&&row.required!==false&&!row.waived&&(row.mechanic===true||row.meta&&row.meta.mechanic===true)).map(row=>row.key))];
+}
 function supportClearStage(row,plan){
   const clearRows=plan&&plan.deficits&&plan.deficits.clearRows||[],impact=row&&row.impact||{},impactRows=impact.rows||[],byKey=new Map(impactRows.map(item=>[item.key,item])),regressed=(impact.regressed||[]).filter(item=>item.required);
   if(regressed.length)return{index:clearRows.length+2,level:2,label:`필수 후퇴 · ${regressed.map(item=>item.label).slice(0,2).join(' · ')}`};
@@ -4734,7 +4753,7 @@ function supportClearStage(row,plan){
   // stage, as are safe slow and boss/frenzy coverage.
   // v19.9.7(0802 교정): 마딜도 물딜과 같이 stunFull 은 마지막 그룹이다 —
   // 순서만 뒤로 갈 뿐 필수 해제는 없다.
-  const mode=plan&&plan.mode,route=plan&&plan.resolvedMagicRoute||plan&&plan.deficits&&plan.deficits.route||plan&&plan.settings&&plan.settings._resolvedMagicRoute||'singleEnd',priority=mode==='physical'?[['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected','single','end'],['stunFull']],missing=new Set(clearRows.map(item=>item.key)),grouped=new Set(),groups=[];
+  const mode=plan&&plan.mode,route=plan&&plan.resolvedMagicRoute||plan&&plan.deficits&&plan.deficits.route||plan&&plan.settings&&plan.settings._resolvedMagicRoute||'singleEnd',basePriority=mode==='physical'?[['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected','single','end'],['stunFull']],priority=insertMechanicPriorityGroup(basePriority,mechanicRequirementKeys(clearRows)),missing=new Set(clearRows.map(item=>item.key)),grouped=new Set(),groups=[];
   for(const keys of priority){const active=keys.filter(key=>missing.has(key));if(active.length){groups.push(active);active.forEach(key=>grouped.add(key));}}
   for(const need of clearRows)if(!grouped.has(need.key))groups.push([need.key]);
   for(let index=0;index<groups.length;index++){
@@ -4750,6 +4769,10 @@ function compareSupportRows(a,b){
   for(const tier of ['rare','special','uncommon','common'])if(num(a.tierUse&&a.tierUse[tier])!==num(b.tierUse&&b.tierUse[tier]))return num(b.tierUse&&b.tierUse[tier])-num(a.tierUse&&a.tierUse[tier]);
   const aw=num(a.solve&&a.solve.wispCost),bw=num(b.solve&&b.solve.wispCost);if(aw!==bw)return aw-bw;
   if(!!a.pairSynergy!==!!b.pairSynergy)return Number(!!b.pairSynergy)-Number(!!a.pairSynergy);if(num(a.coverage)!==num(b.coverage))return num(b.coverage)-num(a.coverage);
+  // v19.17(A1): 클리어 실측 파트너 지분은 마지막 타이브레이크다 — 역할
+  // 수학(가용성·필수 단계·티어·선위·시너지·기여)이 전부 같을 때만
+  // 실전에서 더 자주 함께 클리어한 쪽을 앞세운다.  게이트·목표 불변.
+  if(num(a.metaPartnerShare)!==num(b.metaPartnerShare))return num(b.metaPartnerShare)-num(a.metaPartnerShare);
   return nameOf(a.unit).localeCompare(nameOf(b.unit),'ko');
 }
 // v17.27(사용자 요청): "지금 가진 희귀함으로 만들 수 있는 전설급 유닛".
@@ -4799,7 +4822,7 @@ function rareCraftableLegends(state,options){
   return out;
 }
 function upperProfileData(state,upper,plan,upperMemo,synergyMemo){
-  if(!upper)return null;plan=plan||{};const memo=upperMemoFor(upper,upperMemo),role=roleProfile(upper),facts=skillFacts(upper),strategy=upperStrategy(upper),mode=familyOf(upper)==='neutral'?plan.mode:familyOf(upper),supports=(plan.rows||[]).filter(row=>row&&row.unit&&row.unit.id!==upper.id&&canonicalUpperId(row.unit.id)!==canonicalUpperId(upper.id)&&num(state.counts[row.unit.id])<=0).filter(row=>num(row.coverage)>0||row.pairSynergy).map(row=>Object.assign({},row,{tierUse:supportTierUse(state,row),supportStage:supportClearStage(row,plan)})).sort(compareSupportRows);
+  if(!upper)return null;plan=plan||{};const memo=upperMemoFor(upper,upperMemo),role=roleProfile(upper),facts=skillFacts(upper),strategy=upperStrategy(upper),mode=familyOf(upper)==='neutral'?plan.mode:familyOf(upper),supports=(plan.rows||[]).filter(row=>row&&row.unit&&row.unit.id!==upper.id&&canonicalUpperId(row.unit.id)!==canonicalUpperId(upper.id)&&num(state.counts[row.unit.id])<=0).filter(row=>num(row.coverage)>0||row.pairSynergy).map(row=>Object.assign({},row,{tierUse:supportTierUse(state,row),supportStage:supportClearStage(row,plan),metaPartnerShare:partnerShareFor(upper.id,row.unit)})).sort(compareSupportRows);
   supports.forEach((row,index)=>{row.supportRank=index+1;row.supportStageLabel=row.supportStage.label;});
   return{upper,memo,role,facts,strategy,mode,rankedSupports:supports,now:supports.filter(row=>row.feasible&&row.valueStatus!=='hold').slice(0,3),later:supports.filter(row=>!row.feasible||row.valueStatus==='hold').slice(0,5)};
 }
@@ -4860,9 +4883,18 @@ function clearStatsFor(upperId){
   if(!stats||!stats.byUpper)return null;
   return stats.byUpper[String(canonicalUpperId(upperId))]||null;
 }
+// v19.17(A1): 이 상위의 클리어 실측 파트너 지분(%).  91,833판에서 함께
+// 클리어한 빈도로, 보조 후보 정렬의 후순위 타이브레이크와 표시에만
+// 쓴다 — 게이트·목표는 바꾸지 않는다(위 purpose 경계 동일).
+function partnerShareFor(upperId,unitOrId){
+  const stats=clearStatsFor(upperId);if(!stats)return 0;
+  const id=String(unitOrId&&unitOrId.id||unitOrId||'');if(!id)return 0;
+  const hit=(stats.partners||[]).find(item=>String(item.id)===id);
+  return hit?num(hit.share):0;
+}
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,partnerShareFor,insertMechanicPriorityGroup,mechanicRequirementKeys,debugFixture};
 })(window);
 
 </script>
@@ -4875,7 +4907,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.16.0';
+const VERSION='19.17.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 // v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
 // 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
@@ -5759,7 +5791,11 @@ function requirementPriorityVector(requirements){
   // 때만 스턴을 생존 그룹에 합쳐 다시 찾는 구제 모드를 둔다 — 화면의
   // fillLast(마지막에 반드시 채움) 순서는 그대로고, 탐색만 미리 자금을
   // 댄다.  "마지막"은 순서지 포기가 아니다.
-  groups=SEARCH_STUN_EARLY?(route==='physical'?[['main'],['armor','stunBase','stunFull'],['slow','bossFrenzy']]:route==='dual'?[['main','stunBase','stunFull'],['slow'],['bossFrenzy','toki']]:[['main'],['bossFrenzy','stunBase','stunFull'],['slow'],['singleEndExpected']]):(route==='physical'?[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected'],['stunFull']]),vector=[];
+  baseGroups=SEARCH_STUN_EARLY?(route==='physical'?[['main'],['armor','stunBase','stunFull'],['slow','bossFrenzy']]:route==='dual'?[['main','stunBase','stunFull'],['slow'],['bossFrenzy','toki']]:[['main'],['bossFrenzy','stunBase','stunFull'],['slow'],['singleEndExpected']]):(route==='physical'?[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected'],['stunFull']]),
+  // v19.17(A2): 전략 필수(전제 — 체젠 등)는 이 벡터에 아예 없어서 빔이
+  // 단끝을 먼저 채웠다(0805 키드).  화력만의 그룹 앞에 전제 그룹을 끼운다
+  // — 같은 경로·상위끼리 비교하므로 벡터 정렬은 항상 맞는다.
+  groups=C.insertMechanicPriorityGroup&&C.mechanicRequirementKeys?C.insertMechanicPriorityGroup(baseGroups,C.mechanicRequirementKeys(rows)):baseGroups,vector=[];
   for(const keys of groups){const selected=keys.map(key=>byKey.get(key)).filter(Boolean),missed=selected.filter(row=>num(row.gap)>0).length,debt=selected.reduce((total,row)=>total+num(row.gap)/Math.max(.01,num(row.target)),0);vector.push(missed,round(debt,6));}return vector;
 }
 function comparePriorityVectors(a,b){const left=a||[],right=b||[],length=Math.max(left.length,right.length);for(let index=0;index<length;index++){const av=num(left[index]),bv=num(right[index]);if(av!==bv)return av-bv;}return 0;}
@@ -6541,7 +6577,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.16.0';
+const VERSION='19.17.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -6671,7 +6707,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.16.0';
+const VERSION='19.17.0';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -6751,7 +6787,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.16.0';
+const VERSION='19.17.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.7스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']],priority:'상위 2기·최소 0.7스턴 → 이감 → 광보잡·토키 → 1.5스턴(마지막 필수)'}),
@@ -6827,7 +6863,17 @@ function groupRows(route,role,checkpoint,roundInput){
   // never referenced them — the recorded '단일 1/2' deficit could not be acted
   // on.  Append every uncovered required row as a trailing group.
   const extras=[...map.values()].filter(row=>row&&row.required!==false&&!covered.has(row.key));
-  if(extras.length)groups.push(extras);
+  // v19.17(A2): 전략 필수(mechanic — 체젠·암브·보조딜 등 상위 전제)는
+  // 꼬리가 아니라 화력만으로 이루어진 그룹(단·끝·1.5스턴) 앞에 선다.
+  // 0805 키드 판: 체젠 2 필수가 늘 마지막 그룹이라 단끝 조각부터 승인돼
+  // 체젠 0.45/2로 63라 라인사.  전제는 상위 스킬이 작동하기 위한 선행
+  // 조건이므로 생존·제어 뒤, 화력 앞이 맞다.  ord_core 의
+  // insertMechanicPriorityGroup 과 같은 규칙이다.
+  const isMechanicRow=row=>row&&(row.mechanic===true||row.meta&&row.meta.mechanic===true);
+  const mechanicExtras=extras.filter(isMechanicRow),plainExtras=extras.filter(row=>!isMechanicRow(row));
+  const FIRE_ONLY_KEYS=new Set(['single','end','singleEnd','singleEndExpected','singleEndStable','singleEndMax','stunFull']);
+  if(mechanicExtras.length){const cut=groups.findIndex(rows=>rows.length&&rows.every(row=>FIRE_ONLY_KEYS.has(row&&row.key)));groups.splice(cut<0?groups.length:cut,0,mechanicExtras);}
+  if(plainExtras.length)groups.push(plainExtras);
   // v16.4: two straight losses died at round 60 with 이감 starved while an
   // almost-closed armor group kept outranking it in the static order.  When a
   // non-main group is nearly done (worst relative gap <=10%) it sinks below
@@ -6851,7 +6897,12 @@ function groupRows(route,role,checkpoint,roundInput){
   // lines kill you before the boss does.  The gate is state-level, not
   // pairwise, so the ordering stays a coherent total order inside the search.
   const BOSS_POWER_KEYS=new Set(['single','end','singleEndExpected','attack','toki','stunFull']);
-  const bossPowerOpen=rows=>rows.some(row=>row.required!==false&&!row.waived&&BOSS_POWER_KEYS.has(row.key)&&num(row.gap)>0);
+  // v19.17(A2): 전제(mechanic)는 보스 화력이 성립하기 위한 조건이므로
+  // 50라+ 화력 부양 창에서 화력 그룹과 함께 뜬다 — 정적 순서가 화력
+  // 앞이라, 함께 뜨면 전제가 먼저다.  또한 전제 결손은 생존 위기가
+  // 아니다(생존 위기 판정이 화력 부양을 꺼버리면 전제·화력 둘 다
+  // 꼬리로 밀린다).
+  const bossPowerOpen=rows=>rows.some(row=>row.required!==false&&!row.waived&&(BOSS_POWER_KEYS.has(row.key)||row.mechanic===true||row.meta&&row.meta.mechanic===true)&&num(row.gap)>0);
   const bossWindow=currentRound>=50;
   // v19.9(사용자 교정): 물딜은 방깎이 우선이다 — "최소 스턴 잡고 풀이감을
   // 잡은 뒤에 스턴 1.5를 채우는 거지, 먼저 채우는 건 별로 좋지 않다.
@@ -6945,7 +6996,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='19.16.0';
+const VERSION='19.17.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -7279,7 +7330,12 @@ function protectCriticalBudget(model,route,locks,assessment,rows,counts){
 // wisp distance.  A silent HOLD is never an acceptable answer.
 function recoveryPlan(model,route,locks,assessment,options){
   if(!route||!assessment)return null;
-  const limit=options&&options.limit||4,counts=model.effective.counts,open=(assessment.requirements||[]).filter(row=>num(row.gap)>0&&!row.waived);
+  const limit=options&&options.limit||4,counts=model.effective.counts,open=(assessment.requirements||[]).filter(row=>num(row.gap)>0&&!row.waived)
+    // v19.17(A2): 회복 목표도 정책 그룹 순서(생존→전제→화력→1.5스턴)를
+    // 따른다 — 삽입 순서 그대로면 전략 전제(체젠 등)가 늘 꼬리라, limit 에
+    // 걸리거나 화력 조각 뒤로 밀렸다(0805 키드).  priority 는 policy
+    // evaluate 가 그룹 인덱스로 매긴다.
+    .sort((a,b)=>(num(a.priority)||99)-(num(b.priority)||99));
   if(!open.length)return null;
   const universe=actionUniverse(model,route,locks,assessment,counts),targets=[],seen=new Set();
   for(const req of open){
@@ -7372,8 +7428,11 @@ function supportNodeRank(node){const tier=node.resources.tiers,overlap=node.over
 function compareSupportNodes(left,right){const vector=P.compareVector(left.rankVector,right.rankVector);if(vector)return vector;return(left.steps||[]).map(step=>step.quote.targetId).join('|').localeCompare((right.steps||[]).map(step=>step.quote.targetId).join('|'));}
 function makeSupportNode(model,counts,assessment,steps,warpedCount){const resources=resourceTotals(steps),overlap=lineupOverlap(model,ownedFinals(model,counts)),node={counts,assessment,steps,resources,warpedCount:num(warpedCount),overlap,rankVector:[]};supportNodeRank(node);return node;}
 function supportUniverse(model,route,locks,counts,assessment){
-  const beforeLineup=ownedFinals(model,counts),lock=lockedUpper(locks),staticRows=allCandidates(model,route,locks,counts).map(unit=>{const potential=potentialScore(unit,assessment,route,lock),profile=recipeProfile(model,unit);return{unit,potential,profile};}).filter(row=>row.potential>0).sort((left,right)=>right.potential-left.potential||sum(right.profile.rare)-sum(left.profile.rare)||sum(right.profile.special)-sum(left.profile.special)||num(model.effective.percent[right.unit.id])-num(model.effective.percent[left.unit.id])||nameOf(left.unit).localeCompare(nameOf(right.unit),'ko')).slice(0,SUPPORT_STATIC_PROBE_CAP),rows=[];for(const prepared of staticRows){const unit=prepared.unit,quote=L.quote(model,unit,counts,{availableRound:model.round.value});if(!quote.feasible||introducesLineageConflict(model,beforeLineup,ownedFinals(model,quote.after)))continue;const after=P.evaluate(model,quote.after,route,{round:model.round.value,locks});if(!safeRoleImprovement(assessment,after))continue;const tiers=quote.tiers&&quote.tiers.totals||{},potential=prepared.potential;rows.push({unit,quote,after,potential,tiers,warpedRequired:!!(C.requiresWarpedCraft&&C.requiresWarpedCraft(model.knowledge.db,unit,counts))});}
-  rows.sort((left,right)=>P.compareVector(left.after.fullVector,right.after.fullVector)||right.potential-left.potential||-num(left.tiers.rare)+num(right.tiers.rare)||-num(left.tiers.special)+num(right.tiers.special)||-num(left.tiers.uncommon)+num(right.tiers.uncommon)||-num(left.tiers.common)+num(right.tiers.common)||left.quote.wisp.cost-right.quote.wisp.cost||nameOf(left.unit).localeCompare(nameOf(right.unit),'ko'));return rows.slice(0,SUPPORT_CANDIDATE_CAP);
+  // v19.17(A1): 확정 상위의 클리어 실측 파트너 지분은 후순위 타이브레이크
+  // 전용 — 역할 벡터·잠재 점수가 같을 때만 실전에서 함께 클리어한 쪽을
+  // 앞세운다(예: 키드 ↔ 모비딕호 60.9%).  게이트·목표 불변.
+  const beforeLineup=ownedFinals(model,counts),lock=lockedUpper(locks),partnerShare=unit=>C.partnerShareFor?C.partnerShareFor(lock&&lock.id,unit):0,staticRows=allCandidates(model,route,locks,counts).map(unit=>{const potential=potentialScore(unit,assessment,route,lock),profile=recipeProfile(model,unit);return{unit,potential,profile};}).filter(row=>row.potential>0).sort((left,right)=>right.potential-left.potential||partnerShare(right.unit)-partnerShare(left.unit)||sum(right.profile.rare)-sum(left.profile.rare)||sum(right.profile.special)-sum(left.profile.special)||num(model.effective.percent[right.unit.id])-num(model.effective.percent[left.unit.id])||nameOf(left.unit).localeCompare(nameOf(right.unit),'ko')).slice(0,SUPPORT_STATIC_PROBE_CAP),rows=[];for(const prepared of staticRows){const unit=prepared.unit,quote=L.quote(model,unit,counts,{availableRound:model.round.value});if(!quote.feasible||introducesLineageConflict(model,beforeLineup,ownedFinals(model,quote.after)))continue;const after=P.evaluate(model,quote.after,route,{round:model.round.value,locks});if(!safeRoleImprovement(assessment,after))continue;const tiers=quote.tiers&&quote.tiers.totals||{},potential=prepared.potential;rows.push({unit,quote,after,potential,tiers,warpedRequired:!!(C.requiresWarpedCraft&&C.requiresWarpedCraft(model.knowledge.db,unit,counts))});}
+  rows.sort((left,right)=>P.compareVector(left.after.fullVector,right.after.fullVector)||right.potential-left.potential||partnerShare(right.unit)-partnerShare(left.unit)||-num(left.tiers.rare)+num(right.tiers.rare)||-num(left.tiers.special)+num(right.tiers.special)||-num(left.tiers.uncommon)+num(right.tiers.uncommon)||-num(left.tiers.common)+num(right.tiers.common)||left.quote.wisp.cost-right.quote.wisp.cost||nameOf(left.unit).localeCompare(nameOf(right.unit),'ko'));return rows.slice(0,SUPPORT_CANDIDATE_CAP);
 }
 function projectSupportPrefix(model,row,route){
   // v17.12: 특수재료 게이트 상위의 quote는 크레딧 재시도 값이므로 정확
@@ -7514,7 +7573,10 @@ function plannerState(model){
   return{db:knowledge.db,units:knowledge.units||knowledge.db&&knowledge.db.units||[],counts:clone(effective.counts),rawCounts:clone(effective.rawCounts||effective.counts),currentAbilities:clone(effective.currentAbilities),percent:clone(effective.percent),wisp:num(effective.counts&&effective.counts[C.WISP_ID])};
 }
 function blueprintSupportRows(model,ranking){
-  const plan=ranking&&ranking.plan||{},actionById=new Map(),rows=[],seen=new Set(),memoById=new Map((ranking&&ranking.memoPackage&&ranking.memoPackage.hits||[]).map(item=>[String(item.id),item]));
+  const plan=ranking&&ranking.plan||{},actionById=new Map(),rows=[],seen=new Set(),memoById=new Map((ranking&&ranking.memoPackage&&ranking.memoPackage.hits||[]).map(item=>[String(item.id),item])),
+  // v19.17(A1): 상위별 클리어 실측 파트너 지분 — 메모(전수 근거) 다음의
+  // 타이브레이크로만 쓴다.  표시용으로 행에도 싣는다.
+  rankingUpperId=String(ranking&&(ranking.upperId||ranking.id)||'');
   for(const action of [].concat(plan.safePrefix&&plan.safePrefix.actions||[],plan.actions||[]))if(action&&action.id&&!actionById.has(action.id))actionById.set(action.id,action);
   for(const item of plan.finalLineup||[]){
     // Worker compact rows used to carry `{unit:{id}}`.  That truthy stub won
@@ -7524,9 +7586,9 @@ function blueprintSupportRows(model,ranking){
     const id=String(item&&item.id||item&&item.unit&&item.unit.id||''),unit=model.knowledge.db.byId.get(id)||item&&item.unit;
     if(!unit||!id||C.isUpper(unit)||pseudoUnit(unit)||seen.has(id))continue;
     seen.add(id);const action=actionById.get(id),role=C.summarizeRoles?C.summarizeRoles({role:C.roleProfile(unit)},plan.mode):'',memo=memoById.get(id);
-    rows.push({id,name:nameOf(unit),status:String(item.status||action&&'planned'||'future'),role,wispCost:num(action&&action.wispCost),order:rows.length+1,memoMatched:!!memo,memoRank:num(memo&&memo.rank),memoReason:String(memo&&memo.reason||'')});
+    rows.push({id,name:nameOf(unit),status:String(item.status||action&&'planned'||'future'),role,wispCost:num(action&&action.wispCost),order:rows.length+1,memoMatched:!!memo,memoRank:num(memo&&memo.rank),memoReason:String(memo&&memo.reason||''),partnerShare:C.partnerShareFor?C.partnerShareFor(rankingUpperId,id):0});
   }
-  return rows.sort((left,right)=>Number(right.memoMatched)-Number(left.memoMatched)||(left.memoRank||999)-(right.memoRank||999)||left.order-right.order).slice(0,3).map((row,index)=>Object.assign({},row,{displayOrder:index+1}));
+  return rows.sort((left,right)=>Number(right.memoMatched)-Number(left.memoMatched)||(left.memoRank||999)-(right.memoRank||999)||num(right.partnerShare)-num(left.partnerShare)||left.order-right.order).slice(0,3).map((row,index)=>Object.assign({},row,{displayOrder:index+1}));
 }
 function integratedUpperCompare(left,right){
   const ar=num(left.blueprintEvaluation&&left.blueprintEvaluation.rank),br=num(right.blueprintEvaluation&&right.blueprintEvaluation.rank);
@@ -11550,7 +11612,7 @@ class App{
     }
     const squad=plan.squadPlan||this.v151ComputeParty(state,plan,upper.id);if(squad&&!squad.error)plan.squadPlan=squad;
     const power=C.upperPowerTier?C.upperPowerTier(upper,db):null,requirements=(decision.assessment&&decision.assessment.requirements||[]).filter(row=>row.required!==false&&!row.waived&&C.num(row.gap)>0).slice(0,3),ship=this.v153ShipOpportunity(state,plan),baseSupports=this.v151BuildableLegendRows(state,plan).filter(row=>!ship||String(row.unit.id)!==String(ship.unit.id)),supports=ship?[baseSupports[0],ship,baseSupports[1]].filter(Boolean).slice(0,3):baseSupports.slice(0,3);
-    const supportHtml=supports.map((row,index)=>{const shipRow=ship&&String(row.unit.id)===String(ship.unit.id),reason=shipRow?`${row.memoLabel} · ${row.roleLabel}`:row.squadSupportReason||(row.covers||[]).slice(0,2).join(' · ')||'필수 역할 보강',materials=shipRow?`${row.rareLabel}${row.slackLabel?` · ${row.slackLabel}`:''}${row.tradeoffs&&row.tradeoffs.length?` · 먼저 ${row.tradeoffs.join('·')} 보강`:''}`:'';return`<button class="${shipRow?'ship-opportunity':''}" data-source="${shipRow?'ship-opportunity':'squad-support'}" data-act="detail" data-id="${C.esc(row.unit.id)}"><i>${shipRow?'배':index+1}</i>${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:''}<span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(reason)}</small>${materials?`<small class="materials">${C.esc(materials)}</small>`:''}</span><em>선위 ${C.num(row.solve&&row.solve.wispCost)}</em></button>`;}).join('');
+    const supportHtml=supports.map((row,index)=>{const shipRow=ship&&String(row.unit.id)===String(ship.unit.id),reason=shipRow?`${row.memoLabel} · ${row.roleLabel}`:row.squadSupportReason||(row.covers||[]).slice(0,2).join(' · ')||'필수 역할 보강',materials=shipRow?`${row.rareLabel}${row.slackLabel?` · ${row.slackLabel}`:''}${row.tradeoffs&&row.tradeoffs.length?` · 먼저 ${row.tradeoffs.join('·')} 보강`:''}`:'';return`<button class="${shipRow?'ship-opportunity':''}" data-source="${shipRow?'ship-opportunity':'squad-support'}" data-act="detail" data-id="${C.esc(row.unit.id)}"><i>${shipRow?'배':index+1}</i>${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:''}<span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(reason)}</small>${C.num(row.metaPartnerShare)>0?`<small class="v1917-partner">클리어 실측 파트너 ${C.num(row.metaPartnerShare)}%</small>`:''}${materials?`<small class="materials">${C.esc(materials)}</small>`:''}</span><em>선위 ${C.num(row.solve&&row.solve.wispCost)}</em></button>`;}).join('');
     // v18.4(목업): 최종 파티를 "몇 기 확보했나 / 각 자리가 어느 단계인가"로
     // 보여 준다. 상태는 새로 계산하지 않는다 — 보유(실제 카운트) · 지금(이번
     // 행동) · 다음(후속 후보) · 예정(파티 계획) 순으로 이미 있는 값을 읽는다.

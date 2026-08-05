@@ -28,7 +28,7 @@ function loadEngine(){
     'ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js',
     'ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js',
     'ord_upper_combat_data.js','ord_upper_skill_digest.js',
-    'ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js',
+    'ord_upper_skill_dps.js','ord_meta_stats.js','ord_clear_stats.js','ord_core.js',
     'ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js',
     'ord_v15_policy.js','ord_v15_engine.js'
   ])require(path.join(EXT,file));

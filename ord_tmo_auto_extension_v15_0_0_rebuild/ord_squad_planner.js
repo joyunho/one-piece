@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.16.0';
+const VERSION='19.17.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 // v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
 // 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
@@ -890,7 +890,11 @@ function requirementPriorityVector(requirements){
   // 때만 스턴을 생존 그룹에 합쳐 다시 찾는 구제 모드를 둔다 — 화면의
   // fillLast(마지막에 반드시 채움) 순서는 그대로고, 탐색만 미리 자금을
   // 댄다.  "마지막"은 순서지 포기가 아니다.
-  groups=SEARCH_STUN_EARLY?(route==='physical'?[['main'],['armor','stunBase','stunFull'],['slow','bossFrenzy']]:route==='dual'?[['main','stunBase','stunFull'],['slow'],['bossFrenzy','toki']]:[['main'],['bossFrenzy','stunBase','stunFull'],['slow'],['singleEndExpected']]):(route==='physical'?[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected'],['stunFull']]),vector=[];
+  baseGroups=SEARCH_STUN_EARLY?(route==='physical'?[['main'],['armor','stunBase','stunFull'],['slow','bossFrenzy']]:route==='dual'?[['main','stunBase','stunFull'],['slow'],['bossFrenzy','toki']]:[['main'],['bossFrenzy','stunBase','stunFull'],['slow'],['singleEndExpected']]):(route==='physical'?[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']]:route==='dual'?[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']]:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected'],['stunFull']]),
+  // v19.17(A2): 전략 필수(전제 — 체젠 등)는 이 벡터에 아예 없어서 빔이
+  // 단끝을 먼저 채웠다(0805 키드).  화력만의 그룹 앞에 전제 그룹을 끼운다
+  // — 같은 경로·상위끼리 비교하므로 벡터 정렬은 항상 맞는다.
+  groups=C.insertMechanicPriorityGroup&&C.mechanicRequirementKeys?C.insertMechanicPriorityGroup(baseGroups,C.mechanicRequirementKeys(rows)):baseGroups,vector=[];
   for(const keys of groups){const selected=keys.map(key=>byKey.get(key)).filter(Boolean),missed=selected.filter(row=>num(row.gap)>0).length,debt=selected.reduce((total,row)=>total+num(row.gap)/Math.max(.01,num(row.target)),0);vector.push(missed,round(debt,6));}return vector;
 }
 function comparePriorityVectors(a,b){const left=a||[],right=b||[],length=Math.max(left.length,right.length);for(let index=0;index<length;index++){const av=num(left[index]),bv=num(right[index]);if(av!==bv)return av-bv;}return 0;}
