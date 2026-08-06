@@ -190,9 +190,10 @@ for(const file of ['ord_icons.js','ord_units_data.js','ord_upper_memo.js','ord_s
 const embeddedCss=manual.match(/<style data-source="ord_app\.css">([\s\S]*?)<\/style>/);
 assert(embeddedCss,'manual CSS bundle missing');
 assert.strictEqual(embeddedCss[1].trim(),read('ord_app.css').trim(),'manual bundle contains stale CSS');
-const embeddedCockpitCss=manual.match(/<style data-source="ord_cockpit_v15\.css">([\s\S]*?)<\/style>/);
-assert(embeddedCockpitCss,'manual cockpit CSS bundle missing');
-assert.strictEqual(embeddedCockpitCss[1].trim(),read('ord_cockpit_v15.css').trim(),'manual bundle contains stale cockpit CSS');
+// v20.1: 매뉴얼은 신작 시트(ord_ui_v20.css)를 인라인한다 — cockpit 은퇴.
+const embeddedCockpitCss=manual.match(/<style data-source="ord_ui_v20\.css">([\s\S]*?)<\/style>/);
+assert(embeddedCockpitCss,'manual ui-v20 CSS bundle missing');
+assert.strictEqual(embeddedCockpitCss[1].trim(),read('ord_ui_v20.css').trim(),'manual bundle contains stale ui-v20 CSS');
 
 assert(!fs.existsSync(path.resolve(ext,'..','openai_bridge')),'removed OpenAI bridge directory remains');
 assert(!fs.existsSync(path.resolve(ext,'..','START_OPENAI.bat')),'removed OpenAI launcher remains');

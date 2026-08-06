@@ -19,7 +19,7 @@ const staleOutputs = fs.readdirSync(packageDir)
   .filter((name) => name.startsWith(MANUAL_PREFIX) && name.endsWith(MANUAL_SUFFIX) && name !== outputName)
   .map((name) => path.join(packageDir, name));
 const cssPath = path.join(extensionDir, 'ord_app.css');
-const cockpitCssPath = path.join(extensionDir, 'ord_cockpit_v15.css');
+const cockpitCssPath = path.join(extensionDir, 'ord_ui_v20.css');
 const scriptFiles = [
   'ord_icons.js',
   'ord_units_data.js',
@@ -157,7 +157,7 @@ const html = `<!doctype html>
   <style data-source="ord_app.css">
 ${safeStyle(fs.readFileSync(cssPath, 'utf8'))}
   </style>
-  <style data-source="ord_cockpit_v15.css">
+  <style data-source="ord_ui_v20.css">
 ${safeStyle(fs.readFileSync(cockpitCssPath, 'utf8'))}
   </style>
 </head>

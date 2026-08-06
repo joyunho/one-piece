@@ -119,13 +119,15 @@ check('⑥ 오버레이 미니 패널 — 우상단 축소·게임 클릭 보존
   assert(main.includes('savedBounds')&&main.includes('win.setBounds(savedBounds)'),'원래 창 복원 없음');
   assert(preload.includes('onOverlayMode')&&preload.includes("on('ord-overlay-mode'"),'preload 오버레이 구독 없음');
   assert(bootDesktop.includes("classList.toggle('ord-overlay-mode'"),'부트 컴팩트 클래스 배선 없음');
-  const css=read('ord_cockpit_v15.css');
-  assert(css.includes('body.ord-overlay-mode')&&css.includes('not([data-region="next-action"])'),'컴팩트 CSS 없음');
+  // v20.1: 오버레이 계약은 실제 로드되는 신작 시트(ord_ui_v20.css)가
+  // 진실이다 — 구 cockpit 시트는 페이지에서 은퇴(레거시 보존).
+  const css=read('ord_ui_v20.css');
+  assert(css.includes('body.ord-overlay-mode .v153-spec')&&css.includes('body.ord-overlay-mode .v155-rare-strip'),'컴팩트 CSS 없음');
   // v19.14.2: 오버레이 위치·크기 기억(사용자가 끌면 그대로 유지) + 기본
   // 크기 축소.  조합 명령어 줄(command-line)은 게임 중 필수라 숨기지 않는다.
   assert(main.includes('ord-overlay-bounds.json')&&main.includes('loadOverlayBounds')&&main.includes('saveOverlayBounds'),'오버레이 위치 기억 없음');
   assert(main.includes('const width = 400'),'축소 기본 크기 아님');
-  assert(!css.includes('body.ord-overlay-mode .command-line'),'조합 명령어 줄을 숨기면 안 됨');
+  assert(css.includes('body.ord-overlay-mode .command-line{display:flex}'),'조합 명령어 줄은 오버레이에서도 보여야 함');
   // v19.15.0: 인게임 HUD — 투명·클릭 통과·포커스 불가 창, F8.  미니
   // 패널은 F9 로 이동(HUD 위치 잡기용).  앱 이중 구동 금지: HUD 는
   // 메인 창이 그린 조각을 받아 표시만 한다.
