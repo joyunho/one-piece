@@ -1,9 +1,15 @@
 'use strict';
 
 // v16.9: 사용자 검증 2.305 [C] 맵 데이터 반영 검증.
+// v20.0: 2.310 패치노트(tmo.gg/ko/posts/39095) 반영 — 악몽 오로성 개편.
+//  · 워큐리 몹 방어 10→15 (방깎 목표 190/221→195/226)
+//  · 나스쥬로 보스 1500만→라인몹 1500만 · 워큐리 라인몹 1000만→보스
+//    1500만 (증가 대상 교체 — 코드값은 악몽 공통 1000만 합산 구조)
+//  · 체젠 디버프: 공통 30만→50만 · 새턴 개별 37.5만→30만
+//  보스 기본 HP·방어·타이머는 2.305 파싱값 유지(2.310 재파싱 전).
 //  - 보스 HP·재생·타이머와 "보스 단독 최소 실효 DPS" 재현
 //  - 인게임 수동 업그레이드 가산(미입력 null과 0 구분)
-//  - 이감 102/117 · 방깎 180/211(워큐리 190/221) · 스턴 운용 1.0 상수
+//  - 이감 102/117 · 방깎 180/211(워큐리 195/226) · 스턴 운용 1.0 상수
 //  - 상위 라인 자립도 표(공략 근거, unknown 기본)와 보조딜 요구 배선
 //  - 152킬 = 시작 시 1/32 고정 추첨 모델 · 희귀 리롤 1/41 카피
 
@@ -33,13 +39,15 @@ test('보스 단독 최소 실효 DPS가 검증표를 재현한다',()=>{
   assert.strictEqual(C.bossPreview(30,'saturn').dpsNeed,118750,'30라 에넬');
   assert.strictEqual(C.bossPreview(40,'warcury').dpsNeed,459167,'40라 루치');
   assert.strictEqual(C.bossPreview(50,'nasjuro').dpsNeed,3293333,'50라 센고쿠(오로성 보정은 신세계부터)');
-  assert.strictEqual(C.bossPreview(60,'warcury').dpsNeed,4447656,'60라 빅맘 워큐리');
-  assert.strictEqual(C.bossPreview(60,'nasjuro').dpsNeed,4916406,'60라 빅맘 나스쥬로');
-  assert.strictEqual(C.bossPreview(65,'warcury').dpsNeed,4698516,'65라 카이도 워큐리');
-  assert.strictEqual(C.bossPreview(65,'nasjuro').dpsNeed,5167266,'65라 카이도 나스쥬로');
+  // v20.0(2.310): 워큐리가 보스 증가(+1500만+공통 1000만)로 바뀌어 이제
+  // 워큐리가 나스쥬로보다 보스 DPS 요구가 크다(2.305는 반대였다).
+  assert.strictEqual(C.bossPreview(60,'warcury').dpsNeed,5116406,'60라 빅맘 워큐리(보스 +2500만·체젠 55만)');
+  assert.strictEqual(C.bossPreview(60,'nasjuro').dpsNeed,4647656,'60라 빅맘 나스쥬로(보스 +1000만·체젠 55만)');
+  assert.strictEqual(C.bossPreview(65,'warcury').dpsNeed,5367266,'65라 카이도 워큐리');
+  assert.strictEqual(C.bossPreview(65,'nasjuro').dpsNeed,4898516,'65라 카이도 나스쥬로');
   const sixty=C.bossPreview(60,'saturn');
   assert.strictEqual(sixty.time,32,'신세계 보스는 32초');
-  assert.strictEqual(sixty.regen,725000,'새턴 보스 재생 72.5만/초');
+  assert.strictEqual(sixty.regen,850000,'새턴 보스 재생 85만/초(공통 50만+새턴 30만+기본 5만)');
   assert.strictEqual(C.bossPreview(50,'saturn').time,60,'50라 이전 보스는 60초');
 });
 
@@ -52,9 +60,12 @@ test('보스 미리보기가 직전/동시 라인 웨이브를 구분해 노출�
   assert.strictEqual(fifty.line.hp,34650000,'구세계 라인은 오로성 몹 HP 보정 없음');
   const sixty=C.bossPreview(56,'warcury');
   assert.strictEqual(sixty.line.round,60,'신세계 보스는 동시 라인');
-  assert.strictEqual(sixty.line.hp,124251000+20000000,'워큐리 몹 HP +2000만');
-  assert.strictEqual(sixty.line.armor,180+10,'워큐리 몹 방어 +10');
+  // v20.0(2.310): 워큐리 라인몹 증가가 보스로 옮겨가 몹 HP는 공통 1000만만.
+  assert.strictEqual(sixty.line.hp,124251000+10000000,'워큐리 몹 HP +1000만(공통만)');
+  assert.strictEqual(sixty.line.armor,180+15,'워큐리 몹 방어 +15(2.310 상향)');
   assert.strictEqual(sixty.line.withBoss,true);
+  const nasSixty=C.bossPreview(56,'nasjuro');
+  assert.strictEqual(nasSixty.line.hp,124251000+25000000,'나스쥬로 몹 HP +2500만(개별 1500만+공통 1000만)');
 });
 
 test('구 수동 업그레이드 자유 수치 입력은 더 이상 스펙에 영향을 주지 않는다',()=>{
@@ -70,13 +81,13 @@ test('구 수동 업그레이드 자유 수치 입력은 더 이상 스펙에 �
   assert.strictEqual(C.num(lab.slow),C.num(plain.slow)+10,'labResearch 이감업 +10%p');
 });
 
-test('검증 상수: 이감 102/117 · 방깎 180/211(워큐리 190/221) · 스턴 운용 1.0',()=>{
+test('검증 상수: 이감 102/117 · 방깎 180/211(워큐리 195/226) · 스턴 운용 1.0',()=>{
   assert.strictEqual(C.GOROSEI.none.slowPhysical,102);
   assert.strictEqual(C.GOROSEI.nasjuro.slowPhysical,117,'117은 나스쥬로 이속 +15% 상쇄 조건부 목표');
   assert.strictEqual(C.GOROSEI.none.armorSoft,180);
   assert.strictEqual(C.GOROSEI.none.armorSafe,211,'공개 공략 풀방깎 목표');
-  assert.strictEqual(C.GOROSEI.warcury.armorSoft,190,'워큐리 몹 방어 +10 반영');
-  assert.strictEqual(C.GOROSEI.warcury.armorSafe,221);
+  assert.strictEqual(C.GOROSEI.warcury.armorSoft,195,'워큐리 몹 방어 +15 반영(2.310)');
+  assert.strictEqual(C.GOROSEI.warcury.armorSafe,226);
   assert.strictEqual(C.CONTROL_ENVELOPE.physicalOperationalStun,1,'스턴 운용선 1.0');
   assert.strictEqual(C.CONTROL_ENVELOPE.magicOperationalStun,1);
   // v19.9.8(사용자 실측): "아오키지 원스턴은 불가능 — 적어도 0.7은 잡혀야

@@ -2615,3 +2615,143 @@ body.ord-overlay-mode .v151-action-foot small{display:none;}
 .v1916-clear-audit p{margin:2px 0;}
 .v1916-clear-audit p.warn{color:#ffc98a;}
 .v1916-clear-audit p.ok{color:#9df0c6;}
+
+/* ================================================================
+   v20.0 — 2.310 리뉴얼: Calm Command Deck ("추천하는거랑 UI가 너무
+   맘에 안들어 리뉴얼 진행해줘")
+   진단: 모든 패널이 같은 음량으로 빛났다 — 그라디언트 보더·글로우·
+   도트 격자·보라/파랑/시안/코랄 혼용 속에서 정작 "지금 할 일"의
+   행동 대상이 묻혔다.
+   처방: ① 장식 전면 철거(격자·글로우·그라디언트) — 평평한 카본
+   패널 + 헤어라인.  ② 강조색 1개(파랑)로 통일, 골드는 오직 지금
+   할 일(행동 승인)에만 — 화면에서 금색이 보이면 그게 할 일이다.
+   ③ 상태색은 상태에만(충족 초록·주의 앰버·위험 적색).  ④ 히어로
+   타이포 확대·보조 정보 감량.  기존 수법 그대로 토큰 값 교체 +
+   레이어 append — DOM·클래스 계약 불변. */
+html,body{background-color:#0a0d12}
+body{background:linear-gradient(180deg,#0b0e14 0%,#0a0d12 60%,#090c11 100%)}
+.v153-screen{
+  --v153-bg:#0a0d12;
+  --v153-deep:#090c11;
+  --v153-card:#10141b;
+  --v153-card-2:#141922;
+  --v153-surface-3:#1a212c;
+  --v153-line:rgba(148,163,184,.14);
+  --v153-line-strong:rgba(148,163,184,.28);
+  --v153-text:#e8edf4;
+  --v153-sub:#b9c3d1;
+  --v153-muted:#8494a8;
+  --v153-ocean:#5ab0ff;
+  --v153-ocean-deep:#3d8fe0;
+  --v153-brass:#e8b45a;
+  --v153-violet:#5ab0ff; /* 구 보라 계열을 단일 강조색으로 흡수 */
+  --v153-success:#43cf8f;
+  --v153-warning:#e8a44c;
+  --v153-danger:#f06a6a;
+}
+.v153-screen::before{display:none} /* 도트 격자 철거 */
+/* 패널: 평평한 카본 + 헤어라인.  그라디언트 보더 변수도 중화한다. */
+.v153-panel{
+  --panel-a:#1c2430;
+  --panel-b:#1c2430;
+  border:1px solid var(--v153-line)!important;
+  border-radius:12px;
+  background:var(--v153-card)!important;
+  box-shadow:none!important;
+}
+.v153-status{
+  border:1px solid var(--v153-line);
+  border-radius:12px;
+  background:var(--v153-card);
+  box-shadow:none;
+  backdrop-filter:none;
+}
+.v153-brand-mark{background:#151b24;color:var(--v153-ocean);box-shadow:none;border:1px solid var(--v153-line)}
+.v153-status button,.v153-status select,.v153-panel button,.v153-panel select{border-color:var(--v153-line);border-radius:9px;background:#151b24;color:var(--v153-text)}
+.v153-status button:hover,.v153-panel button:hover{border-color:rgba(90,176,255,.55);background:#1a212c;transform:none}
+.v153-mode{border-color:var(--v153-line);background:#10141b}
+.v153-mode button.on,.v153-status .primary,.v153-panel .primary{background:#2e6cb5;box-shadow:none;color:#fff}
+.v153-round,.v153-pill,.v153-sync,.v153-tools>summary{border-color:var(--v153-line);background:#151b24}
+.v153-pill.violet,.v153-pill.coral{color:var(--v153-sub)}
+.v153-pill.violet .v153-ic,.v153-pill.coral .v153-ic{color:var(--v153-muted)}
+.v153-tools-pop{border-color:var(--v153-line-strong);background:#10141b}
+/* 패널 헤더: 조용한 대문자 톤 — 내용보다 작게. */
+.v153-panel>header h2{font-size:14px;letter-spacing:.01em;color:var(--v153-sub)}
+.v153-panel>header p{color:var(--v153-muted)}
+.v153-panel>header small{color:var(--v153-muted)}
+/* ── 히어로: 화면에서 유일하게 금색을 쓰는 곳 ─────────────── */
+.v155-action-zone{border-color:rgba(232,180,90,.34)!important}
+.v155-action-zone>header h2{color:#f0c680}
+.v151-action-main{gap:12px}
+.v151-action-main>div>b,.v151-action-title{font-size:23px;line-height:1.22;letter-spacing:-.015em}
+.v151-action .v151-state{color:var(--v153-muted)}
+.v151-action .v151-confidence{border:1px solid rgba(232,180,90,.4);border-radius:7px;background:rgba(232,180,90,.09);color:#f0c680}
+.v151-action .primary{background:#b7873c;color:#14100a;font-weight:800}
+.v151-action .primary:hover{background:#caa04e}
+.v151-action .primary.danger{background:#a24d4d;color:#fff}
+.v151-action img{border-radius:10px;border:1px solid rgba(232,180,90,.3)}
+/* 보조 레일(다음 제작)·기타 패널은 감량 — 히어로보다 조용하게. */
+.v155-decision-rail{opacity:.96}
+.v155-subhead h3{font-size:12.5px;color:var(--v153-sub)}
+/* 진행 막대: 얇고 무채색 트랙 + 단일 강조 채움. */
+.v153-panel progress,.v153-panel .bar,.v153-panel [class*="progress"]{accent-color:var(--v153-ocean)}
+/* 상태 배지 정리: 의미 있는 상태만 색을 갖는다. */
+.v153-screen .ok,.v153-screen .충족{color:var(--v153-success)}
+.v153-screen .warn{color:var(--v153-warning)}
+.v153-screen .bad,.v153-screen .gap{color:var(--v153-danger)}
+/* 카드류(희귀→전설·후보): 평면화 + 배지 감량. */
+.v153-craft article,.v153-craft .card,.v15-route-card,.v153-next-candidates button{border:1px solid var(--v153-line);border-radius:10px;background:var(--v153-card-2);box-shadow:none}
+.v15-route-card.recommended{border-color:rgba(90,176,255,.5)}
+.v153-next-candidates button:hover{border-color:rgba(90,176,255,.55)}
+/* 링크·강조 텍스트 단일화 */
+.v153-screen a{color:var(--v153-ocean)}
+/* ── v20.0 표적 철거: v19.5+ 레이어는 var() 대신 hex를 박아 토큰
+   교체가 안 먹혔다(실측 — 화면이 안 바뀐 1차 시도).  보라·글로우를
+   쓰는 셀렉터를 전수 추출해 개별 중화한다. ── */
+.ord-app.v151-shell::before{display:none}
+.v153-brand-mark{background:#151b24;color:#5ab0ff;box-shadow:none;border:1px solid rgba(148,163,184,.14)}
+.v153-craft-cards>button{border-color:rgba(148,163,184,.14);background:#141922;box-shadow:none}
+.v153-craft-cards>button:hover{border-color:rgba(90,176,255,.5)}
+.v153-craft-cards>button.recommended{border-color:rgba(90,176,255,.6);animation:none;box-shadow:none}
+.v153-craft-cards>button>header img,.v153-craft-cards>button>header .v153-ic{border-color:rgba(148,163,184,.2);color:#5ab0ff;box-shadow:none}
+.v153-panel>header::after{background:linear-gradient(90deg,rgba(90,176,255,.4),transparent)}
+.v153-panel>header>small{color:#8494a8;background:#151b24;border-color:rgba(148,163,184,.14);box-shadow:none}
+.v153-role.lead{border-color:rgba(148,163,184,.24);background:rgba(90,176,255,.06)}
+.v154-rare-progress strong{color:#e8edf4}
+.v154-rare-bar>span{background:#3d8fe0;box-shadow:none}
+.v155-subhead>small{color:#8494a8;background:#151b24;border-color:rgba(148,163,184,.14);box-shadow:none}
+.v155-decision-rail .v154-hold{border-color:rgba(148,163,184,.2)}
+.v155-decision-rail .v154-hold>div>span{color:#b9c3d1}
+.v155-party-ghost>i{color:#8494a8;border-color:rgba(148,163,184,.2);background:#141922}
+.v155-playbook .row i{color:#5ab0ff}
+.v158-queue-row img,.v158-queue-row>.v153-ic,.v158-queue-row>.v153-ic-img{border-color:rgba(148,163,184,.2);box-shadow:none;color:#5ab0ff}
+.v158-queue-row:hover{border-color:rgba(90,176,255,.5);background:#1a212c}
+.v153-next .v151-action-main>img{border-color:rgba(232,180,90,.4);box-shadow:none}
+.v153-upper-main{border-color:rgba(148,163,184,.14);background:#141922;box-shadow:none}
+.v153-party-chips>button,.v153-party-slot{border-color:rgba(148,163,184,.14);background:#141922}
+.v153-role.bad>strong,.v153-role.bad>span{color:#f06a6a}
+.v153-role.warn>strong,.v153-role.warn>span{color:#e8a44c}
+.v155-rare-strip>header{border-color:rgba(148,163,184,.14)}
+/* 히어로 골드 승격 최종 확인 사살 — 상태 배지·확신 배지·버튼. */
+.v153-next .v151-action-foot button.primary{background:#b7873c;color:#14100a;box-shadow:none}
+.v153-next .v151-action-foot button.primary:hover{background:#caa04e}
+.v153-next .v151-action-main{border-color:rgba(232,180,90,.3)}
+.v153-next .v151-mats{border-color:rgba(148,163,184,.14)}
+/* ── v20.0 마감 사살: 실행 문서 전수 인벤토리(computed style 검출)로
+   남은 보라 요소를 특이성·!important 로 확정 중화한다.  이전 지층이
+   !important·복합 셀렉터를 쓰므로 마지막 레이어도 같은 무게를 쓴다. */
+.v153-screen .primary,.v153-screen button.primary{background:#2e6cb5!important;box-shadow:none!important;border-color:transparent!important}
+.v153-craft-cards>button.recommended{background:#141922!important}
+.v153-craft-cards>button.recommended.ready{background:#141922!important}
+.v158-uses b{color:#b9c3d1!important;border-color:rgba(148,163,184,.2)!important}
+.v158-uses .v153-ic,.v158-uses .v153-ic-img{color:#5ab0ff!important;border-color:rgba(148,163,184,.2)!important}
+.v153-pick{background:rgba(90,176,255,.14)!important;color:#8fc6ff!important;border-color:rgba(90,176,255,.4)!important}
+.v155-playbook{background:#141922!important;border-color:rgba(148,163,184,.14)!important;box-shadow:none!important}
+.v155-playbook .row i,.v155-playbook i{color:#5ab0ff!important;background:transparent!important;border-color:rgba(148,163,184,.2)!important}
+.v153-screen .chips i,.v153-screen .chips em{color:#b9c3d1!important;border-color:rgba(148,163,184,.2)!important;background:#151b24!important}
+.v153-second-list .presc{color:#8fc6ff!important;border-color:rgba(90,176,255,.35)!important}
+.v153-brand-mark{box-shadow:none!important}
+/* 히어로 골드는 위 blanket 뒤에서 다시 이긴다 — 화면 유일의 금색. */
+.v153-next .v151-action-foot button.primary,.v151-action .primary{background:#b7873c!important;color:#14100a!important}
+.v153-next .v151-action-foot button.primary:hover,.v151-action .primary:hover{background:#caa04e!important}
+.v151-action .primary.danger{background:#a24d4d!important;color:#fff!important}

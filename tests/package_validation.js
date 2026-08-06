@@ -159,7 +159,9 @@ const compactSnapshot={
 const payloadBytes=Buffer.byteLength(JSON.stringify(compactSnapshot));
 assert(payloadBytes<160000,`snapshot payload too large: ${payloadBytes}`);
 
-const manualPath=path.resolve(ext,`../ord_2305_nightmare_helper_v${releaseFileVersion}_manual.html`);
+// v20.0: 2.310 대응 — 매뉴얼 파일명도 맵 버전을 따라간다.
+const manualPath=path.resolve(ext,`../ord_2310_nightmare_helper_v${releaseFileVersion}_manual.html`);
+assert(!fs.readdirSync(path.resolve(ext,'..')).some(name=>/^ord_2305_nightmare_helper_v.*_manual\.html$/.test(name)),'stale 2.305 manual remains after the 2.310 rename');
 assert(fs.existsSync(manualPath),'standalone v15 manual bundle missing');
 assert(!fs.existsSync(path.resolve(ext,'../ord_2305_nightmare_helper_v14_2_0_manual.html')),'stale v14 manual remains in the v15 package');
 assert(!fs.existsSync(path.resolve(ext,'../ord_2305_nightmare_helper_v17_18_0_manual.html')),'stale v17.18 manual remains in the v17.20 package');

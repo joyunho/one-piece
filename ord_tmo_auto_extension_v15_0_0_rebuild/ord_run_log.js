@@ -102,7 +102,7 @@ function createRun(options){
   options=options||{};const startedAt=iso(options.startedAt),limits=normalizedLimits(options.limits),requestedId=String(options.runId||''),runId=/^ord-[a-z0-9-]+$/i.test(requestedId)?requestedId:makeRunId(startedAt,options.nonce);
   return{
     schemaName:SCHEMA_NAME,schemaVersion:SCHEMA_VERSION,runId,startedAt,endedAt:null,status:'active',
-    app:plain(options.app||{}),game:plain(options.game||{version:'2.305',difficulty:'nightmare'}),
+    app:plain(options.app||{}),game:plain(options.game||{version:'2.310',difficulty:'nightmare'}),
     privacy:{scope:'gameplay-only',containsPersonalData:false,policyVersion:1},
     limits:{maxEvents:limits.maxEventsPerRun},droppedEventCount:0,firstRetainedSeq:1,nextSeq:1,events:[]
   };
@@ -294,7 +294,7 @@ const OUTCOME_DEFAULTS=Object.freeze({
   r50_failed:{terminal:true,status:'failed'},r50_killed:{terminal:false,status:'active'},r51_65_failed:{terminal:true,status:'failed'},r65_cleared:{terminal:true,status:'completed'},abandoned:{terminal:true,status:'abandoned'}
 });
 function createRecorder(options){
-  options=options||{};const repository=options.repository||createRepository(options.persistence||options),baseRunOptions={app:plain(options.app||{}),game:plain(options.game||{version:'2.305',difficulty:'nightmare'}),limits:options.limits};let run=null,loading=true,destroyed=false,manualStart=false;
+  options=options||{};const repository=options.repository||createRepository(options.persistence||options),baseRunOptions={app:plain(options.app||{}),game:plain(options.game||{version:'2.310',difficulty:'nightmare'}),limits:options.limits};let run=null,loading=true,destroyed=false,manualStart=false;
   const readyPromise=(async()=>{try{const metas=await repository.listRuns();if(!run&&options.resume!==false){const active=metas.find(item=>item.status==='active');if(active)run=await repository.getRun(active.runId);}}catch(_){/* Logging must never block the helper when browser storage is denied. */}finally{loading=false;}return api;})();
   function ensureAlive(){if(destroyed)throw new Error('ORD run recorder is destroyed');}
   function startRun(runOptions){

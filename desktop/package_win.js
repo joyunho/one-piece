@@ -26,7 +26,7 @@ const {packager} = require('@electron/packager');
     ],
     win32metadata: {
       ProductName: 'ORD 악몽 실전 판단 코치',
-      FileDescription: 'ORD 2.305 악몽 실전 판단 코치 (데스크톱 셸)',
+      FileDescription: 'ORD 2.310 악몽 실전 판단 코치 (데스크톱 셸)',
       CompanyName: 'ORD coach'
     }
   });

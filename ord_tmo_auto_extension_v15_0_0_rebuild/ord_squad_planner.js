@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='19.17.0';
+const VERSION='20.0.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 // v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
 // 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
@@ -561,7 +561,7 @@ function requirementRows(spec,lineup,mode,route,settings,mainUpper){
   if(mode==='magic'&&route==='singleEnd')add('singleEndStable','한 기 누락 후 단일·끝딜 하한',num(spec.singleEndStable),3,34,false,{maximum:num(spec.singleEndMax)});
   if(mode==='magic')add('magicSupport','마딜 증폭·마방깎',num(spec.magicDef)+num(spec.magicAmp)+num(spec.explosionAmp),1,32,false);
   if(mainUpper&&C.upperStrategy){const strategy=C.upperStrategy(mainUpper);for(const need of strategy.needs||[]){if(rows.some(x=>x.key===need.key))continue;add(need.key,need.label,num(spec[need.key]),num(need.target)||1,60,true,{mechanic:true,reason:need.reason});}
-    if(strategy.lineSelf==='support'&&!rows.some(x=>x.key==='subdamage'))add('subdamage','보조·방무딜',num(spec.subdamage),1,60,true,{mechanic:true,reason:'라인딜이 부족한 상위라 보조딜이 필수입니다.'});}
+    if(strategy.lineSelf==='support'&&!rows.some(x=>x.key==='subdamage'))add('subdamage','보조·폭발딜',num(spec.subdamage),1,60,true,{mechanic:true,reason:'라인딜이 부족한 상위라 보조딜이 필수입니다.'});}
   const required=rows.filter(x=>x.required),weight=required.reduce((s,x)=>s+x.weight,0)||1,readiness=Math.round(required.reduce((s,x)=>s+x.weight*Math.min(1,x.current/Math.max(.01,x.target)),0)/weight*100),complete=required.every(x=>x.gap<=0);
   return{rows,deficits:rows.filter(x=>x.gap>0),readiness,complete,control:ctl,route};
 }

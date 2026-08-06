@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='19.17.0';
+const VERSION='20.0.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -78,10 +78,14 @@ const ABILITY_ALIASES={
 //  이감 102 = 풀이감 기준, 117 = 나스쥬로(적 이속 +15%) 상쇄 조건부 목표.
 //  방깎 180 = 실전선, 211 = 공개 공략 풀방깎 목표(워큐리는 몹 방어 +10).
 //  스턴 0.7 = 하드 최소, 1.0 = 운용선, 1.5 = 안정선, 2.0+ = 과투자 주의.
+// v20.0(2.310 패치노트 tmo.gg/ko/posts/39095 판독): 악몽 워큐리 몹 방어
+//  10→15 · 마법방어 10%→15% — 워큐리 방깎 목표 190/221→195/226.
+//  (마법방어 15%는 별도 모델 없음 — 마방깎은 유닛 능력 파싱만.)
+//  나스쥬로 이속 15%는 유지라 이감 117 목표 불변.
 const GOROSEI={
   none:{key:'none',name:'아직 모름',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5},
   nasjuro:{key:'nasjuro',name:'나스쥬로',slowPhysical:117,slowMagic:117,armorSoft:180,armorSafe:211,stun:1.5},
-  warcury:{key:'warcury',name:'워큐리',slowPhysical:102,slowMagic:102,armorSoft:190,armorSafe:221,stun:1.5},
+  warcury:{key:'warcury',name:'워큐리',slowPhysical:102,slowMagic:102,armorSoft:195,armorSafe:226,stun:1.5},
   saturn:{key:'saturn',name:'새턴',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5}
 };
 // v19.9.8(사용자 실측): "아오키지 원스턴은 불가능한듯, 적어도 0.7은 잡혀야
@@ -132,10 +136,16 @@ const BOSS_META={
   },
   // 보스 방어 (2.305 [C] 파싱 확정, 50라 이후만 확보).
   bossArmor:{50:350,55:360,60:372,65:395},
-  goroseiBossHpBonusNewWorld:{warcury:10000000,saturn:10000000,nasjuro:25000000},
-  goroseiBossRegenNewWorld:{base:50000,warcury:350000,nasjuro:350000,saturn:725000},
-  goroseiMobHpBonusNewWorld:{saturn:10000000,nasjuro:10000000,warcury:20000000},
-  goroseiMobArmorBonus:{warcury:10},
+  // v20.0(2.310): 오로성 체력 증가 대상이 서로 교체됐다 — 나스쥬로
+  // 보스 1500만→라인몹 1500만, 워큐리 라인몹 1000만→보스 1500만.
+  // 값은 (개별 + 악몽 공통 1000만) 합산 구조 그대로다(2.305 코드값이
+  // 패치노트 공통·개별 합과 정확히 일치함을 재검증).  체젠은 공통
+  // 30만→50만·새턴 개별 37.5만→30만 — 모든 판에서 체젠 압박 증가:
+  // 워큐리·나스쥬로 5만+50만=55만, 새턴 5만+50만+30만=85만.
+  goroseiBossHpBonusNewWorld:{warcury:25000000,saturn:10000000,nasjuro:10000000},
+  goroseiBossRegenNewWorld:{base:50000,warcury:550000,nasjuro:550000,saturn:850000},
+  goroseiMobHpBonusNewWorld:{saturn:10000000,nasjuro:25000000,warcury:10000000},
+  goroseiMobArmorBonus:{warcury:15},
   goroseiMobSpeedPct:{nasjuro:15},
   timers:{normal:35,boss:60,prepAfter50:70,newWorld:32},
   mobs:{perRound:35,spawnIntervalSec:.5,frenzyFromRound:51,frenzyAtSec:7.5,countLimitBase:70,countLimitFrom41:50},
@@ -403,8 +413,8 @@ const UPPER_PAIR_SYNERGIES=[
 
 const UPPER_STRATEGY_OVERRIDES={
   'I70h':{key:'attack',label:'공증·체젠형 물딜',summary:'저렴한 메인 상위로 빠르게 스토리 보상을 회수하고 방깎·보잡을 이어 붙이는 경로입니다.',needs:[['attack','공증 버프',30],['regen','체젠',1]]},
-  '890H':{key:'subdamage',label:'보조딜 필수 스킬딜형',summary:'자체 스턴·방깎·공증은 있지만 보조딜러가 없으면 라인딜이 빈니다.',needs:[['subdamage','보조·방무딜',1]]},
-  'F50h':{key:'subdamage',label:'유틸 만능형 물딜 · 보조딜 필수',summary:'이감·스턴·방깎을 두루 채우지만 자체 스킬딜이 약해(약한 스킬딜러) 보조·방무딜러가 없으면 라인이 밀립니다. 50라 보스 전에 보조딜을 먼저 확보하세요.',needs:[['subdamage','보조·방무딜',1]]},
+  '890H':{key:'subdamage',label:'보조딜 필수 스킬딜형',summary:'자체 스턴·방깎·공증은 있지만 보조딜러가 없으면 라인딜이 빈니다.',needs:[['subdamage','보조·폭발딜',1]]},
+  'F50h':{key:'subdamage',label:'유틸 만능형 물딜 · 보조딜 필수',summary:'이감·스턴·방깎을 두루 채우지만 자체 스킬딜이 약해(약한 스킬딜러) 보조·폭발딜러가 없으면 라인이 밀립니다. 50라 보스 전에 보조딜을 먼저 확보하세요.',needs:[['subdamage','보조·폭발딜',1]]},
   'Q80h':{key:'armorBreak',label:'암브·넉백 무스턴 물딜',summary:'스턴을 짜지 않고 이감을 상한까지 채워 넉백으로 라인을 관리하는 경로입니다. 스턴 대신 암브·스펙으로 마감합니다.',needs:[['armorBreak','암브 연계',1]],waives:['stunBase','stunFull']},
   'IA0h':{key:'armorBreak',label:'암브형 물딜',summary:'암브가 있어야 제 성능을 내므로 암브 공급 유닛을 먼저 확인합니다.',needs:[['armorBreak','암브 연계',1]]},
   'A90H':{key:'armorBreak',label:'암브 비례 스킬형',summary:'암브 수에 따라 스킬이 강해지며 발동 이감은 상시 이감과 분리해 봐야 합니다.',needs:[['armorBreak','추가 암브',2]]},
@@ -420,7 +430,7 @@ const UPPER_STRATEGY_OVERRIDES={
 // v16.9: 2.305 공개 공략 근거의 상위 라인 자립도.  목록에 없는 상위는
 // unknown으로 남긴다 — 근거 없이 '약'으로 확정하지 않는다(검증 지침).
 //  self    = 라인 자립도가 높음(보조딜 강제 없음)
-//  support = 보강 필요·조건부(다른 라인 보강 요구가 없으면 보조·방무딜 1 요구)
+//  support = 보강 필요·조건부(다른 라인 보강 요구가 없으면 보조·폭발딜 1 요구)
 const UPPER_LINE_PROFILE={
   '490H':{line:'self'},'5B0H':{line:'self'},'V80H':{line:'self'},'Q40h':{line:'self'},
   'H90H':{line:'self'},'unit_1767886116631_3690':{line:'self'},'590H':{line:'self'},
@@ -708,22 +718,22 @@ function strategyConditions(u,role){
 function upperStrategy(u){
   if(!u)return{key:'none',label:'상위 미확정',summary:'메인 상위를 먼저 확정하세요.',needs:[],waives:[],partners:[],conditions:[]};
   const canonical=canonicalUpperId(u.id),role=roleProfile(u),desc=cleanName(u.desc||''),override=UPPER_STRATEGY_OVERRIDES[canonical]||{},needs=(override.needs||[]).map(([key,label,target])=>({key,label,target,reason:`${override.label||'상위'} 핵심 시너지`})),waives=(override.waives||[]).slice();let label=override.label,summary=override.summary;const addNeed=(key,needLabel,target,reason)=>{if(!needs.some(x=>x.key===key))needs.push({key,label:needLabel,target,reason});};
-  if(/보조딜러\s*필수/.test(desc))addNeed('subdamage','보조·방무딜',1,'상위 스킬 설명의 보조딜러 필수 조건');
+  if(/보조딜러\s*필수/.test(desc))addNeed('subdamage','보조·폭발딜',1,'상위 스킬 설명의 보조딜러 필수 조건');
   // v16.9: 공략 근거 라인 자립도 표.  support인데 별도 라인 보강 요구
-  // (예: 드래곤 단일·끝딜)가 없으면 보조·방무딜 1을 요구하고, self는
+  // (예: 드래곤 단일·끝딜)가 없으면 보조·폭발딜 1을 요구하고, self는
   // 설명 추정 규칙보다 우선해 자립으로 확정한다.
   const lineProfile=UPPER_LINE_PROFILE[canonical]||UPPER_LINE_PROFILE[u.id]||null;
-  if(lineProfile&&lineProfile.line==='support'&&lineProfile.covered!=='single-end')addNeed('subdamage','보조·방무딜(라인 보강)',1,'공략 근거: 상위 자체 라인딜 보강 필요');
+  if(lineProfile&&lineProfile.line==='support'&&lineProfile.covered!=='single-end')addNeed('subdamage','보조·폭발딜(라인 보강)',1,'공략 근거: 상위 자체 라인딜 보강 필요');
   // v16.8: 상위 자체 라인딜이 약하다고 명시된 경우(예: 크로커다일 '약한
-  // 스킬딜러') 보조·방무딜을 필수 역할로 요구한다 — 50라 보스 라인 붕괴의
+  // 스킬딜러') 보조·폭발딜을 필수 역할로 요구한다 — 50라 보스 라인 붕괴의
   // 재발 방지 규칙.  공략 근거 self로 확정된 상위에는 적용하지 않는다.
-  if((!lineProfile||lineProfile.line!=='self')&&/약한\s*스킬\s*딜러|약한\s*스킬딜|라인딜?이?\s*(?:약|부족|빈)/.test(desc))addNeed('subdamage','보조·방무딜(라인 보강)',1,'상위 스킬 설명의 약한 라인딜 조건');if(/암브.*필수|필수.*암브/.test(desc))addNeed('armorBreak','암브 연계',1,'상위 스킬 설명의 암브 필수 조건');if(/공속.*(?:필수|챙)/.test(desc))addNeed('speed','공속 보강',20,'상위 스킬 설명의 공속 조건');if(/체젠.*필수/.test(desc))addNeed('regen','체젠 버프',2,'체젠 비례 스킬 조건');if(/공증이 있어야|공증.*필수/.test(desc))addNeed('attack','공증 버프',30,'공증 조건부 스킬');if(/보잡.*필수|보스.*필요/.test(desc))addNeed('boss','보잡',1,'상위 설명의 보잡 필수 조건');
+  if((!lineProfile||lineProfile.line!=='self')&&/약한\s*스킬\s*딜러|약한\s*스킬딜|라인딜?이?\s*(?:약|부족|빈)/.test(desc))addNeed('subdamage','보조·폭발딜(라인 보강)',1,'상위 스킬 설명의 약한 라인딜 조건');if(/암브.*필수|필수.*암브/.test(desc))addNeed('armorBreak','암브 연계',1,'상위 스킬 설명의 암브 필수 조건');if(/공속.*(?:필수|챙)/.test(desc))addNeed('speed','공속 보강',20,'상위 스킬 설명의 공속 조건');if(/체젠.*필수/.test(desc))addNeed('regen','체젠 버프',2,'체젠 비례 스킬 조건');if(/공증이 있어야|공증.*필수/.test(desc))addNeed('attack','공증 버프',30,'공증 조건부 스킬');if(/보잡.*필수|보스.*필요/.test(desc))addNeed('boss','보잡',1,'상위 설명의 보잡 필수 조건');
   if(!label&&role.family==='physical'&&role.armorBreak){label='암브 연계형 물딜';summary='암브 수와 방깎을 함께 올릴 때 효율이 커집니다.';addNeed('armorBreak','암브 연계',1,'암브 계열 상위 조건');}
   if(!label&&role.family==='physical'&&(role.attack||role.speed)){label='버프·범위딜형 물딜';summary=`풀방깎을 먼저 맞추고 ${role.attack?`공증 ${round2(role.attack)}`:''}${role.attack&&role.speed?' · ':''}${role.speed?`공속 ${round2(role.speed)}`:''} 버프를 스플·스킬딜러에 연결합니다.`;}
-  if(!label&&role.family==='physical'){label=role.supportDamage?'보조·방무딜형 물딜':'물리 스킬·범위딜형';summary='풀방깎을 먼저 맞추고 부족한 공속·보잡·이감을 실제 보유 스킬에서 보강합니다.';}
+  if(!label&&role.family==='physical'){label=role.supportDamage?'보조·폭발딜형 물딜':'물리 스킬·범위딜형';summary='풀방깎을 먼저 맞추고 부족한 공속·보잡·이감을 실제 보유 스킬에서 보강합니다.';}
   if(!label&&role.family==='magic'&&(role.single||role.end)){label='단일·끝딜형 마딜';summary='풀이감과 광보잡을 확보한 뒤 단일·끝딜 배치로 라인을 처리합니다.';}
   if(!label&&role.family==='magic'&&(role.magicDef||role.magicAmp||role.explosionAmp)){label='마방깎·증폭 연계형 마딜';summary='마방깎·마뎀증·폭뎀증 종류를 구분해 해당 데미지 유닛과 연결합니다.';}
-  if(!label&&role.family==='magic'){label='라인딜·방무딜형 마딜';summary='두 번째 상위, 마방깎·증폭, 광보잡을 실제 스킬에 맞춰 보강합니다.';}
+  if(!label&&role.family==='magic'){label='라인딜·폭발딜형 마딜';summary='두 번째 상위, 마방깎·증폭, 광보잡을 실제 스킬에 맞춰 보강합니다.';}
   if(!label){label='복합 상위';summary='실제 상시·발동 스킬과 현재 결손의 순증으로 파트너를 고릅니다.';}
   const partners=UPPER_PAIR_SYNERGIES.filter(x=>canonicalUpperId(x.a)===canonical||canonicalUpperId(x.b)===canonical).map(x=>({unitId:canonicalUpperId(x.a)===canonical?x.b:x.a,label:x.label,reason:x.reason})),conditions=strategyConditions(u,role);
   return{key:override.key||'generic',label,summary,needs,waives,partners,conditions,description:desc,attackPenalty:role.attackPenalty,lineSelf:lineProfile?lineProfile.line:needs.some(x=>x.key==='subdamage')?'support':'unknown',lineNote:lineProfile&&lineProfile.note||''};
@@ -732,7 +742,7 @@ function upperStrategy(u){
 function skillFacts(u){
   const r=roleProfile(u),always=[],trigger=[],research=[],researchVariants=[],penalties=[],mechanics=[],stunMeta=stunResearch(u),measuredStun=!!stunMeta,push=(list,key,label,value)=>{if(value===true||num(value)>0)list.push({key,label,value:value===true?1:round3(value)});},penalty=(key,label,value)=>{if(num(value)<0)penalties.push({key,label,value:round3(value)});};
   if(stunMeta)research.push({key:'stun',label:stunMeta.active?'조건부 연구표 유효 스턴':'연구표 유효 스턴',value:stunMeta.displayStun,capture:stunMeta.capture,activeCondition:stunMeta.active?stunMeta.condition:''});else push(always,'stun','유효 스턴',r.stun);if(stunMeta&&stunMeta.variant)researchVariants.push({key:'stun',label:stunMeta.variant.label,value:stunMeta.variant.displayStun,capture:stunMeta.variant.capture,active:stunMeta.active});push(always,'slow','상시 이감',r.slow);penalty('slow','이감 페널티',r.slow);push(trigger,'triggerSlow','발동 이감',r.triggerSlow);penalty('triggerSlow','발동 이감 페널티',r.triggerSlow);push(always,'singleSlow','단일 이감',r.singleSlow);push(always,'armor','상시 방깎',r.armor);penalty('armor','방깎 페널티',r.armor);push(trigger,'triggerArmor','발동 방깎',r.triggerArmor);penalty('triggerArmor','발동 방깎 페널티',r.triggerArmor);push(always,'singleArmor','단일 방깎',r.singleArmor);push(always,'stackArmor','중첩 방깎',r.stackArmor);push(always,'magicDef','마방깎',r.magicDef);push(always,'magicAmp','마뎀증',r.magicAmp);push(always,'explosionAmp','폭뎀증',r.explosionAmp);push(always,'attack','공증',r.attack);if(r.attackPenalty)penalties.push({key:'attackPenalty',label:'아군 공증 페널티',value:-round2(r.attackPenalty)});push(trigger,'triggerAttack','발동 공증',r.triggerAttack);push(always,'speed','공속',r.speed);push(always,'regen','체젠',r.regen);push(always,'mana','마젠',r.mana);push(always,'single','단일',r.single);push(always,'end','끝딜',r.end);
-  if(r.armorBreak)mechanics.push({key:'armorBreak',label:'아머브레이크'});if(r.boss&&r.frenzy)mechanics.push({key:'bossFrenzy',label:'광보잡'});else if(r.boss)mechanics.push({key:'boss',label:'보잡'});else if(r.frenzy)mechanics.push({key:'frenzy',label:'광폭 처리'});if(r.percent)mechanics.push({key:'percent',label:'범위 퍼센트 딜'});if(r.supportDamage)mechanics.push({key:'supportDamage',label:'보조·방무딜'});if(r.deletion)mechanics.push({key:'deletion',label:'유닛 삭제'});
+  if(r.armorBreak)mechanics.push({key:'armorBreak',label:'아머브레이크'});if(r.boss&&r.frenzy)mechanics.push({key:'bossFrenzy',label:'광보잡'});else if(r.boss)mechanics.push({key:'boss',label:'보잡'});else if(r.frenzy)mechanics.push({key:'frenzy',label:'광폭 처리'});if(r.percent)mechanics.push({key:'percent',label:'범위 퍼센트 딜'});if(r.supportDamage)mechanics.push({key:'supportDamage',label:'보조·폭발딜'});if(r.deletion)mechanics.push({key:'deletion',label:'유닛 삭제'});
   return{always,trigger,research,researchVariants,penalties,mechanics,measuredStun,source:'2.305 abilities + 유효 스턴 연구표'};
 }
 

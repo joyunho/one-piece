@@ -27,7 +27,30 @@ const liveIdentity={
 const abilityPatches={
   '4B0H':{abilities:{'이동속도 감소':35},renameFrom:/이감33/,renameTo:'이감35'}
 };
-if(Array.isArray(global.ORD_TMO_UNITS)){const ids=new Set(global.ORD_TMO_UNITS.map(u=>u.id));for(const row of missingRows)if(!ids.has(row.id))global.ORD_TMO_UNITS.push(row);for(const unit of global.ORD_TMO_UNITS){const patch=liveIdentity[unit.id];if(patch)Object.assign(unit,patch);const abilityPatch=abilityPatches[unit.id];if(abilityPatch){unit.abilities=Object.assign({},unit.abilities||{},abilityPatch.abilities);if(abilityPatch.renameFrom&&abilityPatch.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(abilityPatch.renameFrom,abilityPatch.renameTo);}const extraCodes=codeAliases[unit.id];if(extraCodes){unit.codes=Array.isArray(unit.codes)?unit.codes:[];for(const code of extraCodes)if(!unit.codes.includes(code))unit.codes.push(code);}}}
+// v20.0(2.310 패치노트 tmo.gg/ko/posts/39095 판독): 오프라인 카탈로그는
+// 2.305 덤프다 — 게시된 리뉴얼 중 역할 원장·표시에 닿는 항목만 손패치한다.
+//  · 개별 유닛 버프/너프 목록은 게시글 기준 "-- 준비중 --" — 공개되면 후속.
+//  · 가이몬(신규 특수함 — 보물 랜덤위습→선택위습)은 id/코드 미상 — TMO
+//    카탈로그 갱신 전까지 미해석 코드 경로(unknownCodes)로만 관측된다.
+//  · 방어무시 타입 전면 삭제(→폭발형)와 루치·시류·도플라밍고(변화)의
+//    일반 마법 전환은 스킬 DPS 원자료(2305C JASS) 재파싱이 필요해 수치는
+//    유지한다 — 역할 원장은 능력치 파싱이라 영향 없음.
+const patch2310={
+  // (변화)베이비5 — 암브 기반 물딜 유틸로 리뉴얼: 무기무기열매가 범위 1
+  // 아머브레이크(최대 75중첩) 부여 + 과열(대상 아군 공속 150% 12초).
+  'N70h':{abilities:{'아머브레이크':1},desc:'2.310 리뉴얼: 암브 기반 물딜 유틸 — 무기무기열매 범위 1 아머브레이크(최대 75중첩) · 과열 가속(대상 아군 공속 150%, 12초, 쿨 50초).'},
+  // (불멸)스코퍼 가반 — 스킬 전면 리뉴얼.  조합 유닛 구성(레이쥬+조로+
+  // 샹크스)은 2.305와 동일하고 목재 10이 추가됐다 — 목재는 2.310 신규
+  // 자원이라 코치 선위 원장 밖(게임에서 확인).
+  'F40h':{desc:'2.310 리뉴얼: 산먹깨비(공격시 45% 단일 100만×1~3 물리 + 3초 스턴, 20회마다 부천락 추가발동) · 부천락(타입별 전체체력 비례 고정딜 — 라인/광폭 55%·보스 15%·스토리 10%) · 견문색 패기(공격력 25%↑, 기본공격 방깎 60·보스 70) · 참격(단일 875만×1~1.5 물리 + 라인 전체체력 20%). 특성강화 팔십효사. 조합에 목재 10 추가(목재는 게임 내 자원 — 코치 계산 밖).'},
+  // 특수함 개편(등장 3%→1%, 성능 상향):
+  'unit_1767884457709_1523':{abilities:{'보스 잡기':true,'광폭화':true},renameFrom:/탐색/,renameTo:'광보잡, 라인딜',desc:'2.310 개편: 탐색 삭제 → 도끼손(기본공격 11% 8배 크리 + 단일 0.8초 스턴, 11% 타입별 추가 고정딜 — 라인/스토리 2만·보스 현재체력 0.9%·광폭 전체체력 4.5%) — 신세계 이후 딜러.'},
+  'unit_1767884591387_9300':{renameFrom:/배2개제작/,renameTo:'모든 배 건조',desc:'2.310 개편: 초 일류 조선공(Z) — 조합식 선박 유닛에게 사용시 목재로 즉시 건조(해적선 2 · 발라티에/모비딕호 10 · 방주맥심/사운드써니호 15 · 레드포스호 20).'},
+  'unit_1767884647613_2996':{abilities:{'공격력 증가':40},renameFrom:/공증버프/,renameTo:'공증버프40',desc:'2.310: 오라 공증 60% → 40% 하향.'},
+  'unit_1767884539590_2352':{desc:'2.310 개편: 격려격려 열매::고무(Q) — 선택 아군 체력·마나 3초간 90 회복(쿨 100초) — 극대화 버퍼.'},
+  'unit_1767884779838_643':{desc:'2.310: 공격 기능 추가.'}
+};
+if(Array.isArray(global.ORD_TMO_UNITS)){const ids=new Set(global.ORD_TMO_UNITS.map(u=>u.id));for(const row of missingRows)if(!ids.has(row.id))global.ORD_TMO_UNITS.push(row);for(const unit of global.ORD_TMO_UNITS){const patch=liveIdentity[unit.id];if(patch)Object.assign(unit,patch);const abilityPatch=abilityPatches[unit.id];if(abilityPatch){unit.abilities=Object.assign({},unit.abilities||{},abilityPatch.abilities);if(abilityPatch.renameFrom&&abilityPatch.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(abilityPatch.renameFrom,abilityPatch.renameTo);}const p2310=patch2310[unit.id];if(p2310){if(p2310.abilities)unit.abilities=Object.assign({},unit.abilities||{},p2310.abilities);if(p2310.renameFrom&&p2310.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(p2310.renameFrom,p2310.renameTo);if(p2310.desc)unit.desc=(String(unit.desc||'').trim()?String(unit.desc)+'\n':'')+p2310.desc;}const extraCodes=codeAliases[unit.id];if(extraCodes){unit.codes=Array.isArray(unit.codes)?unit.codes:[];for(const code of extraCodes)if(!unit.codes.includes(code))unit.codes.push(code);}}}
 const synergy=global.ORD_SYNERGY_MEMO;if(synergy&&synergy.byUnitId){synergy.byUnitId['unit_1767886180546_6011']=31;synergy.byUnitId.KB0H_=34;}
 function patchMemo(memo){
   for(const entry of memo&&memo.entries||[])for(const support of entry.supports||[]){const ids=support.unitIds||[],name=String(support.name||'');

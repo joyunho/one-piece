@@ -6,11 +6,11 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='19.17.0';
+const VERSION='20.0.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.7스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']],priority:'상위 2기·최소 0.7스턴 → 이감 → 광보잡·토키 → 1.5스턴(마지막 필수)'}),
-  singleEnd:Object.freeze({key:'singleEnd',mode:'magic',label:'마딜 1상위·단끝',groups:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected','single','end'],['stunFull']],priority:'상위 → 광보잡·최소 0.7스턴 → 이감 → 안정 단·끝 → 1.5스턴(마지막 필수)'})
+  singleEnd:Object.freeze({key:'singleEnd',mode:'magic',label:'마딜 1상위·단끝',groups:[['main'],['bossFrenzy','stunBase'],['slow'],['singleEndExpected','single','end'],['stunFull']],priority:'상위 → 광보잡·최소 0.7스턴 → 이감 → 상위 전제(체젠 등 필수 시) → 안정 단·끝 → 1.5스턴(마지막 필수)'})
 });
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}

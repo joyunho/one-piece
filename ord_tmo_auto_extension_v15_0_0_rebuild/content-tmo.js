@@ -11,7 +11,7 @@
     return;
   }
 
-  const VERSION = '19.17.0';
+  const VERSION = '20.0.0';
   const PARSER = 'ord-tmo-parser-v13-adapter';
   const SESSION = `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 9)}`;
   const HELPER_ADAPTERS = Object.freeze({
@@ -49,8 +49,11 @@
     {id: 'unit_1761061102389_3', name: '센토 이스즈 (바제스)', groupName: '랜덤유닛', re: /^센토\s*이스즈\s*\(바제스\)$/},
     {id: 'unit_1761061295036_310', name: '옌', groupName: '랜덤유닛', re: /^옌$/},
     {id: 'unit_1761061550524_6203', name: '카미조 토우마(단일스턴/코비용기의외침)', groupName: '랜덤유닛', re: /^카미조\s*토우마\s*\(단일스턴\s*\/\s*코비용기의외침\)$/},
-    {id: 'unit_1767884457709_1523', name: '모건 (탐색)', groupName: '특수함', re: /^모건.*탐색/},
-    {id: 'unit_1767884591387_9300', name: '아이스버그 (배2개제작)', groupName: '특수함', re: /^아이스버그.*배\s*2개\s*제작/},
+    // v20.0(2.310): 특수함 개편으로 TMO 별명 괄호가 바뀐다(모건 탐색→
+    // 광보잡·아이스버그 배2개→모든 배).  이름 머리로만 조인한다 —
+    // '모건'/'아이스버그'로 시작하는 특수함은 이 둘뿐이다.
+    {id: 'unit_1767884457709_1523', name: '모건 (광보잡, 라인딜)', groupName: '특수함', re: /^모건/},
+    {id: 'unit_1767884591387_9300', name: '아이스버그 (모든 배 건조)', groupName: '특수함', re: /^아이스버그/},
     {id: 'unit_1767884614234_8036', name: '오타마 (희귀함이하구매)', groupName: '특수함', re: /^오타마.*희귀함\s*이하\s*구매/}
   ];
   const SPECIAL_ROW_IDS = new Set(SPECIAL_ROWS.map(row => row.id));
@@ -884,7 +887,7 @@
     style.textContent = ':host{all:initial;position:fixed;right:14px;bottom:14px;z-index:2147483647;font-family:system-ui,sans-serif}.card{width:310px;padding:11px;border:1px solid #33476a;border-radius:15px;background:rgba(5,10,23,.94);color:#eaf3ff;box-shadow:0 18px 55px rgba(0,0,0,.45)}.top{display:flex;justify-content:space-between;align-items:center}.title{font-size:13px;font-weight:900}.dot{width:9px;height:9px;border-radius:50%;background:#f3b84b}.dot.ok{background:#27d17f;box-shadow:0 0 12px #27d17f}.meta{margin-top:5px;color:#8fa2bd;font-size:10px;line-height:1.45}.btn{margin-top:8px;width:100%;border:0;border-radius:10px;padding:8px;background:linear-gradient(135deg,#7b5fff,#25bfe6);color:white;font-weight:900;cursor:pointer}';
     const card = document.createElement('div');
     card.className = 'card';
-    card.innerHTML = '<div class="top"><span class="title">ORD 실전 판단 코치 v19.17.0</span><span class="dot"></span></div><div class="meta">수집 대기 중 · TMO.GG 데스크톱 프로그램을 먼저 실행하세요</div><button class="btn">실전 코치 열기</button>';
+    card.innerHTML = '<div class="top"><span class="title">ORD 실전 판단 코치 v20.0.0</span><span class="dot"></span></div><div class="meta">수집 대기 중 · TMO.GG 데스크톱 프로그램을 먼저 실행하세요</div><button class="btn">실전 코치 열기</button>';
     card.querySelector('.btn').onclick = () => send({type: 'ORD_OPEN_DASHBOARD'});
     shadow.append(style, card);
     document.documentElement.appendChild(host);
