@@ -8,7 +8,7 @@ const path = require('path');
 
 const ext = path.join(__dirname, '../ord_tmo_auto_extension_v15_0_0_rebuild');
 const app = fs.readFileSync(path.join(ext, 'ord_app.js'), 'utf8');
-const css = fs.readFileSync(path.join(ext, 'ord_cockpit_v15.css'), 'utf8');
+const css = fs.readFileSync(path.join(ext, 'ord_ui_v20.css'), 'utf8');
 const slice = (start, end) => app.slice(app.indexOf(start), app.indexOf(end));
 
 const tests = [];
@@ -107,11 +107,13 @@ test('설정·기록·진단은 상태 스트립의 기본 접힘 도구함에 �
 test('대형 타이포와 반응형 12열 그리드를 사용한다', () => {
   assert(css.includes('.v153-screen{'));
   assert(css.includes('font-size:16px'));
+  // v20.2: 신작 시트(ord_ui_v20.css) 기준으로 갱신 — 큰 타이포와 반응형은
+  // 유지하되 수치·셀렉터는 현재 화면의 것이다(12열 그리드 → 3칼럼 콘솔).
   assert(css.includes('.v153-panel>header h2'));
-  assert(css.includes('font-size:22px'));
-  assert(css.includes('.v153-next .v151-action-title{font-size:28px'));
-  assert(css.includes('.v153-grid{display:grid;grid-template-columns:repeat(12,minmax(0,1fr))'));
-  assert(css.includes('@media(max-width:760px)'));
+  assert(/\.v151-action-main b\{display:block;font-size:(2[5-9]|[3-9]\d)px/.test(css),'히어로 유닛명 대형 타이포 없음');
+  assert(css.includes('.v151-action-title{font-size:24px'));
+  assert(css.includes('.v155-dashboard{')&&css.includes('grid-template-areas'),'대시보드 그리드 계약 없음');
+  assert(css.includes('@media (max-width:700px)'),'모바일 반응형 티어 없음');
 });
 
 for (const [name, fn] of tests) {

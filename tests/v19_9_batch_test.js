@@ -18,7 +18,7 @@
 const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
 const ROOT=path.join(__dirname,'..','ord_tmo_auto_extension_v15_0_0_rebuild');
 const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const app=read('ord_app.js'),css=read('ord_cockpit_v15.css');
+const app=read('ord_app.js'),css=read('ord_ui_v20.css');
 let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS ',name);};
 
 // 런타임 컨텍스트는 한 번만 만든다(전체 카탈로그 로드가 무겁다).
@@ -77,11 +77,15 @@ check('① 물딜 1.5스턴 — 항상 필수 + 마지막 순서(fillLast), 마�
 
 check('② 제작 카드 — TMO% · 직접 조합식 · 노리기 카드 % 숨김',()=>{
   const craft=app.slice(app.indexOf('renderV153CraftableLegends(state,plan){'),app.indexOf('renderV153UnusedRare(state,plan){'));
-  assert(craft.includes('completionPercent(state,row.unit)'),'큰 %가 TMO 완성도가 아니다');
+  // v20.2: 큰 %는 여전히 "희귀 보유 비율"이 아니라 완성도다 — 다만 출처가
+  // 하나 늘었다.  TMO 보강이 있으면 TMO 값, 없으면(데스크톱 셸 상시) 코치가
+  // 원장으로 잰 값.  v202Completion 이 그 갈림을 한 곳에서 판정하므로
+  // 계약도 그 헬퍼를 가리킨다(직접 completionPercent 호출은 폐기).
+  assert(craft.includes('this.v202Completion(state,row.unit)'),'큰 %가 완성도 헬퍼를 안 씀');
   assert(craft.includes('v159-recipe'),'직접 조합식 라인이 없다');
   assert(craft.includes('solve.direct'),'조합식이 direct stuffs 기반이 아니다');
-  assert(craft.includes("row.upcoming?'':"),'노리기 카드에서 %를 숨기지 않는다(겹침 재발)');
-  assert(craft.includes('TMO 완성도'),'푸터 TMO 라벨이 없다');
+  assert(craft.includes('row.upcoming||'),'노리기 카드에서 %를 숨기지 않는다(겹침 재발)');
+  assert(craft.includes('done.label'),'푸터에 완성도 출처 라벨이 없다');
   assert(css.includes('.v159-recipe'),'조합식 스타일이 없다');
 });
 

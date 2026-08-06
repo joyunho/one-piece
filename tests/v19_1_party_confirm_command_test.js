@@ -22,7 +22,7 @@ const path = require('path');
 const ROOT = path.join(__dirname, '..');
 const EXT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild');
 const APP = fs.readFileSync(path.join(EXT, 'ord_app.js'), 'utf8');
-const CSS = fs.readFileSync(path.join(EXT, 'ord_cockpit_v15.css'), 'utf8');
+const CSS = fs.readFileSync(path.join(EXT, 'ord_ui_v20.css'), 'utf8');
 const APP_CSS = fs.readFileSync(path.join(EXT, 'ord_app.css'), 'utf8');
 
 const tests = [];
@@ -103,8 +103,13 @@ test('재료 그리드 카드가 이름을 옆 카드로 흘리지 않는다', (
 
 test('파티 확정 CSS가 6패널 화면 계약을 위해 압축 규칙도 갖는다', () => {
   assert(/\.v153-party-lock\{/.test(CSS), '파티 확정 줄 스타일이 없음');
+  // v20.2: 지켜야 하는 것은 "낮은 높이에서도 한 화면"이지 특정 셀렉터의
+  // 압축이 아니다.  구 시트는 줄마다 여백을 깎았고, 신작 시트(v20.1)는
+  // 셸 전체를 zoom 으로 축소하는 방식으로 바꿨다 — 파티 확정 줄도 그
+  // 축소에 함께 실린다.  계약을 현재 방식으로 갱신한다.
   const tight = slice(CSS, '@media (max-height:1000px) and (min-width:1240px){', '\n}');
-  assert(tight.includes('.v153-party-lock'), '낮은 높이에서 파티 확정 줄을 압축하지 않음 — 6패널 한 화면 계약을 깰 수 있다');
+  assert(/zoom:\.[89]/.test(tight), '낮은 높이 압축 티어가 사라짐 — 한 화면 계약을 깰 수 있다');
+  assert(CSS.includes('@media (max-height:820px) and (min-width:1240px){'), '더 낮은 높이 티어가 사라짐');
 });
 
 for (const [name, fn] of tests) {

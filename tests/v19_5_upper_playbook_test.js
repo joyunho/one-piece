@@ -66,7 +66,7 @@ check('③⑤ 화면 배선 — 확정 설명 카드와 2상위 처방·희귀 �
   assert(app.includes('파티가 채울 것'),'부족 핵심 라벨 없음');
   assert(app.includes("label:'처방 추천'"),'2상위 처방 후보 주입 없음');
   assert(app.includes('메인과 희귀 겹침'),'희귀 겹침 표시 없음');
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   assert(css.includes('.v155-playbook .row')&&css.includes('v157-direction'),'방향 카드 스타일 없음');
 });
 
@@ -95,7 +95,7 @@ check('상위가 보이는 화면 5곳에 붙는다',()=>{
   // 상세 모달: 전용 섹션.
   assert(app.includes('playbook-detail'),'상세 모달 플레이북 섹션이 없음');
   // CSS 가 실제로 존재한다.
-  const css=read('ord_cockpit_v15.css');
+  const css=read('ord_ui_v20.css');
   assert(css.includes('.v155-playbook')&&css.includes('.playbook-detail'),'플레이북 스타일이 없음');
 });
 

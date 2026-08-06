@@ -79,16 +79,26 @@ check('④ 브랜딩 2.310 — 사용자 노출만, 데이터 출처는 2.305 �
   assert(read('ord_core.js').includes("source:'2.305 abilities"),'능력치 출처 표기 소실');
 });
 
-check('⑤ 리뉴얼 레이어 — Calm Command Deck 마커·히어로 골드·보라 중화',()=>{
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
-  const layer=css.slice(css.indexOf('Calm Command Deck'));
-  assert(layer.length>1000,'리뉴얼 레이어 없음');
-  assert(layer.includes('.v153-screen::before{display:none}'),'도트 격자 철거 없음');
-  // 화면 유일의 금색 = 지금 할 일 승인 버튼.
-  assert(layer.includes('.v151-action .primary{background:#b7873c'),'히어로 골드 없음');
-  // 잔존 보라의 실측 중화(computed-style 인벤토리로 특정한 셀렉터들).
-  for(const sel of ['.v154-rare-progress strong{color:#e8edf4}','.v153-craft-cards>button.recommended{background:#141922!important}','.v153-screen .primary,.v153-screen button.primary{background:#2e6cb5!important'])
-    assert(layer.includes(sel),`중화 규칙 소실: ${sel}`);
+check('⑤ 위계 계약 — 골드는 지금 할 일 전용 · 장식 없음',()=>{
+  // v20.2: v20.0.0 의 리뉴얼은 구 시트(cockpit) 위 오버라이드 레이어였고
+  // v20.1.0 의 완전 신작 시트로 대체됐다.  그 레이어 마커를 계속 찾는
+  // 대신, 두 세대가 공유하는 **설계 불변식**을 현재 시트에서 잰다:
+  //  ① 화면에서 금색은 "지금 할 일" 한 곳뿐(행동 승인 = 금색)
+  //  ② 장식 금지(도트 격자·글로우 없음)
+  //  ③ 상태색은 상태에만
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
+  // 신작 시트는 장식을 "끄는" 게 아니라 애초에 만들지 않는다.
+  assert(!/radial-gradient/.test(css),'배경 장식(방사 그라디언트) 잔존');
+  assert(!/\.v153-screen::before\s*\{(?![^}]*display:none)/.test(css),'화면 장식 의사요소 잔존');
+  assert(/--gold:#[0-9a-f]{6}/.test(css),'골드 토큰 없음');
+  assert(css.includes('.v155-action-zone{border-left-color:var(--gold)}'),'지금 할 일 패널 금색 마커 없음');
+  assert(/\.v151-action-foot \.primary\{[^}]*var\(--gold\)/.test(css),'승인 버튼 골드 없음');
+  // 골드가 지금 할 일 밖으로 새지 않는다 — 다른 패널 마커는 골드가 아니다.
+  for(const sel of ['.v153-spec{border-left-color:','.v153-craft{border-left-color:','.v153-upper{border-left-color:']){
+    const at=css.indexOf(sel);assert(at>0,`패널 마커 없음: ${sel}`);
+    assert(!css.slice(at,at+80).includes('--gold'),`골드가 지금 할 일 밖으로 샘: ${sel}`);
+  }
+  for(const token of ['--ok:','--warn:','--bad:'])assert(css.includes(token),`상태색 토큰 없음: ${token}`);
   // 정책 우선순위 문구에 전제 명시.
   assert(read('ord_v15_policy.js').includes('상위 전제(체젠 등 필수 시)'),'정책 문구 전제 없음');
 });

@@ -115,7 +115,7 @@ check('⑤ 배선 — 엔진 타이브레이크 위치·블루프린트·회복 
   // 앱: 다음 보조 fold 칩.
   const appSrc=read('ord_app.js');
   assert(appSrc.includes('클리어 실측 파트너')&&appSrc.includes('v1917-partner'),'앱 파트너 칩 없음');
-  assert(fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8').includes('.v1917-partner'),'파트너 칩 CSS 없음');
+  assert(fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8').includes('.v1917-partner'),'파트너 칩 CSS 없음');
   // 리플레이 lib 도 프로덕션과 같이 클리어 실측을 싣는다.
   assert(fs.readFileSync(path.join(__dirname,'lib/ordlog_replay.js'),'utf8').includes("'ord_clear_stats.js'"),'리플레이 lib 클리어 실측 로드 없음');
 });

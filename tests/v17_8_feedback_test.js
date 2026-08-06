@@ -85,7 +85,7 @@ test('UI 배선: 스펙 밀집 행·판단 스트립·보스 대조·후보 선�
   assert(app.includes('이 유닛으로 갈 수 있는 상위'),'상세 모달 상위 경로 섹션 누락');
   assert(!app.includes('직접 만들어야 하는 중간 재료'),'중간 재료 섹션이 남아 있다');
   assert(!app.includes('계산 검증 펼치기'),'계산 검증 섹션이 남아 있다');
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   assert(css.includes('.v151-spec-tile{'),'스펙 결손 타일 CSS 누락');
   assert(css.includes('.v151-action-facts{'),'판단 스트립 CSS 누락');
   assert(css.includes('.upper-path-grid{'),'상위 경로 CSS 누락');

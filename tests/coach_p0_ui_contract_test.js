@@ -17,7 +17,7 @@ for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js'
 const App=global.ORDApp.App;
 const C=global.ORDCore;
 const source=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
-const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
 const between=(start,end)=>source.slice(source.indexOf(start),source.indexOf(end));
 let checks=0;
 function check(name,fn){fn();checks++;console.log(`PASS  ${name}`);}
@@ -195,8 +195,12 @@ check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   assert(!coachSource.includes('renderSquadPlan('));
   // v18.4: 상시 판단 영역 6개(상태 스트립 제외).
   assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,6);
-  for(const selector of ['.v153-screen{','.v153-grid{','.v153-status{','.v153-panel{','.v153-next{','.v153-preview{','.v153-craft{','.v153-unused{'])assert(css.includes(selector),selector);
-  assert(css.includes('grid-template-columns:repeat(12,minmax(0,1fr))'));
+  // v20.2: 레이아웃 계약을 실제 로드되는 신작 시트(ord_ui_v20.css) 기준으로
+  // 갱신한다.  구 12열 그리드(.v153-grid)는 v20.1.0 신작 UI에서 3칼럼
+  // 지휘 콘솔(.v155-dashboard)로 교체됐다 — 은퇴한 시트를 읽던 계약이
+  // 통과하는 바람에 실사용 화면의 스타일 유실을 못 잡았다(v20.2 실측).
+  for(const selector of ['.v153-screen{','.v155-dashboard{','.v153-status{','.v153-panel{','.v153-craft{','.v153-unused{'])assert(css.includes(selector),selector);
+  assert(css.includes('"action spec  party"')&&css.includes('"rare   rare  rare"'),'3칼럼 콘솔 그리드 계약 없음');
 });
 
 console.log(`\n${checks}/${checks} v15 live-coach UI contract checks passed.`);

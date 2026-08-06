@@ -118,7 +118,7 @@ test('배선: 미리 파티 버튼→모달 · 2번 패널 리롤 목표 · 가�
   assert(app.includes('리롤 목표 ${rerollTargets.kinds}종'),'리롤 목표 블록 누락');
   assert(app.includes('/41 = ${rerollTargets.perRollPercent}%'),'적중 확률 표기 누락');
   assert(app.includes('돌릴 후보(사용처 없음)'),'돌릴 무용 희귀 안내 누락');
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   assert(css.includes('.v151-clear-party{'),'파티 CSS 누락');
   assert(css.includes('.v151-reroll-targets{'),'리롤 목표 CSS 누락');
   assert(css.includes('.party-modal'),'파티 모달 CSS 누락');

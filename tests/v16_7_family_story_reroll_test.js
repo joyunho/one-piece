@@ -114,7 +114,7 @@ test('UI: 4번 패널 계열 필터·스토리 동순위, 2번 패널 리롤 유
   assert(app.includes('v151FamilyIntent'),'buildable-legends family intent helper missing');
   assert(app.includes("familyOk=unit=>familyMode!=='physical'&&familyMode!=='magic'||C.familyOf(unit)!=="),'panel-4 family filter missing');
   assert(app.includes('v151-reroll-hint'),'panel-2 reroll guidance markup missing');
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   assert(css.includes('.v151-reroll-hint'),'reroll hint style missing');
   const engine=fs.readFileSync(path.join(EXT,'ord_v15_engine.js'),'utf8');
   assert(engine.includes('b.story-a.story'),'completion sort story tiebreak missing');

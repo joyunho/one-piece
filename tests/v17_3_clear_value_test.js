@@ -127,7 +127,7 @@ test('upperSkillProcDps: 트레인 기대치가 더해지고 상한이 지켜진
 
 test('1번 패널: 대안 제거 · 재료 즉시 표시 · 최단 완성 배지 배선',()=>{
   const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   assert(!app.includes('renderV15Alternatives'),'1번 패널 대안 렌더러가 아직 남아 있다');
   assert(app.includes('v151-mats'),'재료 즉시 표시 블록 누락');
   // v19.9.2(사용자 요청): 1번 패널의 직접 재료 라벨은 제작 카드와 같은

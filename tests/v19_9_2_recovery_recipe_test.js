@@ -11,7 +11,7 @@
 const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
 const ROOT=path.join(__dirname,'..','ord_tmo_auto_extension_v15_0_0_rebuild');
 const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const app=read('ord_app.js'),css=read('ord_cockpit_v15.css');
+const app=read('ord_app.js'),css=read('ord_ui_v20.css');
 let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS ',name);};
 
 check('① 회복 목표 행마다 조합식이 붙는다(런타임)',()=>{

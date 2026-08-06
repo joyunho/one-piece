@@ -93,7 +93,7 @@ test('판단 엔진 상태와 무관하게 계산된다 — 재료 수집 구간
 
 test('화면 배선: 3번 영역에 독립 칸으로 붙는다',()=>{
   const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   assert(/renderV152RareCraftable\(state,plan\)\{/.test(app),'렌더러가 없다');
   assert(/\$\{rareCraftable\}/.test(app),'3번 영역에 칸이 합쳐지지 않았다');
   assert(app.includes('지금 가진 희귀함으로 만들 수 있는 전설급'),'칸 제목이 없다');

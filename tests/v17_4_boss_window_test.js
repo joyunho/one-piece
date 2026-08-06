@@ -83,7 +83,7 @@ test('보스 창이라도 화력 역할이 닫혀 있으면 순서를 바꾸지 
 
 test('UI 배선: 후보 "왜" 설명 · 보스 카운트다운 경고 · CSS',()=>{
   const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   assert(app.includes('v151ClearWhy'),'후보 왜 설명 빌더 누락');
   assert(app.includes('v151-clear-why'),'왜 설명 마크업 누락');
   assert(app.includes('보스 화력 역할을 생존 조각보다 먼저 닫으세요'),'보스 경고 문구 누락');

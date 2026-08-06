@@ -66,14 +66,22 @@ test('화면 배선: 희귀 제작 목록이 희귀 소모 기준 계산을 쓴�
 
 test('정합성 가드가 1번 카드를 통째로 비우지 않는다',()=>{
   const source=fs.readFileSync(path.join(EXT,'ord_v15_engine.js'),'utf8');
-  const marker='const blocked=(state,reason,extra)=>';
+  // v20.2: 가드가 네 번째 인자(showAction)를 받는다 — 0806 로그에서 필수
+  // 역할 회귀로 막을 때 blockedAction 이 비어 카드가 통째로 빈 사례가
+  // 나왔다(56라운드 중 20라운드 승인 0건).  막는 쪽이 "무엇을 막았는지"
+  // 후보 행을 직접 실어 보낼 수 있게 하고, 안 실으면 종전 대체 카드로
+  // 떨어진다.  둘 중 어느 쪽이든 blockedAction 은 절대 비지 않는다.
+  const marker='const blocked=(state,reason,extra,showAction)=>';
   const at=source.indexOf(marker);
   assert(at>=0,'가드를 찾지 못했다');
   const body=source.slice(at,at+400);
   assert(/action:null/.test(body),'승인 차단(action:null)이 사라졌다 — 이 가드의 본래 목적이다');
   assert(!/blockedAction:null/.test(body),'blockedAction까지 비워 화면에 아무것도 안 남는다');
-  assert(/blockedAction:blockedFallback\(\)/.test(body),'대체 카드 배선이 없다');
+  assert(/blockedAction:showAction\|\|blockedFallback\(\)/.test(body),'대체 카드 배선이 없다');
   assert(source.includes('const blockedFallback=()=>'),'대체 카드 계산이 없다');
+  // 회귀 게이트도 실제로 후보를 실어 보낸다(빈 카드 재발 방지).
+  assert(/regressCandidate/.test(source),'회귀 게이트가 표시 후보를 만들지 않는다');
+  assert(/blocked\('HOLD',[\s\S]{0,400}regressCandidate\)/.test(source),'회귀 게이트가 후보를 가드에 넘기지 않는다');
   assert(typeof E._test.reconcileSquadExecution==='function','가드가 테스트에 노출되지 않았다');
 });
 

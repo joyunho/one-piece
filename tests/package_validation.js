@@ -15,7 +15,7 @@ const releaseFileVersion=releaseVersion.replace(/\./g,'_');
 const required=[
   'manifest.json','background.js','content-tmo.js','ord_page_unthrottle.js','ord_helper.html','ord_units_data.js',
   'ord_upper_memo.js','ord_synergy_memo.js','ord_upper_playbook.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_core.js',
-  'ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_app.css','ord_cockpit_v15.css','ord_boot_extension.js',
+  'ord_squad_planner.js','ord_direction_worker.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_run_log_compactor.js','ord_run_log.js','ord_app.js','ord_app.css','ord_ui_v20.css','ord_boot_extension.js',
   'popup.html','popup.js','popup.css','README.txt'
 ];
 for(const file of required)assert(fs.existsSync(path.join(ext,file)),`missing ${file}`);

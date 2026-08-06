@@ -8,7 +8,7 @@
 const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
 const ROOT=path.join(__dirname,'..','ord_tmo_auto_extension_v15_0_0_rebuild');
 const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const app=read('ord_app.js'),background=read('background.js'),css=read('ord_cockpit_v15.css');
+const app=read('ord_app.js'),background=read('background.js'),css=read('ord_ui_v20.css');
 const manifest=JSON.parse(read('manifest.json'));
 let checks=0;const check=async(name,fn)=>{await fn();checks++;console.log('PASS ',name);};
 

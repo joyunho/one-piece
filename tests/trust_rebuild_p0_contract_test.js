@@ -196,7 +196,7 @@ test('current-stock guaranteed upper route outranks a zero-prefix-wisp speculati
 });
 
 test('v15 trust UI exposes evidence boundaries and never paints advice as clear proof',()=>{
-  const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8'),css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8'),css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   const decision=app.slice(app.indexOf('  renderV151NextAction('),app.indexOf('  renderV151Preparation('));
   const gaps=app.slice(app.indexOf('  renderV153Spec('),app.indexOf('  renderV153CraftableLegends('));
   const coach=app.slice(app.indexOf('  renderCoach(state'),app.indexOf('  renderCoachDetails('));
@@ -211,8 +211,16 @@ test('v15 trust UI exposes evidence boundaries and never paints advice as clear 
   assert(!coach.includes('renderV15RareBoard('));
   // v18.4(사용자 목업): 상시 판단 영역 6개.
   assert.strictEqual((coach.match(/data-region=/g)||[]).length,6);
-  assert(css.includes('--v15-calc:#38c6e8'),'계산 조언의 청록색 근거 범례가 사라짐');
-  assert(css.includes('--v15-observed:#36d58a'),'TMO 관측의 녹색 근거 범례가 사라짐');
+  // v20.2: 지켜야 하는 계약은 특정 16진값이 아니라 **근거 경계**다 —
+  // 코치가 계산한 값과 TMO가 관측한 값이 화면에서 같아 보이면 안 된다.
+  // 신작 시트(v20.1)로 팔레트가 바뀌면서 토큰 이름·색이 옮겨졌고,
+  // 완성도%가 두 근거 모두에서 나오게 된 v20.2 부터는 실제로 쓰인다.
+  assert(/--calc:#[0-9a-f]{6}/.test(css),'계산 근거 범례가 사라짐');
+  assert(/--observed:#[0-9a-f]{6}/.test(css),'관측 근거 범례가 사라짐');
+  const calc=(css.match(/--calc:(#[0-9a-f]{6})/)||[])[1],observed=(css.match(/--observed:(#[0-9a-f]{6})/)||[])[1];
+  assert(calc&&observed&&calc!==observed,'계산과 관측이 같은 색 — 근거 경계 소실');
+  assert(css.includes('.v202-progress.coach b{color:var(--calc)}'),'완성도%에 계산 근거색 미적용');
+  assert(css.includes('.v202-progress.tmo b{color:var(--observed)}'),'완성도%에 관측 근거색 미적용');
   assert(css.includes('.v151-sync.ok:before'),'TMO 관측 상태의 시각 구분이 사라짐');
 });
 

@@ -156,7 +156,7 @@ test('UI 배선(소스 검증): 자동 모드 플레이스홀더 · 해적선 �
   assert(!app.includes('지금 제작 가능\':`선위 ${C.num(row.wispGap)} 부족`'),'카드 상태 줄이 남아 있다');
   // 연구 입력 상한.
   assert(app.includes('max="21"'),'공업 레벨 입력 상한 누락');
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   assert(css.includes('.v151-gorosei-selects'),'오로성 선택 2열 CSS 누락');
   assert(css.includes('.v151-gated-uppers'),'게이트 칩 CSS 누락');
   assert(css.includes('.v151-ship-line'),'해적선 한 줄 CSS 누락');

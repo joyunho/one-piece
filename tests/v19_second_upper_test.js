@@ -211,7 +211,7 @@ test('앱이 확정·관성을 플래너까지 실어 보낸다', () => {
   for (const key of ['_squadCacheKey', '_v15CacheKey', '_directionRankCacheKey', '_blueprintRankingsKey']) {
     assert(handler.includes(key), `확정이 ${key} 를 비우지 않아 화면이 안 바뀐다`);
   }
-  const css = fs.readFileSync(path.join(EXT, 'ord_cockpit_v15.css'), 'utf8');
+  const css = fs.readFileSync(path.join(EXT, 'ord_ui_v20.css'), 'utf8');
   assert(/\.v153-second\{/.test(css), '두 번째 상위 카드 스타일이 없다');
 });
 

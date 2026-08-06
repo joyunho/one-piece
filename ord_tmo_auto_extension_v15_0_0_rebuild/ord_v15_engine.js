@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='20.1.2';
+const VERSION='20.2.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -258,6 +258,90 @@ function committedUpperDecision(model,route,locks,lock){
   storyBlocked=!quote.feasible&&quote.blocked.some(text=>/레일리|해적선/.test(String(text)))&&story10RewardOpen(model),
   reason=quote.feasible?`확정한 메인 상위 ${nameOf(unit)}를 먼저 완성합니다. 다른 제작으로 예약 재료를 소비하지 않습니다.`:`${storyBlocked?`스토리 10라운드 보상에서 레일리(히든)+해적선을 선택하면 ${nameOf(unit)} 경로가 열립니다(${C.STORY10_FORFEITS} 포기). `:''}확정한 메인 상위 ${nameOf(unit)}의 재료와 선택 위습을 보호합니다. 완성 전에는 다른 제작과 희귀 리롤을 잠급니다.${quote.blocked.length?` · 차단: ${quote.blocked.join(' · ')}`:''}`,row=makeRow(model,quote,after,reason),candidate={id:unit.id,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:quote.feasible?num(quote.wisp.after):null,result:'committed-upper-first',reason,deltas,stopCondition:`표시 재료가 하나라도 바뀌거나 선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path:quote.feasible?[{id:unit.id,name:nameOf(unit),wispCost:num(quote.wisp.cost)}]:[]};
   return{state,label:quote.feasible?'확정 상위 지금 제작':'확정 상위 재료 보호',reason,action:quote.feasible?candidate:null,blockedAction:quote.feasible?null:candidate,assessment:before,afterAction:after,bestPath:quote.feasible?{steps:candidate.path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]}:null,rare:rareLedgerForQuote(model,quote,state,`확정 상위 ${nameOf(unit)}`),alternatives:[],unknowns:before.unknowns||[],search:{candidateCount:1,pathCount:quote.feasible?1:0,horizon:0,beamWidth:0,committedUpper:true},evidence:{observed:M.observedEvidence(model),ledger:'exact-current-stock',lockedUpper:unit.id,upperFirst:true,futureDropsCredited:false,clearClaim:false}};
+}
+// v20.2(0806 실측 · 사용자 재보고 "만들고 있는 중에 지금 할 일이 바뀐다"):
+// 제작 진행 중 잠금.
+//
+// 0806 로그 r48 실측: 승인 카드가 킬러(광보잡) → 샬롯 크래커 → 킬러 →
+// HOLD → 킬러로 요동했다.  같은 창에서 선택 위습은 14→11→9→7→5로 계속
+// 줄고 있었다 — 즉 사용자가 킬러의 하위 재료를 찍고 있던 시간이다.
+// 엔진은 그 중간 상태를 매 폴링마다 "새 판단"으로 취급하므로, 목표를
+// 향해 자원이 빠지는 동안 그 목표가 일시적으로 제작 불가로 보이고 더 싼
+// 카드로 갈아타거나 HOLD 로 빠진다.  r1 의 레베카→봉쿠레→레베카(9초·8초)
+// 도 같은 원인이다.
+//
+// 기존 관성(_stickyActionId / stickyPath)은 "직전 대상이 탐색 경로에
+// 남아 있을 때" 동점이면 유지하는 장치라, 자원이 빠져 후보에서 아예
+// 사라지는 이 상황을 막지 못한다.
+//
+// 그래서 앱이 "지금 이 대상을 만드는 중"이라고 선언하면(_craftLockId),
+// 엔진은 그 대상의 정확 원장 견적을 다시 떠서 카드를 고정한다:
+//  · 제작 가능 → 그대로 승인(ACT_NOW)
+//  · 선위만 모자람 → PREPARE 로 "제작 진행 중 · 선위 N 부족"
+// 잠금은 권위가 아니라 표시 안정성이다.  엔진이 다른 답을 냈다면 그
+// 사실을 craftLock.alternative 로 함께 실어 사용자가 바꿀 수 있게 한다.
+// 해제 조건(아래 guard)은 전부 "사실"이다 — 이미 보유·제작 불가·경로
+// 미확정·동기화 실패.  영원히 잠기지 않는다(앱이 라운드 경과·수동 제작
+// 으로 해제한다).
+const CRAFT_LOCK_SKIP_STATES=new Set(['SYNC_BLOCKED','ROUTE_CHOICE']);
+function craftLockDecision(model,route,locks,lockId,fallback){
+  if(!route)return null;
+  const unit=model.knowledge.db.byId.get(String(lockId||''));
+  if(!unit||num(model.effective.counts[unit.id])>0)return null;
+  const quote=L.quote(model,unit,model.effective.counts,{availableRound:model.round.value});
+  // 사실 기반 해제: 선행조건이 막혔거나 애초에 만들 수 없는 대상은 잡지 않는다.
+  if(!quote.prerequisite.allowed)return null;
+  if((quote.blocked||[]).some(reason=>/이미 보유|조합 근거 부족|레시피 순환/.test(String(reason))))return null;
+  const wispShort=Math.max(0,num(quote.wisp.cost)-num(quote.wisp.before));
+  // 선위 외의 이유로 못 만들면(재료 부족) 그대로 두되, 이 역시 "모으는
+  // 중"이므로 대상은 유지한다 — 다만 문구는 정직하게 재료를 말한다.
+  const before=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks}),
+    after=quote.feasible?P.evaluate(model,quote.after,route,{round:model.round.value,locks}):before,
+    state=quote.feasible?'ACT_NOW':'PREPARE',
+    altName=String(fallback&&fallback.action&&fallback.action.name||fallback&&fallback.blockedAction&&fallback.blockedAction.name||''),
+    // 잠금이 보류(HOLD)를 덮을 때 그 사유를 삼키지 않는다 — 진행 중이라
+    // 카드를 고정하는 것과, 그 제작이 필수 역할을 건드린다는 경고는
+    // 양립한다.  0806 r48 의 7초 HOLD 는 중간 재료가 보드에 올라온 상태의
+    // 회귀 판정이었다(파티 검증 게이트).
+    guardNote=fallback&&String(fallback.state||'')==='HOLD'&&fallback.reason?` 파티 검증 경고: ${String(fallback.reason).slice(0,110)}`:'',
+    lackNote=quote.feasible?'':wispShort>0?` · 선택 위습 ${wispShort}개 더 필요`:(quote.blocked||[]).length?` · ${quote.blocked.slice(0,2).join(' · ')}`:'',
+    reason=`제작 진행 중 — ${nameOf(unit)}를 만드는 동안에는 지금 할 일을 바꾸지 않습니다${lackNote}.${altName&&altName!==nameOf(unit)?` (엔진의 이번 계산 1순위는 ${altName} — 바꾸려면 아래 목록에서 고르세요.)`:''}${guardNote}`,
+    row=makeRow(model,quote,after,reason),
+    candidate={id:unit.id,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:quote.feasible?num(quote.wisp.after):num(quote.wisp.before),feasible:quote.feasible,
+      deltas:quote.feasible?requirementDeltas(before,after):[],path:[{quote}],
+      stopCondition:'표시 재료가 하나라도 바뀌거나 이 유닛이 완성되면 다시 계산합니다.'};
+  return{state,label:quote.feasible?'제작 진행 중 · 지금 제작':'제작 진행 중 · 재료 모으는 중',reason,
+    action:quote.feasible?candidate:null,blockedAction:quote.feasible?null:candidate,
+    assessment:before,afterAction:after,
+    bestPath:quote.feasible?{steps:[candidate],assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]}:null,
+    rare:rareLedgerForQuote(model,quote,state,`제작 진행 중 ${nameOf(unit)}`),
+    alternatives:[],unknowns:before.unknowns||[],
+    recovery:fallback&&fallback.recovery||null,
+    routeCandidates:fallback&&fallback.routeCandidates||[],
+    craftLock:{held:true,id:unit.id,name:nameOf(unit),wispShort,feasible:quote.feasible,guard:guardNote.trim(),
+      alternative:altName&&altName!==nameOf(unit)?altName:'',
+      note:'제작을 시작한 대상은 완성·보유·불가 판정 전까지 유지합니다.'},
+    search:{candidateCount:1,pathCount:quote.feasible?1:0,horizon:0,beamWidth:0,craftLock:true},
+    evidence:{observed:M.observedEvidence(model),ledger:'exact-current-stock',craftLockId:unit.id,futureDropsCredited:false,clearClaim:false}};
+}
+// route 는 여기서 직접 푼다 — finalize 는 buildDecision 의 route 선언보다
+// 앞에서(첫 희귀·첫 전설 마일스톤 반환) 이미 호출되므로 인자로 받으면
+// TDZ 로 깨진다.  r1 의 레베카→봉쿠레→레베카 요동이 바로 그 구간이라
+// 마일스톤 결정에도 잠금이 걸려야 한다.
+function applyCraftLock(decision,model,locks){
+  const lockId=String(model&&model.settings&&model.settings._craftLockId||'');
+  if(!lockId||!decision||CRAFT_LOCK_SKIP_STATES.has(String(decision.state||'')))return decision;
+  const current=decision.action||decision.blockedAction||null;
+  if(current&&String(current.id||'')===lockId)return decision;
+  const held=craftLockDecision(model,P.resolveRoute(model.intent,model.settings),locks,lockId,decision);
+  if(!held)return decision;
+  // 잠금은 표시 안정성이지 승인 권한이 아니다.  들어온 판단이 보류였다면
+  // 잠금이 그것을 승인으로 바꾸지 않는다 — 카드만 고정하고 사유는 그대로
+  // 싣는다(필수 역할 회귀 경고를 잠금이 삼키면 v19.12 가드가 무력해진다).
+  if(String(decision.state||'')==='HOLD'&&held.state==='ACT_NOW')
+    return Object.assign({},held,{state:'PREPARE',label:'제작 진행 중 · 승인 보류',action:null,blockedAction:held.action,
+      craftLock:Object.assign({},held.craftLock,{approvalHeld:true})});
+  return held;
 }
 function resourceTotals(sequence){const tiers=Object.fromEntries(HAND_TIERS.map(tier=>[tier,0]));let wisp=0;for(const step of sequence||[]){wisp+=num(step.quote.wisp.cost);for(const tier of HAND_TIERS)tiers[tier]+=num(step.quote.tiers.totals[tier]);}return{tiers,wisp};}
 function groupImprovement(before,after,index){const left=before.groups&&before.groups[index],right=after.groups&&after.groups[index];if(!left||!right)return false;return right.missed<left.missed||right.missed===left.missed&&right.debt+1e-9<left.debt;}
@@ -875,7 +959,23 @@ function exclusionReason(best,path){if(path.coverage.deadEnds.length>best.covera
 // the squad's Rare cards, creating two mutually exclusive futures.  Reconcile
 // at the authority boundary: only the first exact squad-prefix action may
 // become ACT_NOW, and it is re-quoted against the V15 current-stock ledger.
+// v20.2(0806 포렌식 후속): 화면의 승인 카드는 v15 탐색이 아니라 이
+// 함수가 만든다(label '최종 파티 · 지금 제작', result 'squad-prefix-
+// requoted').  0806 r48 재생에서 v15 원시 1순위는 봉쿠레였고 화면은
+// 킬러였다 — 즉 요동도 관성도 전부 이 층의 문제다.  그래서 제작 진행
+// 중 잠금을 여기서도 한 번 더 적용한다(엔진 decide 안의 finalize 적용은
+// 이 함수가 덮어쓰므로 그것만으로는 사용자가 보는 카드가 안 잡힌다).
 function reconcileSquadExecution(decision,squad,locks){
+  const reconciled=reconcileSquadExecutionRaw(decision,squad,locks);
+  // 필수 역할 회귀(stop) 판정은 잠금보다 강하다 — 진행 중이라도
+  // 필수를 무너뜨리는 제작을 계속하라고 말하지 않는다.
+  const audit=reconciled&&reconciled.evidence&&reconciled.evidence.squadAudit;
+  if(audit&&String(audit.level||audit)==='stop')return reconciled;
+  const model=reconciled&&reconciled.model||decision&&decision.model;
+  if(!model)return reconciled;
+  return applyCraftLock(reconciled,model,locks||[]);
+}
+function reconcileSquadExecutionRaw(decision,squad,locks){
   if(!decision||!decision.model||!squad||squad.error)return decision;
   const model=decision.model,prefix=squad.safePrefix||{},actions=Array.isArray(prefix.actions)?prefix.actions:[],audit=prefix.audit||{},rawAction=decision.action||decision.blockedAction||null,withEvidence=(patch,extra)=>Object.assign({},decision,patch,{evidence:Object.assign({},decision.evidence||{},extra||{})});
   // v17.28(사용자 지적): "이 타이밍에 추천을 안 해버리면 굉장히 곤란하다."
@@ -887,7 +987,7 @@ function reconcileSquadExecution(decision,squad,locks){
   // 승인은 계속 막되(action은 null 유지), 엔진이 원래 만들려던 유닛을
   // blockedAction으로 남겨 무엇을 왜 기다리는지 보이게 한다.
   const blockedFallback=()=>decision&&(decision.action||decision.blockedAction)||null;
-  const blocked=(state,reason,extra)=>withEvidence({state,label:state==='SYNC_BLOCKED'?'현재 패 재검증 필요':'최종 파티 제작 순서 보류',reason,action:null,blockedAction:blockedFallback()},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:true,squadPrefixRejectReason:reason,...extra});
+  const blocked=(state,reason,extra,showAction)=>withEvidence({state,label:state==='SYNC_BLOCKED'?'현재 패 재검증 필요':'최종 파티 제작 순서 보류',reason,action:null,blockedAction:showAction||blockedFallback()},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:true,squadPrefixRejectReason:reason,...extra});
   if(!actions.length){
     if(decision.state==='ACT_NOW')return blocked('HOLD','최종 파티의 현재 패 검증 순서에 없는 제작이라 승인하지 않습니다. 패가 바뀌면 파티와 제작 순서를 함께 다시 계산합니다.',{rawActionId:String(rawAction&&rawAction.id||'')});
     return withEvidence({}, {executionAuthority:'squad-prefix-requoted-v15',squadPrefixEmpty:true});
@@ -902,7 +1002,20 @@ function reconcileSquadExecution(decision,squad,locks){
   const route=decision.assessment&&decision.assessment.route||P.resolveRoute(Object.assign({},model.intent,{damageMode:squad.mode||model.intent&&model.intent.damageMode,magicRoute:squad.magicRoute||model.intent&&model.intent.magicRoute}),Object.assign({},model.settings,{mode:squad.mode||model.settings.mode,magicRoute:squad.magicRoute||model.settings.magicRoute}));
   if(!route)return blocked('SYNC_BLOCKED','최종 파티의 물딜·마딜 세부 경로를 확인하지 못했습니다.',{plannedId});
   const activeLocks=Array.isArray(locks)?locks:[],before=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks:activeLocks}),after=P.evaluate(model,quote.after,route,{round:model.round.value,locks:activeLocks}),afterByKey=new Map((after.requirements||[]).map(row=>[row.key,row])),regressed=(before.requirements||[]).filter(row=>row.required!==false&&!row.waived).filter(row=>{const next=afterByKey.get(row.key);return next&&num(next.gap)>num(row.gap)+.005;}).map(row=>row.label||row.key);
-  if(regressed.length)return blocked('HOLD',`최종 파티 첫 제작이 현재 필수 역할을 악화시킵니다: ${regressed.join(' · ')}`,{plannedId,regressedRequired:regressed});
+  if(regressed.length){
+    // v20.2(0806b 실측): 이 분기가 56라운드 중 20라운드를 통째로 침묵시켰다
+    // (승인 0 · 카드에 아무것도 없음).  v17.28 이 "이 타이밍에 추천을 안
+    // 해버리면 굉장히 곤란하다"며 절대 재발 금지로 새긴 빈 카드가 정확히
+    // 재발한 것이다 — 원시 v15 판단도 HOLD 라 blockedFallback() 이 null 이면
+    // 화면이 비어 버린다.  승인은 계속 막되(action null 유지), 파티가
+    // 만들려던 대상과 그 회귀 수치를 반드시 보여 준다.
+    const regressRow=makeRow(model,quote,after,`파티 검증 보류 — ${regressed.join(' · ')} 악화`);
+    const regressCandidate={id:plannedId,name:nameOf(unit),unit,row:regressRow,quote,
+      wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),feasible:quote.feasible,
+      deltas:requirementDeltas(before,after),path:[{quote}],
+      stopCondition:'이 제작은 지금 열린 필수 역할을 더 벌립니다 — 회복 목표부터 확인하세요.'};
+    return blocked('HOLD',`최종 파티 첫 제작이 현재 필수 역할을 악화시킵니다: ${regressed.join(' · ')}`,{plannedId,regressedRequired:regressed},regressCandidate);
+  }
   const deltas=requirementDeltas(before,after),reason=String(planned.reason||'최종 파티의 현재 패 검증 첫 순서'),row=makeRow(model,quote,after,reason),path=actions.map(action=>({id:String(action.id||''),name:String(action.name||''),wispCost:num(action.wispCost)})).filter(action=>action.id),action={id:plannedId,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),result:'squad-prefix-requoted',reason,deltas,stopCondition:`${Object.keys(quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path};
   return withEvidence({state:'ACT_NOW',label:'최종 파티 · 지금 제작',reason,action,blockedAction:null,assessment:before,afterAction:after,bestPath:{steps:path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]},rare:rareLedgerForQuote(model,quote,'ACT_NOW',`최종 파티 ${nameOf(unit)}`),alternatives:[]},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:false,plannedId,quotedId:String(quote.targetId||unit.id),rawActionId:String(rawAction&&rawAction.id||''),sourceFingerprint:String(model.fingerprint||''),rawActionReplaced:!!rawAction&&String(rawAction.id||'')!==plannedId});
 }
@@ -1134,7 +1247,7 @@ function inferiorRequirements(held,best){
 }
 function buildDecision(input){
   if(!C||!M||!L||!P)throw new Error('ORDV15Engine requires ORDCore, model, ledger, and policy modules.');
-  input=input||{};const model=input.model||M.build(input),locks=input.locks||[],roundNow=model.round.value,final=M.finalSummary(model,model.effective.counts),rareTotal=model.knowledge.db.rares.reduce((total,unit)=>total+Math.max(0,num(model.effective.counts[unit.id])),0),finalize=decision=>Object.assign(decision,{version:VERSION,authority:true,authorityEngine:AUTHORITY,inputFingerprint:model.fingerprint,model},coachGuidance(decision,model,roundNow));
+  input=input||{};const model=input.model||M.build(input),locks=input.locks||[],roundNow=model.round.value,final=M.finalSummary(model,model.effective.counts),rareTotal=model.knowledge.db.rares.reduce((total,unit)=>total+Math.max(0,num(model.effective.counts[unit.id])),0),finalize=raw=>{const decision=applyCraftLock(raw,model,locks);return Object.assign(decision,{version:VERSION,authority:true,authorityEngine:AUTHORITY,inputFingerprint:model.fingerprint,model},coachGuidance(decision,model,roundNow));};
   // Milestones are inventory states, not date windows. Missing the nominal
   // deadline must not silently advance the user into upper planning.
   if(rareTotal<=0&&final.legendEquivalent<=0)return finalize(completionDecision(model,model.knowledge.db.rares.filter(unit=>intentFamilyOk(model,unit)),COMPLETION_MILESTONES.firstRare));
@@ -1210,5 +1323,5 @@ function buildDecision(input){
   return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:openRecovery,upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
 }
 
-return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{coachGuidance,reachableRecovery,operationsNote,decisionPhase,stickyPath,continuableStep,withStickyCandidate,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};
+return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{craftLockDecision,applyCraftLock,coachGuidance,reachableRecovery,operationsNote,decisionPhase,stickyPath,continuableStep,withStickyCandidate,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};
 });

@@ -15,7 +15,7 @@ const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require(
 const ROOT=path.join(__dirname,'..');
 const EXT=path.join(ROOT,'ord_tmo_auto_extension_v15_0_0_rebuild');
 const read=file=>fs.readFileSync(path.join(EXT,file),'utf8');
-const app=read('ord_app.js'),engine=read('ord_v15_engine.js'),planner=read('ord_squad_planner.js'),css=read('ord_cockpit_v15.css'),nettap=read('ord_page_nettap.js');
+const app=read('ord_app.js'),engine=read('ord_v15_engine.js'),planner=read('ord_squad_planner.js'),css=read('ord_ui_v20.css'),nettap=read('ord_page_nettap.js');
 let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS ',name);};
 
 const context={console,setTimeout,clearTimeout};context.window=context;vm.createContext(context);
@@ -99,7 +99,10 @@ check('④ UI — 노리기 분리·막대 비율·큐 가변·2위 대비·1366
   assert(app.includes('v1910-flex'),'큐 가변 표기 없음(8-4)');
   assert(!app.includes('1번(왼쪽 큰 카드)만 확정입니다'),'옛 번호 안내문 잔존');
   assert(app.includes('v1910-runner'),'1위/2위 차이 표시 없음(4-3)');
-  assert(css.includes('zoom:.93'),'1366 완화 배율 없음(8-5)');
+  // v20.2: 신작 시트의 압축 티어는 폭(1366)이 아니라 화면 높이 기준이다
+  // (1240px+ 에서 뷰포트 고정 + 패널 내부 스크롤).  "좁은 화면에서 배율을
+  // 낮춰 한 화면을 지킨다"는 계약 자체는 그대로다 — 수단만 바뀌었다.
+  assert(/zoom:\.[89]/.test(css),'좁은 화면 완화 배율 없음(8-5)');
   // 검증 수리: 추천 카드는 4번째 이후여도 숨기지 않는다.
   assert(css.includes('.v153-craft-cards>button:nth-child(n+4):not(.recommended){display:none}'),'1366 정보량 축소 없음');
   assert(nettap.includes('function sampled(')&&nettap.includes('sampled(url, response.status, text.length)'),'nettap 샘플링 없음(9-4)');

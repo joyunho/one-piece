@@ -61,7 +61,15 @@ check('⑤ UI·부트 배선 — 중간 합류·데스크톱 2상태·TMO%·특�
   assert(app.includes('중간 합류 감지')&&app.includes('v1912MidJoinBanner'),'중간 합류 배너 없음');
   assert(app.includes('TMO 프로그램 미연결')&&app.includes('게임 시작 대기 중 · TMO 프로그램 연결됨'),'데스크톱 미수신 2상태 없음');
   assert(app.includes('데스크톱 프로그램</b>(설치형 앱)')&&app.includes('tmo.gg 웹사이트를 여는 것으로는 연결되지 않습니다'),'데스크톱 가드 카피 없음');
-  assert(app.includes('v1912TmoEnriched')&&app.includes('TMO% 보강 없음'),'TMO% 보강 없음 표기 없음');
+  // v20.2: 보강 판정(v1912TmoEnriched)은 그대로 남지만, 그 결과가 더는
+  // 막다른 "TMO% 보강 없음"이 아니다 — 사용자가 진행도를 아예 못 보게
+  // 됐기 때문에("완성도 %가 안보이니까 불편한데") 코치 원장 계산값으로
+  // 대체하고 이름·색으로 출처를 구분한다.  0%를 TMO 값인 척하지 않는다는
+  // v19.12 의 원래 계약은 라벨 분리로 계속 지켜진다.
+  assert(app.includes('v1912TmoEnriched')&&app.includes('v202Completion'),'보강 판정·완성도 대체 배선 없음');
+  assert(app.includes("label:'코치 계산 재료 진행도'"),'대체 수치 라벨 없음');
+  assert(app.includes('TMO 보강 없음(코치 원장 계산)'),'출처 고지 없음');
+  assert(!app.includes("'TMO% 보강 없음'"),'막다른 표기가 되살아남');
   assert(app.includes('특강 기준')&&app.includes('집계'),'특강 집계 표기 없음');
   assert(app.includes('localDirect:snapshot.localDirect?{unknownCodes'),'런로그 미해석 코드 기록 없음');
   for(const boot of ['ord_boot_desktop.js','ord_boot_extension.js']){

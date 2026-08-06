@@ -1,5 +1,5 @@
 /* ============================================================
-   ord_ui_v20.css — v20.1.2 "Operator Console" (완전 신작)
+   ord_ui_v20.css — v20.2.0 "Operator Console" (완전 신작)
    ============================================================
    사용자: "UI를 완전히 새로 만들어줘".
    ord_cockpit_v15.css(2,700줄 퇴적층 — v15~v19 레이어가 서로를
@@ -38,6 +38,11 @@
   --ok:#4cc98c;
   --warn:#e0a44e;
   --bad:#e87070;
+  /* 근거 경계(v15부터의 계약 — 구 시트에서는 --v15-calc/--v15-observed).
+     코치가 자기 원장으로 "계산"한 값과 TMO 화면에서 "관측"한 값은 같은
+     숫자처럼 보이면 안 된다.  노을 팔레트로 옮기되 구분은 유지한다. */
+  --calc:#7fa8d6;          /* 계산 — 코치 원장 */
+  --observed:#4cc98c;      /* 관측 — TMO 보고 */
   --radius:10px;
   --radius-sm:7px;
   color:var(--text);
@@ -230,7 +235,7 @@ body{
 }
 .v151-action-main{
   display:grid;
-  grid-template-columns:56px minmax(0,1fr) auto;
+  grid-template-columns:56px minmax(0,1fr) auto auto;
   gap:12px;align-items:center;
   border:1px solid rgba(217,164,65,.35);
   border-radius:var(--radius);
@@ -253,6 +258,16 @@ body{
 .v151-cost{display:grid;gap:1px;justify-items:end;text-align:right}
 .v151-cost small{font-size:10px}
 .v151-cost b,.v151-cost .wisp{font-size:26px;color:var(--gold)}
+/* v20.2: 완성도 기둥. 금색은 "지금 할 일"(선위 승인) 전용이므로 진행도는
+   중립색으로 둔다 — 두 숫자가 같은 무게로 보이면 안 된다. */
+.v202-progress{border-left:1px solid var(--line);padding-left:12px}
+.v202-progress b{font-size:22px;color:var(--text)}
+.v202-progress b i{font-size:13px;font-style:normal;color:var(--muted);margin-left:1px}
+.v202-progress span{color:var(--muted);font-size:10px;white-space:nowrap}
+/* 근거 경계 적용: 관측(TMO)과 계산(코치 원장)을 색으로 가른다. */
+.v202-progress.tmo b{color:var(--observed)}
+.v202-progress.coach b{color:var(--calc)}
+.v202-coach-pct{color:var(--calc)}
 .v151-clear-why{color:var(--sub);font-size:13.5px}
 .v151-story{color:var(--muted);font-size:12.5px}
 .v151-boss-warn{
@@ -280,7 +295,10 @@ body{
 .commons .common-chip.gap{border-color:rgba(226,101,101,.45)}
 .v158-consume-warn,.v159-skip-warn{color:var(--warn);font-size:11.5px}
 /* 승인 버튼은 히어로가 내부 스크롤이어도 항상 보인다. */
-.v151-action-foot{position:sticky;bottom:0;z-index:5;display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:auto;padding-top:8px;background:linear-gradient(180deg,transparent,var(--panel) 34%)}
+/* v20.2: 페이드 구간이 34%(약 22px)라 그 띠 안의 안내 문구 뒤로 스크롤되는
+   본문이 비쳐 두 겹으로 겹쳐 보였다.  페이드는 10px 로 짧게 끊고 나머지는
+   불투명 — 고정 줄 위에서는 무엇도 비치지 않는다. */
+.v151-action-foot{position:sticky;bottom:0;z-index:5;display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin-top:auto;padding-top:10px;background:linear-gradient(180deg,rgba(26,22,29,0) 0,var(--panel) 10px)}
 .v151-action-foot .primary{
   border:0;border-radius:var(--radius-sm);
   padding:11px 22px;
@@ -363,6 +381,10 @@ body{
 .v158-queue-row small{display:block;overflow:hidden;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
 .v158-queue-row>em{display:inline-flex;gap:4px;align-items:center;color:var(--sub);font-size:13.5px;font-style:normal;white-space:nowrap;font-variant-numeric:tabular-nums}
 .v158-queue-row>em .v153-ic-img,.v158-queue-row>em img{width:14px;height:14px;border:0;border-radius:3px}
+/* 큐 행 완성도 배지. `.v158-queue-row b`(유닛명 블록)보다 구체적이어야 한다. */
+.v158-queue-row>em .v202-queue-pct{display:inline-block;min-width:36px;border-left:1px solid var(--line);padding-left:7px;font-size:13px;font-weight:600;text-align:right}
+.v158-queue-row>em .v202-queue-pct.coach{color:var(--calc)}
+.v158-queue-row>em .v202-queue-pct.tmo{color:var(--observed)}
 .v154-hold{display:grid;gap:4px;border:1px dashed var(--line-strong);border-radius:var(--radius-sm);padding:7px 9px;color:var(--sub);font-size:11px}
 .v154-next-note{color:var(--muted);font-size:12px}
 .v1910-flex{display:flex;gap:7px;align-items:baseline;justify-content:space-between}
@@ -510,6 +532,18 @@ body{
 .v153-upper-gaps{display:grid;gap:6px;font-size:13px}
 .v153-upper-gaps span{display:inline-flex;gap:6px;margin-right:8px}
 .v153-upper-gaps b{color:var(--bad)}
+/* v20.2: 신작 시트 이관에서 컨테이너 자체가 빠져 있었다 — 접이 안의 행만
+   칠해지고 두 번째 상위 블록은 맨몸이었다.  확정 상태(.confirmed)는 접이가
+   아니라 고정 카드이므로 자물쇠 톤(로즈 테두리)으로 구분한다. */
+.v153-second{border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--panel-2)}
+.v153-second.confirmed{border-color:var(--accent-dim);background:rgba(224,92,126,.05)}
+.v153-second.confirmed>header{display:flex;gap:7px;align-items:center;color:var(--accent);font-size:12px}
+.v153-second.confirmed>header .v153-ic-img,.v153-second.confirmed>header img{width:14px;height:14px;border-radius:3px}
+.v153-second.confirmed>div{margin-top:5px}
+.v153-second.confirmed strong{display:block;font-size:15px}
+.v153-second.confirmed small{display:block;color:var(--muted);font-size:12px}
+.v153-second.confirmed>footer{display:flex;gap:6px;margin-top:7px}
+.v153-second>small{display:block;margin-top:6px;color:var(--muted);font-size:12px}
 .v153-second summary,.v153-support-fold summary,.v153-rare-ledger-fold summary{cursor:pointer;color:var(--sub);font-size:13px}
 .v153-second-list,.v153-support-list{display:grid;gap:6px;margin-top:6px}
 .v153-second-list article{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;background:var(--panel-2);font-size:13px}
@@ -646,3 +680,126 @@ body.ord-overlay-mode .command-line{display:flex}
 @media (prefers-reduced-motion:reduce){
   .v153-screen *{transition:none!important;animation:none!important}
 }
+/* v20.2 — 제작 진행 중 잠금 배너 / 회복 목표 머리말·계열 주석 */
+.v202-craft-lock{
+  display:grid;gap:2px;
+  border:1px solid rgba(217,164,65,.45);
+  border-radius:var(--radius-sm);
+  padding:8px 11px;
+  background:rgba(217,164,65,.09);
+  font-size:13px;
+}
+.v202-craft-lock b{color:var(--gold)}
+.v202-craft-lock small{color:var(--sub);font-size:12px}
+.v202-recovery-head{display:grid;gap:2px;margin-bottom:5px}
+.v202-recovery-head b{font-size:12.5px;color:var(--warn)}
+.v202-recovery-head small{font-size:11.5px}
+.v202-cross{display:block;color:var(--muted);font-size:11px}
+.v151-recovery{display:grid;gap:5px;border-top:1px solid var(--line);padding-top:8px}
+.v151-recovery>small{color:var(--muted)}
+.v151-recovery-row>i{
+  display:inline-flex;align-items:center;
+  border:1px solid var(--line-strong);border-radius:5px;
+  padding:1px 7px;background:var(--panel-3);
+  color:var(--sub);font-size:11px;font-style:normal;white-space:nowrap;
+}
+.v151-recovery-row{grid-template-columns:auto minmax(0,1fr) auto;display:grid;gap:9px;align-items:center}
+.v159-single-closer{display:flex;gap:7px;align-items:flex-start;border:1px solid rgba(224,164,78,.45);border-radius:var(--radius-sm);padding:7px 10px;background:rgba(224,164,78,.08);font-size:12px}
+/* v20.2: "다음 제작" 큐에 섞이는 목표 행 — 확정 경로와 구분한다. */
+.v202-goal-row{border-style:dashed;opacity:.92}
+.v202-goal-row>i{border:1px solid var(--line-strong);border-radius:5px;padding:0 5px;background:var(--panel-3);color:var(--warn);font-size:10.5px}
+
+/* ── v20.2: 신작 시트 유실 스타일 복구 ─────────────────────
+   v20.1 에서 구 시트를 은퇴시킬 때, 실제 화면에 뜨는데 규칙이 없는
+   클래스 19종이 남았다(라이브 렌더 클래스 130종 ↔ 구 시트 대조 실측).
+   전부 "맨몸 텍스트"로 떨어져 라벨·경고의 시각 신호가 0이 됐다 —
+   회복 목표의 역할 뱃지가 이탤릭 한 줄로 보인 것이 그 예다.
+   관련 CSS 계약 테스트가 은퇴한 시트를 읽고 있어 이 구멍을 못 잡았다. */
+.materials{display:block;margin-top:2px;color:var(--gold);white-space:normal}
+.v159-snug{color:var(--gold);font-size:11px}
+.lv-likely{border-color:var(--accent)!important;background:rgba(224,92,126,.12)!important;color:var(--accent)!important}
+.lv-continue{border-color:var(--ok)!important;background:rgba(76,201,140,.12)!important;color:var(--ok)!important}
+.lv-short{border-color:var(--warn)!important;background:rgba(224,164,78,.12)!important;color:var(--warn)!important}
+.stage-own em{border-radius:4px;padding:0 5px;background:rgba(76,201,140,.16);color:var(--ok);font-style:normal}
+.ph-build b{color:var(--accent)}
+.tier-c{border-color:var(--line-strong);color:var(--sub)}
+.v153-rare-fold-body{display:grid;gap:5px;margin-top:6px;font-size:12px}
+.v153-rare-ledger-fold{margin-top:6px}
+.v158-six{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-content:start}
+.v153-party{display:grid;gap:6px;margin-top:8px}
+.v153-support-list>button.ready,.v153-craft-cards>button.ready{border-color:var(--line-strong)}
+.v153-next-candidates button.full,.v158-queue-row.full{border-color:var(--line-strong)}
+.v153-screen .use{color:var(--sub)}
+.v153-screen .off{opacity:.55}
+.v153-screen .pairs{display:flex;flex-wrap:wrap;gap:4px}
+.v153-screen .compact{font-size:12px}
+.v153-iconbtn.new-game{color:var(--sub)}
+.v153-screen .hold{color:var(--warn)}
+/* v20.2: 계약 테스트가 은퇴 시트를 읽어 가려져 있던 유실 스타일 2종. */
+.v159-endgame{display:grid;gap:3px;border:1px solid rgba(224,164,78,.5);border-radius:var(--radius-sm);padding:8px 11px;background:rgba(224,164,78,.08);font-size:12.5px}
+.v159-endgame b{color:var(--warn)}
+.v151-recovery-row .v159-recovery-recipe{display:block;margin-top:2px;color:var(--muted);font-size:11.5px}
+.v153-unused{border-left-color:var(--line-strong)}
+.v153-next{border-left-color:var(--gold)}
+.v153-role b small.v159-snug{color:var(--gold);font-size:11px}
+
+/* ── v20.2: 모달·보조 화면 스타일 복구 ──────────────────────
+   신작 시트로 갈아탈 때 기본 화면만 옮기고, 모달(상세·파티·해적선·
+   저격)과 보조 화면(연결 진단·기록·스토리)의 내부 구조 스타일이
+   남겨졌다.  열어 보면 맨몸 텍스트로 떨어진다.  CSS 계약 테스트가
+   은퇴한 시트를 읽고 있어 이 구멍도 가려져 있었다(v20.2 실측).
+   전부 신작 언어(평면 패널·헤어라인·로즈 강조·골드는 행동)로 다시 쓴다. */
+.party-modal{position:fixed;z-index:90;top:50%;left:50%;display:grid;gap:10px;width:min(980px,94vw);max-height:88vh;overflow:auto;border:1px solid var(--line-strong);border-radius:12px;padding:16px;background:var(--panel);transform:translate(-50%,-50%);box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.party-modal .v151-meta-pairs{display:grid;gap:5px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px;background:var(--panel-2);font-size:12.5px}
+.v151-meta-pairs.stale{border-color:rgba(224,164,78,.45)}
+.v151-clear-party{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
+.v151-clear-party>div{border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;background:var(--panel-2);font-size:12px}
+.v151-reroll-targets{display:grid;gap:6px;margin-top:8px}
+.v151-reroll-target-chips{display:flex;flex-wrap:wrap;gap:5px}
+.v151-reroll-hint{color:var(--muted);font-size:12px}
+.v151-gorosei-selects{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:6px}
+.v151-gorosei-select{display:grid;gap:3px;font-size:12px}
+.v151-gorosei-values{display:flex;flex-wrap:wrap;gap:5px;color:var(--muted);font-size:11.5px}
+.v151-gated-uppers{display:grid;gap:5px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--panel-2);font-size:12px}
+.ship-modal .v151-ship-plan,.v151-ship-plan{display:grid;gap:6px}
+.v151-ship-group{display:grid;gap:4px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--panel-2)}
+.v151-ship-line{display:flex;flex-wrap:wrap;gap:7px;align-items:baseline;font-size:12.5px}
+.v151-ship-reco{color:var(--accent)}
+.v151-ship-off{opacity:.6}
+.v151-ship-all{color:var(--muted);font-size:11.5px}
+.v151-story10-badge{display:inline-flex;border:1px solid var(--line-strong);border-radius:5px;padding:1px 7px;background:var(--panel-3);color:var(--sub);font-size:11px}
+.v151-nearest-badge{display:inline-flex;border:1px solid var(--accent);border-radius:5px;padding:1px 7px;background:rgba(224,92,126,.12);color:var(--accent);font-size:11px}
+.v151-nearest{color:var(--sub);font-size:12px}
+.v151-spec-tile{display:grid;gap:2px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;background:var(--panel-2);font-size:12px}
+.v151-spec-tile.lead{border-color:var(--accent)}
+.v151-spec-tiles,.v151-spec-chips{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:6px}
+.v151-spec-chip{border:1px solid var(--line);border-radius:5px;padding:2px 8px;background:var(--panel-2);font-size:11.5px}
+.v151-spec-head,.v151-spec-summary,.v151-spec-body{display:grid;gap:5px}
+.v151-spec-bar{height:3px;border-radius:2px;background:var(--panel-3)}
+.upper-path-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px}
+.upper-plan-chip{border:1px solid var(--line);border-radius:5px;padding:2px 8px;background:var(--panel-2);font-size:11.5px}
+.playbook-detail{display:grid;gap:5px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px;background:var(--panel-2);font-size:12.5px}
+.v151-upper-candidates{display:grid;gap:6px}
+.v151-upper-candidates article{display:grid;gap:4px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--panel-2)}
+.v151-upper-candidates article .v151-rank{color:var(--muted);font-size:11.5px}
+/* 이유·선위 문장은 줄바꿈해 잘리지 않게 한다(v17.12 계약). */
+.v151-upper-candidates article .v151-cost-line,.v151-upper-candidates article .v151-clear-why{overflow:visible;white-space:normal;color:var(--sub);font-size:11.5px}
+.v151-upper-guard,.v151-upper-note,.v151-upper-needs{color:var(--sub);font-size:12px}
+.v151-boss-preview{display:grid;gap:4px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--panel-2);font-size:12px}
+.v158-fresh{border-color:var(--accent)!important}
+.v151-sync.ok:before{content:'';display:inline-block;width:7px;height:7px;margin-right:6px;border-radius:99px;background:var(--ok)}
+/* 승인 카드의 흔함 칩·재료 압축(1번 패널에서는 흔함만 남긴다) */
+.v151-mats .commons em.common-chip{border:1px solid var(--line);border-radius:5px;padding:1px 7px;background:var(--panel-3);color:var(--sub);font-size:11.5px;font-style:normal}
+.v153-next .v151-mats>div:not(.commons){display:none}
+/* 희귀→전설: 추천 외 4번째부터는 접어 한 화면 계약을 지킨다 */
+.v153-craft-cards>button:nth-child(n+4):not(.recommended){display:none}
+.v153-craft-cards.v158-six>button:nth-child(n+4):not(.recommended){display:flex}
+.v153-craft-cards.v158-six{grid-auto-rows:max-content}
+/* 희귀 제작각 카드(2번 패널 리롤 유도 계약) */
+.v152-rare-craftable{display:grid;gap:6px}
+.v152-rare-craftable article{border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--panel-2);font-size:12px}
+.v152-rare-buildable{color:var(--ok)}
+.v152-rare-group{display:grid;gap:5px}
+.v152-rare-head,.v152-rare-summary{display:flex;gap:8px;align-items:baseline;justify-content:space-between;font-size:12px}
+/* 조합 줄은 카드 밖으로 넘치지 않게 두 줄까지만(v19.9.1 계약 유지). */
+.v159-action-recipe,.v159-recipe{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}

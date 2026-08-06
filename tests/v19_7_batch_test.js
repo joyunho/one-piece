@@ -79,7 +79,7 @@ check('④ 지금 할 일이 부족 흔함을 전량(색점 칩) 표시한다',(
   assert(app.includes('부족 흔함'),'흔함 부족 라벨 없음');
   assert(app.includes('common-chip'),'흔함 색점 칩 없음');
   assert(app.includes('solve=C.recipeSolve(state.db,shown.id,state.counts||{})'),'quote 없는 상태의 흔함 재계산 폴백 없음');
-  const css=read('ord_cockpit_v15.css');
+  const css=read('ord_ui_v20.css');
   assert(css.includes('.v151-mats .commons em.common-chip'),'흔함 칩 스타일 없음');
   assert(css.includes('.v153-next .v151-mats>div:not(.commons){display:none}'),'노트북 압축에서 흔함 줄까지 숨김');
 });

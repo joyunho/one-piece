@@ -110,7 +110,7 @@ test('clearAffinity는 어떤 컨텍스트에서도 상한 0.8을 넘지 않는�
 });
 
 test('CSS: 미리 파티 실측 스트립 스타일 존재', () => {
-  const css = fs.readFileSync(path.join(ext, 'ord_cockpit_v15.css'), 'utf8');
+  const css = fs.readFileSync(path.join(ext, 'ord_ui_v20.css'), 'utf8');
   assert(css.includes('.party-modal .v151-meta-pairs'), '실측 스트립 스타일이 사라짐');
 });
 

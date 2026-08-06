@@ -17,7 +17,7 @@ let checks=0;
 function check(name,fn){fn();checks++;console.log(`PASS  ${name}`);}
 
 const app=read('ord_app.js');
-const css=read('ord_cockpit_v15.css');
+const css=read('ord_ui_v20.css');
 
 check('① 판단 잠금 상태가 마지막 패 결손·회복 목표를 채운다',()=>{
   assert(app.includes('v158-blocked-spec'),'잠금 상태 결손 요약 없음');

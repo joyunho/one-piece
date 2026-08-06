@@ -97,7 +97,7 @@ check('저격이 배선돼 있다 — 감사 로그·거래 롤백·렌더 훅·
   assert(rollback&&rollback[1].includes("'snipe-upper'"),'거래 롤백 트리거에 없음');
   assert(/renderSnipeModal\(state\)\}\$\{this\.renderRunResultModal/.test(src),'렌더 훅에 모달이 없음');
   assert(src.includes('data-act="snipe-open"'),'저격 열기 버튼이 없음');
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   assert(css.includes('.snipe-modal{')&&css.includes('.v153-snipe-open{'),'저격 스타일이 없음');
 });
 

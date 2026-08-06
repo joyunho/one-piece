@@ -120,7 +120,7 @@ test('해적선 활용 계획: 부족 희귀가 리롤 목표로 나열된다',(
 
 test('배선: 설정·배지·패널·기록 필드',()=>{
   const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
-  const css=fs.readFileSync(path.join(EXT,'ord_cockpit_v15.css'),'utf8');
+  const css=fs.readFileSync(path.join(EXT,'ord_ui_v20.css'),'utf8');
   const compactor=fs.readFileSync(path.join(EXT,'ord_run_log_compactor.js'),'utf8');
   assert(app.includes('data-opt="story10Reward"'),'스토리 10 설정 셀렉트 누락');
   assert(app.includes('story10Reward:this.state.story10Reward'),'settings 전달 누락');

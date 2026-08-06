@@ -61,7 +61,7 @@ check('③ 소비 배선 — core·후보 카드·확정 상위 감사·빌드 �
   for(const page of ['ord_helper.html','ord_helper_desktop.html'])
     assert(read(page).includes('ord_clear_stats.js'),`${page} 스크립트 누락`);
   assert(fs.readFileSync(path.join(ROOT,'package.json'),'utf8').includes('build_clear_stats.js'),'빌드 체인 누락');
-  const css=read('ord_cockpit_v15.css');
+  const css=read('ord_ui_v20.css');
   assert(css.includes('.v1916-clear-audit'),'실측 감사 스타일 없음');
 });
 

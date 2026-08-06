@@ -63,7 +63,7 @@ check('③ 도전 각 — 비주류·현재 패 성립 후보 배지 (순위 불
   assert(engine.includes('row.feasible===true'),'도전 각이 성립 불가 후보에 붙을 수 있음');
   const app=read('ord_app.js');
   assert(app.includes('v1915-challenge')&&app.includes('도전 각 — 비주류지만 이 패로 성립'),'도전 각 배지 없음');
-  const css=read('ord_cockpit_v15.css');
+  const css=read('ord_ui_v20.css');
   assert(css.includes('.v1915-hold-banner')&&css.includes('.v1915-challenge'),'배너·배지 스타일 없음');
 });
 

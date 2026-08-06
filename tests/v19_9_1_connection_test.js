@@ -12,7 +12,7 @@
 const assert=require('assert'),fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..','ord_tmo_auto_extension_v15_0_0_rebuild');
 const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
-const app=read('ord_app.js'),content=read('content-tmo.js'),background=read('background.js'),popup=read('popup.js'),css=read('ord_cockpit_v15.css');
+const app=read('ord_app.js'),content=read('content-tmo.js'),background=read('background.js'),popup=read('popup.js'),css=read('ord_ui_v20.css');
 let checks=0;const check=(name,fn)=>{fn();checks++;console.log('PASS ',name);};
 
 check('① 숨김 탭 워커 틱·숨김 전환이 타이머 없이 즉시 발행한다',()=>{
