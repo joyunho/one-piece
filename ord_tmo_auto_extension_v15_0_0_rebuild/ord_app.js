@@ -1297,6 +1297,13 @@ class App{
       // 다르면 그것도 같이 말해 사용자가 스스로 바꿀 수 있게 한다.
       const lock=decision&&decision.craftLock;if(!lock||!lock.held)return'';
       return`<div class="v202-craft-lock"><b>제작 진행 중 — 지금 할 일을 고정했습니다</b><small>${C.esc(lock.name||'')}${C.num(lock.wispShort)>0?` · 선택 위습 ${C.num(lock.wispShort)}개 더 필요`:''} — 완성하거나 다른 것을 만들면 자동으로 풀립니다.${lock.alternative?` (엔진 1순위는 ${C.esc(lock.alternative)})`:''}</small>${lock.guard?`<small class="v202-lock-guard">${C.esc(lock.guard)}</small>`:''}</div>`;
+    })()}${(()=>{
+      // v20.3: 회귀가 있는데도 우선순위상 승인한 경우, 무엇이 얼마나
+      // 나빠지는지를 반드시 함께 보여 준다.  통과시킨 것과 "괜찮다"고 하는
+      // 것은 다르다 — 열리는 역할을 열린다고 말한 뒤 승인하는 것이다.
+      const action=decision&&(decision.action||decision.blockedAction),reg=action&&action.regression;
+      if(!reg||!(reg.rows||[]).length)return'';
+      return`<div class="v203-regress-warn"><b>${C.esc(reg.headline||'')}</b><small>${C.esc(reg.detail||'')}</small></div>`;
     })()}<div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v151StoryTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}${unit?(()=>{
       // v20.2(사용자 요청): 완성도%를 지금 할 일 카드에서 바로 본다.  TMO 보강이
       // 없으면 코치 원장 진행도로 대체하고, 어느 쪽인지 라벨로 밝힌다.

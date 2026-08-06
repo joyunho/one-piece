@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='20.2.0';
+const VERSION='20.3.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -1001,23 +1001,71 @@ function reconcileSquadExecutionRaw(decision,squad,locks){
   if(!quote||!quote.feasible||String(quote.targetId||unit.id)!==plannedId)return blocked('SYNC_BLOCKED',`최종 파티 첫 제작 ${nameOf(unit)}을 현재 패 원장으로 다시 견적했지만 완성할 수 없습니다. TMO를 다시 동기화하세요.`,{plannedId,quoteFeasible:!!(quote&&quote.feasible)});
   const route=decision.assessment&&decision.assessment.route||P.resolveRoute(Object.assign({},model.intent,{damageMode:squad.mode||model.intent&&model.intent.damageMode,magicRoute:squad.magicRoute||model.intent&&model.intent.magicRoute}),Object.assign({},model.settings,{mode:squad.mode||model.settings.mode,magicRoute:squad.magicRoute||model.settings.magicRoute}));
   if(!route)return blocked('SYNC_BLOCKED','최종 파티의 물딜·마딜 세부 경로를 확인하지 못했습니다.',{plannedId});
-  const activeLocks=Array.isArray(locks)?locks:[],before=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks:activeLocks}),after=P.evaluate(model,quote.after,route,{round:model.round.value,locks:activeLocks}),afterByKey=new Map((after.requirements||[]).map(row=>[row.key,row])),regressed=(before.requirements||[]).filter(row=>row.required!==false&&!row.waived).filter(row=>{const next=afterByKey.get(row.key);return next&&num(next.gap)>num(row.gap)+.005;}).map(row=>row.label||row.key);
-  if(regressed.length){
-    // v20.2(0806b 실측): 이 분기가 56라운드 중 20라운드를 통째로 침묵시켰다
-    // (승인 0 · 카드에 아무것도 없음).  v17.28 이 "이 타이밍에 추천을 안
-    // 해버리면 굉장히 곤란하다"며 절대 재발 금지로 새긴 빈 카드가 정확히
-    // 재발한 것이다 — 원시 v15 판단도 HOLD 라 blockedFallback() 이 null 이면
-    // 화면이 비어 버린다.  승인은 계속 막되(action null 유지), 파티가
-    // 만들려던 대상과 그 회귀 수치를 반드시 보여 준다.
+  const activeLocks=Array.isArray(locks)?locks:[],before=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks:activeLocks}),after=P.evaluate(model,quote.after,route,{round:model.round.value,locks:activeLocks}),afterByKey=new Map((after.requirements||[]).map(row=>[row.key,row])),regressedRows=(before.requirements||[]).filter(row=>row.required!==false&&!row.waived).map(row=>{const next=afterByKey.get(row.key);if(!next||num(next.gap)<=num(row.gap)+.005)return null;return{key:String(row.key||''),label:String(row.label||row.key||''),axis:String(row.axis||''),target:num(row.target),gapBefore:num(row.gap),gapAfter:num(next.gap),currentBefore:num(row.current),currentAfter:num(next.current),delta:num(next.gap)-num(row.gap),brokeClosed:num(row.gap)<=1e-9};}).filter(Boolean),regressed=regressedRows.map(row=>row.label);
+  // v20.3 — 회귀 게이트 정책.
+  //
+  // 여태 이 게이트는 "필수 역할 행이 하나라도 나빠지면 무조건 차단"이었다.
+  // 0806 두 판을 전수 재계산(발화 173건, 로그 역할표와 169건 소수점까지
+  // 일치)해서 잰 결과가 이렇다:
+  //   · 173건 **전부** 무언가를 닫아 준다.  닫아 주는 것 없이 벌리기만 하는
+  //     발화는 0건이었다.
+  //   · 145건은 순이득이 양수(막는 쪽이 손해).  대표: B r28~r40 (A)카벤딧슈
+  //     94회 차단 — 상위 딜러 0→1(최우선 그룹) · 방깎 60→80 · 1.5스턴
+  //     0.16→1 을 닫아 주는데 이감이 목표 102 중 5.5(5.4%) 나빠진다는
+  //     이유로 막았다.  사용자는 결국 r40 에 그대로 만들었다.
+  //   · 게이트가 지킨 역할은 **173건 전부** 파티 계획을 끝까지 따라가도
+  //     안 닫힌다 — 지키는 대상이 애초에 계획이 포기한 역할이었다.
+  //     그래서 "계획이 회복하면 통과" 같은 규칙은 이 판에서 아무것도
+  //     구하지 못한다(0/173).
+  //   · 153건은 이미 마감을 넘긴 뒤에 발화했고, 125건은 원시 v15 탐색의
+  //     1순위와 같은 대상이었다(엔진과 파티가 합의한 것을 게이트만 반대).
+  //   · 최종 결과: 게이트가 지킨 이감 80/102 · 광보잡 0/2 — 못 닫았다.
+  //
+  // 그렇다고 다 열면 안 된다.  같은 자료에서 **정당한 차단도 확인**됐다:
+  // B r47~r53 히바리3 은 베이비5·브룩·아카이누를 재료로 먹어 광보잡을
+  // 2/2 → 0/2 로 완전히 부수는데, 사용자가 r53 에 실제로 만들자 스냅샷에서
+  // 정확히 그대로 벌어졌고 판 끝까지 회복되지 않았다(시저도 이감 65→60 ·
+  // 광보잡 2→1 예측이 실측과 일치).
+  //
+  // 판별자는 새로 만들지 않는다 — **정책 모듈이 이미 갖고 있는 우선순위
+  // 벡터**를 쓴다.  P.evaluate 는 경로의 그룹 순서대로 정렬된 fullVector 와
+  // 현재 체크포인트 기준 checkpointVector 를 내고, 엔진은 다른 곳에서 이미
+  // 이 벡터로 "나아졌는가"를 판단한다.  게이트만 자기 기준(행 단위 gap)을
+  // 따로 쓰고 있었던 것이 과발화의 실체다.
+  //   차단 = 두 벡터 중 하나라도 사전식으로 뒤로 갔을 때.
+  // 173건에 적용하면 차단 39 · 승인 134 이고, 유해가 확인된 히바리 16/16 ·
+  // 시저 7/7 은 그대로 차단되며 카벤딧슈 94건은 전부 통과한다.
+  //
+  // 통과시킬 때도 회귀를 숨기지 않는다 — 승인 카드에 무엇이 얼마나
+  // 나빠지는지 그대로 싣는다(regression).  "괜찮다"고 말하는 게 아니라
+  // "이게 나빠지지만 우선순위상 지금은 이게 맞다"고 말하는 것이다.
+  const vectorLoss=regressed.length?(P.compareVector(after.fullVector,before.fullVector)>0||P.compareVector(after.checkpointVector,before.checkpointVector)>0):false;
+  if(regressed.length&&vectorLoss){
+    // v20.2(0806b 실측): 이 분기가 화면을 통째로 비웠다 — 원시 v15 판단도
+    // HOLD 라 blockedFallback() 이 null 이면 카드에 아무것도 안 남는다.
+    // v17.28 이 "이 타이밍에 추천을 안 해버리면 굉장히 곤란하다"며 절대
+    // 재발 금지로 새긴 그 상태다.  승인은 계속 막되(action null 유지),
+    // 파티가 만들려던 대상과 그 회귀 수치를 반드시 보여 준다.
     const regressRow=makeRow(model,quote,after,`파티 검증 보류 — ${regressed.join(' · ')} 악화`);
     const regressCandidate={id:plannedId,name:nameOf(unit),unit,row:regressRow,quote,
       wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),feasible:quote.feasible,
-      deltas:requirementDeltas(before,after),path:[{quote}],
-      stopCondition:'이 제작은 지금 열린 필수 역할을 더 벌립니다 — 회복 목표부터 확인하세요.'};
-    return blocked('HOLD',`최종 파티 첫 제작이 현재 필수 역할을 악화시킵니다: ${regressed.join(' · ')}`,{plannedId,regressedRequired:regressed},regressCandidate);
+      deltas:requirementDeltas(before,after),path:[{quote}],regression:regressedRows,
+      stopCondition:'이 제작은 우선순위가 더 높은 역할을 뒤로 되돌립니다 — 회복 목표부터 확인하세요.'};
+    return blocked('HOLD',`최종 파티 첫 제작이 우선순위 상 더 급한 역할을 되돌립니다: ${regressed.join(' · ')}`,{plannedId,regressedRequired:regressed,regressionDetail:regressedRows,regressionVerdict:'blocked-vector-loss'},regressCandidate);
   }
-  const deltas=requirementDeltas(before,after),reason=String(planned.reason||'최종 파티의 현재 패 검증 첫 순서'),row=makeRow(model,quote,after,reason),path=actions.map(action=>({id:String(action.id||''),name:String(action.name||''),wispCost:num(action.wispCost)})).filter(action=>action.id),action={id:plannedId,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),result:'squad-prefix-requoted',reason,deltas,stopCondition:`${Object.keys(quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path};
-  return withEvidence({state:'ACT_NOW',label:'최종 파티 · 지금 제작',reason,action,blockedAction:null,assessment:before,afterAction:after,bestPath:{steps:path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]},rare:rareLedgerForQuote(model,quote,'ACT_NOW',`최종 파티 ${nameOf(unit)}`),alternatives:[]},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:false,plannedId,quotedId:String(quote.targetId||unit.id),rawActionId:String(rawAction&&rawAction.id||''),sourceFingerprint:String(model.fingerprint||''),rawActionReplaced:!!rawAction&&String(rawAction.id||'')!==plannedId});
+  // v20.3: 회귀가 있는데도 통과시킬 때는 반드시 카드에 실어 보낸다.
+  // 숨기고 승인하면 v19.12 가 막으려던 "역할이 열렸는데 열린 줄 모르는"
+  // 상태가 되므로, 무엇이 얼마나 나빠지는지와 왜 그래도 지금인지를 함께
+  // 말한다.  통과 사유는 정책 벡터가 앞으로 갔다는 사실 하나뿐이다.
+  const regressionNote=regressedRows.length?{
+    rows:regressedRows,
+    labels:regressed,
+    verdict:'passed-vector-gain',
+    headline:`${regressed.join(' · ')}이(가) 나빠집니다 — 그래도 우선순위가 더 높은 역할이 앞서 닫혀 지금 만드는 것이 낫습니다.`,
+    detail:regressedRows.map(row=>`${row.label} ${round(row.currentBefore)}→${round(row.currentAfter)}/${round(row.target)}`).join(' · ')
+  }:null;
+  const deltas=requirementDeltas(before,after),reason=String(planned.reason||'최종 파티의 현재 패 검증 첫 순서'),row=makeRow(model,quote,after,reason),path=actions.map(action=>({id:String(action.id||''),name:String(action.name||''),wispCost:num(action.wispCost)})).filter(action=>action.id),action={id:plannedId,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),result:'squad-prefix-requoted',reason,deltas,regression:regressionNote,stopCondition:`${Object.keys(quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path};
+  return withEvidence({state:'ACT_NOW',label:'최종 파티 · 지금 제작',reason,action,blockedAction:null,assessment:before,afterAction:after,bestPath:{steps:path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]},rare:rareLedgerForQuote(model,quote,'ACT_NOW',`최종 파티 ${nameOf(unit)}`),alternatives:[]},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:false,plannedId,quotedId:String(quote.targetId||unit.id),rawActionId:String(rawAction&&rawAction.id||''),sourceFingerprint:String(model.fingerprint||''),rawActionReplaced:!!rawAction&&String(rawAction.id||'')!==plannedId,regressedRequired:regressed,regressionDetail:regressedRows,regressionVerdict:regressedRows.length?'passed-vector-gain':''});
 }
 
 // v18 — 침묵 금지.

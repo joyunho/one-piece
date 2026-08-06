@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v20.2.0-decision-engine-manual">
+  <meta name="ord-helper" content="v20.3.0-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.310 악몽 수동 도우미">
-  <title>원랜디 2.310 악몽 실전 판단 코치 v20.2.0 · 수동 모드</title>
+  <title>원랜디 2.310 악몽 실전 판단 코치 v20.3.0 · 수동 모드</title>
   <style data-source="ord_app.css">
 :root{color-scheme:dark;--bg:#060b18;--panel:#0d162a;--panel2:#101d35;--line:#223454;--text:#eef5ff;--muted:#91a2bd;--blue:#4f7cff;--cyan:#25c2e7;--green:#27d17f;--amber:#f3b84b;--red:#ef6262;--violet:#8b67ff;--shadow:0 20px 55px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 10% 0,#122a5a 0,#060b18 35%,#040812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-break:keep-all;overflow-wrap:anywhere}button,input,select{font:inherit}button{cursor:pointer}.ord-app{min-height:100vh;padding:18px;max-width:1860px;margin:0 auto}.ord-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px;border:1px solid rgba(112,154,255,.26);border-radius:24px;background:linear-gradient(135deg,rgba(66,83,222,.34),rgba(17,64,94,.3));box-shadow:var(--shadow)}.ord-kicker{font-size:11px;letter-spacing:.14em;color:#9bb7ff;font-weight:900}.ord-header h1{margin:5px 0 3px;font-size:29px;line-height:1.15}.ord-header p{margin:0;color:var(--muted);font-size:13px}.ord-head-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:720px}.ord-head-status>*{border:1px solid var(--line);border-radius:999px;background:rgba(6,11,24,.7);color:#d9e8ff;padding:8px 12px;font-size:12px;font-weight:800;white-space:nowrap}.ord-head-status .good{border-color:rgba(39,209,127,.45);color:#a8f7ce}.ord-head-status .warn{border-color:rgba(243,184,75,.45);color:#ffe1a1}.ord-head-status button{background:#1b2b4d}.ord-tabs{display:flex;gap:8px;margin:14px 0}.ord-tabs button,.purpose-buttons button,.two-button button,.round-box button,.action-buttons button,.prep-list button,.mini-cards button,.ghost,.primary{border:1px solid var(--line);border-radius:11px;background:#111d32;color:#dce9ff;padding:9px 13px;font-weight:850}.ord-tabs button.on,.purpose-buttons button.on,.primary{border-color:transparent;background:linear-gradient(135deg,var(--violet),var(--blue));color:white}.ord-layout{display:grid;grid-template-columns:294px minmax(0,1fr);gap:14px;align-items:start}.ord-side{display:grid;gap:12px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;padding-right:3px;min-width:0}.side-card,.ord-panel{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(15,26,48,.96),rgba(9,16,31,.96));box-shadow:0 14px 38px rgba(0,0,0,.18);min-width:0}.side-card{padding:14px}.side-card b{font-size:14px}.side-title{display:flex;justify-content:space-between;gap:8px}.side-title span{font-size:11px;color:var(--cyan)}.side-card label{display:grid;gap:5px;color:var(--muted);font-size:11px;margin-top:11px}.side-card input,.side-card select,.form-grid input{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#071020;color:var(--text);padding:9px}.side-card small{display:block;color:var(--muted);font-size:10.5px;line-height:1.45;margin-top:6px}.round-box{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding:10px;border:1px solid rgba(37,194,231,.3);border-radius:13px;background:rgba(10,39,62,.35)}.round-box strong{font-size:13px;min-width:0}.round-box div{display:flex;gap:4px}.round-box button{padding:6px 8px;font-size:11px}.side-card details{margin-top:10px}.side-card summary,.detail-modal summary{cursor:pointer;color:#cbd9ef;font-size:11px;font-weight:800}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.two-button{display:flex;gap:6px;margin-top:10px}.two-button button{flex:1;font-size:11px;padding:8px}.two-button .on{border-color:var(--green);color:#c5ffe0;background:rgba(39,209,127,.1)}.two-button .danger.on{border-color:var(--red);color:#ffc1c1;background:rgba(239,98,98,.1)}.stat-row{display:flex;justify-content:space-between;align-items:center}.stat-row b{font-size:24px;color:#ffe7a3}.lock-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.lock-list>span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(139,103,255,.35);border-radius:999px;padding:5px 8px;background:rgba(139,103,255,.1);font-size:10px}.lock-list button{border:0;background:none;color:#ffaaaa;font-weight:900}.side-card.compact{padding-bottom:10px}.common-line{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;margin-top:7px;font-size:11px}.common-line i{width:8px;height:8px;border-radius:50%}.common-line b{font-size:11px}.ord-main{display:grid;gap:13px;min-width:0}.milestone{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 19px;border:1px solid rgba(37,194,231,.4);border-radius:21px;background:linear-gradient(135deg,rgba(6,47,78,.78),rgba(31,25,87,.56));min-width:0}.milestone small{color:#61daf5;font-weight:900}.milestone h2{margin:3px 0 5px;font-size:24px}.milestone p{margin:0;color:#abc0df;font-size:12px}.purpose-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.purpose-buttons button{font-size:11px}.top-two{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:13px}.ord-panel{padding:17px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px}.panel-head small{color:#72d8ef;font-size:10px;font-weight:900}.panel-head h2{margin:2px 0 4px;font-size:20px}.panel-head p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.45}.count-pill,.mode-pill,.control-badge{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;white-space:nowrap}.mode-pill.physical{color:#ffcb9a;border-color:#e48e45}.mode-pill.magic{color:#a9c9ff;border-color:#5c84d8}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.profile-grid>div,.spec-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px;min-width:0}.profile-grid small,.spec-grid small{display:block;color:var(--muted);font-size:10px}.profile-grid b{display:block;margin-top:5px;font-size:12px;line-height:1.45}.synergy-line{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.synergy-line small{width:100%;color:var(--muted)}.synergy-line span{border:1px solid rgba(39,209,127,.3);border-radius:999px;padding:5px 8px;font-size:10px;color:#b8f7d5}.upper-focus details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.upper-focus details p{color:#aebbd0;font-size:11px}.control-badge.safe{color:#a9f7cc;border-color:rgba(39,209,127,.45)}.control-badge.edge{color:#ffe2a4;border-color:rgba(243,184,75,.45)}.control-badge.danger{color:#ffb4b4;border-color:rgba(239,98,98,.45)}.spec-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.spec-grid b{display:block;font-size:21px;margin:4px 0}.spec-grid span{color:#8193ae;font-size:9.5px}.deficit-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}.deficit-line>b{font-size:11px}.deficit-line span{border:1px solid rgba(243,184,75,.32);border-radius:999px;padding:5px 8px;color:#ffd78d;font-size:10px}.deficit-line .ok{color:#a9f7cc;border-color:rgba(39,209,127,.3)}.state-intro{display:flex;justify-content:space-between;gap:15px;align-items:center}.state-intro h2{margin:4px 0}.state-intro p{color:var(--muted);margin:0;font-size:12px}.control{min-width:260px;border:1px solid var(--line);border-radius:15px;padding:12px}.control b,.control span{display:block}.control span{font-size:10px;color:var(--muted);margin-top:4px}.control.safe{border-color:rgba(39,209,127,.35)}.control.edge{border-color:rgba(243,184,75,.35)}.control.danger{border-color:rgba(239,98,98,.35)}.mini-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mini-cards article{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.mini-cards img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mini-cards b,.mini-cards span,.mini-cards small{display:block;min-width:0}.mini-cards b{font-size:12px}.mini-cards span{font-size:10px;color:#9fb1ca}.mini-cards small{font-size:9px;color:#7085a4}.mini-cards button{padding:7px;font-size:10px}.action-list{display:grid;gap:8px}.action-row{display:grid;grid-template-columns:42px 48px minmax(0,1fr) 124px auto;gap:11px;align-items:center;border:1px solid rgba(55,84,132,.8);border-radius:16px;padding:11px;background:linear-gradient(90deg,rgba(12,27,50,.95),rgba(8,17,33,.95));min-width:0}.action-row .rank{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));font-weight:950}.action-row>img{width:46px;height:46px;border-radius:12px;object-fit:cover}.action-main{min-width:0}.unit-title{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.unit-title b{font-size:14px}.unit-title span{font-size:10px;color:#8da1bd}.role-tags{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.role-tags>span,.role-tags i{border:1px solid #284266;border-radius:999px;padding:4px 7px;font-size:9.5px;font-style:normal;color:#bcd3f2}.role-tags i{border-color:color-mix(in srgb,var(--pc) 60%,#223454);box-shadow:inset 3px 0 var(--pc)}.action-main p{margin:0;color:#91a6c2;font-size:10.5px}.action-cost{border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}.action-cost b{display:block;font-size:22px;color:#ffe1a1}.action-cost small{display:block;color:#7f91ab;font-size:9px}.action-cost span{display:block;margin-top:4px;font-size:9px}.action-cost .good{color:#9ff1c5}.action-cost .warn{color:#ffd083}.action-cost .bad{color:#ffaaaa}.action-buttons{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.action-buttons button{font-size:10px;padding:8px}.empty{padding:20px;border:1px dashed #2c4266;border-radius:14px;text-align:center;color:#8193ad}.prep-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prep-list>div{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.prep-list img{width:38px;height:38px;border-radius:10px;object-fit:cover}.prep-list b,.prep-list small{display:block}.prep-list b{font-size:12px}.prep-list small{color:#8195b2;font-size:9.5px}.prep-list em{font-style:normal;color:#ffd587;font-size:9.5px}.prep-list button{font-size:9px;padding:6px}.rare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rare-columns>div{border:1px solid var(--line);border-radius:14px;padding:11px}.rare-columns h3{margin:0 0 8px;font-size:12px}.rare-columns .use{border-color:rgba(39,209,127,.3)}.rare-columns .hold{border-color:rgba(243,184,75,.3)}.rare-columns .reroll{border-color:rgba(239,98,98,.3)}.rare-columns>div>div{display:grid;grid-template-columns:28px 1fr auto;gap:7px;align-items:center;margin-top:6px;font-size:10px}.rare-columns img{width:28px;height:28px;border-radius:8px}.rare-panel>small{display:block;margin-top:9px;color:#7f91aa;font-size:9.5px}.owned-chips{display:flex;gap:7px;flex-wrap:wrap}.owned-chips button{display:flex;align-items:center;gap:7px;max-width:260px;border:1px solid var(--line);border-radius:12px;background:#091326;color:#dceaff;padding:7px 9px}.owned-chips img{width:30px;height:30px;border-radius:8px}.owned-chips span{font-size:10px;text-align:left}.deck-page,.data-page{display:grid;gap:13px}.raw-ability-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.raw-ability-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px;background:#091326;font-size:10px;min-width:0}.raw-ability-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.raw-ability-grid>div>b{flex:0 0 auto;white-space:nowrap}.raw-ability-grid b{color:#d9ecff}.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.owned-grid button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#091326;color:#e3efff;padding:9px;text-align:left}.owned-grid img{width:36px;height:36px;border-radius:9px}.owned-grid span,.owned-grid small{display:block}.owned-grid span{font-size:11px}.owned-grid small{font-size:9px;color:#8296b4}.owned-grid.small button{grid-template-columns:32px 1fr auto}.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.diag-grid>div{border:1px solid var(--line);border-radius:12px;padding:10px;background:#091326}.diag-grid small,.diag-grid b{display:block}.diag-grid small{color:#8395b0;font-size:9px}.diag-grid b{font-size:11px;margin-top:4px}.data-page pre{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#050b16;padding:11px;color:#9fb5d0;font-size:10px}.manual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.manual-grid label{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;font-size:10px}.manual-grid input{width:100%;border:1px solid var(--line);border-radius:8px;background:#050b16;color:white;padding:7px}.modal-back{position:fixed;inset:0;z-index:9999;background:rgba(1,4,12,.8);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px}.detail-modal{width:min(900px,96vw);max-height:92vh;overflow:auto;border:1px solid #30486f;border-radius:24px;background:#081121;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.65);position:relative}.modal-x{position:absolute;right:15px;top:15px;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#111d31;color:white;font-size:20px}.detail-modal header{display:flex;gap:12px;align-items:center;padding-right:50px}.detail-modal header img{width:54px;height:54px;border-radius:14px}.detail-modal h2{margin:0;font-size:19px}.detail-modal header p{margin:4px 0 0;color:#8ea4c1;font-size:10px}.detail-hero{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:15px 0}.detail-hero>div,.missing-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px}.detail-hero small,.detail-hero b,.detail-hero span{display:block}.detail-hero small{color:#8296b4;font-size:9px}.detail-hero b{margin:4px 0;font-size:16px}.detail-hero span{font-size:10px;color:#a9bad0}.detail-modal section{margin-top:14px}.detail-modal h3{font-size:12px}.direct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.direct-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:10px;min-width:0}.direct-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.direct-grid>div>b{flex:0 0 auto;white-space:nowrap}.missing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.missing-grid small,.missing-grid b{display:block}.missing-grid small{color:#8296b4;font-size:9px}.missing-grid b{font-size:10px;line-height:1.55;margin-top:5px}.detail-modal details{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px}.detail-modal details p{font-size:10px;color:#9cb0cb}.detail-modal .close{margin-top:14px}.ord-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;border-radius:14px;padding:11px 16px;background:linear-gradient(135deg,var(--violet),var(--blue));box-shadow:var(--shadow);font-weight:900;font-size:12px}
@@ -920,6 +920,19 @@ body.ord-overlay-mode .command-line{display:flex}
 }
 .v202-craft-lock b{color:var(--gold)}
 .v202-craft-lock small{color:var(--sub);font-size:12px}
+/* v20.3: 회귀를 안고 승인할 때의 고지.  경고색(앰버)이되 차단(적)은 아니다 —
+   지금 만들라는 승인은 유지되고, 나빠지는 것을 숨기지 않을 뿐이다. */
+.v203-regress-warn{
+  display:grid;gap:2px;
+  border:1px solid rgba(224,164,78,.45);
+  border-left-width:3px;
+  border-radius:var(--radius-sm);
+  padding:7px 10px;
+  background:rgba(224,164,78,.08);
+  font-size:12.5px;
+}
+.v203-regress-warn b{color:var(--warn);font-weight:600}
+.v203-regress-warn small{color:var(--sub);font-size:12px;font-variant-numeric:tabular-nums}
 .v202-recovery-head{display:grid;gap:2px;margin-bottom:5px}
 .v202-recovery-head b{font-size:12.5px;color:var(--warn)}
 .v202-recovery-head small{font-size:11.5px}
@@ -1497,7 +1510,7 @@ window.ORD_CLEAR_STATS={"version":"clear-stats-v1","source":"tmo_nightmare_all_2
 (function(global){
 'use strict';
 
-const VERSION='20.2.0';
+const VERSION='20.3.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -3152,7 +3165,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='20.2.0';
+const VERSION='20.3.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 // v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
 // 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
@@ -4822,7 +4835,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='20.2.0';
+const VERSION='20.3.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -4952,7 +4965,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='20.2.0';
+const VERSION='20.3.0';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -5032,7 +5045,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='20.2.0';
+const VERSION='20.3.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.7스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']],priority:'상위 2기·최소 0.7스턴 → 이감 → 광보잡·토키 → 1.5스턴(마지막 필수)'}),
@@ -5241,7 +5254,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='20.2.0';
+const VERSION='20.3.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -6236,23 +6249,71 @@ function reconcileSquadExecutionRaw(decision,squad,locks){
   if(!quote||!quote.feasible||String(quote.targetId||unit.id)!==plannedId)return blocked('SYNC_BLOCKED',`최종 파티 첫 제작 ${nameOf(unit)}을 현재 패 원장으로 다시 견적했지만 완성할 수 없습니다. TMO를 다시 동기화하세요.`,{plannedId,quoteFeasible:!!(quote&&quote.feasible)});
   const route=decision.assessment&&decision.assessment.route||P.resolveRoute(Object.assign({},model.intent,{damageMode:squad.mode||model.intent&&model.intent.damageMode,magicRoute:squad.magicRoute||model.intent&&model.intent.magicRoute}),Object.assign({},model.settings,{mode:squad.mode||model.settings.mode,magicRoute:squad.magicRoute||model.settings.magicRoute}));
   if(!route)return blocked('SYNC_BLOCKED','최종 파티의 물딜·마딜 세부 경로를 확인하지 못했습니다.',{plannedId});
-  const activeLocks=Array.isArray(locks)?locks:[],before=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks:activeLocks}),after=P.evaluate(model,quote.after,route,{round:model.round.value,locks:activeLocks}),afterByKey=new Map((after.requirements||[]).map(row=>[row.key,row])),regressed=(before.requirements||[]).filter(row=>row.required!==false&&!row.waived).filter(row=>{const next=afterByKey.get(row.key);return next&&num(next.gap)>num(row.gap)+.005;}).map(row=>row.label||row.key);
-  if(regressed.length){
-    // v20.2(0806b 실측): 이 분기가 56라운드 중 20라운드를 통째로 침묵시켰다
-    // (승인 0 · 카드에 아무것도 없음).  v17.28 이 "이 타이밍에 추천을 안
-    // 해버리면 굉장히 곤란하다"며 절대 재발 금지로 새긴 빈 카드가 정확히
-    // 재발한 것이다 — 원시 v15 판단도 HOLD 라 blockedFallback() 이 null 이면
-    // 화면이 비어 버린다.  승인은 계속 막되(action null 유지), 파티가
-    // 만들려던 대상과 그 회귀 수치를 반드시 보여 준다.
+  const activeLocks=Array.isArray(locks)?locks:[],before=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks:activeLocks}),after=P.evaluate(model,quote.after,route,{round:model.round.value,locks:activeLocks}),afterByKey=new Map((after.requirements||[]).map(row=>[row.key,row])),regressedRows=(before.requirements||[]).filter(row=>row.required!==false&&!row.waived).map(row=>{const next=afterByKey.get(row.key);if(!next||num(next.gap)<=num(row.gap)+.005)return null;return{key:String(row.key||''),label:String(row.label||row.key||''),axis:String(row.axis||''),target:num(row.target),gapBefore:num(row.gap),gapAfter:num(next.gap),currentBefore:num(row.current),currentAfter:num(next.current),delta:num(next.gap)-num(row.gap),brokeClosed:num(row.gap)<=1e-9};}).filter(Boolean),regressed=regressedRows.map(row=>row.label);
+  // v20.3 — 회귀 게이트 정책.
+  //
+  // 여태 이 게이트는 "필수 역할 행이 하나라도 나빠지면 무조건 차단"이었다.
+  // 0806 두 판을 전수 재계산(발화 173건, 로그 역할표와 169건 소수점까지
+  // 일치)해서 잰 결과가 이렇다:
+  //   · 173건 **전부** 무언가를 닫아 준다.  닫아 주는 것 없이 벌리기만 하는
+  //     발화는 0건이었다.
+  //   · 145건은 순이득이 양수(막는 쪽이 손해).  대표: B r28~r40 (A)카벤딧슈
+  //     94회 차단 — 상위 딜러 0→1(최우선 그룹) · 방깎 60→80 · 1.5스턴
+  //     0.16→1 을 닫아 주는데 이감이 목표 102 중 5.5(5.4%) 나빠진다는
+  //     이유로 막았다.  사용자는 결국 r40 에 그대로 만들었다.
+  //   · 게이트가 지킨 역할은 **173건 전부** 파티 계획을 끝까지 따라가도
+  //     안 닫힌다 — 지키는 대상이 애초에 계획이 포기한 역할이었다.
+  //     그래서 "계획이 회복하면 통과" 같은 규칙은 이 판에서 아무것도
+  //     구하지 못한다(0/173).
+  //   · 153건은 이미 마감을 넘긴 뒤에 발화했고, 125건은 원시 v15 탐색의
+  //     1순위와 같은 대상이었다(엔진과 파티가 합의한 것을 게이트만 반대).
+  //   · 최종 결과: 게이트가 지킨 이감 80/102 · 광보잡 0/2 — 못 닫았다.
+  //
+  // 그렇다고 다 열면 안 된다.  같은 자료에서 **정당한 차단도 확인**됐다:
+  // B r47~r53 히바리3 은 베이비5·브룩·아카이누를 재료로 먹어 광보잡을
+  // 2/2 → 0/2 로 완전히 부수는데, 사용자가 r53 에 실제로 만들자 스냅샷에서
+  // 정확히 그대로 벌어졌고 판 끝까지 회복되지 않았다(시저도 이감 65→60 ·
+  // 광보잡 2→1 예측이 실측과 일치).
+  //
+  // 판별자는 새로 만들지 않는다 — **정책 모듈이 이미 갖고 있는 우선순위
+  // 벡터**를 쓴다.  P.evaluate 는 경로의 그룹 순서대로 정렬된 fullVector 와
+  // 현재 체크포인트 기준 checkpointVector 를 내고, 엔진은 다른 곳에서 이미
+  // 이 벡터로 "나아졌는가"를 판단한다.  게이트만 자기 기준(행 단위 gap)을
+  // 따로 쓰고 있었던 것이 과발화의 실체다.
+  //   차단 = 두 벡터 중 하나라도 사전식으로 뒤로 갔을 때.
+  // 173건에 적용하면 차단 39 · 승인 134 이고, 유해가 확인된 히바리 16/16 ·
+  // 시저 7/7 은 그대로 차단되며 카벤딧슈 94건은 전부 통과한다.
+  //
+  // 통과시킬 때도 회귀를 숨기지 않는다 — 승인 카드에 무엇이 얼마나
+  // 나빠지는지 그대로 싣는다(regression).  "괜찮다"고 말하는 게 아니라
+  // "이게 나빠지지만 우선순위상 지금은 이게 맞다"고 말하는 것이다.
+  const vectorLoss=regressed.length?(P.compareVector(after.fullVector,before.fullVector)>0||P.compareVector(after.checkpointVector,before.checkpointVector)>0):false;
+  if(regressed.length&&vectorLoss){
+    // v20.2(0806b 실측): 이 분기가 화면을 통째로 비웠다 — 원시 v15 판단도
+    // HOLD 라 blockedFallback() 이 null 이면 카드에 아무것도 안 남는다.
+    // v17.28 이 "이 타이밍에 추천을 안 해버리면 굉장히 곤란하다"며 절대
+    // 재발 금지로 새긴 그 상태다.  승인은 계속 막되(action null 유지),
+    // 파티가 만들려던 대상과 그 회귀 수치를 반드시 보여 준다.
     const regressRow=makeRow(model,quote,after,`파티 검증 보류 — ${regressed.join(' · ')} 악화`);
     const regressCandidate={id:plannedId,name:nameOf(unit),unit,row:regressRow,quote,
       wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),feasible:quote.feasible,
-      deltas:requirementDeltas(before,after),path:[{quote}],
-      stopCondition:'이 제작은 지금 열린 필수 역할을 더 벌립니다 — 회복 목표부터 확인하세요.'};
-    return blocked('HOLD',`최종 파티 첫 제작이 현재 필수 역할을 악화시킵니다: ${regressed.join(' · ')}`,{plannedId,regressedRequired:regressed},regressCandidate);
+      deltas:requirementDeltas(before,after),path:[{quote}],regression:regressedRows,
+      stopCondition:'이 제작은 우선순위가 더 높은 역할을 뒤로 되돌립니다 — 회복 목표부터 확인하세요.'};
+    return blocked('HOLD',`최종 파티 첫 제작이 우선순위 상 더 급한 역할을 되돌립니다: ${regressed.join(' · ')}`,{plannedId,regressedRequired:regressed,regressionDetail:regressedRows,regressionVerdict:'blocked-vector-loss'},regressCandidate);
   }
-  const deltas=requirementDeltas(before,after),reason=String(planned.reason||'최종 파티의 현재 패 검증 첫 순서'),row=makeRow(model,quote,after,reason),path=actions.map(action=>({id:String(action.id||''),name:String(action.name||''),wispCost:num(action.wispCost)})).filter(action=>action.id),action={id:plannedId,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),result:'squad-prefix-requoted',reason,deltas,stopCondition:`${Object.keys(quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path};
-  return withEvidence({state:'ACT_NOW',label:'최종 파티 · 지금 제작',reason,action,blockedAction:null,assessment:before,afterAction:after,bestPath:{steps:path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]},rare:rareLedgerForQuote(model,quote,'ACT_NOW',`최종 파티 ${nameOf(unit)}`),alternatives:[]},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:false,plannedId,quotedId:String(quote.targetId||unit.id),rawActionId:String(rawAction&&rawAction.id||''),sourceFingerprint:String(model.fingerprint||''),rawActionReplaced:!!rawAction&&String(rawAction.id||'')!==plannedId});
+  // v20.3: 회귀가 있는데도 통과시킬 때는 반드시 카드에 실어 보낸다.
+  // 숨기고 승인하면 v19.12 가 막으려던 "역할이 열렸는데 열린 줄 모르는"
+  // 상태가 되므로, 무엇이 얼마나 나빠지는지와 왜 그래도 지금인지를 함께
+  // 말한다.  통과 사유는 정책 벡터가 앞으로 갔다는 사실 하나뿐이다.
+  const regressionNote=regressedRows.length?{
+    rows:regressedRows,
+    labels:regressed,
+    verdict:'passed-vector-gain',
+    headline:`${regressed.join(' · ')}이(가) 나빠집니다 — 그래도 우선순위가 더 높은 역할이 앞서 닫혀 지금 만드는 것이 낫습니다.`,
+    detail:regressedRows.map(row=>`${row.label} ${round(row.currentBefore)}→${round(row.currentAfter)}/${round(row.target)}`).join(' · ')
+  }:null;
+  const deltas=requirementDeltas(before,after),reason=String(planned.reason||'최종 파티의 현재 패 검증 첫 순서'),row=makeRow(model,quote,after,reason),path=actions.map(action=>({id:String(action.id||''),name:String(action.name||''),wispCost:num(action.wispCost)})).filter(action=>action.id),action={id:plannedId,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),result:'squad-prefix-requoted',reason,deltas,regression:regressionNote,stopCondition:`${Object.keys(quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path};
+  return withEvidence({state:'ACT_NOW',label:'최종 파티 · 지금 제작',reason,action,blockedAction:null,assessment:before,afterAction:after,bestPath:{steps:path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]},rare:rareLedgerForQuote(model,quote,'ACT_NOW',`최종 파티 ${nameOf(unit)}`),alternatives:[]},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:false,plannedId,quotedId:String(quote.targetId||unit.id),rawActionId:String(rawAction&&rawAction.id||''),sourceFingerprint:String(model.fingerprint||''),rawActionReplaced:!!rawAction&&String(rawAction.id||'')!==plannedId,regressedRequired:regressed,regressionDetail:regressedRows,regressionVerdict:regressedRows.length?'passed-vector-gain':''});
 }
 
 // v18 — 침묵 금지.
@@ -8574,6 +8635,13 @@ class App{
       // 다르면 그것도 같이 말해 사용자가 스스로 바꿀 수 있게 한다.
       const lock=decision&&decision.craftLock;if(!lock||!lock.held)return'';
       return`<div class="v202-craft-lock"><b>제작 진행 중 — 지금 할 일을 고정했습니다</b><small>${C.esc(lock.name||'')}${C.num(lock.wispShort)>0?` · 선택 위습 ${C.num(lock.wispShort)}개 더 필요`:''} — 완성하거나 다른 것을 만들면 자동으로 풀립니다.${lock.alternative?` (엔진 1순위는 ${C.esc(lock.alternative)})`:''}</small>${lock.guard?`<small class="v202-lock-guard">${C.esc(lock.guard)}</small>`:''}</div>`;
+    })()}${(()=>{
+      // v20.3: 회귀가 있는데도 우선순위상 승인한 경우, 무엇이 얼마나
+      // 나빠지는지를 반드시 함께 보여 준다.  통과시킨 것과 "괜찮다"고 하는
+      // 것은 다르다 — 열리는 역할을 열린다고 말한 뒤 승인하는 것이다.
+      const action=decision&&(decision.action||decision.blockedAction),reg=action&&action.regression;
+      if(!reg||!(reg.rows||[]).length)return'';
+      return`<div class="v203-regress-warn"><b>${C.esc(reg.headline||'')}</b><small>${C.esc(reg.detail||'')}</small></div>`;
     })()}<div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v151StoryTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}${unit?(()=>{
       // v20.2(사용자 요청): 완성도%를 지금 할 일 카드에서 바로 본다.  TMO 보강이
       // 없으면 코치 원장 진행도로 대체하고, 어느 쪽인지 라벨로 밝힌다.

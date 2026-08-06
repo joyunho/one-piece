@@ -86,7 +86,14 @@ const RUNS=Object.freeze([
   // 단끝 환산 2.5/3 · 단일 1.5/2 · 체젠 0.45/2(키드는 '체젠필수' 메인).
   // 63라 승인 카드 8회 왕복(전장 임시 코드 요동)의 원 판 → v19.15.1
   // 디바운스의 근거.
-  {key:'0805L',file:'ORD_2305_20260805_011900_active.ordlog.json',outcome:'loss'}
+  {key:'0805L',file:'ORD_2305_20260805_011900_active.ordlog.json',outcome:'loss'},
+  // 2.310 첫 두 판(v20.1.2 기록).  이 둘이 회귀 게이트 과발화의 원 자료다 —
+  // 0806b 는 판단 387건 중 120건이 파티 검증 게이트에 막혔고, 게이트가
+  // 지킨 역할(이감 102% · 광보잡 2)은 끝내 안 닫혔다.  게이트는 engine.decide()
+  // 가 아니라 reconcileSquadExecution 안에 있으므로, 이 판들을 이 하니스로
+  // 재생해도 게이트는 안 보인다 — tests/lib/reconcile_replay.js 를 써야 한다.
+  {key:'0806a',file:'ORD_2310_20260806_125925_active.ordlog.json',outcome:'loss'},
+  {key:'0806b',file:'ORD_2310_20260806_134555_active.ordlog.json',outcome:'loss'}
 ]);
 
 function num(value){const n=Number(value);return Number.isFinite(n)?n:0;}

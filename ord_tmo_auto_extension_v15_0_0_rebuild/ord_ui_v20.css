@@ -691,6 +691,19 @@ body.ord-overlay-mode .command-line{display:flex}
 }
 .v202-craft-lock b{color:var(--gold)}
 .v202-craft-lock small{color:var(--sub);font-size:12px}
+/* v20.3: 회귀를 안고 승인할 때의 고지.  경고색(앰버)이되 차단(적)은 아니다 —
+   지금 만들라는 승인은 유지되고, 나빠지는 것을 숨기지 않을 뿐이다. */
+.v203-regress-warn{
+  display:grid;gap:2px;
+  border:1px solid rgba(224,164,78,.45);
+  border-left-width:3px;
+  border-radius:var(--radius-sm);
+  padding:7px 10px;
+  background:rgba(224,164,78,.08);
+  font-size:12.5px;
+}
+.v203-regress-warn b{color:var(--warn);font-weight:600}
+.v203-regress-warn small{color:var(--sub);font-size:12px;font-variant-numeric:tabular-nums}
 .v202-recovery-head{display:grid;gap:2px;margin-bottom:5px}
 .v202-recovery-head b{font-size:12.5px;color:var(--warn)}
 .v202-recovery-head small{font-size:11.5px}
