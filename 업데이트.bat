@@ -1,5 +1,7 @@
 @echo off
-git pull
+rem v20.1.2: pull the exact published branch and stop on divergence -
+rem a silent no-op pull left an old install in place.
+git pull --ff-only origin main
 if errorlevel 1 (
   echo git pull failed - check network or git install
   pause

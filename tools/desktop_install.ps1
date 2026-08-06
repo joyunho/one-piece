@@ -29,6 +29,11 @@ if (-not (Test-Path (Join-Path $desktopSrc 'node_modules'))) {
 if ($LASTEXITCODE -ne 0) { throw 'exe 빌드 실패 — 위 오류 메시지를 확인하세요.' }
 
 # 3) 바탕화면으로 복사 (OneDrive 바탕화면 리디렉션 대응)
+# v20.1.2 보강: 코치가 켜져 있으면 exe가 잠겨 교체가 실패하고 예전
+# 버전이 그대로 남는다("예전 버전이 설치되는데?" 실사례) — 실행 중인
+# 코치를 먼저 조용히 종료한다.
+& taskkill /IM ORDCoach.exe /F 2>$null | Out-Null
+Start-Sleep -Milliseconds 700
 $desk = [Environment]::GetFolderPath('Desktop')
 $target = Join-Path $desk 'ORD악몽코치'
 $built = Join-Path $desktopSrc 'dist\ORDCoach-win32-x64'
@@ -47,6 +52,7 @@ $shortcut.WorkingDirectory = $target
 $shortcut.Save()
 
 Write-Host ''
-Write-Host ('설치 완료: ' + $target)
+$ver = (Get-Content (Join-Path $desktopSrc 'package.json') -Raw | ConvertFrom-Json).version
+Write-Host ('설치 완료: ' + $target + ' (코치 v' + $ver + ')')
 Write-Host '바탕화면의 "ORD 악몽 코치" 바로가기로 실행하세요.'
 Write-Host '(TMO.GG 데스크톱 프로그램을 먼저 켜 두세요 — 게임 중 F8 = 오버레이)'

@@ -1,5 +1,5 @@
 /* ============================================================
-   ord_ui_v20.css — v20.1.1 "Operator Console" (완전 신작)
+   ord_ui_v20.css — v20.1.2 "Operator Console" (완전 신작)
    ============================================================
    사용자: "UI를 완전히 새로 만들어줘".
    ord_cockpit_v15.css(2,700줄 퇴적층 — v15~v19 레이어가 서로를
@@ -420,10 +420,15 @@ body{
 .v153-gap-grid article{border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;background:var(--panel-2)}
 
 /* ── 희귀→전설 패널 ──────────────────────────────────── */
-.v153-craft-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;min-height:0;overflow-y:auto;scrollbar-width:thin}
+/* 행은 반드시 카드 내용 크기로 잡는다(max-content) — 컨테이너가
+   좁으면 행을 누르는 게 아니라 그리드가 스크롤한다.  카드 자신도
+   overflow:hidden 으로 어떤 경우에도 이웃 위로 쏟아지지 않는다
+   ("희귀→전설이 너무 깨지는데?" 실사례 — 행 압축 + visible 넘침). */
+.v153-craft-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:max-content;align-content:start;gap:6px;min-height:60px;overflow-y:auto;scrollbar-width:thin}
 .v153-craft-cards>button{
   display:flex;flex-direction:column;gap:5px;
-  min-height:0;
+  max-height:230px;
+  overflow:hidden;
   border:1px solid var(--line);
   border-radius:var(--radius-sm);
   padding:8px;
@@ -443,11 +448,12 @@ body{
 .v154-rare-progress em{overflow:hidden;color:var(--muted);font-size:11px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}
 .v154-rare-bar{height:3px;border-radius:2px;overflow:hidden;background:var(--panel-3)}
 .v154-rare-bar>span{display:block;height:100%;background:var(--accent)}
-.v154-rare-mats{display:flex;flex-wrap:wrap;gap:3px;min-height:0}
+/* 재료 칩·사용처는 카드 안에서 두 줄까지만 — 나머지는 상세에서. */
+.v154-rare-mats{display:flex;flex-wrap:wrap;gap:3px;max-height:52px;overflow:hidden}
 .v154-rare-mats>span{border-radius:4px;padding:3px 7px;background:var(--panel-3);font-size:11px;color:var(--sub)}
 .v154-rare-mats>span.owned::before{content:'✓ ';color:var(--ok)}
 .v154-rare-mats>span.missing::before{content:'· ';color:var(--warn)}
-.v158-uses{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:11.5px;color:var(--muted)}
+.v158-uses{display:flex;flex-wrap:wrap;gap:4px;align-items:center;max-height:44px;overflow:hidden;font-size:11.5px;color:var(--muted)}
 .v158-uses b{font-size:11.5px;color:var(--sub)}
 .v158-uses .v153-ic-img{width:13px;height:13px;border-radius:3px}
 .v153-craft-cards>button>footer{display:flex;gap:6px;align-items:center;justify-content:space-between;margin-top:auto;font-size:11.5px;color:var(--muted)}
