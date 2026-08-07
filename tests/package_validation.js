@@ -225,9 +225,19 @@ assert(!fs.existsSync(path.resolve(ext,'..','START_OPENAI.bat')),'removed OpenAI
     assert(found,`${label} 에서 버전 상수를 찾지 못함 — 표기가 바뀌었으면 이 목록도 고칠 것`);
     assert.strictEqual(found,manifest.version,`${label} 버전이 ${found} — manifest ${manifest.version} 와 어긋남 (릴리스 때 같이 올릴 것)`);
   }
-  // 사용자에게 보이는 제목 두 곳도 같은 값이어야 한다.
-  for(const [label,src] of [['popup.html',read('popup.html')],['content-tmo.js',read('content-tmo.js')]])
-    assert(src.includes(`코치 v${manifest.version}`),`${label} 의 화면 제목이 v${manifest.version} 이 아님`);
+  // 사용자에게 보이는 제목도 같은 값이어야 한다.
+  // v20.5.2: 처음엔 popup.html·content-tmo.js 만 걸었는데, 정작 사용자가
+  // 계속 인용한 문자열(데스크톱 창 제목 표시줄)은 ord_helper_desktop.html
+  // 의 <title> 이었다 — 검사에서 빠져 있었다.
+  for(const [label,src] of [
+    ['popup.html',read('popup.html')],
+    ['content-tmo.js',read('content-tmo.js')],
+    ['ord_helper_desktop.html',read('ord_helper_desktop.html')]
+  ]) assert(src.includes(`코치 v${manifest.version}`),`${label} 의 화면 제목이 v${manifest.version} 이 아님`);
+  // 데스크톱 창 제목은 <title> 그 자체다 — 본문 어딘가가 아니라 태그를 건다.
+  const deskTitle=(read('ord_helper_desktop.html').match(/<title>([^<]*)<\/title>/)||[])[1];
+  assert(deskTitle&&deskTitle.includes(`v${manifest.version}`),
+    `데스크톱 창 제목이 "${deskTitle}" — v${manifest.version} 이어야 함 (사용자가 보는 유일한 버전 표시)`);
 }
 
 console.log(`PASS  manifest and MV3 CSP (${manifest.version})`);

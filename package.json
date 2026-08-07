@@ -1,6 +1,6 @@
 {
   "name": "ord-2305-nightmare-coach",
-  "version": "20.5.1",
+  "version": "20.5.2",
   "private": true,
   "description": "원랜디 2.305 악몽 실전 판단 코치 — TMO 조합도우미 연동 확장 + 단일 HTML 수동판",
   "engines": {
