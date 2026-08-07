@@ -121,42 +121,24 @@ check('⑥ 회복 목표는 "지금 만들라"가 아니다 — 머리말·계�
   assert.strictEqual(C.roleContribution(neko,'magic').bossFrenzy,0,'마딜에서 네코 광보잡이 세짐(제외 규칙 소실)');
 });
 
-check('⑦ 완성도% — TMO 보강이 없어도 진행도를 보여 준다(다만 TMO 라 하지 않는다)',()=>{
-  // 사용자 지적: "완성도 %가 안보이니까 불편한데".  v19.12 는 데스크톱 셸에서
-  // 항상 0으로 오는 TMO 값을 숨겨 정직성을 지켰지만, 대체 수치를 주지 않아
-  // 진행도를 볼 방법이 사라졌다.  코치 원장으로 직접 재고, 이름을 달리 쓴다.
-  const C=global.ORDCore,db=C&&catalog?C.buildDb(catalog):null;
-  assert(typeof C.ledgerCompletion==='function','ledgerCompletion 미노출');
-  const app=read('ord_app.js');
-  assert(app.includes('v202Completion(state,unitOrId){'),'완성도 헬퍼 없음');
-  // 정직성 계약: 코치 수치는 TMO 라벨을 달지 않는다.
-  assert(app.includes("label:'코치 계산 재료 진행도'"),'코치 수치 라벨 없음');
-  assert(app.includes("label:'TMO 완성도'"),'TMO 라벨 소실');
-  assert(app.includes('TMO 수치와 다름'),'두 수치가 다르다는 표기 없음');
-  // 옛 막다른 문구는 사라져야 한다 — 그게 "안 보이던" 원인이었다.
-  assert(!app.includes("'TMO% 보강 없음'"),'막다른 보강 없음 문구 잔존');
-  assert(!app.includes("`${fmt(row.completion)}%`:'보강 없음'"),'경로 카드 막다른 문구 잔존');
-  // 표시 지점 4곳(지금 할 일 히어로 · 희귀→전설 카드 · 상위 경로 · 방향판).
-  assert(app.includes('v202-progress'),'히어로 카드 완성도 기둥 없음');
-  assert(/const done=this\.v202Completion\(state,row\.unit\),tmoPct=/.test(app),'희귀 카드 완성도 대체 없음');
-  assert(app.includes('const done=this.v202Completion(state,row.id);'),'상위 경로 카드 완성도 대체 없음');
-  assert(app.includes('const done=this.v202Completion(state,row.upperId);'),'방향판 완성도 대체 없음');
-  assert(read('ord_ui_v20.css').includes('.v202-progress{'),'완성도 기둥 스타일 없음');
-  // 산수 계약: 빈손 0 · 보유 100 · 중간은 흔함 잔여 비율.
-  if(db){
-    const target='Z90h';
-    const empty=C.ledgerCompletion(db,target,{});
-    assert.strictEqual(empty.percent,0,'빈손 진행도가 0이 아님');
-    assert.strictEqual(C.ledgerCompletion(db,target,{[target]:1}).percent,100,'보유가 100%가 아님');
-    assert.strictEqual(C.ledgerCompletion(db,target,{[target]:1}).basis,'owned','보유 근거 표기 없음');
-    assert(empty.needTotal>0,'기준 흔함 총량이 0');
-    // 재료를 절반쯤 채우면 단조 증가한다.
-    const partial={};for(const [id,need] of Object.entries(empty.needTotal?C.recipeSolve(db,target,{}).lowestMissing:{}))partial[id]=Math.floor(C.num(need)/2);
-    const half=C.ledgerCompletion(db,target,partial);
-    assert(half.percent>0&&half.percent<100,`부분 보유 진행도가 범위 밖: ${half.percent}`);
-    assert(half.needRemain<empty.needRemain,'재료를 넣었는데 잔여가 안 줄어듦');
-    assert.strictEqual(C.ledgerCompletion(db,'없는아이디',{}),null,'미지 id 에 억지 수치');
-  }
+check('⑦ 완성도% — v20.5 사용자 결정으로 화면에서 철거됐다',()=>{
+  // v20.2 는 "완성도 %가 안보이니까 불편한데"에 답해 코치 원장 진행도를
+  // 넣었다.  v20.5 에서 사용자가 뒤집었다 — "티모 %이제 필요없잖아 없애줘".
+  // 실제로 1라 빈 패에서는 모든 칸이 0% 라 정보가 아니라 소음이었다.
+  // 계약도 뒤집는다: 화면에 완성도 %를 그리지 않는다.  대신 행동을 바꾸는
+  // 사실(희귀 n/m · 남은 흔함 장수 · 선위)만 남는다.
+  const app=read('ord_app.js'),engine=read('ord_v15_engine.js');
+  for(const gone of ['v202-progress','v202-queue-pct','v202-coach-pct',
+    'TMO 완성도','코치 계산 재료 진행도','완성도 확인 불가'])
+    assert(!app.includes(gone),`화면에 완성도% 잔재: ${gone}`);
+  // 엔진의 판단 이유에서도 % 어휘를 걷어냈다(그 문장이 화면 카드에 그대로 뜬다).
+  for(const gone of ['TMO 완성도','원 TMO'])
+    assert(!engine.includes(gone),`엔진 사유에 완성도% 잔재: ${gone}`);
+  // 대체 사실은 남아 있어야 한다 — 빈칸으로 두는 게 목적이 아니다.
+  assert(app.includes('흔함 ${C.num(progress.short)}장 남음'),'희귀 카드 대체 사실 없음');
+  assert(engine.includes('흔함 ${short}장 남음'),'대안 부제 대체 사실 없음');
+  // 계산 함수 자체는 코어에 남긴다(다시 필요해지면 화면만 붙이면 된다).
+  assert(typeof global.ORDCore.ledgerCompletion==='function','ledgerCompletion 제거됨 — 계산은 남겨 둔다');
 });
 
 console.log(`\n${checks} checks passed (v20.2.0 — 제작 잠금·회복 목표 표시·완성도 대체)`);

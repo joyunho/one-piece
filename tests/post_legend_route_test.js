@@ -34,7 +34,8 @@ check('first completed Legend pauses recommendation until the user chooses a bra
 check('Legend branch ranks extra candidates by live TMO completion and keeps an Upper switch visible',()=>{
   const app=stateFor('legend',{[first.id]:1},[{id:second.id,tmoPercent:61},{id:third.id,tmoPercent:88}]),pack=app.plan();
   assert.strictEqual(pack.plan.purpose,'story');assert(pack.plan.extraLegendChoice);assert(pack.plan.actions.length>1);assert(pack.plan.actions[0].progress>=pack.plan.actions[1].progress);
-  const html=app.renderPostLegendChoice(pack.plan.postLegendDecision);assert(html.includes('TMO 완성도순, 완성 후 다시 선택'));assert(html.includes('상위 3기분을 반영한 전설 환산 9기 미리보기'));
+  const html=app.renderPostLegendChoice(pack.plan.postLegendDecision);// v20.5: 완성도% 어휘 철거 — 같은 뜻을 부족 재료로 말한다.
+  assert(html.includes('부족 재료가 적은 순 · 완성 후 다시 선택'));assert(html.includes('상위 3기분을 반영한 전설 환산 9기 미리보기'));
 });
 
 check('route switches clear only the conflicting pending choice',()=>{

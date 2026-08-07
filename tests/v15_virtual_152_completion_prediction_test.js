@@ -60,8 +60,15 @@ function input({virtualSpecialId='',rewardCount=0,helpedPercent=35,plainPercent=
   assert.strictEqual(decision.action.row.progressOriginal,35);
   assert.strictEqual(decision.action.row.progressPredicted,75);
   assert.strictEqual(decision.action.completion.isProjected,true);
-  assert.match(decision.reason,/예상 TMO 완성도 75%/);
-  assert.match(decision.reason,/원 TMO 35%/);
+  // v20.5 dropped the completion-% vocabulary from user-facing reasons
+  // ("티모 %이제 필요없잖아 없애줘"): on an empty hand every card reads 0%,
+  // and the number never changed which card to build.  The 152 projection
+  // still decides the ranking — pinned above by action.id, progressPredicted
+  // and completion.isProjected — so what belongs here is that the ranking
+  // survives the words going away, not that the words come back.
+  assert.doesNotMatch(decision.reason,/완성도/);
+  assert.doesNotMatch(decision.reason,/원 TMO/);
+  assert.match(decision.reason,/부족한 재료와 선택 위습이 가장 적습니다/);
   assert.strictEqual(decision.evidence.completionBasis,'observed-tmo-plus-recipe-counterfactual');
 }
 

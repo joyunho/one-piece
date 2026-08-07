@@ -46,7 +46,7 @@
   --radius:10px;
   --radius-sm:7px;
   color:var(--text);
-  font-size:15.5px;
+  font-size:16.5px;
   line-height:1.45;
   letter-spacing:-.01em;
   min-height:0;
@@ -269,7 +269,8 @@ body{
 .v202-progress.coach b{color:var(--calc)}
 .v202-coach-pct{color:var(--calc)}
 .v151-clear-why{color:var(--sub);font-size:13.5px}
-.v151-story{color:var(--muted);font-size:12.5px}
+/* v20.5: 유닛명 <b> 안에 바로 이어 붙어 "샹크스희귀 B · 24위" 로 뭉쳤다. */
+.v151-story{display:inline-block;margin-left:8px;border:1px solid var(--line);border-radius:5px;padding:1px 7px;color:var(--sub);font-size:12.5px;font-weight:600;vertical-align:middle}
 .v151-boss-warn{
   border:1px solid rgba(226,101,101,.5);
   border-radius:var(--radius-sm);
@@ -446,11 +447,16 @@ body{
    좁으면 행을 누르는 게 아니라 그리드가 스크롤한다.  카드 자신도
    overflow:hidden 으로 어떤 경우에도 이웃 위로 쏟아지지 않는다
    ("희귀→전설이 너무 깨지는데?" 실사례 — 행 압축 + visible 넘침). */
-.v153-craft-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));grid-auto-rows:max-content;align-content:start;gap:6px;min-height:60px;overflow-y:auto;scrollbar-width:thin}
+/* v20.5 — 희귀→전설 가독성 재편 (사용자: "특히 희귀->전설이 그래").
+   전: 좁은 가운데 칼럼에 3열 × 11~13.5px × 말줄임(…) — 유닛 이름도 역할도
+   끝이 잘려 무엇인지 알 수 없었다.
+   후: 2열로 넓히고 이름 16px·역할 13px 로 키우되 말줄임 대신 두 줄까지
+   접는다.  카드가 조금 길어지는 대신 "무엇을 왜 노리는지"가 읽힌다. */
+.v153-craft-cards{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));grid-auto-rows:max-content;align-content:start;gap:8px;min-height:60px;overflow-y:auto;scrollbar-width:thin}
 .v153-craft-cards>button{
-  display:flex;flex-direction:column;gap:5px;
-  max-height:230px;
-  overflow:hidden;
+  display:flex;flex-direction:column;gap:6px;
+  max-height:none;
+  overflow:visible;
   border:1px solid var(--line);
   border-radius:var(--radius-sm);
   padding:8px;
@@ -460,28 +466,58 @@ body{
 .v153-craft-cards>button:hover{border-color:var(--accent)}
 .v153-craft-cards>button.recommended{border-color:var(--accent)}
 .v153-craft-cards>button.upcoming{opacity:.75}
-.v153-craft-cards>button>header{display:grid;grid-template-columns:30px minmax(0,1fr);gap:7px;align-items:center}
-.v153-craft-cards>button>header>img,.v153-craft-cards>button>header>.v153-ic-img{width:30px;height:30px;border-radius:6px;border:1px solid var(--line)}
-.v153-craft-cards>button>header b{display:block;overflow:hidden;font-size:13.5px;text-overflow:ellipsis;white-space:nowrap}
-.v153-craft-cards>button>header small{display:block;overflow:hidden;font-size:11.5px;text-overflow:ellipsis;white-space:nowrap}
-.v153-pick{display:inline-flex;justify-self:start;width:fit-content;border:1px solid var(--accent);border-radius:4px;padding:1px 7px;background:rgba(224,92,126,.12);color:var(--accent);font-size:11.5px;font-style:normal}
+.v153-craft-cards>button>header{display:grid;grid-template-columns:38px minmax(0,1fr);gap:9px;align-items:center}
+.v153-craft-cards>button>header>img,.v153-craft-cards>button>header>.v153-ic-img{width:38px;height:38px;border-radius:7px;border:1px solid var(--line)}
+.v153-craft-cards>button>header b{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;font-size:16px;line-height:1.25}
+.v153-craft-cards>button>header small{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px;font-size:13px;line-height:1.3;color:var(--sub)}
+.v153-pick{display:inline-flex;justify-self:start;width:fit-content;border:1px solid var(--accent);border-radius:5px;padding:2px 9px;background:rgba(224,92,126,.12);color:var(--accent);font-size:12.5px;font-weight:700;font-style:normal}
 .v154-rare-progress{display:flex;gap:6px;align-items:baseline;justify-content:space-between}
-.v154-rare-progress strong{font-size:22px;letter-spacing:-.02em}
-.v154-rare-progress em{overflow:hidden;color:var(--muted);font-size:11px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}
-.v154-rare-bar{height:3px;border-radius:2px;overflow:hidden;background:var(--panel-3)}
+.v154-rare-progress strong{font-size:24px;letter-spacing:-.02em}
+.v154-rare-progress em{overflow:hidden;color:var(--sub);font-size:13px;font-style:normal;text-overflow:ellipsis;white-space:nowrap}
+.v154-rare-bar{height:5px;border-radius:3px;overflow:hidden;background:var(--panel-3)}
 .v154-rare-bar>span{display:block;height:100%;background:var(--accent)}
 /* 재료 칩·사용처는 카드 안에서 두 줄까지만 — 나머지는 상세에서. */
-.v154-rare-mats{display:flex;flex-wrap:wrap;gap:3px;max-height:52px;overflow:hidden}
-.v154-rare-mats>span{border-radius:4px;padding:3px 7px;background:var(--panel-3);font-size:11px;color:var(--sub)}
+.v154-rare-mats{display:flex;flex-wrap:wrap;gap:4px;max-height:64px;overflow:hidden}
+.v154-rare-mats>span{border-radius:5px;padding:4px 8px;background:var(--panel-3);font-size:12.5px;color:var(--sub)}
 .v154-rare-mats>span.owned::before{content:'✓ ';color:var(--ok)}
 .v154-rare-mats>span.missing::before{content:'· ';color:var(--warn)}
-.v158-uses{display:flex;flex-wrap:wrap;gap:4px;align-items:center;max-height:44px;overflow:hidden;font-size:11.5px;color:var(--muted)}
-.v158-uses b{font-size:11.5px;color:var(--sub)}
+.v158-uses{display:flex;flex-wrap:wrap;gap:5px;align-items:center;max-height:52px;overflow:hidden;font-size:12.5px;color:var(--muted)}
+.v158-uses b{font-size:12.5px;color:var(--sub)}
 .v158-uses .v153-ic-img{width:13px;height:13px;border-radius:3px}
 .v153-craft-cards>button>footer{display:flex;gap:6px;align-items:center;justify-content:space-between;margin-top:auto;font-size:11.5px;color:var(--muted)}
 .v153-craft-cards>button>footer b{color:var(--sub);font-size:12px}
 .upcoming-zone{opacity:.9}
-.v153-no-crafts{padding:12px;color:var(--muted)}
+.v153-no-crafts{display:grid;gap:5px;border:1px dashed var(--line-strong);border-radius:var(--radius-sm);padding:14px 16px;background:var(--panel-2);color:var(--muted)}
+.v153-no-crafts b{font-size:15px;color:var(--text)}
+.v153-no-crafts span{color:var(--sub);font-size:13.5px}
+/* ── v20.5 빈 상태 ────────────────────────────────────────
+   v20.1 시트 이관에서 통째로 빠져 있던 네 클래스.  스타일이 없으니
+   <b> 와 <span> 이 인라인으로 붙어 "딜 계통을 선택하세요상단의 물딜·
+   마딜 버튼을…" 처럼 한 덩어리로 나왔고, 파티 빈 슬롯 9개는 맨 숫자
+   "123456789" 로 찍혔다(사용자 스크린샷).  빈 상태는 화면의 3분의 1을
+   차지하므로 "지금 무엇을 하면 이 칸이 채워지는가"를 읽히게 만든다. */
+.v153-spec-wait,.v153-upper-empty{
+  display:grid;gap:6px;align-content:center;justify-items:start;
+  min-height:120px;
+  border:1px dashed var(--line-strong);
+  border-radius:var(--radius-sm);
+  padding:16px 18px;
+  background:var(--panel-2);
+}
+.v153-spec-wait b,.v153-upper-empty b{font-size:16px;color:var(--text)}
+.v153-spec-wait span,.v153-upper-empty span{color:var(--sub);font-size:13.5px;line-height:1.5}
+.v155-party-idle{display:grid;gap:10px;align-content:start}
+/* 9환산 빈 자리 — 숫자 나열이 아니라 "채워야 할 칸 9개"로 보이게. */
+.v155-party-ghost{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}
+.v155-party-ghost>i{
+  display:grid;place-items:center;
+  min-height:46px;
+  border:1px dashed var(--line-strong);
+  border-radius:var(--radius-sm);
+  background:var(--panel-2);
+  font-style:normal;
+}
+.v155-party-ghost>i>span{color:var(--muted);font-size:14px;font-variant-numeric:tabular-nums}
 
 /* ── 최종 파티 패널 ──────────────────────────────────── */
 .v153-upper{overflow-y:auto;scrollbar-width:thin}
@@ -595,8 +631,11 @@ body{
 }
 .modal-x{position:absolute;top:10px;right:10px;width:30px;height:30px;padding:0}
 .v153-snipe-open{padding:5px 9px}
+/* v20.5: 구 시트(ord_app.css)가 top:16px 를 남겨 둬서 top+bottom 이 동시에
+   걸렸다 — 토스트가 세로로 늘어나 내용이 상단 바 위에 겹쳐 찍혔다. */
 .ord-toast{
-  position:fixed;z-index:99;bottom:18px;left:50%;
+  position:fixed;z-index:99;top:auto;bottom:18px;left:50%;
+  max-width:min(680px,calc(100vw - 32px));
   border:1px solid var(--line-strong);
   border-radius:9px;
   padding:9px 16px;
@@ -637,20 +676,36 @@ body.ord-overlay-mode .v151-action-main b{font-size:17px}
 /* 한글 조합 명령어는 게임 중 필수 — 오버레이에서도 절대 숨기지 않는다. */
 body.ord-overlay-mode .command-line{display:flex}
 
-/* ── 한 화면 계약: 압축 티어 ─────────────────────────── */
+/* ── 한 화면 계약: 압축 티어 ───────────────────────────
+   v20.5: 이 티어가 사실상의 기본값이었다 — max-height:1120px 는 거의 모든
+   노트북·창 크기에 걸리므로, 위에서 정한 본문 16.5px 는 실제로 거의
+   적용된 적이 없고 화면은 늘 13px 로 그려졌다.  "전체적으로 글자가 작고
+   정보를 한눈에 알아보기 힘들어"의 진짜 원인이다.
+   압축은 유지하되 읽을 수 있는 선(15.5px)까지만 줄인다.  더 줄여야 할
+   만큼 내용이 많으면 패널이 각자 내부 스크롤하면 된다 — 글자를 깎아
+   한 화면에 우겨넣지 않는다. */
 @media (max-height:1120px) and (min-width:1240px){
-  .v153-screen{font-size:13px}
-  .v153-panel{padding:8px 10px}
-  .v151-action-main b{font-size:20px}
-  .v151-action-main>img,.v151-action-main>i{width:46px;height:46px}
-  .v153-craft-cards{grid-template-columns:repeat(3,minmax(0,1fr))}
-  .v154-rare-progress strong{font-size:16px}
+  .v153-screen{font-size:15.5px}
+  .v153-panel{padding:9px 11px}
+  .v151-action-main b{font-size:25px}
+  .v151-action-main>img,.v151-action-main>i{width:50px;height:50px}
+  .v153-craft-cards{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .v154-rare-progress strong{font-size:21px}
 }
-@media (max-height:1000px) and (min-width:1240px){
-  .ord-app.v151-shell{zoom:.9}
-}
+/* 아주 낮은 창에서만 한 단계 더 — 그래도 14px 아래로는 안 간다. */
 @media (max-height:820px) and (min-width:1240px){
-  .ord-app.v151-shell{zoom:.8}
+  .v153-screen{font-size:14px}
+  .v151-action-main b{font-size:22px}
+}
+/* v20.5 — 축소(zoom) 폐기.
+   1900×970(흔한 창 크기)에서 zoom:.9 가 걸려 화면 전체가 90%로 줄어 있었다.
+   사용자 지적("전체적으로 글자가 작고 정보를 한눈에 알아보기 힘들어")의
+   직접 원인이다.  한 화면 계약은 zoom 이 아니라 대시보드 자체가
+   height:calc(100dvh - …) 이고 패널이 각자 내부 스크롤하는 구조로 이미
+   지켜진다 — 축소는 그 위에 덧씌운 중복 장치였고, 글자만 깎았다.
+   아주 낮은 창(≤700px)에서만 최소한으로 남긴다. */
+@media (max-height:700px) and (min-width:1240px){
+  .ord-app.v151-shell{zoom:.92}
 }
 
 /* ── 반응형 ──────────────────────────────────────────── */
@@ -738,7 +793,9 @@ body.ord-overlay-mode .command-line{display:flex}
 .tier-c{border-color:var(--line-strong);color:var(--sub)}
 .v153-rare-fold-body{display:grid;gap:5px;margin-top:6px;font-size:12px}
 .v153-rare-ledger-fold{margin-top:6px}
-.v158-six{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;align-content:start}
+/* v20.5: .v158-six 가 3열로 되돌리고 있었다(.v153-craft-cards 의 2열 계약을
+   덮음).  가운데 칼럼 폭에서 3열은 유닛 이름조차 두 줄로 안 들어간다. */
+.v158-six{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;align-content:start}
 .v153-party{display:grid;gap:6px;margin-top:8px}
 .v153-support-list>button.ready,.v153-craft-cards>button.ready{border-color:var(--line-strong)}
 .v153-next-candidates button.full,.v158-queue-row.full{border-color:var(--line-strong)}

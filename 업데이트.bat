@@ -1,5 +1,5 @@
 @echo off
-rem v20.4.0: pull the exact published branch and stop on divergence -
+rem v20.5.0: pull the exact published branch and stop on divergence -
 rem a silent no-op pull left an old install in place.
 git pull --ff-only origin main
 if errorlevel 1 (

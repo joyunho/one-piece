@@ -147,12 +147,17 @@ check('physical and magic modes are directly selectable and magic exposes its ro
 check('152-kill panel uses the v15 projected completion without overwriting original TMO',()=>{
   const app=Object.create(App.prototype),special={id:'special-152',name:'보상 특별',groupName:'특별함',stuffs:[]},rare={id:'rare-target',name:'예상 희귀',groupName:'희귀함',stuffs:[{id:special.id,count:1}]},db={byId:new Map([[special.id,special],[rare.id,rare]]),specials:[special],rares:[rare]};
   app.state={virtualSpecialId:special.id};
-  const state={db,rawCounts:{},counts:{[special.id]:1},percent:{[special.id]:50,[rare.id]:41}},plan={v15Decision:{model:{effective:{completionById:{[rare.id]:{originalTmoPercent:41,predictedTmoPercent:67,rankingPercent:67,delta:26,isProjected:true,virtualSpecialId:special.id,reason:'virtual-special-counterfactual'}}}}}};
+  // v20.5: 계약의 알맹이는 "152 보상을 반사실로만 계산하고 실제 TMO 값을
+  // 덮어쓰지 않는다"이고, 그건 그대로다.  바뀐 건 그 결과를 무엇으로
+  // 말하느냐다 — 완성도 %를 전부 걷어냈으므로("티모 %이제 필요없잖아
+  // 없애줘") 이 칸도 선택위습 환산으로 말한다.  모델이 실어 보내는
+  // recipe(before/after/saved)를 그대로 쓴다.
+  const state={db,rawCounts:{},counts:{[special.id]:1},percent:{[special.id]:50,[rare.id]:41}},plan={v15Decision:{model:{effective:{completionById:{[rare.id]:{originalTmoPercent:41,predictedTmoPercent:67,rankingPercent:67,delta:26,isProjected:true,virtualSpecialId:special.id,reason:'virtual-special-counterfactual',recipe:{totalWispEquivalent:12,beforeWispEquivalent:12,afterWispEquivalent:4,savedWispEquivalent:8,materialConsumed:1}}}}}}};
   const html=app.renderV151RewardForecast(state,plan);
-  assert(html.includes('원 TMO 41%'));
-  assert(html.includes('예상 67%'));
-  assert(html.includes('+26'));
-  assert(html.includes('TMO 원본 수치를 덮어쓰지 않습니다'));
+  assert(!/%/.test(html),`152 칸에 완성도% 잔재: ${html.slice(0,200)}`);
+  assert(html.includes('선택위습 12 → <strong>4</strong>'),'선택위습 전후가 없음');
+  assert(html.includes('선위 8 절약'),'절약분이 없음');
+  assert(html.includes('실제 패를 바꾸지 않고'),'반사실 해명이 사라짐');
 });
 
 check('upper choice consumes only v15 route candidates, caps them at six and hides Common totals',()=>{

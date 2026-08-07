@@ -77,15 +77,14 @@ check('① 물딜 1.5스턴 — 항상 필수 + 마지막 순서(fillLast), 마�
 
 check('② 제작 카드 — TMO% · 직접 조합식 · 노리기 카드 % 숨김',()=>{
   const craft=app.slice(app.indexOf('renderV153CraftableLegends(state,plan){'),app.indexOf('renderV153UnusedRare(state,plan){'));
-  // v20.2: 큰 %는 여전히 "희귀 보유 비율"이 아니라 완성도다 — 다만 출처가
-  // 하나 늘었다.  TMO 보강이 있으면 TMO 값, 없으면(데스크톱 셸 상시) 코치가
-  // 원장으로 잰 값.  v202Completion 이 그 갈림을 한 곳에서 판정하므로
-  // 계약도 그 헬퍼를 가리킨다(직접 completionPercent 호출은 폐기).
-  assert(craft.includes('this.v202Completion(state,row.unit)'),'큰 %가 완성도 헬퍼를 안 씀');
+  // v20.5: 사용자 결정으로 카드의 큰 %(완성도) 자체가 철거됐다 —
+  // "티모 %이제 필요없잖아 없애줘".  1라 빈 패에서 모든 칸이 0% 였다.
+  // 카드가 말하는 진행도는 이제 희귀 보유 비율과 남은 흔함 장수뿐이다.
+  assert(!craft.includes('v156-ratio'),'완성도 % 배지가 남아 있음');
+  assert(craft.includes("<strong>희귀 ${owned}/${total}</strong>"),'희귀 보유 비율이 사라짐');
   assert(craft.includes('v159-recipe'),'직접 조합식 라인이 없다');
   assert(craft.includes('solve.direct'),'조합식이 direct stuffs 기반이 아니다');
-  assert(craft.includes('row.upcoming||'),'노리기 카드에서 %를 숨기지 않는다(겹침 재발)');
-  assert(craft.includes('done.label'),'푸터에 완성도 출처 라벨이 없다');
+  assert(craft.includes('흔함 ${C.num(progress.short)}장 남음'),'푸터에 남은 흔함 장수가 없다');
   assert(css.includes('.v159-recipe'),'조합식 스타일이 없다');
 });
 

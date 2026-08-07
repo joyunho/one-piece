@@ -107,9 +107,14 @@ test('파티 확정 CSS가 6패널 화면 계약을 위해 압축 규칙도 갖�
   // 압축이 아니다.  구 시트는 줄마다 여백을 깎았고, 신작 시트(v20.1)는
   // 셸 전체를 zoom 으로 축소하는 방식으로 바꿨다 — 파티 확정 줄도 그
   // 축소에 함께 실린다.  계약을 현재 방식으로 갱신한다.
-  const tight = slice(CSS, '@media (max-height:1000px) and (min-width:1240px){', '\n}');
-  assert(/zoom:\.[89]/.test(tight), '낮은 높이 압축 티어가 사라짐 — 한 화면 계약을 깰 수 있다');
+  // v20.5: 축소(zoom)를 폐기했다 — zoom:.9 가 거의 모든 창에 걸려 화면
+  // 전체를 줄이고 있었고, 그게 "글자가 작다"의 직접 원인이었다.  한 화면
+  // 계약은 대시보드 높이 고정 + 패널 내부 스크롤로 지킨다.  압축 티어는
+  // 글꼴 단계로만 남기고, 읽을 수 있는 하한(14px)을 못 박는다.
+  const tight = slice(CSS, '@media (max-height:1120px) and (min-width:1240px){', '\n}');
+  assert(/font-size:15\.5px/.test(tight), '압축 티어가 사라짐 — 한 화면 계약을 깰 수 있다');
   assert(CSS.includes('@media (max-height:820px) and (min-width:1240px){'), '더 낮은 높이 티어가 사라짐');
+  assert(!/\{zoom:\.[89]\}/.test(CSS.replace(/\/\*[\s\S]*?\*\//g,'')), 'zoom 축소가 되살아남 — 글자만 깎는 장치다');
 });
 
 for (const [name, fn] of tests) {

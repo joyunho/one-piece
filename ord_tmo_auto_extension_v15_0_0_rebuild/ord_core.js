@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='20.4.0';
+const VERSION='20.5.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1392,7 +1392,10 @@ function recommendationPlan(state,locks,settings,upperMemo,synergyMemo){
   const reserveIds=(locks||[]).filter(x=>['rare','legend','upper'].includes(x.stage)).map(x=>x.id),reserved=reserveTargets(state.db,state.counts,reserveIds),rareProtected=protectedRareMap(state,reserved.stock),rareInventory=rareInventoryFor(state,reserved.stock,rareProtected),rarePressure=rarePressureForInventory(rareInventory,round),projectedStock=cloneCounts(reserved.stock);if(projectedUpper&&num(state.counts[projectedUpper.id])<=0)projectedStock[projectedUpper.id]=num(projectedStock[projectedUpper.id])+1;const spec=currentSpec(state,mode,localSettings,projectedUpper);let def=deficits(spec,mode,localSettings);if(mode==='magic'&&normalizeMagicRoute(settings.magicRoute)==='auto'){localSettings._resolvedMagicRoute=def.route;def=deficits(spec,mode,localSettings);}const stock=purpose==='spec'?projectedStock:reserved.stock,availableWisp=reserved.remainingWisp,ctx={mode,spec,deficits:def,settings:localSettings,round,purpose,upper,stock,ruleCounts:stock,availableWisp,synergyMemo,rareProtected,rareInventory,rarePressure,costBasis:reserveIds.length?'protected':'current'};
   const completionInventory=completionForced?rareInventoryFor(state,state.counts,{}):rareInventory,completionPressure=completionForced?rarePressureForInventory(completionInventory,round):rarePressure,completionCtx=completionForced?Object.assign({},ctx,{stock:state.counts,ruleCounts:state.counts,availableWisp:state.wisp,rareProtected:{},rareInventory:completionInventory,rarePressure:completionPressure,costBasis:'current'}):ctx,ruleStock=completionCtx.ruleCounts||completionCtx.stock||state.counts,pool=candidatePool(state,purpose,mode,localSettings,round).filter(u=>!num(state.counts[u.id])).filter(u=>specialPrerequisiteStatus(state.db,u,ruleStock).allowed),rowFor=u=>{const family=openBoth&&familyOf(u)!=='neutral'?familyOf(u):mode,rowCtx=completionCtx;if(family===mode)return candidateRow(state,u,rowCtx);const alternateSettings=Object.assign({},localSettings,{_upperUnit:isUpper(u)?u:null}),alternateSpec=currentSpec(state,family,alternateSettings,projectedUpper),alternateDef=deficits(alternateSpec,family,alternateSettings);return candidateRow(state,u,Object.assign({},rowCtx,{mode:family,spec:alternateSpec,deficits:alternateDef,settings:alternateSettings}));};let rows=annotateCandidateValue(dedupeCandidateRows(pool.map(rowFor))).sort(completionForced?compareCompletionRows:compareRows),actions=[],queueResult=null,actionCap=purpose==='choice'?0:purpose==='spec'?5:3,selectionMode=purpose==='choice'?'decision':purpose==='spec'?'queue':'alternatives';
   if(completionForced){
-    rows.forEach((row,index)=>{row.completionRank=index+1;row.why=Object.assign({},row.why||{},{headline:`TMO 완성도 ${round2(row.progress)}% ${index+1}위 · 전략 점수와 예약보다 완성도를 먼저 적용`});});
+    // v20.5: 순위 근거는 그대로 완성도지만(내부 계산은 유지) 화면에 숫자를
+    // 내밀지는 않는다 — "티모 %이제 필요없잖아 없애줘".  사용자가 이 줄에서
+    // 얻어야 하는 건 "왜 이게 1위인가"이지 35 라는 값이 아니다.
+    rows.forEach((row,index)=>{row.completionRank=index+1;row.why=Object.assign({},row.why||{},{headline:`남은 재료가 가장 적은 ${index+1}번째 후보 · 전략 점수와 예약보다 먼저 적용`});});
     actions=rows.slice(0,actionCap);
   }
   else if(purpose==='spec'){queueResult=selectCompatibleQueue(state,pool,ctx,actionCap);actions=queueResult.rows;}
@@ -1432,7 +1435,7 @@ function gameFlow(state,locks,settings){
   if(!rareSecured){purpose='rare';phase='first-rare';label='첫 희귀 제작';deadline=7;note='7라운드 안에 첫 희귀를 만들어 선택 위습 1개를 확보합니다.';}
   else if(!legendSecured){purpose='story';phase='first-legend';label='첫 전설·히든 제작';deadline=20;note='현재 희귀·특별·안흔·흔함 패에서 가장 가까운 전설 또는 히든을 20라 전에 만듭니다.';}
   else if(!upperDecided&&!postLegendRoute){purpose='choice';phase='post-legend-choice';label='첫 전설 이후 진행 선택';deadline=25;note='추가 전설·히든을 더 만들지, 현재 패로 상위를 준비할지 선택하세요.';}
-  else if(!upperDecided&&postLegendRoute===POST_LEGEND_ROUTES.LEGEND){purpose='story';phase='additional-legend';label='추가 전설·히든 제작';note='현재 TMO 완성도 순서대로 전설·히든을 더 추천합니다. 상위를 준비할 때 진행 선택을 바꾸세요.';}
+  else if(!upperDecided&&postLegendRoute===POST_LEGEND_ROUTES.LEGEND){purpose='story';phase='additional-legend';label='추가 전설·히든 제작';note='남은 재료가 적은 순서대로 전설·히든을 더 추천합니다. 상위를 준비할 때 진행 선택을 바꾸세요.';}
   else if(!upperDecided){purpose='upper';phase='upper-choice';label='상위·딜 계통 결정';deadline=25;note='현재 희귀 패를 최대한 소모하는 상위와 물딜·마딜 계통을 비교합니다.';}
   else if(!upperBuilt){phase='upper-build';label='상위 제작 + 라인 전설';deadline=30;note='확정 상위 재료를 보호하고 30라 전후에 상위와 라인 방어용 전설 1기를 마련합니다.';}
   else if(round<=50&&counts.squad<by50Target){phase='reinforce';label='50라 전 9환산 보강';deadline=50;note=`50라 전까지 상위 결손을 메우며 실제 전설 환산 ${by50Target}기를 보수적 구조 최소선으로 맞춥니다.`;}
@@ -1605,8 +1608,12 @@ function snapshotHealth(snapshot,now){
     // 아는 코드 수량은 정상이지만, 방금 만든 유닛이 그 미해석일 수 있다.
     {const unknownCount=(s.localDirect&&s.localDirect.unknownCodes||[]).length;
     if(unknownCount>0)return result('partial',`로컬 직결 · 미해석 코드 ${unknownCount}종`,true,'아는 코드의 수량은 정상 수집 중입니다. 방금 만든 유닛이 화면에 없으면 연결 진단의 미해석 코드를 확인하세요 — 표본 대조로 매핑을 추가할 수 있습니다.');}
-    if(num(s.abilityCount)<3)return result('partial','로컬 직결 · %·능력치는 TMO 탭 보강 대기',true,'게임 데이터를 /datas 로 직접 읽는 중입니다. 완성도%·현재 능력치는 TMO 조합도우미 탭이 열려 있으면 자동 보강됩니다.');
-    return result('ok','로컬 직결 실시간',true,'TMO 화면 없이 게임 데이터를 직접 읽고 있으며, 완성도%·현재 능력치는 TMO 탭에서 보강 중입니다.');
+    // v20.5: 완성도%는 더는 화면에 없다.  그런데도 상태줄이 "%·능력치 보강
+    // 대기"라고 말하면, 사용자는 찾을 수 없는 표시를 기다리게 된다.  값은
+    // 여전히 순위 계산에 쓰이므로 대기 자체는 사실 — 그 값이 무엇에 쓰이는지로
+    // 바꿔 말한다.
+    if(num(s.abilityCount)<3)return result('partial','로컬 직결 · 순위 보정·능력치는 TMO 탭 보강 대기',true,'게임 데이터를 /datas 로 직접 읽는 중입니다. 추천 순위를 다듬는 값과 현재 능력치는 TMO 조합도우미 탭이 열려 있으면 자동 보강됩니다.');
+    return result('ok','로컬 직결 실시간',true,'TMO 화면 없이 게임 데이터를 직접 읽고 있으며, 추천 순위를 다듬는 값과 현재 능력치는 TMO 탭에서 보강 중입니다.');
   }
   if(s.source!=='tmo')return result('error','알 수 없는 데이터 원본',false,'지원하는 TMO 연동 또는 동봉 수동 실행 파일에서 다시 시작해 주세요.');
   // v19.7.1(외부 감사): 커넥터 전 구간이 숫자 번호를 받는데 최종 상태 판정만

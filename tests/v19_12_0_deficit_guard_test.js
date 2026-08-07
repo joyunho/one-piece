@@ -52,8 +52,11 @@ check('④ closer 없는 필수 결손의 보유 기여 보호 (protectCriticalB
   assert(src.includes('const starved=open.filter(req=>!closers.has(req.key))'),'starved 결손 분기 없음');
   assert(src.includes('keepsStarved'),'보유 기여 원장 비교 없음');
   assert(src.includes('starvedDropped'),'데드락 방지 복원 없음');
-  // 완성도 0% 문구 — 보강 없는 판에 "0%로 가장 가깝습니다"라고 말하지 않는다.
-  assert(src.includes('TMO 완성도 보강 없음'),'완성도 0 사유 문구 없음');
+  // v19.12 는 보강 없는 판에서 "0%로 가장 가깝습니다"라고 말하지 않으려고
+  // 사유에 해명을 달았다.  v20.5 에서 완성도% 어휘 자체를 철거했으므로
+  // 해명할 대상이 없다 — 사유는 부족 재료·선위로만 말한다.
+  assert(!src.includes('TMO 완성도'),'엔진 사유에 완성도% 잔재');
+  assert(src.includes('부족한 재료와 선택 위습이 가장 적습니다'),'대체 사유 문구 없음');
 });
 
 check('⑤ UI·부트 배선 — 중간 합류·데스크톱 2상태·TMO%·특강·런로그',()=>{
@@ -61,15 +64,13 @@ check('⑤ UI·부트 배선 — 중간 합류·데스크톱 2상태·TMO%·특�
   assert(app.includes('중간 합류 감지')&&app.includes('v1912MidJoinBanner'),'중간 합류 배너 없음');
   assert(app.includes('TMO 프로그램 미연결')&&app.includes('게임 시작 대기 중 · TMO 프로그램 연결됨'),'데스크톱 미수신 2상태 없음');
   assert(app.includes('데스크톱 프로그램</b>(설치형 앱)')&&app.includes('tmo.gg 웹사이트를 여는 것으로는 연결되지 않습니다'),'데스크톱 가드 카피 없음');
-  // v20.2: 보강 판정(v1912TmoEnriched)은 그대로 남지만, 그 결과가 더는
-  // 막다른 "TMO% 보강 없음"이 아니다 — 사용자가 진행도를 아예 못 보게
-  // 됐기 때문에("완성도 %가 안보이니까 불편한데") 코치 원장 계산값으로
-  // 대체하고 이름·색으로 출처를 구분한다.  0%를 TMO 값인 척하지 않는다는
-  // v19.12 의 원래 계약은 라벨 분리로 계속 지켜진다.
-  assert(app.includes('v1912TmoEnriched')&&app.includes('v202Completion'),'보강 판정·완성도 대체 배선 없음');
-  assert(app.includes("label:'코치 계산 재료 진행도'"),'대체 수치 라벨 없음');
-  assert(app.includes('TMO 보강 없음(코치 원장 계산)'),'출처 고지 없음');
-  assert(!app.includes("'TMO% 보강 없음'"),'막다른 표기가 되살아남');
+  // v20.5: 사용자가 완성도% 자체를 철거하라고 했다("티모 %이제 필요없잖아
+  // 없애줘").  v19.12 가 지키려던 것은 "0%를 사실처럼 보여 주지 않는다"였고,
+  // 아예 안 그리면 그 위험은 원천적으로 없다.  보강 판정 자체는 남는다 —
+  // 현재 능력치 보강 여부는 다른 표시에서 여전히 쓴다.
+  assert(app.includes('v1912TmoEnriched'),'보강 판정이 사라짐');
+  for(const gone of ['TMO 완성도','코치 계산 재료 진행도',"'TMO% 보강 없음'"])
+    assert(!app.includes(gone),`완성도% 잔재: ${gone}`);
   assert(app.includes('특강 기준')&&app.includes('집계'),'특강 집계 표기 없음');
   assert(app.includes('localDirect:snapshot.localDirect?{unknownCodes'),'런로그 미해석 코드 기록 없음');
   for(const boot of ['ord_boot_desktop.js','ord_boot_extension.js']){
