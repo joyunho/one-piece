@@ -518,8 +518,11 @@ function routeChoiceCard(model,route,locks,routeCandidates,roundNow){
   if(!unit)return null;
   let quote=null;
   try{quote=L.quote(model,unit,model.effective.counts,{availableRound:model.round.value});}catch(_){quote=null;}
-  let after=null;
-  if(quote){try{after=P.evaluate(model,quote.after,route,{round:roundNow,locks:Array.isArray(locks)?locks:[]});}catch(_){after=null;}}
+  // 이 카드는 "먼저 방향을 확정하라"는 안내지 제작 명세가 아니다.  전체
+  // 역할표를 다시 평가(P.evaluate)해 makeRow 를 만들면 ROUTE_CHOICE 라운드마다
+  // 정책 평가가 한 번씩 더 돈다 — 0806a 는 그런 라운드가 44개라 재생
+  // 게이트가 600초 예산을 넘겼다.  이름·사유·선위만으로 충분하므로 만들지
+  // 않는다(재료 명세가 필요하면 아래 후보 카드에서 상세로 들어간다).
   // v18 계약(v18_coach_layer_test): 방향 미확정 구간에서 **감당 못 할
   // 대상을 다음 행동으로 지목하지 않는다**.  "감당 못 할 상위를 다음
   // 행동이라 부르던 회귀가 실제로 있었다"는 기록이 남아 있고, 그때
@@ -529,7 +532,7 @@ function routeChoiceCard(model,route,locks,routeCandidates,roundNow){
   // 0806a r41 의 (S)료쿠규(feasible=true·wispGap=0)가 정확히 그 경우다.
   if(!quote||!quote.feasible)return null;
   return{id:String(lead.id),name:nameOf(unit),unit,quote,
-    row:(()=>{try{return after?makeRow(model,quote,after,'상위 방향 확정 대기'):null;}catch(_){return null;}})(),
+    row:null,
     wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),wispShort:0,
     feasible:true,affordable:true,result:'route-choice-lead',routeChoicePending:true,
     reason:'현재 1순위 후보이고 지금 만들 수 있습니다. 아래에서 상위 방향을 확정하면 그때 승인합니다 — 확정 전에는 재료를 쓰지 않습니다.',
