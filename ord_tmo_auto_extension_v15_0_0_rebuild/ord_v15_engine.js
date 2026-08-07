@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='20.3.0';
+const VERSION='20.4.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -451,6 +451,89 @@ function recoveryPlan(model,route,locks,assessment,options){
     if(targets.length>=limit)break;
   }
   return targets.length?{basis:'nearest-closer-per-open-role',note:options&&options.note||'남은 필수 역할을 닫는 최근접 목표',targets}:null;
+}
+// v20.4 — "지금 증명되는 제작은 없습니다" 라운드의 빈 카드 메우기.
+//
+// 0723a r55~r62 실측: 8라운드 연속으로 1번 카드가 통째로 비어 있었다.
+// 판단 자체는 침묵이 아니다 — 회복 목표 3개(베이비5·도플라밍고·키드)를
+// 들고 있었고 각각 선위가 2·5·3개 부족했다.  즉 **말할 것이 있는데 카드에
+// 안 실었다**.  15판 재생에서 이런 빈 카드가 57건이고 그중 27건이 이
+// 한 경로에서 나왔다(나머지도 같은 계열).
+//
+// 회복 목표는 "지금 만들라"가 아니므로 승인(action)으로 올리면 안 된다.
+// 대신 v17.28 이 정한 자리인 blockedAction 에 실어 "무엇을 기다리는지"를
+// 보여 준다 — 재료가 다 모였고 선위만 모자란 목표를 최우선으로 고른다.
+// 그게 사용자가 실제로 할 수 있는 유일한 행동(선위 모으기)이기 때문이다.
+function recoveryHoldCard(model,route,locks,recovery,roundNow){
+  const targets=recovery&&Array.isArray(recovery.targets)?recovery.targets:[];
+  if(!targets.length)return null;
+  // ① 재료 완비 + 선위만 부족  ② 그 외에는 정책 우선순위 순서(그대로)
+  const ranked=targets.slice().sort((left,right)=>{
+    const readyLeft=(left.missing||[]).length===0?0:1,readyRight=(right.missing||[]).length===0?0:1;
+    return readyLeft-readyRight||num(left.wispGap)-num(right.wispGap);
+  });
+  for(const target of ranked){
+    const unit=model.knowledge&&model.knowledge.db&&model.knowledge.db.byId.get(String(target.id||''));
+    if(!unit)continue;
+    let quote=null;
+    try{quote=L.quote(model,unit,model.effective.counts,{availableRound:model.round.value});}catch(_){continue;}
+    if(!quote)continue;
+    let after=null;
+    try{after=P.evaluate(model,quote.after,route,{round:roundNow,locks:Array.isArray(locks)?locks:[]});}catch(_){after=null;}
+    const wispShort=Math.max(0,num(quote.wisp.cost)-num(quote.wisp.before));
+    const missing=(target.missing||[]).map(item=>`${item.name} ${num(item.count)}장`).join(' · ');
+    const reason=missing
+      ?`${target.roleLabel||target.roleKey}을(를) 닫는 최근접 목표입니다. 아직 ${missing} 부족합니다.`
+      :wispShort>0
+        ?`${target.roleLabel||target.roleKey}을(를) 닫는 최근접 목표입니다. 재료는 다 모였고 선택 위습 ${wispShort}개만 더 모으면 됩니다.`
+        :`${target.roleLabel||target.roleKey}을(를) 닫는 최근접 목표입니다.`;
+    return{id:String(target.id||''),name:nameOf(unit),unit,quote,
+      row:(()=>{try{return after?makeRow(model,quote,after,reason):null;}catch(_){return null;}})(),
+      wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),wispShort,
+      feasible:!!quote.feasible,result:'recovery-nearest',reason,
+      roleKey:String(target.roleKey||''),roleLabel:String(target.roleLabel||''),
+      recoveryPreview:true,
+      stopCondition:'이것은 승인이 아니라 다음 목표입니다 — 재료·선위가 모이면 그때 카드가 승인으로 바뀝니다.'};
+  }
+  return null;
+}
+// v20.4 — 상위 방향 미확정 라운드의 빈 카드 메우기.
+//
+// 0806a 실측: r1~r44 **44라운드 전부** 상태가 ROUTE_CHOICE 였고, 그 96개
+// 판단 전부 action·blockedAction·proposed·coachAction 이 모두 비어 있었다.
+// 화면 아래에는 상위 후보 6개가 떠 있었지만 화면의 축인 "지금 할 일"
+// 카드는 44라운드 내내 백지였다.  게다가 r41 시점 1순위((S)료쿠규)는
+// feasible=true · wispGap=0 — 지금 만들 수 있는 것이었다.
+//
+// 그 판의 침묵 37라운드 중 31라운드가 이 상태였다(회귀 게이트보다 큰
+// 침묵 원인이다).  자동 확정은 하지 않는다 — 메인 상위 선택은 판 전체를
+// 규정하는 결정이라 사용자 몫이다.  대신 **무엇을 해야 하는지**를 카드에
+// 싣는다: 1순위 후보 이름과 "먼저 방향을 확정해야 승인이 시작된다".
+function routeChoiceCard(model,route,locks,routeCandidates,roundNow){
+  const rows=routeCandidates&&Array.isArray(routeCandidates.rows)?routeCandidates.rows
+    :Array.isArray(routeCandidates)?routeCandidates:[];
+  const lead=rows.find(row=>row&&row.feasible)||rows[0];
+  if(!lead||!lead.id)return null;
+  const unit=model.knowledge&&model.knowledge.db&&model.knowledge.db.byId.get(String(lead.id));
+  if(!unit)return null;
+  let quote=null;
+  try{quote=L.quote(model,unit,model.effective.counts,{availableRound:model.round.value});}catch(_){quote=null;}
+  let after=null;
+  if(quote){try{after=P.evaluate(model,quote.after,route,{round:roundNow,locks:Array.isArray(locks)?locks:[]});}catch(_){after=null;}}
+  // v18 계약(v18_coach_layer_test): 방향 미확정 구간에서 **감당 못 할
+  // 대상을 다음 행동으로 지목하지 않는다**.  "감당 못 할 상위를 다음
+  // 행동이라 부르던 회귀가 실제로 있었다"는 기록이 남아 있고, 그때
+  // 정한 답은 "지금 할 수 없으면 지목하지 않고, 무엇이 얼마나 모자란지만
+  // 말한다"(그 몫은 confidence.note 가 이미 한다)였다.
+  // 그러므로 이 카드는 **지금 실제로 만들 수 있는 1순위**일 때만 낸다.
+  // 0806a r41 의 (S)료쿠규(feasible=true·wispGap=0)가 정확히 그 경우다.
+  if(!quote||!quote.feasible)return null;
+  return{id:String(lead.id),name:nameOf(unit),unit,quote,
+    row:(()=>{try{return after?makeRow(model,quote,after,'상위 방향 확정 대기'):null;}catch(_){return null;}})(),
+    wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),wispShort:0,
+    feasible:true,affordable:true,result:'route-choice-lead',routeChoicePending:true,
+    reason:'현재 1순위 후보이고 지금 만들 수 있습니다. 아래에서 상위 방향을 확정하면 그때 승인합니다 — 확정 전에는 재료를 쓰지 않습니다.',
+    stopCondition:'상위 방향을 확정하기 전에는 어떤 제작도 승인하지 않습니다 — 잘못 고른 상위는 판 전체를 되돌릴 수 없습니다.'};
 }
 function expand(model,node,row,route,locks,initial){const quote=L.quote(model,row.unit,node.counts,{availableRound:model.round.value});if(!quote.feasible)return null;const before=ownedFinals(model,node.counts),after=ownedFinals(model,quote.after);if(introducesLineageConflict(model,before,after))return null;const next=nodeBase(model,quote.after,route,locks,initial,node.sequence.concat({quote}));return next;}
 // v18.2 — 직전에 추천하던 대상은 후보 목록에서 조용히 사라지지 않는다.
@@ -1304,7 +1387,7 @@ function buildDecision(input){
   // The user explicitly chose "another legend/hidden" after the first one.
   // Keep the same completion authority until they switch to upper preparation.
   if(postLegend==='legend'&&final.nonUpperFinalCount>0&&final.upperCount<=0&&!lock){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.additionalFinal));}
-  if(!route||!lock&&final.upperCount<=0){const routeCandidates=upperRouteCandidates(model,locks),routeCandidateLanes=routeCandidates.blueprintLanes||[],lockedDetail=!!lock&&!route,leadRoute=route||routeOptions(model)[0],leadAssessment=P.evaluate(model,model.effective.counts,leadRoute,{round:roundNow,locks});return finalize({state:'ROUTE_CHOICE',label:lockedDetail?'고정 상위의 마딜 세부 경로 선택':'상위 방향 선택',reason:lockedDetail?'감지된 메인 상위는 바꾸지 않고 dual·singleEnd 중 역할표만 선택합니다.':'상위 단독 화력으로 줄 세우지 않습니다. 현재 패로 만든 상위와 이를 보조할 전설급을 9환산 최소 파티로 함께 최적화하고, 재료 충돌·역할 결손·제어 과잉을 반영해 최대 6개만 비교합니다.',action:null,assessment:P.evaluate(model,model.effective.counts,route,{round:roundNow,locks}),routeCandidates,routeCandidateLanes,routeChoiceKind:lockedDetail?'locked-magic-detail':'upper',recovery:recoveryPlan(model,leadRoute,locks,leadAssessment,{note:`방향 확정 전 참고 · ${leadRoute.label} 기준 결손 목표`}),alternatives:[],rare:{basis:'route-uncommitted',rows:model.knowledge.db.rares.filter(unit=>num(model.effective.counts[unit.id])>0).map(unit=>({id:unit.id,name:nameOf(unit),unit,initial:num(model.effective.counts[unit.id]),use:0,hold:num(model.effective.counts[unit.id]),reroll:0,reason:'경로 확정 전 안전 보류'})),use:[],hold:[],reroll:[],safeReroll:null,conflict:false},unknowns:['50~65라 실제 보스 DPS','라인 처리력'],evidence:{observed:M.observedEvidence(model),ledger:'exact-current-stock',rankingAuthority:S&&typeof S.rankUpperBlueprints==='function'?'upper-plus-support-full-squad':'projected-route-fallback',candidateLimit:ROUTE_CANDIDATE_LIMIT,futureDropsCredited:false,fixedFinalParty:false,clearClaim:false}});}
+  if(!route||!lock&&final.upperCount<=0){const routeCandidates=upperRouteCandidates(model,locks),routeCandidateLanes=routeCandidates.blueprintLanes||[],lockedDetail=!!lock&&!route,leadRoute=route||routeOptions(model)[0],leadAssessment=P.evaluate(model,model.effective.counts,leadRoute,{round:roundNow,locks});return finalize({state:'ROUTE_CHOICE',label:lockedDetail?'고정 상위의 마딜 세부 경로 선택':'상위 방향 선택',reason:lockedDetail?'감지된 메인 상위는 바꾸지 않고 dual·singleEnd 중 역할표만 선택합니다.':'상위 단독 화력으로 줄 세우지 않습니다. 현재 패로 만든 상위와 이를 보조할 전설급을 9환산 최소 파티로 함께 최적화하고, 재료 충돌·역할 결손·제어 과잉을 반영해 최대 6개만 비교합니다.',action:null,blockedAction:routeChoiceCard(model,leadRoute,locks,routeCandidates,roundNow),assessment:P.evaluate(model,model.effective.counts,route,{round:roundNow,locks}),routeCandidates,routeCandidateLanes,routeChoiceKind:lockedDetail?'locked-magic-detail':'upper',recovery:recoveryPlan(model,leadRoute,locks,leadAssessment,{note:`방향 확정 전 참고 · ${leadRoute.label} 기준 결손 목표`}),alternatives:[],rare:{basis:'route-uncommitted',rows:model.knowledge.db.rares.filter(unit=>num(model.effective.counts[unit.id])>0).map(unit=>({id:unit.id,name:nameOf(unit),unit,initial:num(model.effective.counts[unit.id]),use:0,hold:num(model.effective.counts[unit.id]),reroll:0,reason:'경로 확정 전 안전 보류'})),use:[],hold:[],reroll:[],safeReroll:null,conflict:false},unknowns:['50~65라 실제 보스 DPS','라인 처리력'],evidence:{observed:M.observedEvidence(model),ledger:'exact-current-stock',rankingAuthority:S&&typeof S.rankUpperBlueprints==='function'?'upper-plus-support-full-squad':'projected-route-fallback',candidateLimit:ROUTE_CANDIDATE_LIMIT,futureDropsCredited:false,fixedFinalParty:false,clearClaim:false}});}
   // A selected but not-yet-observed upper is a hard milestone reservation.
   // Do not let a tempting support legend spend its rares or finite wisps first.
   // v16.6: but the reservation must not freeze the whole board.  A recorded
@@ -1336,7 +1419,7 @@ function buildDecision(input){
     // 재료 보호 authority instead of a generic hold, enriched with the
     // recovery targets computed on the reserved stock.
     if(upperFallback&&!rare.safeReroll)return finalize(Object.assign(upperFallback,{recovery,upperReserve}));
-    return finalize({state:rare.safeReroll?'REROLL_ONE':'HOLD',label:rare.safeReroll?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:rare.safeReroll?`${rare.safeReroll.name}은 검토한 현재 패 경로와 현재 전투 역할에 사용처가 없습니다.`:recovery?'지금 증명되는 제작은 없습니다. 아래 회복 목표의 재료를 모으거나 리롤로 찾으세요.':'현재 패로 다음 필수 조건을 안전하게 개선하는 제작을 증명하지 못했습니다.',action:null,assessment:searched.initialAssessment,rare,recovery,upperReserve,alternatives:[],unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,pathCount:0,horizon:HORIZON}});}
+    return finalize({state:rare.safeReroll?'REROLL_ONE':'HOLD',label:rare.safeReroll?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:rare.safeReroll?`${rare.safeReroll.name}은 검토한 현재 패 경로와 현재 전투 역할에 사용처가 없습니다.`:recovery?'지금 증명되는 제작은 없습니다. 아래 회복 목표의 재료를 모으거나 리롤로 찾으세요.':'현재 패로 다음 필수 조건을 안전하게 개선하는 제작을 증명하지 못했습니다.',action:null,blockedAction:recoveryHoldCard(searchModel,route,locks,recovery,roundNow),assessment:searched.initialAssessment,rare,recovery,upperReserve,alternatives:[],unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,pathCount:0,horizon:HORIZON}});}
   const first=best.sequence[0],firstAssessment=P.evaluate(searchModel,first.quote.after,route,{round:roundNow,locks}),deltas=requirementDeltas(searched.initialAssessment,firstAssessment),improves=P.improved(searched.initialAssessment,firstAssessment),pathLoss=best.coverage.deadEnds.length>searched.initialCoverage.deadEnds.length,budgetProtected=!!(searched.budgetGuard&&searched.budgetGuard.applied&&searched.budgetGuard.criticalIds.includes(first.quote.targetId)),freeRepair=freeNonRegressiveRepair(first.quote,searched.initialAssessment,firstAssessment),openRequiredKeys=new Set((searched.initialAssessment.requirements||[]).filter(row=>row.required!==false&&!row.waived&&num(row.gap)>0).map(row=>row.key)),requiredRepair=deltas.some(row=>openRequiredKeys.has(row.key)&&(row.closed||row.gapGain>0)),
   // v16.5: when every remaining open requirement is a coverage dead end (no
   // affordable closer exists in the current hand), a feasible non-regressive
