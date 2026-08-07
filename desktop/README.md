@@ -1,7 +1,32 @@
-# ORD 악몽 코치 — 데스크톱 셸 (v20.2.0 프로토타입)
+# ORD 악몽 코치 — 데스크톱 셸
 
 크롬 확장 없이 코치를 독립 프로그램으로 돌립니다.  TMO.GG **데스크톱
 앱**(로컬 서버)만 켜져 있으면 되고, tmo.gg 탭은 필요 없습니다.
+
+## 설치 — cmd 창에 그대로 붙여넣기 (git 이 이미 있을 때)
+
+시작 → "cmd" 를 열고 한 줄씩:
+
+```bat
+cd /d %USERPROFILE%
+git clone https://github.com/joyunho/one-piece.git ord-coach
+cd ord-coach
+바탕화면에_설치.bat
+```
+
+- Node.js 가 없으면 설치 스크립트가 winget 으로 자동 설치합니다(1~2분).
+- 끝나면 바탕화면 **"ORD 악몽 코치"** 바로가기로 실행하세요.
+- 설치 시작 시 `설치할 폴더 / 설치할 버전 / 커밋` 이 찍힙니다 — 버전이
+  기대와 다르면 옛 폴더에서 돌린 것입니다.
+
+**업데이트** (같은 cmd 창):
+
+```bat
+cd /d %USERPROFILE%\ord-coach && 업데이트.bat
+```
+
+git 이 없다는 오류(`'git'은(는) ... 아닙니다`)가 나오면 아래
+PowerShell 절차로 git 부터 설치하세요.
 
 ## 완전 처음부터 한 번에 (포맷 직후 — git·Node 전부 자동)
 

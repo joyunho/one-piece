@@ -21,7 +21,7 @@ test('renderCoach는 상태와 6개 핵심 판단 영역만 배치한다', () =>
   // v18.4(사용자 목업): 6개 판단 영역. 아래 이름 순서가 곧 화면 순서다.
   // v19.6(사용자 루미너스 UI): 2번(다음 판단)이 1번 안의 레일로 들어가고,
   // 스펙이 첫 행 오른쪽으로 — action+rail | spec / craft | party / rare 순서.
-  assert.deepStrictEqual(regions, ['next-action', 'next-preview', 'clear-gaps', 'craftable-legends', 'upper-party', 'unused-rare']);
+  assert.deepStrictEqual(regions, ['next-action', 'next-preview', 'clear-gaps', 'reference', 'craftable-legends', 'upper-party', 'unused-rare']); // v21.1 참고 탭
   assert(coach.includes('renderV153Status(state,clock,health)'));
   assert(!coach.includes('renderV151RunHeader'));
   assert(!coach.includes('renderV152RarePlan'));
@@ -41,7 +41,10 @@ test('다음 행동은 확정 카드 하나와 후속 후보 최대 2개만 보�
   // 패널의 사용·보류 접이에 유지).  "먼 미래를 고정하지 않는다"는 계약은
   // 문구로 유지 — 1번 카드만 확정이고 이후 순서는 패 변화 시 재계산.
   assert(candidate.includes('queue.length>=5'), '다음 제작 큐 상한 5가 사라짐');
-  for (const section of ['v158-queue', '패가 바뀌면 다시 계산']) {
+  // v21.1("정보가 너무 중구난방"): 큐 밑의 상시 설명 문단은 제거했다.
+  // "먼 미래를 고정하지 않는다"는 원칙은 큐 머리말("가변 후보 · 확정은
+  // 큰 카드 1개")이 압축해 말한다 — 문단이 아니라 머리말이 계약이다.
+  for (const section of ['v158-queue', '가변 후보']) {
     assert(candidate.includes(section), `다음 제작 큐 섹션이 사라짐: ${section}`);
   }
   assert(!candidate.includes('지금 보존'), "'지금 보존' 섹션은 v19.9에서 제거됐다");

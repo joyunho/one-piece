@@ -50,7 +50,10 @@ catch(error){
 // 희귀"(6번)로 나뉘고, "할 일 미리보기"(2번)가 새로 들어왔다.
 // v19.6(사용자 루미너스 UI): 2번(다음 판단)이 1번 패널 안의 레일이 되고,
 // 스펙이 첫 행 오른쪽으로 — 영역 순서 갱신.
-const REGIONS=['game-status','next-action','next-preview','clear-gaps','craftable-legends','upper-party','unused-rare'];
+// v21.1: 참고 3패널(희귀→전설·최종 파티·남는 희귀)은 reference 탭 안으로
+// 들어갔다 — 상시 5패널이 '정보 중구난방'의 원인이었다.  세 지역은 DOM에
+// 남고(탭 전환) reference 가 그 컨테이너다.
+const REGIONS=['game-status','next-action','next-preview','clear-gaps','reference','craftable-legends','upper-party','unused-rare'];
     for(const cfg of [{name:'desktop',width:1920,height:1080},{name:'laptop',width:1440,height:900},{name:'mobile',width:430,height:900}]){
       await page.setViewportSize({width:cfg.width,height:cfg.height});
       await page.goto('file://'+path.resolve(__dirname,'ui_fixture.html'),{waitUntil:'domcontentloaded'});
@@ -82,7 +85,9 @@ const REGIONS=['game-status','next-action','next-preview','clear-gaps','craftabl
       // 제작 가능 전설급 / 현재 스펙 / 최종 파티 / 필요없는 희귀).
       // v19.6(사용자 루미너스 UI): "다음 판단"이 1번 패널 안의 레일로 합쳐져
       // .v153-panel 은 5장 — 판단 영역 자체는 여전히 6개(REGIONS 로 검사).
-      assert.strictEqual(metrics.panelCount,5,`${cfg.name} expected exactly five decision panels`);
+      // v21.1: 참고 탭 컨테이너(v211-refer)가 패널로 서고, 그 안의 세 옛 패널도
+      // .v153-panel 클래스를 유지한다(스타일은 접힘) — 총 6장.
+      assert.strictEqual(metrics.panelCount,6,`${cfg.name} expected six panel shells (v21.1)`);
       assert(metrics.gapCards<=4,`${cfg.name} clear gaps exceeded the four-card cap`);
       assert(metrics.hasAction||metrics.hasRecovery,`${cfg.name} replay of the recorded stall must show an action or recovery ladder (state=${metrics.decisionState})`);
       assert.strictEqual(metrics.legacyTabs,0,`${cfg.name} legacy tab bar returned`);

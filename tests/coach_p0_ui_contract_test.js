@@ -40,8 +40,8 @@ check('live coach exposes one status strip and four decision regions',()=>{
   // 실제로는 두 가지(만들 수 있는 전설급 / 안 쓰는 희귀)라 목업대로 갈랐고,
   // "다음에 뭘 하지"를 1번 카드 안에서 빼내 2번 패널로 세웠다.
   // v19.6(사용자 루미너스 UI): 스펙이 첫 행 오른쪽으로 — 순서 갱신.
-  assert.deepStrictEqual(regions,['game-status','next-action','next-preview','clear-gaps','craftable-legends','upper-party','unused-rare']);
-  assert.strictEqual(new Set(regions).size,7);
+  assert.deepStrictEqual(regions,['game-status','next-action','next-preview','clear-gaps','reference','craftable-legends','upper-party','unused-rare']); // v21.1 참고 탭 컨테이너 포함
+  assert.strictEqual(new Set(regions).size,8); // v21.1 reference 포함
   for(const key of ['status','next','candidate','spec','rare','upper','unused'])assert.strictEqual((html.match(new RegExp(`data-test="${key}"`,'g'))||[]).length,1,key);
   for(const removed of ['ord-tabs','v15-rare-board','coach-details','v15-outcome-dock'])assert(!html.includes(removed),removed);
   assert(html.includes('v153-screen'));
@@ -55,8 +55,8 @@ check('route and post-Legend states keep the compact five-region shell visible',
   for(const name of ['Status','NextCandidate','Spec','RareLedger','UpperParty'])app[`renderV153${name}`]=()=>name==='Status'?'<section data-region="game-status"></section>':'<i></i>';
   const route=app.renderCoach({}, {v15Decision:{state:'ROUTE_CHOICE'},postLegendDecision:{awaiting:false}}, {}, {}, {ready:true,key:'ok'});
   const postLegend=app.renderCoach({}, {v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:true}}, {}, {}, {ready:true,key:'ok'});
-  assert.strictEqual((route.match(/data-region=/g)||[]).length,7);
-  assert.strictEqual((postLegend.match(/data-region=/g)||[]).length,7);
+  assert.strictEqual((route.match(/data-region=/g)||[]).length,8); // v21.1
+  assert.strictEqual((postLegend.match(/data-region=/g)||[]).length,8); // v21.1
 });
 
 check('Rare focus shows the pre-upper safe reroll and at most three craftable Legends',()=>{
@@ -198,14 +198,15 @@ check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   assert(source.includes('data-opt="virtualSpecialId"'),'152 selector must stay reachable from collapsed settings');
   assert(!coachSource.includes('renderActions('));
   assert(!coachSource.includes('renderSquadPlan('));
-  // v18.4: 상시 판단 영역 6개(상태 스트립 제외).
-  assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,6);
+  // v18.4: 상시 판단 영역 6개 → v21.1: 참고 탭 컨테이너(reference) 추가로 7개.
+  assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,7);
   // v20.2: 레이아웃 계약을 실제 로드되는 신작 시트(ord_ui_v20.css) 기준으로
   // 갱신한다.  구 12열 그리드(.v153-grid)는 v20.1.0 신작 UI에서 3칼럼
   // 지휘 콘솔(.v155-dashboard)로 교체됐다 — 은퇴한 시트를 읽던 계약이
   // 통과하는 바람에 실사용 화면의 스타일 유실을 못 잡았다(v20.2 실측).
-  for(const selector of ['.v153-screen{','.v155-dashboard{','.v153-status{','.v153-panel{','.v153-craft{','.v153-unused{'])assert(css.includes(selector),selector);
-  assert(css.includes('"action spec  party"')&&css.includes('"rare   rare  rare"'),'3칼럼 콘솔 그리드 계약 없음');
+  for(const selector of ['.v153-screen{','.v155-dashboard{','.v153-status{','.v153-panel{','.v211-refer{','.v153-unused{'])assert(css.includes(selector),selector);
+  // v21.1: 3칼럼 상시 5패널 → 2열 + 참고 탭('필요한 UI만 남기고').
+  assert(css.includes('"action status"')&&css.includes('"action refer"'),'2열 콘솔 그리드 계약 없음');
 });
 
 console.log(`\n${checks}/${checks} v15 live-coach UI contract checks passed.`);

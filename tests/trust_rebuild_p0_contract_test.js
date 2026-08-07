@@ -209,8 +209,9 @@ test('v15 trust UI exposes evidence boundaries and never paints advice as clear 
   assert(coach.includes('renderV151NextAction(state,plan,health)'));
   assert(coach.includes('renderV153Spec(state,plan)'));
   assert(!coach.includes('renderV15RareBoard('));
-  // v18.4(사용자 목업): 상시 판단 영역 6개.
-  assert.strictEqual((coach.match(/data-region=/g)||[]).length,6);
+  // v18.4(사용자 목업): 상시 판단 영역 6개 → v21.1: 참고 탭 컨테이너
+  // (reference)가 추가돼 7개.  세 참고 패널 자체는 탭 안에 그대로 있다.
+  assert.strictEqual((coach.match(/data-region=/g)||[]).length,7);
   // v20.2: 지켜야 하는 계약은 특정 16진값이 아니라 **근거 경계**다 —
   // 코치가 계산한 값과 TMO가 관측한 값이 화면에서 같아 보이면 안 된다.
   // 신작 시트(v20.1)로 팔레트가 바뀌면서 토큰 이름·색이 옮겨졌고,

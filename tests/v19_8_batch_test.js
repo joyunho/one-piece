@@ -37,7 +37,9 @@ check('② 다음 제작 큐 — 5개 상한(v19.9) + 소스 사슬 + 보존 섹
   }
   assert(preview.includes('v158-queue'),'큐 마크업 없음');
   assert(!preview.includes('지금 보존'),"'지금 보존' 섹션은 v19.9에서 제거됐다");
-  assert(preview.includes('패가 바뀌면 다시 계산'),'먼 미래 미고정 문구 없음');
+  // v21.1("정보가 너무 중구난방"): 큐 밑 상시 설명 문단은 제거 — 원칙은
+  // 큐 머리말("가변 후보 · 확정은 큰 카드 1개")이 압축해 말한다.
+  assert(preview.includes('가변 후보'),'먼 미래 미고정 머리말 없음');
   // 보유 유닛은 큐에 안 올린다(이미 만든 것을 다음 제작으로 표시 금지).
   assert(preview.includes('C.num((state.counts||{})[id])>0)return'),'보유 유닛 제외 없음');
 });

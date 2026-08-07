@@ -178,22 +178,34 @@ body{
   .v153-screen{display:flex;flex-direction:column;height:calc(100dvh - 26px);min-height:0}
   .v155-dashboard{flex:1 1 auto}
 }
+/* v21.1(사용자: "필요한 UI만 남기고 — 정보가 너무 중구난방"): 상시 5패널
+   3열을 2열로 줄인다.  주인공은 지금 할 일 하나, 오른쪽 위는 부족 게이지,
+   나머지(최종 파티·희귀→전설·남는 희귀)는 오른쪽 아래 탭 한 자리에서
+   갈아 끼운다 — 항상 다 보이는 것이 아니라 필요할 때 꺼내 본다. */
 .v155-dashboard{
   display:grid;
-  grid-template-columns:minmax(470px,4.6fr) minmax(0,3.8fr) minmax(0,3.8fr);
-  grid-template-rows:minmax(0,7fr) minmax(0,5fr) auto;
+  grid-template-columns:minmax(520px,5fr) minmax(0,4.2fr);
+  grid-template-rows:minmax(0,auto) minmax(0,1fr);
   grid-template-areas:
-    "action spec  party"
-    "action craft party"
-    "rare   rare  rare";
+    "action status"
+    "action refer";
   gap:11px;
   min-height:0;
 }
 .v155-action-zone{grid-area:action}
-.v153-spec{grid-area:spec}
-.v153-craft{grid-area:craft}
-.v153-upper{grid-area:party}
-.v155-rare-strip{grid-area:rare}
+.v153-spec{grid-area:status;min-height:0;overflow-y:auto;scrollbar-width:thin}
+.v211-refer{grid-area:refer;display:flex;flex-direction:column;min-height:0}
+.v211-tabs{display:flex;gap:6px;margin-bottom:9px}
+.v211-tabs button{flex:1 1 0;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 4px;background:var(--panel-2);color:var(--sub);font-size:13.5px;font-weight:600}
+.v211-tabs button.on{border-color:var(--accent);background:rgba(224,92,126,.12);color:var(--fg)}
+.v211-pane{display:none;min-height:0;overflow-y:auto;scrollbar-width:thin}
+.v211-pane.on{display:block;flex:1 1 auto}
+/* 탭 안으로 들어간 옛 패널은 자기 테두리를 접는다 — 패널 속 패널 방지. */
+.v211-pane>.v153-panel{border:0;padding:0;background:transparent}
+.v211-pane>.v153-panel::before{display:none}
+/* 남는 희귀는 하단 띠 시절의 가로 배치를 버리고 탭 안에서는 보통 블록. */
+.v211-pane .v155-rare-strip{flex-direction:column;align-items:stretch;padding:0}
+.v211-pane .v155-rare-strip>header{margin-bottom:8px}
 
 /* ── 패널 해부: 좌측 마커 바 + 조용한 헤더 ────────────── */
 .v153-panel{
@@ -430,7 +442,15 @@ body{
 .v153-role.warn::after{background:linear-gradient(90deg,var(--warn) var(--metric,0%),var(--panel-3) var(--metric,0%))}
 .v153-role>img,.v153-role>.v153-ic{width:18px;height:18px;border-radius:4px}
 .v153-role>b{overflow:hidden;font-size:13.5px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
-.v153-role>b small{font-size:11px}
+/* 라벨과 주석이 붙어 "이감 102%풀이감 목표"로 읽히던 것 — 간격·색 분리. */
+.v153-role>b small{margin-left:6px;font-size:11px;color:var(--muted);font-weight:500}
+/* v21.1("정보가 너무 중구난방"): 충족 행은 목소리를 낮춘다 — 부족만
+   크게 보이면 된다.  여유 0·초과 같은 경고 주석은 행 안에 그대로 남아
+   작아진 채로도 읽힌다(v19.9.2 광보잡 여유 0 계약 유지). */
+.v153-role.ok{padding:2px 2px 4px;opacity:.62}
+.v153-role.ok>b{font-size:12px;font-weight:500}
+.v153-role.ok::after{height:1px;opacity:.5}
+.v153-role.ok:hover{opacity:1}
 .v153-role>span{color:var(--muted);font-size:12px;white-space:nowrap;font-variant-numeric:tabular-nums}
 .v153-role>strong{min-width:60px;font-size:14px;text-align:right;white-space:nowrap}
 .v153-role.bad>strong{color:var(--bad)}
@@ -710,14 +730,13 @@ body.ord-overlay-mode .command-line{display:flex}
 
 /* ── 반응형 ──────────────────────────────────────────── */
 @media (max-width:1450px){
+  /* v21.1: 좁은 창도 같은 두 기둥 — 참고 정보는 탭이 이미 접고 있다. */
   .v155-dashboard{
     grid-template-columns:minmax(400px,1fr) minmax(0,1fr);
-    grid-template-rows:none;
+    grid-template-rows:minmax(0,auto) minmax(0,1fr);
     grid-template-areas:
-      "action spec"
-      "action party"
-      "craft  party"
-      "rare   rare";
+      "action status"
+      "action refer";
   }
 }
 @media (max-width:1100px){
