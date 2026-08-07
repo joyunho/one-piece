@@ -81,27 +81,26 @@ test('국면은 라운드가 아니라 상태로 정해진다',()=>{
   assert.strictEqual(empty.phase.key,'opening',`전설급 0인데 국면이 '${empty.phase.key}'다`);
 });
 
-test('방향 미확정이면 상위 후보들의 의견 일치 여부를 밝힌다',()=>{
-  // 방향(magicRoute)을 비우면 엔진은 ROUTE_CHOICE로 간다.
+test('방향 미확정이어도 침묵하지 않는다 — 자동 채택 + 실제 추천',()=>{
+  // 이 테스트가 원래 지키던 것은 "방향 구간에서 화면이 비지 않는다"였다
+  // (17라운드 무응답의 재발 방지).  v21.0 은 그 요구를 더 강하게 만족한다:
+  // 방향을 묻고 기다리는 ROUTE_CHOICE 상태 자체를 없애고, 엔진이 후보
+  // 1위 방향을 즉시 채택해(routeAuto) 진짜 추천을 이어간다.  0806a 실측
+  // 32라운드 침묵이 이 뒤집기의 근거다("전면 재설계").
   const decision=E.decide({
     catalog:units,
     snapshot:{source:'v18-coach-test',counts:R50.counts,currentAbilities:{},wispCountFound:true,wispCount:R50.wisp},
     settings:{mode:'magic',magicRoute:'',currentRound:30,gorosei:'saturn',postLegendRoute:'upper',superKumaOwned:true},
     locks:[]
   });
-  assert.strictEqual(decision.state,'ROUTE_CHOICE');
-  // 이 구간에서 지켜야 할 것은 "행동이 반드시 있다"가 아니라 "화면이 비지
-  // 않는다"이다.  지금 선위로 할 수 있는 게 없으면 제작을 지목하지 않는
-  // 편이 정확하다 — 감당 못 할 상위를 다음 행동이라 부르던 회귀가 실제로
-  // 있었다.  대신 무엇이 얼마나 모자란지를 말해야 한다.
-  assert(decision.confidence.note,'방향 미확정 구간에서 화면에 내보낼 것이 없다 — 17라운드 무응답의 재발이다');
-  if(decision.coachAction)
-    assert.notStrictEqual(decision.coachAction.affordable,false,'감당 못 할 목표를 방향 국면의 다음 행동으로 지목했다');
-  else
-    assert(/선위|모으는/.test(decision.confidence.note),`제작을 지목하지 않았으면 왜인지 말해야 한다: ${decision.confidence.note}`);
-  assert.strictEqual(decision.phase.key,'direction');
-  assert(/서로 다른 것을 지목|모두 같은 것을 지목/.test(decision.confidence.note),
-    `후보 일치 여부를 밝히지 않는다: ${decision.confidence.note}`);
+  assert.notStrictEqual(decision.state,'ROUTE_CHOICE','방향 대기 상태가 되살아남 — 침묵 회귀');
+  assert(decision.routeAuto&&decision.routeAuto.adopted,'방향 미선택인데 자동 채택 사실이 없음');
+  assert(decision.routeAuto.label,'채택한 방향의 이름이 비어 있음 — 화면에 알릴 수 없다');
+  assert(decision.action||decision.blockedAction,'방향 구간에서 화면에 내보낼 카드가 없다 — 무응답의 재발');
+  // 감당 못 할 목표를 "지금 실행"이라 부르지 않는다는 원칙은 그대로다.
+  if(decision.state==='ACT_NOW')
+    assert.notStrictEqual(decision.action&&decision.action.quote&&decision.action.quote.feasible,false,'제작 불가를 지금 실행으로 지목');
+  assert(Array.isArray(decision.routeCandidates)&&decision.routeCandidates.length,'방향판 후보가 사라짐 — 사용자가 개입할 통로가 없다');
 });
 
 test('닿지 않는 회복 목표를 마감 구간에 반복 제시하지 않는다',()=>{

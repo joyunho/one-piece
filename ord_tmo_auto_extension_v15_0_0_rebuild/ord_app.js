@@ -428,8 +428,11 @@ class App{
     if(message.type!=='rank-directions-result'||message.requestId!==this._directionRankSeq||message.key!==this._directionDesiredKey)return;this._directionInFlight=null;this._directionRankCache=message.board||{lanes:[],safeReroll:[]};this._directionRankCacheKey=message.key;if(this.shouldDeferExternalRender()){this._deferredExternalRender=true;return;}this.render();
   }
   queueBlueprintRank(key,settings,decision){
-    // 방향 미확정(ROUTE_CHOICE)에서만 전체 파티 계획이 필요하다.
-    if(!decision||decision.state!=='ROUTE_CHOICE')return;
+    // v21.0: 엔진이 방향을 스스로 채택하므로 ROUTE_CHOICE 상태는 더는
+    // 나오지 않는다.  전체 파티 계획은 "상위가 아직 없고 확정도 안 된"
+    // 구간(= 엔진이 routeAuto 를 실은 판단)에서 계속 필요하다 — 방향판이
+    // 이 평가로 후보를 채운다.
+    if(!decision||!(decision.state==='ROUTE_CHOICE'||decision.routeAuto))return;
     const candidates=decision.routeCandidates||[];if(!candidates.length)return;
     const worker=this.ensureDirectionWorker();if(!worker)return;
     const supplied=Array.isArray(decision.routeCandidateLanes)?decision.routeCandidateLanes:[],byLane=new Map();
@@ -545,7 +548,7 @@ class App{
     // deck/manual-inspection tab, where its broad catalog rows are useful and
     // cannot stall the game during every TMO snapshot.
     if(global.ORDV15Engine&&this.state.tab!=='deck'){
-      const rawV15=this.authoritativeDecision(settings),assessment=rawV15&&rawV15.assessment||{},route=assessment.route||null,mode=route&&route.mode||settings.mode||'physical',upper=C.mainUpper(state,this.state.locks,settings),spec=assessment.role&&assessment.role.spec||C.currentSpec(state,mode,Object.assign({},settings,upper?{_upperUnit:upper}:{})),deficits=assessment.role&&assessment.role.deficits||C.deficits(spec,mode,Object.assign({},settings,upper?{_upperUnit:upper}:{})),label=String(rawV15&&rawV15.label||''),purpose=settings.purpose||(/첫 희귀/.test(label)?'rare':/전설/.test(label)?'story':rawV15&&rawV15.state==='ROUTE_CHOICE'?'upper':'spec');
+      const rawV15=this.authoritativeDecision(settings),assessment=rawV15&&rawV15.assessment||{},route=assessment.route||null,mode=route&&route.mode||settings.mode||'physical',upper=C.mainUpper(state,this.state.locks,settings),spec=assessment.role&&assessment.role.spec||C.currentSpec(state,mode,Object.assign({},settings,upper?{_upperUnit:upper}:{})),deficits=assessment.role&&assessment.role.deficits||C.deficits(spec,mode,Object.assign({},settings,upper?{_upperUnit:upper}:{})),label=String(rawV15&&rawV15.label||''),purpose=settings.purpose||(/첫 희귀/.test(label)?'rare':/전설/.test(label)?'story':rawV15&&(rawV15.state==='ROUTE_CHOICE'||rawV15.routeAuto)?'upper':'spec');
       const livePlan={mode,purpose,round:settings.currentRound,settings,upper,spec,deficits,actions:[],watch:[],prep:[],rows:[],availableWisp:state.wisp,postLegendDecision:postLegend,v15Decision:rawV15,selectionMode:'v15-single-authority',actionCap:1,completionForced:/첫 희귀|첫 전설|추가 전설/.test(label)};
       // Strategy and execution now share one party plan.  The squad planner
       // chooses the 9→11-equivalent composition; v15 remains the only module
@@ -1288,7 +1291,7 @@ class App{
       const action=decision&&(decision.action||decision.blockedAction),reg=action&&action.regression;
       if(!reg||!(reg.rows||[]).length)return'';
       return`<div class="v203-regress-warn"><b>${C.esc(reg.headline||'')}</b><small>${C.esc(reg.detail||'')}</small></div>`;
-    })()}<div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기',ROUTE_CHOICE:'상위 방향 확정 필요'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v151StoryTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}</div>${deltas.length?`<div class="v151-deltas">${deltas.map(row=>{
+    })()}<div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${decision.routeAuto&&decision.routeAuto.adopted?`<em class="v151-confidence lv-continue" title="엔진이 클리어 실측 순 1위 방향을 자동 채택했습니다. 방향판·상위 확정으로 언제든 바꿀 수 있습니다.">방향 자동 · ${C.esc(decision.routeAuto.label||'')}</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기',ROUTE_CHOICE:'상위 방향 확정 필요'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v151StoryTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}</div>${deltas.length?`<div class="v151-deltas">${deltas.map(row=>{
       // v18.4(목업): 인라인 알약 대신 "무엇이 얼마나 오르는가" 타일.
       const ic=/스턴/.test(row.label)?'blade':/이감|둔화/.test(row.label)?'target':/방깎|방어/.test(row.label)?'snow':/보잡|보스/.test(row.label)?'skull':'gear';
       return`<span>${this.v153Icon(ic)}<small>${C.esc(row.label)}</small><b>${fmt(row.before)}<i>→</i>${fmt(row.after)}</b></span>`;

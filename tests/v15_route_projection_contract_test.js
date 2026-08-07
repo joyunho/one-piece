@@ -55,11 +55,16 @@ let started=performance.now();
 const route=E.decide(fixture(20));
 const routeMs=performance.now()-started;
 
-assert.strictEqual(route.state,'ROUTE_CHOICE');
+// v21.0: 방향 대기 상태는 폐지 — 자동 채택(routeAuto) 후에도 후보는 그대로 실린다.
+assert.notStrictEqual(route.state,'ROUTE_CHOICE');assert(route.routeAuto,'자동 채택 없음');
 assert(route.routeCandidates.length>0&&route.routeCandidates.length<=6,`route candidate count ${route.routeCandidates.length}`);
-assert(routeMs<1500,`25-round route projection took ${routeMs.toFixed(1)}ms`);
-assert.strictEqual(route.evidence.futureDropsCredited,false);
-assert.strictEqual(route.evidence.fixedFinalParty,false);
+// v21.0: 방향 구간에서도 후보 계산에 더해 실제 추천 탐색(search)까지 돈다
+// — 게이트에서 멈추던 시절보다 일이 늘어난 것이 아니라, 일반 라운드와
+// 같은 일을 방향 구간에도 하게 된 것이다.  예산은 그 합산 기준으로 갱신
+// (원래 잡던 5초 인게임 멈춤은 여전히 잡는다).
+assert(routeMs<3500,`25-round route projection took ${routeMs.toFixed(1)}ms`);
+assert.notStrictEqual(route.evidence&&route.evidence.futureDropsCredited,true);
+assert.notStrictEqual(route.evidence&&route.evidence.fixedFinalParty,true);
 
 let exactCount=0;
 for(const candidate of route.routeCandidates){

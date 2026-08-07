@@ -140,7 +140,8 @@ assert.deepStrictEqual(physicalPool.tierAnchors.map(item=>item.letter),['S','A',
 for(const anchor of physicalPool.tierAnchors)assert(physicalPool.ids.includes(anchor.id),`${anchor.letter} anchor is not in the shortlist`);
 
 const decision=E.decide({catalog,snapshot:replay.snapshot,settings:replay.settings,locks:[]});
-assert.strictEqual(decision.state,'ROUTE_CHOICE');
+// v21.0: 방향 대기 상태는 폐지 — 자동 채택(routeAuto) 후에도 후보는 그대로 실린다.
+  assert.notStrictEqual(decision.state,'ROUTE_CHOICE');assert(decision.routeAuto,'자동 채택 없음');
 assert(decision.routeCandidates.length>0&&decision.routeCandidates.length<=6);
 for(const candidate of decision.routeCandidates){
   assert(candidate.powerTier&&candidate.powerTier.known,`${candidate.name}: tier missing from engine output`);

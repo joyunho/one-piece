@@ -31,7 +31,8 @@ function input({counts={},percent={},settings={},locks=[]}={}){
 // and treats Rare -> Special -> Uncommon burn before completion percentage.
 {
   const decision=E.decide(input({counts:{[ownedLegend.id]:1,[rareA.id]:2,[rareB.id]:2,[special.id]:1,[uncommon.id]:1,[C.WISP_ID]:10},percent:{[upperRareHeavy.id]:45,[upperRareLight.id]:99,[upperHard.id]:100}}));
-  assert.strictEqual(decision.state,'ROUTE_CHOICE');
+  // v21.0: 방향 대기 상태는 폐지 — 자동 채택(routeAuto) 후에도 후보는 그대로 실린다.
+  assert.notStrictEqual(decision.state,'ROUTE_CHOICE');assert(decision.routeAuto,'자동 채택 없음');
   assert(decision.routeCandidates.length<=6);
   assert.strictEqual(decision.routeCandidates[0].id,upperRareHeavy.id,decision.routeCandidates.map(row=>[row.id,row.rankVector]));
   assert.strictEqual(decision.routeCandidates[0].tiers.rare,2);
@@ -48,15 +49,19 @@ function input({counts={},percent={},settings={},locks=[]}={}){
   }
   const declined=E.decide(input({counts:{[ownedLegend.id]:1,[rareA.id]:2,[rareB.id]:2,[special.id]:1,[uncommon.id]:1,[C.WISP_ID]:10},percent:{[upperRareHeavy.id]:45,[upperRareLight.id]:99,[upperHard.id]:100},settings:{story10Reward:'kuma'}}));
   assert(!declined.routeCandidates.some(row=>row.id===upperHard.id),'missing Rayleigh prerequisite leaked after declaring another story-10 reward');
-  assert.strictEqual(decision.evidence.fixedFinalParty,false);
+  // v21.0: 판단이 게이트 전용 evidence 를 거치지 않으므로 fixedFinalParty
+  // 키가 없을 수 있다 — 지켜야 하는 것은 "고정 파티를 주장하지 않는다"다.
+  assert.notStrictEqual(decision.evidence&&decision.evidence.fixedFinalParty,true);
 }
 
 // A locked magic upper with an unresolved route may only choose the detail
 // route. It must never be replaced by another upper candidate.
 {
   const locks=[{stage:'upper',id:magicUpper.id,source:'tmo',sticky:true}],decision=E.decide(input({counts:{[ownedLegend.id]:1,[magicUpper.id]:1,[C.WISP_ID]:5},settings:{mode:'magic',magicRoute:'auto'},locks}));
-  assert.strictEqual(decision.state,'ROUTE_CHOICE');
-  assert.strictEqual(decision.routeChoiceKind,'locked-magic-detail');
+  // v21.0: 방향 대기 상태는 폐지 — 자동 채택(routeAuto) 후에도 후보는 그대로 실린다.
+  assert.notStrictEqual(decision.state,'ROUTE_CHOICE');assert(decision.routeAuto,'자동 채택 없음');
+  // v21.0: routeChoiceKind 는 게이트와 함께 은퇴 — 고정 상위의 세부 경로
+  // 후보(dual·singleEnd)가 그대로 실리는지가 계약의 알맹이다.
   assert.deepStrictEqual(new Set(decision.routeCandidates.map(row=>row.routeKey)),new Set(['dual','singleEnd']));
   assert(decision.routeCandidates.every(row=>row.id===magicUpper.id&&row.keepUpper&&row.locked));
 }

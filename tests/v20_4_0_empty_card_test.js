@@ -37,32 +37,33 @@ check('① 회복 목표 HOLD 도 카드를 싣는다 — 승인은 아니다',(
   assert(src.includes('이것은 승인이 아니라 다음 목표입니다'),'승인 아님 고지 없음');
 });
 
-check('② 상위 방향 미확정도 카드를 싣는다 — 자동 확정은 하지 않는다',()=>{
+check('② 상위 방향 미확정은 침묵 대신 자동 채택으로 흐른다 (v21.0 뒤집기)',()=>{
+  // v20.4 는 "자동 확정은 하지 않는다"를 원칙으로 카드만 실었다.  사용자가
+  // "전면 재설계"로 그 원칙을 뒤집었다 — 0806a 실측 32라운드 침묵이 근거다.
+  // 이제 엔진이 후보 1위 방향을 즉시 채택하고(routeAuto) 실제 추천을
+  // 이어간다.  routeChoiceCard 헬퍼와 ROUTE_CHOICE 조기 반환은 은퇴했다.
   const src=read('ord_v15_engine.js');
-  assert(src.includes('function routeChoiceCard(model,route,locks,routeCandidates,roundNow){'),'방향 카드 헬퍼 없음');
-  assert(/blockedAction:routeChoiceCard\(model,leadRoute,locks,routeCandidates,roundNow\)/.test(src),'ROUTE_CHOICE 분기에 카드 배선 없음');
-  assert(src.includes("result:'route-choice-lead'"),'방향 카드 표기 없음');
-  assert(src.includes('routeChoicePending:true'),'확정 대기 표시 없음');
-  // 자동 확정 금지 — 이 카드는 승인이 아니고, 확정 전에는 아무것도 안 만든다.
-  assert(src.includes('상위 방향을 확정하기 전에는 어떤 제작도 승인하지 않습니다'),'자동 확정 금지 고지 없음');
-  assert(!/state:'ROUTE_CHOICE'[\s\S]{0,300}action:\{/.test(src),'ROUTE_CHOICE 가 승인을 냄');
-  // 화면도 이 상태를 이름으로 밝힌다(옛날엔 '다음 판단'으로 뭉뚱그렸다).
-  assert(read('ord_app.js').includes("ROUTE_CHOICE:'상위 방향 확정 필요'"),'상태 라벨 없음');
+  assert(!/return finalize\(\{state:'ROUTE_CHOICE'/.test(src),'ROUTE_CHOICE 조기 반환이 되살아남 — 침묵 회귀');
+  assert(src.includes('routeAuto={adopted:!route'),'자동 채택 배선 없음');
+  assert(src.includes('routeCandidates,routeCandidateLanes}'),'방향판 후보가 판단에 실리지 않음');
+  // 사용자 개입 통로는 남는다 — 방향판(routeCandidates)과 확정 버튼.
+  assert(read('ord_app.js').includes('decision.routeAuto'),'앱이 자동 채택 사실을 그리지 않음');
 });
 
-check('③ 실측 재생 — 두 경로 모두 카드가 채워진다',()=>{
+check('③ 실측 재생 — 침묵 라운드가 없다',()=>{
   const R=require('./lib/reconcile_replay.js');
   R.loadEngine();
   // 0723a 는 회복 목표 HOLD 로 8라운드 연속 백지였던 판.
   const a=R.replayDisplayed('0723a',{fromRound:50,toRound:62});
-  const emptyA=a.rounds.filter(row=>!row.error&&!row.hasCard&&row.state!=='ROUTE_CHOICE');
+  const emptyA=a.rounds.filter(row=>!row.error&&!row.hasCard);
   assert.strictEqual(emptyA.length,0,`0723a r50~62 빈 카드 ${emptyA.length}건 (r${emptyA.map(r=>r.round).join(',')})`);
-  // 0806a 는 44라운드 내내 ROUTE_CHOICE 였던 판.
+  // 0806a 는 v20.4 까지 44라운드 내내 ROUTE_CHOICE 였던 판 — v21.0 에서는
+  // 그 상태 자체가 없어야 하고, 모든 라운드에 카드가 있어야 한다.
   const b=R.replayDisplayed('0806a',{toRound:20});
   const rc=b.rounds.filter(row=>row.state==='ROUTE_CHOICE');
-  assert(rc.length>0,'0806a 초반에 ROUTE_CHOICE 가 없음 — 표본이 바뀌었는지 확인 필요');
-  const blank=rc.filter(row=>!row.hasCard);
-  assert.strictEqual(blank.length,0,`ROUTE_CHOICE 빈 카드 ${blank.length}/${rc.length}건`);
+  assert.strictEqual(rc.length,0,`ROUTE_CHOICE 가 ${rc.length}건 살아 있음 — 자동 채택이 안 됨`);
+  const blank=b.rounds.filter(row=>!row.error&&!row.hasCard);
+  assert.strictEqual(blank.length,0,`0806a r1~20 빈 카드 ${blank.length}건`);
 });
 
 console.log(`\n${checks} checks passed (v20.4.0 — 빈 카드 봉합)`);

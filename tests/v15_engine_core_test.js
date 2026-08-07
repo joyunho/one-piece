@@ -78,10 +78,16 @@ assert.strictEqual(E.AUTHORITY,'ord-v15-decision-engine');
   assert.strictEqual(more.action.id,legendB.id);
   assert.match(more.label,/추가 전설/);
 
+  // v21.0(전면 재설계): 방향 미선택은 더는 침묵(ROUTE_CHOICE)이 아니다.
+  // 0806a 실측에서 이 대기 상태가 32라운드를 삼켰고, 사용자가 "전면
+  // 재설계"로 뒤집었다.  엔진이 후보 1위 방향을 스스로 채택해 추천을
+  // 이어가고, 채택 사실은 routeAuto 로 실린다.  이 합성 픽스처에는 만들
+  // 것이 없으므로 행동이 비어 있을 수는 있지만, "사용자가 고를 때까지
+  // 멈춘다"는 상태 자체가 다시 나타나면 회귀다.
   const choose=E.decide(input({counts:{[legendA.id]:1,[C.WISP_ID]:2},percent:{[legendA.id]:100,[legendB.id]:93},settings:{currentRound:25,postLegendRoute:''}}));
-  assert.strictEqual(choose.state,'ROUTE_CHOICE');
-  assert.strictEqual(choose.action,null);
-  assert.strictEqual(choose.rare.safeReroll,null);
+  assert.notStrictEqual(choose.state,'ROUTE_CHOICE');
+  assert(choose.routeAuto,'자동 채택 사실(routeAuto)이 판단에 실리지 않음');
+  assert(Array.isArray(choose.routeCandidates),'방향판 후보가 판단에서 사라짐');
 }
 
 // Exact ledger rejects non-Common leaf shortages and stale sequential quotes.

@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='20.5.2';
+const VERSION='21.0.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -227,11 +227,24 @@ function completionMilestone(value){
   if(label==='첫 전설·히든')return COMPLETION_MILESTONES.firstFinal;
   return{key:'custom',label,dueRound:null};
 }
+// v21.0(전면 재설계 ②): 첫 희귀·첫 전설의 1순위 근거를 "재료가 가까운 순"
+// 에서 "이기는 판에 실제로 드는 순"으로 바꾼다.  0806b 실측 — 사용자가
+// 실제로 만든 빌드(로우·사보·킬러 히든)는 채용률 상위 유닛들이었는데
+// 코치는 완성도 근접만 보고 다른 픽을 고집했다("애초에 방향이 엉뚱함").
+// 출처는 실측 96,627판 채용률(ORD_META_STATS.byCode).  통계가 없는 유닛
+// (합성 픽스처 포함)은 0이라, 채용률이 전부 0인 판에서는 기존 완성도
+// 순위가 그대로 순서를 정한다 — 근거가 없을 때 지어내지 않는다.
+function metaUsage(unit){
+  if(!META_STATS||!META_STATS.byCode||!unit)return null;
+  const id=String(unit.id||'');
+  return META_STATS.byCode[id]||META_STATS.byCode[id.toLowerCase()]||META_STATS.byCode[id.toUpperCase()]||null;
+}
+function metaUsageRate(unit){const hit=metaUsage(unit);return hit?num(hit.rate):0;}
 function completionDecision(model,units,milestone){
   const milestoneSpec=completionMilestone(milestone),label=milestoneSpec.label;
   // v16.7: 같은 완성도·같은 선위 소모라면 스토리 파괴 속도(스토리 등급
   // 점수)가 빠른 쪽을 먼저 설계한다 — 첫 희귀·첫 전설 공통.
-  const quoted=units.map(unit=>{const completion=M.completionFor?M.completionFor(model,unit):null;return{unit,quote:L.quote(model,unit,model.effective.counts,{availableRound:model.round.value}),completion:completion?num(completion.rankingPercent):num(model.effective.percent[unit.id]),completionDetail:completion,story:num(C.storyGrade(unit).score)};}).filter(item=>num(model.effective.counts[item.unit.id])<=0&&item.quote.prerequisite.allowed&&!item.quote.blocked.some(reason=>/조합 근거 부족|레시피 순환/.test(reason))).sort((a,b)=>b.completion-a.completion||Number(b.quote.feasible)-Number(a.quote.feasible)||a.quote.wisp.cost-b.quote.wisp.cost||b.story-a.story||nameOf(a.unit).localeCompare(nameOf(b.unit),'ko'));
+  const quoted=units.map(unit=>{const completion=M.completionFor?M.completionFor(model,unit):null;return{unit,quote:L.quote(model,unit,model.effective.counts,{availableRound:model.round.value}),completion:completion?num(completion.rankingPercent):num(model.effective.percent[unit.id]),completionDetail:completion,story:num(C.storyGrade(unit).score),usage:metaUsageRate(unit)};}).filter(item=>num(model.effective.counts[item.unit.id])<=0&&item.quote.prerequisite.allowed&&!item.quote.blocked.some(reason=>/조합 근거 부족|레시피 순환/.test(reason))).sort((a,b)=>b.usage-a.usage||b.completion-a.completion||Number(b.quote.feasible)-Number(a.quote.feasible)||a.quote.wisp.cost-b.quote.wisp.cost||b.story-a.story||nameOf(a.unit).localeCompare(nameOf(b.unit),'ko'));
   let best=quoted[0],deadlineEscape=null;
   // v17.6(감사 P0-6): 완성도 1순위가 지금 제작 불가인 채 하드 마감(첫
   // 희귀 7라 · 첫 전설 20라)에 도달하면, 즉시 제작 가능한 차선으로
@@ -242,9 +255,9 @@ function completionDecision(model,units,milestone){
     if(feasibleBest){deadlineEscape={passedName:nameOf(best.unit),passedCompletion:round(best.completion,1),dueRound};best=feasibleBest;}
   }
   if(!best)return{version:VERSION,state:'HOLD',authority:true,label:`${label} 후보 없음`,reason:'특수 선행재료가 없거나 조합 데이터를 확인할 수 없습니다.',action:null,alternatives:[],unknowns:[]};
-  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',completionReason=`${escapeNote}${label} 후보 중 지금 패에서 부족한 재료와 선택 위습이 가장 적습니다.`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible?'ACT_NOW':'PREPARE';
+  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',completionReason=best.usage>0?`${escapeNote}${label} 후보 중 실전 채용률이 가장 높습니다 — ${num(META_STATS&&META_STATS.gameCount).toLocaleString('ko-KR')}판 중 ${Math.round(best.usage*1000)/10}%가 채용.`:`${escapeNote}${label} 후보 중 지금 패에서 부족한 재료와 선택 위습이 가장 적습니다.`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible?'ACT_NOW':'PREPARE';
   const candidate={id:best.unit.id,name:nameOf(best.unit),unit:best.unit,row,quote:best.quote,completion:best.completionDetail,wispCost:best.quote.wisp.cost,wispAfter:best.quote.wisp.after,result:'completion-rule',stopCondition:`선택 위습이 ${best.quote.wisp.cost}개보다 적거나 패가 바뀌면 만들지 말고 다시 동기화`};
-  return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
+  return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',rankingAuthority:best.usage>0?'meta-usage-first':'completion-first',metaUsageRate:best.usage,virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
 }
 function rareLedgerForQuote(model,quote,state,label){
   const rows=[];for(const unit of model.knowledge.db.rares){const initial=Math.max(0,num(model.effective.counts[unit.id]));if(initial<=0)continue;const planned=Math.min(initial,num(quote&&quote.rareUse&&quote.rareUse[unit.id])),use=state==='ACT_NOW'?planned:0,hold=initial-use,reason=use?`${label} 즉시 재료`:planned?`${label} 제작 재료 보호`:`${label} 확정 전 안전 보류`;rows.push({id:unit.id,name:nameOf(unit),unit,initial,use,hold,reroll:0,reason,proof:{planned,use,exclusive:use+hold===initial}});}
@@ -509,35 +522,8 @@ function recoveryHoldCard(model,route,locks,recovery,roundNow){
 // 침묵 원인이다).  자동 확정은 하지 않는다 — 메인 상위 선택은 판 전체를
 // 규정하는 결정이라 사용자 몫이다.  대신 **무엇을 해야 하는지**를 카드에
 // 싣는다: 1순위 후보 이름과 "먼저 방향을 확정해야 승인이 시작된다".
-function routeChoiceCard(model,route,locks,routeCandidates,roundNow){
-  const rows=routeCandidates&&Array.isArray(routeCandidates.rows)?routeCandidates.rows
-    :Array.isArray(routeCandidates)?routeCandidates:[];
-  const lead=rows.find(row=>row&&row.feasible)||rows[0];
-  if(!lead||!lead.id)return null;
-  const unit=model.knowledge&&model.knowledge.db&&model.knowledge.db.byId.get(String(lead.id));
-  if(!unit)return null;
-  let quote=null;
-  try{quote=L.quote(model,unit,model.effective.counts,{availableRound:model.round.value});}catch(_){quote=null;}
-  // 이 카드는 "먼저 방향을 확정하라"는 안내지 제작 명세가 아니다.  전체
-  // 역할표를 다시 평가(P.evaluate)해 makeRow 를 만들면 ROUTE_CHOICE 라운드마다
-  // 정책 평가가 한 번씩 더 돈다 — 0806a 는 그런 라운드가 44개라 재생
-  // 게이트가 600초 예산을 넘겼다.  이름·사유·선위만으로 충분하므로 만들지
-  // 않는다(재료 명세가 필요하면 아래 후보 카드에서 상세로 들어간다).
-  // v18 계약(v18_coach_layer_test): 방향 미확정 구간에서 **감당 못 할
-  // 대상을 다음 행동으로 지목하지 않는다**.  "감당 못 할 상위를 다음
-  // 행동이라 부르던 회귀가 실제로 있었다"는 기록이 남아 있고, 그때
-  // 정한 답은 "지금 할 수 없으면 지목하지 않고, 무엇이 얼마나 모자란지만
-  // 말한다"(그 몫은 confidence.note 가 이미 한다)였다.
-  // 그러므로 이 카드는 **지금 실제로 만들 수 있는 1순위**일 때만 낸다.
-  // 0806a r41 의 (S)료쿠규(feasible=true·wispGap=0)가 정확히 그 경우다.
-  if(!quote||!quote.feasible)return null;
-  return{id:String(lead.id),name:nameOf(unit),unit,quote,
-    row:null,
-    wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),wispShort:0,
-    feasible:true,affordable:true,result:'route-choice-lead',routeChoicePending:true,
-    reason:'현재 1순위 후보이고 지금 만들 수 있습니다. 아래에서 상위 방향을 확정하면 그때 승인합니다 — 확정 전에는 재료를 쓰지 않습니다.',
-    stopCondition:'상위 방향을 확정하기 전에는 어떤 제작도 승인하지 않습니다 — 잘못 고른 상위는 판 전체를 되돌릴 수 없습니다.'};
-}
+// v21.0: routeChoiceCard 는 ROUTE_CHOICE 게이트와 함께 은퇴했다 — 방향은
+// 엔진이 즉시 채택하고(routeAuto), 화면 카드는 실제 추천이 채운다.
 function expand(model,node,row,route,locks,initial){const quote=L.quote(model,row.unit,node.counts,{availableRound:model.round.value});if(!quote.feasible)return null;const before=ownedFinals(model,node.counts),after=ownedFinals(model,quote.after);if(introducesLineageConflict(model,before,after))return null;const next=nodeBase(model,quote.after,route,locks,initial,node.sequence.concat({quote}));return next;}
 // v18.2 — 직전에 추천하던 대상은 후보 목록에서 조용히 사라지지 않는다.
 //
@@ -1381,16 +1367,31 @@ function inferiorRequirements(held,best){
 }
 function buildDecision(input){
   if(!C||!M||!L||!P)throw new Error('ORDV15Engine requires ORDCore, model, ledger, and policy modules.');
-  input=input||{};const model=input.model||M.build(input),locks=input.locks||[],roundNow=model.round.value,final=M.finalSummary(model,model.effective.counts),rareTotal=model.knowledge.db.rares.reduce((total,unit)=>total+Math.max(0,num(model.effective.counts[unit.id])),0),finalize=raw=>{const decision=applyCraftLock(raw,model,locks);return Object.assign(decision,{version:VERSION,authority:true,authorityEngine:AUTHORITY,inputFingerprint:model.fingerprint,model},coachGuidance(decision,model,roundNow));};
+  input=input||{};let routeAuto=null;const model=input.model||M.build(input),locks=input.locks||[],roundNow=model.round.value,final=M.finalSummary(model,model.effective.counts),rareTotal=model.knowledge.db.rares.reduce((total,unit)=>total+Math.max(0,num(model.effective.counts[unit.id])),0),finalize=raw=>{const decision=applyCraftLock(raw,model,locks);return Object.assign(decision,{version:VERSION,authority:true,authorityEngine:AUTHORITY,inputFingerprint:model.fingerprint,model},routeAuto?{routeAuto:{adopted:routeAuto.adopted,routeKey:routeAuto.routeKey,label:routeAuto.label,topUpperId:routeAuto.topUpperId,topUpperName:routeAuto.topUpperName,rankingAuthority:routeAuto.rankingAuthority},routeCandidates:decision.routeCandidates||routeAuto.routeCandidates,routeCandidateLanes:decision.routeCandidateLanes||routeAuto.routeCandidateLanes}:null,coachGuidance(decision,model,roundNow));};
   // Milestones are inventory states, not date windows. Missing the nominal
   // deadline must not silently advance the user into upper planning.
   if(rareTotal<=0&&final.legendEquivalent<=0)return finalize(completionDecision(model,model.knowledge.db.rares.filter(unit=>intentFamilyOk(model,unit)),COMPLETION_MILESTONES.firstRare));
   if(final.legendEquivalent<=0){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.firstFinal));}
-  const route=P.resolveRoute(model.intent,model.settings),lock=lockedUpper(locks),postLegend=String(model.settings.postLegendRoute||'');
+  let route=P.resolveRoute(model.intent,model.settings);const lock=lockedUpper(locks),postLegend=String(model.settings.postLegendRoute||'');
   // The user explicitly chose "another legend/hidden" after the first one.
   // Keep the same completion authority until they switch to upper preparation.
   if(postLegend==='legend'&&final.nonUpperFinalCount>0&&final.upperCount<=0&&!lock){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.additionalFinal));}
-  if(!route||!lock&&final.upperCount<=0){const routeCandidates=upperRouteCandidates(model,locks),routeCandidateLanes=routeCandidates.blueprintLanes||[],lockedDetail=!!lock&&!route,leadRoute=route||routeOptions(model)[0],leadAssessment=P.evaluate(model,model.effective.counts,leadRoute,{round:roundNow,locks});return finalize({state:'ROUTE_CHOICE',label:lockedDetail?'고정 상위의 마딜 세부 경로 선택':'상위 방향 선택',reason:lockedDetail?'감지된 메인 상위는 바꾸지 않고 dual·singleEnd 중 역할표만 선택합니다.':'상위 단독 화력으로 줄 세우지 않습니다. 현재 패로 만든 상위와 이를 보조할 전설급을 9환산 최소 파티로 함께 최적화하고, 재료 충돌·역할 결손·제어 과잉을 반영해 최대 6개만 비교합니다.',action:null,blockedAction:routeChoiceCard(model,leadRoute,locks,routeCandidates,roundNow),assessment:P.evaluate(model,model.effective.counts,route,{round:roundNow,locks}),routeCandidates,routeCandidateLanes,routeChoiceKind:lockedDetail?'locked-magic-detail':'upper',recovery:recoveryPlan(model,leadRoute,locks,leadAssessment,{note:`방향 확정 전 참고 · ${leadRoute.label} 기준 결손 목표`}),alternatives:[],rare:{basis:'route-uncommitted',rows:model.knowledge.db.rares.filter(unit=>num(model.effective.counts[unit.id])>0).map(unit=>({id:unit.id,name:nameOf(unit),unit,initial:num(model.effective.counts[unit.id]),use:0,hold:num(model.effective.counts[unit.id]),reroll:0,reason:'경로 확정 전 안전 보류'})),use:[],hold:[],reroll:[],safeReroll:null,conflict:false},unknowns:['50~65라 실제 보스 DPS','라인 처리력'],evidence:{observed:M.observedEvidence(model),ledger:'exact-current-stock',rankingAuthority:S&&typeof S.rankUpperBlueprints==='function'?'upper-plus-support-full-squad':'projected-route-fallback',candidateLimit:ROUTE_CANDIDATE_LIMIT,futureDropsCredited:false,fixedFinalParty:false,clearClaim:false}});}
+  // v21.0(전면 재설계 ① — 사용자: "애초에 방향이 엉뚱함", "전면 재설계"):
+  // 방향을 사용자에게 묻고 멈추지 않는다.  0806a 실측 — 1~32라 32라운드가
+  // ROUTE_CHOICE 침묵이었고 그동안 구체 추천 0건.  같은 판 r10의 후보
+  // 1위는 (S)료쿠규였고, 사용자가 33라에 실제로 만든 상위도 (S)료쿠규다.
+  // 즉 후보 계산(클리어 실측 순)은 옳았고 "고를 때까지 대기"가 문제였다.
+  // 이제 그 1위 방향을 엔진이 즉시 채택해 추천을 이어가고, 채택 사실은
+  // routeAuto 로 화면에 알린다.  사용자의 명시 선택(모드·경로 버튼, 상위
+  // 확정·저격)은 여전히 이 자동 채택을 덮어쓴다 — 묻지 않되 빼앗지 않는다.
+  if(!route||!lock&&final.upperCount<=0){
+    const routeCandidates=upperRouteCandidates(model,locks),routeCandidateLanes=routeCandidates.blueprintLanes||[];
+    const topRow=[...routeCandidates].find(row=>row&&row.routeKey)||null;
+    const options=routeOptions(model);
+    const adopted=route||topRow&&options.find(option=>option.key===topRow.routeKey)||options[0]||route;
+    routeAuto={adopted:!route,routeKey:adopted&&adopted.key||'',label:adopted&&adopted.label||'',topUpperId:topRow?String(topRow.id||''):'',topUpperName:topRow?String(topRow.name||''):'',rankingAuthority:S&&typeof S.rankUpperBlueprints==='function'?'upper-plus-support-full-squad':'projected-route-fallback',routeCandidates,routeCandidateLanes};
+    route=adopted;
+  }
   // A selected but not-yet-observed upper is a hard milestone reservation.
   // Do not let a tempting support legend spend its rares or finite wisps first.
   // v16.6: but the reservation must not freeze the whole board.  A recorded
