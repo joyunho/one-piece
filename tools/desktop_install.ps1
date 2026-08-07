@@ -29,7 +29,7 @@ if (-not (Test-Path (Join-Path $desktopSrc 'node_modules'))) {
 if ($LASTEXITCODE -ne 0) { throw 'exe 빌드 실패 — 위 오류 메시지를 확인하세요.' }
 
 # 3) 바탕화면으로 복사 (OneDrive 바탕화면 리디렉션 대응)
-# v20.5.0 보강: 코치가 켜져 있으면 exe가 잠겨 교체가 실패하고 예전
+# v20.5.1 보강: 코치가 켜져 있으면 exe가 잠겨 교체가 실패하고 예전
 # 버전이 그대로 남는다("예전 버전이 설치되는데?" 실사례) — 실행 중인
 # 코치를 먼저 조용히 종료한다.
 & taskkill /IM ORDCoach.exe /F 2>$null | Out-Null

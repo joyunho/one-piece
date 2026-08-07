@@ -198,6 +198,38 @@ assert.strictEqual(embeddedCockpitCss[1].trim(),read('ord_ui_v20.css').trim(),'m
 assert(!fs.existsSync(path.resolve(ext,'..','openai_bridge')),'removed OpenAI bridge directory remains');
 assert(!fs.existsSync(path.resolve(ext,'..','START_OPENAI.bat')),'removed OpenAI launcher remains');
 
+// v20.5.1: 화면에 찍히는 버전이 릴리스와 어긋나면 사용자는 업데이트가
+// 됐는지를 알 수 없다.  실제로 v20.4.1 은 코드만 바뀌고 버전 상수를 안
+// 올려서 앱이 계속 "v20.4.0" 이라고 말했고, 사용자가 v20.5.0 으로 올린
+// 뒤에도 제목 표시줄만 보고는 갱신 여부를 판단할 수 없었다.
+// (실사례: "20.4 버전인데 저거 명령어 쳤는데?")
+// manifest.version 을 단일 원천으로 삼아 살아 있는 버전 상수를 전부 건다.
+{
+  const root=path.resolve(ext,'..');
+  const readAny=file=>fs.readFileSync(path.join(root,file),'utf8');
+  const liveVersions=[
+    ['package.json',()=>packageInfo.version],
+    ['desktop/package.json',()=>JSON.parse(readAny('desktop/package.json')).version],
+    ['desktop/preload.js',()=>(readAny('desktop/preload.js').match(/version:\s*'([\d.]+)'/)||[])[1]],
+    ['ord_core.js',()=>(read('ord_core.js').match(/const VERSION='([\d.]+)'/)||[])[1]],
+    ['ord_squad_planner.js',()=>(read('ord_squad_planner.js').match(/const VERSION='([\d.]+)'/)||[])[1]],
+    ['ord_v15_model.js',()=>(read('ord_v15_model.js').match(/const VERSION='([\d.]+)'/)||[])[1]],
+    ['ord_v15_ledger.js',()=>(read('ord_v15_ledger.js').match(/const VERSION='([\d.]+)'/)||[])[1]],
+    ['ord_v15_policy.js',()=>(read('ord_v15_policy.js').match(/const VERSION='([\d.]+)'/)||[])[1]],
+    ['ord_v15_engine.js',()=>(read('ord_v15_engine.js').match(/const VERSION='([\d.]+)'/)||[])[1]],
+    ['ord_local_code_map.js',()=>(read('ord_local_code_map.js').match(/VERSION:\s*'([\d.]+)'/)||[])[1]],
+    ['content-tmo.js',()=>(read('content-tmo.js').match(/const VERSION = '([\d.]+)'/)||[])[1]]
+  ];
+  for(const [label,get] of liveVersions){
+    const found=get();
+    assert(found,`${label} 에서 버전 상수를 찾지 못함 — 표기가 바뀌었으면 이 목록도 고칠 것`);
+    assert.strictEqual(found,manifest.version,`${label} 버전이 ${found} — manifest ${manifest.version} 와 어긋남 (릴리스 때 같이 올릴 것)`);
+  }
+  // 사용자에게 보이는 제목 두 곳도 같은 값이어야 한다.
+  for(const [label,src] of [['popup.html',read('popup.html')],['content-tmo.js',read('content-tmo.js')]])
+    assert(src.includes(`코치 v${manifest.version}`),`${label} 의 화면 제목이 v${manifest.version} 이 아님`);
+}
+
 console.log(`PASS  manifest and MV3 CSP (${manifest.version})`);
 console.log(`PASS  no OpenAI/localhost runtime surface`);
 console.log(`PASS  data/recipe integrity (${units.length} units, ${units.filter(C.isUpper).length} upper variants)`);
