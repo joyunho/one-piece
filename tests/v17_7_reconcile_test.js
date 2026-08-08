@@ -66,9 +66,14 @@ test('마일스톤 분리: 첫 전설은 20라 마감 탈출, 추가 전설은 �
   // 첫 전설: 20라를 넘기면 제작 불가 99% 대신 즉시 가능 96%로 전환한다.
   const first=milestoneFixture({round:21,ownLegend:false});
   assert.strictEqual(first.evidence.completionMilestone,'firstFinal','첫 전설 마일스톤이 아니다');
-  assert.strictEqual(first.state,'ACT_NOW',`첫 전설 마감 탈출 실패: ${first.state}`);
+  assert.strictEqual(first.state,'ACT_NOW',`첫 전설이 즉시 가능 픽을 두고 대기: ${first.state}`);
   assert.strictEqual(first.action&&first.action.id,'ms-legend-now');
-  assert(first.evidence.deadlineEscape&&first.evidence.deadlineEscape.dueRound===20,'첫 전설 마감(20라) 증거 누락');
+  // v21.3(사용자: "제일 빠르게 만들 수 있는 걸로"): 첫 픽이 속도 우선이라
+  // 즉시 가능 96%를 처음부터 고른다 — 완성도 1위(제작 불가 99%)를 쫓다가
+  // 마감에 몰려서야 갈아타던 "탈출"은 일어날 일 자체가 없어졌다.  지켜야
+  // 하는 것은 "마감을 넘긴 채 제작 불가를 붙들지 않는다"이고, 그건 즉시
+  // 가능 픽 + 탈출 증거 없음으로 더 강하게 성립한다.
+  assert.strictEqual(first.evidence.deadlineEscape,null,'속도 우선인데 마감 탈출이 발생 — 순위가 완성도로 회귀했다');
   // 추가 전설: 마감이 없으므로 같은 라운드 조건에서도 전환 없이 준비를 유지한다.
   const additional=milestoneFixture({round:25,ownLegend:true,postLegendRoute:'legend'});
   assert.strictEqual(additional.evidence.completionMilestone,'additionalFinal','추가 전설 마일스톤이 아니다');

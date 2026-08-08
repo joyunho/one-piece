@@ -693,6 +693,13 @@ class App{
   }
   syncUpperMode(id,db){
     const unit=(db||this.catalogDb()).byId.get(String(id||'')),family=unit&&C.familyOf(unit);if(!['physical','magic'].includes(family))return false;let changed=false;
+    // v21.3(사용자: "자동으로 바꿀려 했는데 강제로 물딜로 고정됐었어"):
+    // TMO 감지로 상위가 잠기면 이 함수가 매 스냅샷마다 mode 를 상위 계통으로
+    // 되돌려 썼다.  사용자가 '자동'(mode='')을 명시적으로 고른 뒤에는 그
+    // 선택이 이긴다 — 자동은 "엔진이 추론"이지 "빈 값이니 채워라"가 아니다.
+    // 잠긴 상위 자체는 그대로라 추론 결과는 대개 같은 계통이지만, 화면
+    // 선택과 이후 추론의 자유는 사용자 것이다.
+    if(this.state.modeExplicit===true&&!this.state.mode)return false;
     if(this.state.mode!==family){this.state.mode=family;changed=true;}
     if(family==='physical'){if(this.state.magicRoute!=='auto'){this.state.magicRoute='auto';changed=true;}}
     else{

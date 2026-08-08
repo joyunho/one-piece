@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='21.2.0';
+const VERSION='21.3.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -244,7 +244,25 @@ function completionDecision(model,units,milestone){
   const milestoneSpec=completionMilestone(milestone),label=milestoneSpec.label;
   // v16.7: 같은 완성도·같은 선위 소모라면 스토리 파괴 속도(스토리 등급
   // 점수)가 빠른 쪽을 먼저 설계한다 — 첫 희귀·첫 전설 공통.
-  const quoted=units.map(unit=>{const completion=M.completionFor?M.completionFor(model,unit):null;return{unit,quote:L.quote(model,unit,model.effective.counts,{availableRound:model.round.value}),completion:completion?num(completion.rankingPercent):num(model.effective.percent[unit.id]),completionDetail:completion,story:num(C.storyGrade(unit).score),usage:metaUsageRate(unit)};}).filter(item=>num(model.effective.counts[item.unit.id])<=0&&item.quote.prerequisite.allowed&&!item.quote.blocked.some(reason=>/조합 근거 부족|레시피 순환/.test(reason))).sort((a,b)=>b.usage-a.usage||b.completion-a.completion||Number(b.quote.feasible)-Number(a.quote.feasible)||a.quote.wisp.cost-b.quote.wisp.cost||b.story-a.story||nameOf(a.unit).localeCompare(nameOf(b.unit),'ko'));
+  const quoted=units.map(unit=>{const completion=M.completionFor?M.completionFor(model,unit):null;return{unit,quote:L.quote(model,unit,model.effective.counts,{availableRound:model.round.value}),completion:completion?num(completion.rankingPercent):num(model.effective.percent[unit.id]),completionDetail:completion,story:num(C.storyGrade(unit).score),usage:metaUsageRate(unit),
+  // v21.3(사용자 실전): 뽑기·드랍으로만 얻는 특별 재료가 패에 없는 후보는
+  // "빠른 후보"가 아니다.  실사례 — 희귀 페로나(이감20)는 압살롬×1이
+  // 필요하고 압살롬은 좀비×3(후반 재료)으로만 제작되는데, 원장의 압살롬
+  // 예외가 빈 패에서도 feasible=true 를 내는 바람에 1라 1순위로 올라갔다.
+  // 원장(제작 증명)은 그대로 두고 순위에서만 뒤로 보낸다 — 압살롬이
+  // 패에 실제로 있으면 hardMissing 이 비어 정상 순위로 돌아온다.
+  hardShort:0,wispGap:0};}).map(item=>Object.assign(item,{hardShort:(item.quote.solve&&item.quote.solve.hardMissing||[]).length,wispGap:Math.max(0,num(item.quote.wisp&&item.quote.wisp.cost)-num(item.quote.wisp&&item.quote.wisp.before))})).filter(item=>num(model.effective.counts[item.unit.id])<=0&&item.quote.prerequisite.allowed&&!item.quote.blocked.some(reason=>/조합 근거 부족|레시피 순환/.test(reason)))
+  // v21.3(사용자: "희귀랑 전설or히든은 제일 빠르게 만들 수 있는 걸로 나오고
+  // 그 뒤에는 패를 보고 가면 좋아"): 첫 픽(firstRare·firstFinal)의 1순위
+  // 근거는 속도다 — 지금 제작 가능 > 부족 선위 적은 순 > 싼 순, 같은
+  // 속도면 실전 채용률 > 완성도.  추가 전설(additionalFinal)은 사용자
+  // 문장의 "그 뒤"라 가치 우선(채용률 > 완성도)을 유지한다 — v17.7 의
+  // "추가 전설은 마감 없이 최고 완성" 계약이 그대로 산다.  뽑기·드랍
+  // 전용 재료 미보유(hardShort) 강등은 두 경우 모두 최우선이다.
+  .sort((a,b)=>(a.hardShort>0)-(b.hardShort>0)||(milestoneSpec.key!=='additionalFinal'
+    ?(Number(b.quote.feasible)-Number(a.quote.feasible)||a.wispGap-b.wispGap||a.quote.wisp.cost-b.quote.wisp.cost||b.usage-a.usage||b.completion-a.completion)
+    :(b.usage-a.usage||b.completion-a.completion||Number(b.quote.feasible)-Number(a.quote.feasible)||a.wispGap-b.wispGap||a.quote.wisp.cost-b.quote.wisp.cost))
+    ||b.story-a.story||nameOf(a.unit).localeCompare(nameOf(b.unit),'ko'));
   let best=quoted[0],deadlineEscape=null;
   // v17.6(감사 P0-6): 완성도 1순위가 지금 제작 불가인 채 하드 마감(첫
   // 희귀 7라 · 첫 전설 20라)에 도달하면, 즉시 제작 가능한 차선으로
@@ -255,9 +273,9 @@ function completionDecision(model,units,milestone){
     if(feasibleBest){deadlineEscape={passedName:nameOf(best.unit),passedCompletion:round(best.completion,1),dueRound};best=feasibleBest;}
   }
   if(!best)return{version:VERSION,state:'HOLD',authority:true,label:`${label} 후보 없음`,reason:'특수 선행재료가 없거나 조합 데이터를 확인할 수 없습니다.',action:null,alternatives:[],unknowns:[]};
-  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',completionReason=best.usage>0?`${escapeNote}${label} 후보 중 실전 채용률이 가장 높습니다 — ${num(META_STATS&&META_STATS.gameCount).toLocaleString('ko-KR')}판 중 ${Math.round(best.usage*1000)/10}%가 채용.`:`${escapeNote}${label} 후보 중 지금 패에서 부족한 재료와 선택 위습이 가장 적습니다.`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible?'ACT_NOW':'PREPARE';
+  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',hardNote=best.hardShort>0?`주의 — 뽑기·드랍으로만 얻는 재료(${(best.quote.solve&&best.quote.solve.hardMissing||[]).map(entry=>String(entry.name||entry.id)).join('·')}) 미보유. 모든 후보가 같은 처지라 순서만 제시합니다. `:'',usageNote=best.usage>0?` — 실전 채용률 ${Math.round(best.usage*1000)/10}% (${num(META_STATS&&META_STATS.gameCount).toLocaleString('ko-KR')}판)`:'',completionReason=`${escapeNote}${hardNote}${label} 후보 중 ${milestoneSpec.key!=='additionalFinal'?'지금 패에서 부족한 재료와 선택 위습이 가장 적습니다':'지금 패 기준 완성도·실전 가치가 가장 높습니다'}${usageNote}.`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible&&best.hardShort<=0?'ACT_NOW':'PREPARE';
   const candidate={id:best.unit.id,name:nameOf(best.unit),unit:best.unit,row,quote:best.quote,completion:best.completionDetail,wispCost:best.quote.wisp.cost,wispAfter:best.quote.wisp.after,result:'completion-rule',stopCondition:`선택 위습이 ${best.quote.wisp.cost}개보다 적거나 패가 바뀌면 만들지 말고 다시 동기화`};
-  return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',rankingAuthority:best.usage>0?'meta-usage-first':'completion-first',metaUsageRate:best.usage,virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
+  return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',rankingAuthority:'fastest-first-usage-tiebreak',metaUsageRate:best.usage,hardMaterialGated:best.hardShort>0,virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
 }
 function rareLedgerForQuote(model,quote,state,label){
   const rows=[];for(const unit of model.knowledge.db.rares){const initial=Math.max(0,num(model.effective.counts[unit.id]));if(initial<=0)continue;const planned=Math.min(initial,num(quote&&quote.rareUse&&quote.rareUse[unit.id])),use=state==='ACT_NOW'?planned:0,hold=initial-use,reason=use?`${label} 즉시 재료`:planned?`${label} 제작 재료 보호`:`${label} 확정 전 안전 보류`;rows.push({id:unit.id,name:nameOf(unit),unit,initial,use,hold,reroll:0,reason,proof:{planned,use,exclusive:use+hold===initial}});}

@@ -58,10 +58,13 @@ assert.strictEqual(E.AUTHORITY,'ord-v15-decision-engine');
 // First milestones remain completion-authority rules after their nominal
 // deadlines. PREPARE is not an executable action.
 {
+  // v21.3(사용자: "희귀랑 전설or히든은 제일 빠르게 만들 수 있는 걸로"):
+  // 첫 픽 1순위는 속도다.  선위 1 부족(완성도 80%)이 선위 3 부족(99%)을
+  // 이긴다 — 완성도는 같은 속도끼리의 타이브레이크로 내려갔다.
   const prepare=E.decide(input({counts:{[C.WISP_ID]:0},percent:{[rareA.id]:99,[rareB.id]:80},settings:{currentRound:12}}));
   assert.strictEqual(prepare.state,'PREPARE');
   assert.strictEqual(prepare.action,null);
-  assert.strictEqual(prepare.blockedAction.id,rareA.id);
+  assert.strictEqual(prepare.blockedAction.id,rareB.id);
   assert.strictEqual(prepare.authorityEngine,E.AUTHORITY);
 
   const firstLegend=E.decide(input({counts:{[rareA.id]:1,[C.WISP_ID]:2},percent:{[legendA.id]:96,[legendB.id]:90},settings:{currentRound:23}}));

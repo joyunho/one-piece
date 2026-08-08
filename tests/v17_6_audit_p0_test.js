@@ -153,15 +153,18 @@ function deadlineFixture(round){
   return E.decide({catalog,snapshot:{source:'t',counts:{[common.id]:2,[C.WISP_ID]:2},currentAbilities:{},wispCountFound:true,wispCount:2,units:catalog.map(u=>Object.assign({},u,{count:u.id===common.id?2:0,tmoPercent:u.id===rareTop.id?99:u.id===rareNow.id?96:0}))},settings:{mode:'',magicRoute:'auto',currentRound:round,postLegendRoute:'',gorosei:'none',superKumaOwned:false,manualCounts:{}},locks:[]});
 }
 
-test('P0-6: 7라 마감 도달 시 제작 불가 99%에서 즉시 가능 96%로 전환한다',()=>{
-  const early=deadlineFixture(5);
-  assert.strictEqual(early.state,'PREPARE','마감 전에는 최고 완성도 우선(PREPARE) 유지');
-  assert.strictEqual(early.blockedAction&&early.blockedAction.id,'dl-rare-top');
-  const due=deadlineFixture(8);
-  assert.strictEqual(due.state,'ACT_NOW',`마감 도달에도 ${due.state}`);
-  assert.strictEqual(due.action&&due.action.id,'dl-rare-now','즉시 가능 차선으로 전환되지 않았다');
-  assert(/마감 도달/.test(String(due.reason||'')),'마감 전환 고지 문구 없음');
-  assert(due.evidence&&due.evidence.deadlineEscape&&due.evidence.deadlineEscape.dueRound===7,'deadlineEscape 증거 누락');
+test('P0-6(v21.3 갱신): 즉시 가능 픽을 마감과 무관하게 처음부터 고른다',()=>{
+  // v17.6 의 원 계약은 "마감 전엔 최고 완성도 추격, 마감 도달 시 즉시
+  // 가능으로 탈출"이었다.  P0-6 이 막던 사고는 "제작 불가 99%를 붙들고
+  // 마감을 넘기는 것"이고, v21.3(사용자: "희귀랑 전설or히든은 제일 빠르게
+  // 만들 수 있는 걸로")은 그 사고를 구조적으로 없앤다 — 속도 우선이라
+  // 즉시 가능 96%를 1라부터 고르고, 탈출할 상황 자체가 생기지 않는다.
+  for(const round of [5,8]){
+    const decision=deadlineFixture(round);
+    assert.strictEqual(decision.state,'ACT_NOW',`r${round}: 즉시 가능 픽을 두고 ${decision.state}`);
+    assert.strictEqual(decision.action&&decision.action.id,'dl-rare-now',`r${round}: 제작 불가 완성도 1위를 다시 붙듦`);
+    assert.strictEqual(decision.evidence&&decision.evidence.deadlineEscape,null,`r${round}: 속도 우선인데 마감 탈출이 발생`);
+  }
 });
 
 test('P0-7: 기본 계통은 자동이고 새 게임 리셋이 계통을 유지하지 않는다(소스 검증)',()=>{
