@@ -81,7 +81,10 @@ check('④ 지금 할 일이 부족 흔함을 전량(색점 칩) 표시한다',(
   assert(app.includes('solve=C.recipeSolve(state.db,shown.id,state.counts||{})'),'quote 없는 상태의 흔함 재계산 폴백 없음');
   const css=read('ord_ui_v20.css');
   assert(css.includes('.v151-mats .commons em.common-chip'),'흔함 칩 스타일 없음');
-  assert(css.includes('.v153-next .v151-mats>div:not(.commons){display:none}'),'노트북 압축에서 흔함 줄까지 숨김');
+  // v21.2(사용자: "지금 할 일에 조합 재료들이 표시 되었으면"): 조합 줄을
+  // 숨기던 압축 규칙을 폐기했다 — 다시 살아나면 조합이 또 사라진다.
+  assert(!css.includes('.v153-next .v151-mats>div:not(.commons){display:none}'),'조합 줄 숨김 규칙이 되살아남');
+  assert(css.includes('.v159-action-recipe em.gap'),'조합 재료 보유/부족 색 구분 없음');
 });
 
 check('⑤ 확정 2상위가 미보유면 지금 할 일에 상시 콜아웃이 뜬다(런타임)',()=>{

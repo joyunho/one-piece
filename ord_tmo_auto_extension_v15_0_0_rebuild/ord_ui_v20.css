@@ -497,8 +497,14 @@ body{
 .v154-rare-bar{height:5px;border-radius:3px;overflow:hidden;background:var(--panel-3)}
 .v154-rare-bar>span{display:block;height:100%;background:var(--accent)}
 /* 재료 칩·사용처는 카드 안에서 두 줄까지만 — 나머지는 상세에서. */
-.v154-rare-mats{display:flex;flex-wrap:wrap;gap:4px;max-height:64px;overflow:hidden}
-.v154-rare-mats>span{border-radius:5px;padding:4px 8px;background:var(--panel-3);font-size:12.5px;color:var(--sub)}
+/* v21.2(사용자 스크린샷 — 노리기 카드 아래 잘림): 재료 칩의 <img> 크기
+   규칙이 v20.1 시트 이관에서 빠져 있었다.  이미지가 원본 크기(세로 수백
+   px)로 렌더되고 컨테이너 max-height:64px 가 그걸 중간에서 자르니, 칩
+   텍스트 위로 초상화가 겹쳐 찍혔다.  이미지를 칩 아이콘 크기로 못 박고,
+   자르기 대신 감싸기로 마감한다 — 칩은 최대 4개라 높이는 유한하다. */
+.v154-rare-mats{display:flex;flex-wrap:wrap;gap:4px}
+.v154-rare-mats>span{display:inline-flex;align-items:center;gap:5px;border-radius:5px;padding:4px 8px;background:var(--panel-3);font-size:12.5px;color:var(--sub)}
+.v154-rare-mats>span img{width:17px;height:17px;border-radius:4px;object-fit:cover;flex:0 0 auto}
 .v154-rare-mats>span.owned::before{content:'✓ ';color:var(--ok)}
 .v154-rare-mats>span.missing::before{content:'· ';color:var(--warn)}
 .v158-uses{display:flex;flex-wrap:wrap;gap:5px;align-items:center;max-height:52px;overflow:hidden;font-size:12.5px;color:var(--muted)}
@@ -877,9 +883,15 @@ body.ord-overlay-mode .command-line{display:flex}
 .v151-boss-preview{display:grid;gap:4px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--panel-2);font-size:12px}
 .v158-fresh{border-color:var(--accent)!important}
 .v151-sync.ok:before{content:'';display:inline-block;width:7px;height:7px;margin-right:6px;border-radius:99px;background:var(--ok)}
-/* 승인 카드의 흔함 칩·재료 압축(1번 패널에서는 흔함만 남긴다) */
+/* 승인 카드의 흔함 칩 스타일.  v21.2(사용자: "지금 할 일에 조합 재료들이
+   표시 되었으면 좋겠고"): 1번 패널에서 흔함 줄만 남기고 조합 줄을 감추던
+   압축 규칙 폐기 — 마크업은 내내 조합 줄을 만들고 있었는데 시트 한 줄이
+   감추고 있었다.  v21.1 재편으로 왼쪽 기둥이 넓어져 자리도 있다. */
 .v151-mats .commons em.common-chip{border:1px solid var(--line);border-radius:5px;padding:1px 7px;background:var(--panel-3);color:var(--sub);font-size:11.5px;font-style:normal}
-.v153-next .v151-mats>div:not(.commons){display:none}
+.v151-mats{display:grid;gap:6px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 11px;background:var(--panel-2)}
+.v159-action-recipe em.ok{color:var(--ok);font-style:normal}
+.v159-action-recipe em.gap{color:var(--warn);font-style:normal}
+.v159-action-recipe small{margin-right:7px;color:var(--muted)}
 /* 희귀→전설: 추천 외 4번째부터는 접어 한 화면 계약을 지킨다 */
 .v153-craft-cards>button:nth-child(n+4):not(.recommended){display:none}
 .v153-craft-cards.v158-six>button:nth-child(n+4):not(.recommended){display:flex}
