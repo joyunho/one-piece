@@ -3,9 +3,9 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="ord-helper" content="v22.0.0-decision-engine-manual">
+  <meta name="ord-helper" content="v22.1.0-decision-engine-manual">
   <meta name="description" content="현재 패의 정확한 순차 원장과 생존 마감으로 다음 한 행동만 결정하는 원랜디 2.310 악몽 수동 도우미">
-  <title>원랜디 2.310 악몽 실전 판단 코치 v22.0.0 · 수동 모드</title>
+  <title>원랜디 2.310 악몽 실전 판단 코치 v22.1.0 · 수동 모드</title>
   <style data-source="ord_app.css">
 :root{color-scheme:dark;--bg:#060b18;--panel:#0d162a;--panel2:#101d35;--line:#223454;--text:#eef5ff;--muted:#91a2bd;--blue:#4f7cff;--cyan:#25c2e7;--green:#27d17f;--amber:#f3b84b;--red:#ef6262;--violet:#8b67ff;--shadow:0 20px 55px rgba(0,0,0,.28)}
 *{box-sizing:border-box}html,body{margin:0;min-height:100%;background:radial-gradient(circle at 10% 0,#122a5a 0,#060b18 35%,#040812 100%);color:var(--text);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;word-break:keep-all;overflow-wrap:anywhere}button,input,select{font:inherit}button{cursor:pointer}.ord-app{min-height:100vh;padding:18px;max-width:1860px;margin:0 auto}.ord-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding:22px 24px;border:1px solid rgba(112,154,255,.26);border-radius:24px;background:linear-gradient(135deg,rgba(66,83,222,.34),rgba(17,64,94,.3));box-shadow:var(--shadow)}.ord-kicker{font-size:11px;letter-spacing:.14em;color:#9bb7ff;font-weight:900}.ord-header h1{margin:5px 0 3px;font-size:29px;line-height:1.15}.ord-header p{margin:0;color:var(--muted);font-size:13px}.ord-head-status{display:flex;gap:8px;flex-wrap:wrap;justify-content:flex-end;max-width:720px}.ord-head-status>*{border:1px solid var(--line);border-radius:999px;background:rgba(6,11,24,.7);color:#d9e8ff;padding:8px 12px;font-size:12px;font-weight:800;white-space:nowrap}.ord-head-status .good{border-color:rgba(39,209,127,.45);color:#a8f7ce}.ord-head-status .warn{border-color:rgba(243,184,75,.45);color:#ffe1a1}.ord-head-status button{background:#1b2b4d}.ord-tabs{display:flex;gap:8px;margin:14px 0}.ord-tabs button,.purpose-buttons button,.two-button button,.round-box button,.action-buttons button,.prep-list button,.mini-cards button,.ghost,.primary{border:1px solid var(--line);border-radius:11px;background:#111d32;color:#dce9ff;padding:9px 13px;font-weight:850}.ord-tabs button.on,.purpose-buttons button.on,.primary{border-color:transparent;background:linear-gradient(135deg,var(--violet),var(--blue));color:white}.ord-layout{display:grid;grid-template-columns:294px minmax(0,1fr);gap:14px;align-items:start}.ord-side{display:grid;gap:12px;position:sticky;top:10px;max-height:calc(100vh - 20px);overflow:auto;padding-right:3px;min-width:0}.side-card,.ord-panel{border:1px solid var(--line);border-radius:20px;background:linear-gradient(180deg,rgba(15,26,48,.96),rgba(9,16,31,.96));box-shadow:0 14px 38px rgba(0,0,0,.18);min-width:0}.side-card{padding:14px}.side-card b{font-size:14px}.side-title{display:flex;justify-content:space-between;gap:8px}.side-title span{font-size:11px;color:var(--cyan)}.side-card label{display:grid;gap:5px;color:var(--muted);font-size:11px;margin-top:11px}.side-card input,.side-card select,.form-grid input{width:100%;min-width:0;border:1px solid var(--line);border-radius:10px;background:#071020;color:var(--text);padding:9px}.side-card small{display:block;color:var(--muted);font-size:10.5px;line-height:1.45;margin-top:6px}.round-box{display:flex;align-items:center;justify-content:space-between;gap:7px;margin-top:10px;padding:10px;border:1px solid rgba(37,194,231,.3);border-radius:13px;background:rgba(10,39,62,.35)}.round-box strong{font-size:13px;min-width:0}.round-box div{display:flex;gap:4px}.round-box button{padding:6px 8px;font-size:11px}.side-card details{margin-top:10px}.side-card summary,.detail-modal summary{cursor:pointer;color:#cbd9ef;font-size:11px;font-weight:800}.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:10px 0}.two-button{display:flex;gap:6px;margin-top:10px}.two-button button{flex:1;font-size:11px;padding:8px}.two-button .on{border-color:var(--green);color:#c5ffe0;background:rgba(39,209,127,.1)}.two-button .danger.on{border-color:var(--red);color:#ffc1c1;background:rgba(239,98,98,.1)}.stat-row{display:flex;justify-content:space-between;align-items:center}.stat-row b{font-size:24px;color:#ffe7a3}.lock-list{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}.lock-list>span{display:inline-flex;align-items:center;gap:5px;border:1px solid rgba(139,103,255,.35);border-radius:999px;padding:5px 8px;background:rgba(139,103,255,.1);font-size:10px}.lock-list button{border:0;background:none;color:#ffaaaa;font-weight:900}.side-card.compact{padding-bottom:10px}.common-line{display:grid;grid-template-columns:8px 1fr auto;gap:7px;align-items:center;margin-top:7px;font-size:11px}.common-line i{width:8px;height:8px;border-radius:50%}.common-line b{font-size:11px}.ord-main{display:grid;gap:13px;min-width:0}.milestone{display:flex;justify-content:space-between;gap:16px;align-items:center;padding:17px 19px;border:1px solid rgba(37,194,231,.4);border-radius:21px;background:linear-gradient(135deg,rgba(6,47,78,.78),rgba(31,25,87,.56));min-width:0}.milestone small{color:#61daf5;font-weight:900}.milestone h2{margin:3px 0 5px;font-size:24px}.milestone p{margin:0;color:#abc0df;font-size:12px}.purpose-buttons{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.purpose-buttons button{font-size:11px}.top-two{display:grid;grid-template-columns:minmax(0,.95fr) minmax(0,1.05fr);gap:13px}.ord-panel{padding:17px}.panel-head{display:flex;justify-content:space-between;align-items:flex-start;gap:14px;margin-bottom:13px}.panel-head small{color:#72d8ef;font-size:10px;font-weight:900}.panel-head h2{margin:2px 0 4px;font-size:20px}.panel-head p{margin:0;color:var(--muted);font-size:11.5px;line-height:1.45}.count-pill,.mode-pill,.control-badge{border:1px solid var(--line);border-radius:999px;padding:7px 10px;font-size:11px;font-weight:900;white-space:nowrap}.mode-pill.physical{color:#ffcb9a;border-color:#e48e45}.mode-pill.magic{color:#a9c9ff;border-color:#5c84d8}.profile-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}.profile-grid>div,.spec-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px;min-width:0}.profile-grid small,.spec-grid small{display:block;color:var(--muted);font-size:10px}.profile-grid b{display:block;margin-top:5px;font-size:12px;line-height:1.45}.synergy-line{display:flex;gap:7px;flex-wrap:wrap;margin-top:10px}.synergy-line small{width:100%;color:var(--muted)}.synergy-line span{border:1px solid rgba(39,209,127,.3);border-radius:999px;padding:5px 8px;font-size:10px;color:#b8f7d5}.upper-focus details{margin-top:12px;border-top:1px solid var(--line);padding-top:10px}.upper-focus details p{color:#aebbd0;font-size:11px}.control-badge.safe{color:#a9f7cc;border-color:rgba(39,209,127,.45)}.control-badge.edge{color:#ffe2a4;border-color:rgba(243,184,75,.45)}.control-badge.danger{color:#ffb4b4;border-color:rgba(239,98,98,.45)}.spec-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.spec-grid b{display:block;font-size:21px;margin:4px 0}.spec-grid span{color:#8193ae;font-size:9.5px}.deficit-line{display:flex;align-items:center;gap:7px;flex-wrap:wrap;margin-top:11px}.deficit-line>b{font-size:11px}.deficit-line span{border:1px solid rgba(243,184,75,.32);border-radius:999px;padding:5px 8px;color:#ffd78d;font-size:10px}.deficit-line .ok{color:#a9f7cc;border-color:rgba(39,209,127,.3)}.state-intro{display:flex;justify-content:space-between;gap:15px;align-items:center}.state-intro h2{margin:4px 0}.state-intro p{color:var(--muted);margin:0;font-size:12px}.control{min-width:260px;border:1px solid var(--line);border-radius:15px;padding:12px}.control b,.control span{display:block}.control span{font-size:10px;color:var(--muted);margin-top:4px}.control.safe{border-color:rgba(39,209,127,.35)}.control.edge{border-color:rgba(243,184,75,.35)}.control.danger{border-color:rgba(239,98,98,.35)}.mini-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.mini-cards article{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.mini-cards img{width:38px;height:38px;border-radius:10px;object-fit:cover}.mini-cards b,.mini-cards span,.mini-cards small{display:block;min-width:0}.mini-cards b{font-size:12px}.mini-cards span{font-size:10px;color:#9fb1ca}.mini-cards small{font-size:9px;color:#7085a4}.mini-cards button{padding:7px;font-size:10px}.action-list{display:grid;gap:8px}.action-row{display:grid;grid-template-columns:42px 48px minmax(0,1fr) 124px auto;gap:11px;align-items:center;border:1px solid rgba(55,84,132,.8);border-radius:16px;padding:11px;background:linear-gradient(90deg,rgba(12,27,50,.95),rgba(8,17,33,.95));min-width:0}.action-row .rank{width:34px;height:34px;border-radius:12px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,var(--violet),var(--cyan));font-weight:950}.action-row>img{width:46px;height:46px;border-radius:12px;object-fit:cover}.action-main{min-width:0}.unit-title{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}.unit-title b{font-size:14px}.unit-title span{font-size:10px;color:#8da1bd}.role-tags{display:flex;gap:5px;flex-wrap:wrap;margin:6px 0}.role-tags>span,.role-tags i{border:1px solid #284266;border-radius:999px;padding:4px 7px;font-size:9.5px;font-style:normal;color:#bcd3f2}.role-tags i{border-color:color-mix(in srgb,var(--pc) 60%,#223454);box-shadow:inset 3px 0 var(--pc)}.action-main p{margin:0;color:#91a6c2;font-size:10.5px}.action-cost{border:1px solid var(--line);border-radius:12px;padding:8px;text-align:center}.action-cost b{display:block;font-size:22px;color:#ffe1a1}.action-cost small{display:block;color:#7f91ab;font-size:9px}.action-cost span{display:block;margin-top:4px;font-size:9px}.action-cost .good{color:#9ff1c5}.action-cost .warn{color:#ffd083}.action-cost .bad{color:#ffaaaa}.action-buttons{display:flex;gap:5px;flex-wrap:wrap;justify-content:flex-end}.action-buttons button{font-size:10px;padding:8px}.empty{padding:20px;border:1px dashed #2c4266;border-radius:14px;text-align:center;color:#8193ad}.prep-list{display:grid;grid-template-columns:1fr 1fr;gap:8px}.prep-list>div{display:grid;grid-template-columns:40px minmax(0,1fr) auto auto;gap:9px;align-items:center;border:1px solid var(--line);border-radius:14px;padding:10px;background:#091326;min-width:0}.prep-list img{width:38px;height:38px;border-radius:10px;object-fit:cover}.prep-list b,.prep-list small{display:block}.prep-list b{font-size:12px}.prep-list small{color:#8195b2;font-size:9.5px}.prep-list em{font-style:normal;color:#ffd587;font-size:9.5px}.prep-list button{font-size:9px;padding:6px}.rare-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}.rare-columns>div{border:1px solid var(--line);border-radius:14px;padding:11px}.rare-columns h3{margin:0 0 8px;font-size:12px}.rare-columns .use{border-color:rgba(39,209,127,.3)}.rare-columns .hold{border-color:rgba(243,184,75,.3)}.rare-columns .reroll{border-color:rgba(239,98,98,.3)}.rare-columns>div>div{display:grid;grid-template-columns:28px 1fr auto;gap:7px;align-items:center;margin-top:6px;font-size:10px}.rare-columns img{width:28px;height:28px;border-radius:8px}.rare-panel>small{display:block;margin-top:9px;color:#7f91aa;font-size:9.5px}.owned-chips{display:flex;gap:7px;flex-wrap:wrap}.owned-chips button{display:flex;align-items:center;gap:7px;max-width:260px;border:1px solid var(--line);border-radius:12px;background:#091326;color:#dceaff;padding:7px 9px}.owned-chips img{width:30px;height:30px;border-radius:8px}.owned-chips span{font-size:10px;text-align:left}.deck-page,.data-page{display:grid;gap:13px}.raw-ability-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.raw-ability-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:12px;padding:9px;background:#091326;font-size:10px;min-width:0}.raw-ability-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.raw-ability-grid>div>b{flex:0 0 auto;white-space:nowrap}.raw-ability-grid b{color:#d9ecff}.owned-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.owned-grid button{display:grid;grid-template-columns:36px minmax(0,1fr) auto;gap:8px;align-items:center;border:1px solid var(--line);border-radius:12px;background:#091326;color:#e3efff;padding:9px;text-align:left}.owned-grid img{width:36px;height:36px;border-radius:9px}.owned-grid span,.owned-grid small{display:block}.owned-grid span{font-size:11px}.owned-grid small{font-size:9px;color:#8296b4}.owned-grid.small button{grid-template-columns:32px 1fr auto}.diag-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.diag-grid>div{border:1px solid var(--line);border-radius:12px;padding:10px;background:#091326}.diag-grid small,.diag-grid b{display:block}.diag-grid small{color:#8395b0;font-size:9px}.diag-grid b{font-size:11px;margin-top:4px}.data-page pre{white-space:pre-wrap;max-height:260px;overflow:auto;border:1px solid var(--line);border-radius:12px;background:#050b16;padding:11px;color:#9fb5d0;font-size:10px}.manual-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:7px}.manual-grid label{display:grid;grid-template-columns:1fr 70px;gap:8px;align-items:center;border:1px solid var(--line);border-radius:11px;padding:7px;font-size:10px}.manual-grid input{width:100%;border:1px solid var(--line);border-radius:8px;background:#050b16;color:white;padding:7px}.modal-back{position:fixed;inset:0;z-index:9999;background:rgba(1,4,12,.8);backdrop-filter:blur(7px);display:flex;align-items:center;justify-content:center;padding:18px}.detail-modal{width:min(900px,96vw);max-height:92vh;overflow:auto;border:1px solid #30486f;border-radius:24px;background:#081121;padding:20px;box-shadow:0 30px 90px rgba(0,0,0,.65);position:relative}.modal-x{position:absolute;right:15px;top:15px;width:34px;height:34px;border:1px solid var(--line);border-radius:50%;background:#111d31;color:white;font-size:20px}.detail-modal header{display:flex;gap:12px;align-items:center;padding-right:50px}.detail-modal header img{width:54px;height:54px;border-radius:14px}.detail-modal h2{margin:0;font-size:19px}.detail-modal header p{margin:4px 0 0;color:#8ea4c1;font-size:10px}.detail-hero{display:grid;grid-template-columns:1fr 1.5fr 1fr;gap:8px;margin:15px 0}.detail-hero>div,.missing-grid>div{border:1px solid var(--line);border-radius:13px;background:#091326;padding:11px}.detail-hero small,.detail-hero b,.detail-hero span{display:block}.detail-hero small{color:#8296b4;font-size:9px}.detail-hero b{margin:4px 0;font-size:16px}.detail-hero span{font-size:10px;color:#a9bad0}.detail-modal section{margin-top:14px}.detail-modal h3{font-size:12px}.direct-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:7px}.direct-grid>div{display:flex;justify-content:space-between;align-items:center;gap:8px;border:1px solid var(--line);border-radius:11px;padding:9px;font-size:10px;min-width:0}.direct-grid>div>span{min-width:0;overflow-wrap:anywhere;flex:1 1 auto}.direct-grid>div>b{flex:0 0 auto;white-space:nowrap}.missing-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}.missing-grid small,.missing-grid b{display:block}.missing-grid small{color:#8296b4;font-size:9px}.missing-grid b{font-size:10px;line-height:1.55;margin-top:5px}.detail-modal details{margin-top:14px;border:1px solid var(--line);border-radius:12px;padding:10px}.detail-modal details p{font-size:10px;color:#9cb0cb}.detail-modal .close{margin-top:14px}.ord-toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:10000;border-radius:14px;padding:11px 16px;background:linear-gradient(135deg,var(--violet),var(--blue));box-shadow:var(--shadow);font-weight:900;font-size:12px}
@@ -1183,6 +1183,30 @@ body.ord-overlay-mode .command-line{display:flex}
 .v211-refer.v22-closed{align-self:start}
 .v22-drawer-close{margin-left:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);color:var(--muted);font-size:11px;padding:2px 9px;cursor:pointer}
 
+/* v22.1(0809 포렌식): 확정 상위 재료 명시 + 스토리 진행 스텝퍼.
+   재료가 이름으로 보이면 "코치가 상위 재료를 먹는 추천"을 사용자도
+   잡을 수 있다.  스토리 13@35라는 사용자 실측 최소선이다. */
+.v221-upper-mats{display:grid;gap:5px;border:1px solid rgba(167,139,250,.4);border-radius:var(--radius-sm);padding:8px 11px;background:rgba(167,139,250,.07);font-size:11.5px}
+.v221-upper-mats small{color:var(--sub)}
+.v221-upper-mats>div{display:flex;flex-wrap:wrap;gap:4px}
+.v221-upper-mats em{font-style:normal;border:1px solid var(--line);border-radius:5px;padding:1px 7px;background:var(--panel-2)}
+.v221-upper-mats em.use{border-color:rgba(76,201,140,.5);color:var(--ok)}
+.v221-upper-mats em.build{border-color:rgba(224,164,78,.5);color:var(--warn)}
+.v221-upper-mats em.hard{border-color:rgba(232,112,112,.55);color:var(--bad)}
+.v221-upper-mats em.none{color:var(--muted)}
+.v221-upper-wisp{font-size:11px;color:var(--muted)}
+.v221-upper-wisp.short{color:var(--warn);font-weight:600}
+.v221-story{display:grid;gap:4px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 11px;background:var(--panel-2);font-size:11.5px}
+.v221-story small{color:var(--muted)}
+.v221-story-row{display:flex;gap:8px;align-items:center}
+.v221-story-row b{font-size:15px;min-width:52px;text-align:center}
+.v221-story-row button{border:1px solid var(--line);border-radius:6px;background:var(--panel-3,#2a2233);color:var(--text);width:24px;height:24px;cursor:pointer;font-size:14px;line-height:1}
+.v221-story-row span{color:var(--sub);font-size:11.5px}
+.v221-story.behind{border-color:rgba(224,164,78,.55)}
+.v221-story.behind .v221-story-row span{color:var(--warn);font-weight:600}
+.v221-story.late{border-color:rgba(232,112,112,.6)}
+.v221-story.late .v221-story-row span{color:var(--bad);font-weight:700}
+
   </style>
 </head>
 <body>
@@ -1647,7 +1671,7 @@ window.ORD_CLEAR_STATS={"version":"clear-stats-v1","source":"tmo_nightmare_all_2
 (function(global){
 'use strict';
 
-const VERSION='22.0.0';
+const VERSION='22.1.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -3317,7 +3341,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='22.0.0';
+const VERSION='22.1.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 // v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
 // 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
@@ -4987,7 +5011,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='22.0.0';
+const VERSION='22.1.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -5117,7 +5141,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='22.0.0';
+const VERSION='22.1.0';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -5197,7 +5221,7 @@ if(root)root.ORDV15Policy=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='22.0.0';
+const VERSION='22.1.0';
 const ROUTES=Object.freeze({
   physical:Object.freeze({key:'physical',mode:'physical',label:'물딜 1상위',groups:[['main'],['armor','stunBase'],['slow','bossFrenzy'],['stunFull']],priority:'상위 → 상시 방깎·최소 0.7스턴 → 이감·광보잡 → 1.5스턴'}),
   dual:Object.freeze({key:'dual',mode:'magic',label:'마딜 2상위·토키',groups:[['main','stunBase'],['slow'],['bossFrenzy','toki'],['stunFull']],priority:'상위 2기·최소 0.7스턴 → 이감 → 광보잡·토키 → 1.5스턴(마지막 필수)'}),
@@ -5406,7 +5430,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='22.0.0';
+const VERSION='22.1.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -5640,11 +5664,14 @@ function metaUsage(unit){
   return META_STATS.byCode[id]||META_STATS.byCode[id.toLowerCase()]||META_STATS.byCode[id.toUpperCase()]||null;
 }
 function metaUsageRate(unit){const hit=metaUsage(unit);return hit?num(hit.rate):0;}
-function completionDecision(model,units,milestone){
+function completionDecision(model,units,milestone,guard){
   const milestoneSpec=completionMilestone(milestone),label=milestoneSpec.label;
+  // v22.1(0809 포렌식): guard 는 확정 상위 트리 소모분을 뺀 재고다 — 견적만
+  // 이 재고로 뜨고, 보유 판정·원장 표시는 실제 패 그대로 둔다.
+  const quoteCounts=guard&&guard.counts||model.effective.counts;
   // v16.7: 같은 완성도·같은 선위 소모라면 스토리 파괴 속도(스토리 등급
   // 점수)가 빠른 쪽을 먼저 설계한다 — 첫 희귀·첫 전설 공통.
-  const quoted=units.map(unit=>{const completion=M.completionFor?M.completionFor(model,unit):null;return{unit,quote:L.quote(model,unit,model.effective.counts,{availableRound:model.round.value}),completion:completion?num(completion.rankingPercent):num(model.effective.percent[unit.id]),completionDetail:completion,story:num(C.storyGrade(unit).score),usage:metaUsageRate(unit),
+  const quoted=units.map(unit=>{const completion=M.completionFor?M.completionFor(model,unit):null;return{unit,quote:L.quote(model,unit,quoteCounts,{availableRound:model.round.value}),completion:completion?num(completion.rankingPercent):num(model.effective.percent[unit.id]),completionDetail:completion,story:num(C.storyGrade(unit).score),usage:metaUsageRate(unit),
   // v21.3(사용자 실전): 뽑기·드랍으로만 얻는 특별 재료가 패에 없는 후보는
   // "빠른 후보"가 아니다.  실사례 — 희귀 페로나(이감20)는 압살롬×1이
   // 필요하고 압살롬은 좀비×3(후반 재료)으로만 제작되는데, 원장의 압살롬
@@ -5688,9 +5715,9 @@ function completionDecision(model,units,milestone){
       .sort((a,b)=>b.story-a.story||a.quote.wisp.cost-b.quote.wisp.cost)[0];
     if(sPick){storyPremium={tier:String(C.storyGrade(sPick.unit).tier),delta:Math.max(0,num(sPick.quote.wisp.cost)-num(best.quote.wisp.cost)),over:nameOf(best.unit)};best=sPick;}
   }}
-  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',hardNote=best.hardShort>0?`주의 — 뽑기·드랍으로만 얻는 재료(${(best.quote.solve&&best.quote.solve.hardMissing||[]).map(entry=>String(entry.name||entry.id)).join('·')}) 미보유. 모든 후보가 같은 처지라 순서만 제시합니다. `:'',usageNote=best.usage>0?` — 실전 채용률 ${Math.round(best.usage*1000)/10}% (${num(META_STATS&&META_STATS.gameCount).toLocaleString('ko-KR')}판)`:'',completionReason=`${escapeNote}${hardNote}${label} 후보 중 ${storyPremium?`스토리 ${storyPremium.tier}급 — 최저 선위(${storyPremium.over})보다 ${storyPremium.delta} 더 들지만 스토리가 빠릅니다${milestoneSpec.key==='firstRare'?' · 7라 미션 가속':' · 20라 보스 대비'}`:milestoneSpec.key!=='additionalFinal'?'지금 패에서 부족한 재료와 선택 위습이 가장 적습니다':'지금 패 기준 완성도·실전 가치가 가장 높습니다'}${usageNote}.`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible&&best.hardShort<=0?'ACT_NOW':'PREPARE';
+  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',hardNote=best.hardShort>0?`주의 — 뽑기·드랍으로만 얻는 재료(${(best.quote.solve&&best.quote.solve.hardMissing||[]).map(entry=>String(entry.name||entry.id)).join('·')}) 미보유. 모든 후보가 같은 처지라 순서만 제시합니다. `:'',usageNote=best.usage>0?` — 실전 채용률 ${Math.round(best.usage*1000)/10}% (${num(META_STATS&&META_STATS.gameCount).toLocaleString('ko-KR')}판)`:'',guardNote=guard&&guard.taken>0?` 확정 상위 ${guard.lockName}의 트리 재료 ${guard.taken}개는 이 견적에서 제외했습니다 — 마일스톤 제작이 상위 재료를 먹지 않습니다.`:'',completionReason=`${escapeNote}${hardNote}${label} 후보 중 ${storyPremium?`스토리 ${storyPremium.tier}급 — 최저 선위(${storyPremium.over})보다 ${storyPremium.delta} 더 들지만 스토리가 빠릅니다${milestoneSpec.key==='firstRare'?' · 7라 미션 가속':' · 20라 보스 대비'}`:milestoneSpec.key!=='additionalFinal'?'지금 패에서 부족한 재료와 선택 위습이 가장 적습니다':'지금 패 기준 완성도·실전 가치가 가장 높습니다'}${usageNote}.${guardNote}`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible&&best.hardShort<=0?'ACT_NOW':'PREPARE';
   const candidate={id:best.unit.id,name:nameOf(best.unit),unit:best.unit,row,quote:best.quote,completion:best.completionDetail,wispCost:best.quote.wisp.cost,wispAfter:best.quote.wisp.after,result:'completion-rule',stopCondition:`선택 위습이 ${best.quote.wisp.cost}개보다 적거나 패가 바뀌면 만들지 말고 다시 동기화`};
-  return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',rankingAuthority:'fastest-first-usage-tiebreak',metaUsageRate:best.usage,hardMaterialGated:best.hardShort>0,storyPremium:storyPremium?{tier:storyPremium.tier,extraWisp:storyPremium.delta}:null,virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
+  return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',rankingAuthority:'fastest-first-usage-tiebreak',metaUsageRate:best.usage,hardMaterialGated:best.hardShort>0,storyPremium:storyPremium?{tier:storyPremium.tier,extraWisp:storyPremium.delta}:null,lockedUpperGuard:guard&&guard.taken>0?{id:guard.lockId,name:guard.lockName,reservedUnits:guard.taken}:null,virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
 }
 function rareLedgerForQuote(model,quote,state,label){
   const rows=[];for(const unit of model.knowledge.db.rares){const initial=Math.max(0,num(model.effective.counts[unit.id]));if(initial<=0)continue;const planned=Math.min(initial,num(quote&&quote.rareUse&&quote.rareUse[unit.id])),use=state==='ACT_NOW'?planned:0,hold=initial-use,reason=use?`${label} 즉시 재료`:planned?`${label} 제작 재료 보호`:`${label} 확정 전 안전 보류`;rows.push({id:unit.id,name:nameOf(unit),unit,initial,use,hold,reroll:0,reason,proof:{planned,use,exclusive:use+hold===initial}});}
@@ -5702,7 +5729,13 @@ function committedUpperDecision(model,route,locks,lock){
   // v17.5: 레일리(히든)·해적선 차단은 재료 문제가 아니라 스토리 10 보상
   // 미수령이다 — 보호 문구 대신 수령 안내를 앞세운다.
   storyBlocked=!quote.feasible&&quote.blocked.some(text=>/레일리|해적선/.test(String(text)))&&story10RewardOpen(model),
-  reason=quote.feasible?`확정한 메인 상위 ${nameOf(unit)}를 먼저 완성합니다. 다른 제작으로 예약 재료를 소비하지 않습니다.`:`${storyBlocked?`스토리 10라운드 보상에서 레일리(히든)+해적선을 선택하면 ${nameOf(unit)} 경로가 열립니다(${C.STORY10_FORFEITS} 포기). `:''}확정한 메인 상위 ${nameOf(unit)}의 재료와 선택 위습을 보호합니다. 완성 전에는 다른 제작과 희귀 리롤을 잠급니다.${quote.blocked.length?` · 차단: ${quote.blocked.join(' · ')}`:''}`,row=makeRow(model,quote,after,reason),candidate={id:unit.id,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:quote.feasible?num(quote.wisp.after):null,result:'committed-upper-first',reason,deltas,stopCondition:`표시 재료가 하나라도 바뀌거나 선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path:quote.feasible?[{id:unit.id,name:nameOf(unit),wispCost:num(quote.wisp.cost)}]:[]};
+  // v22.1(0809 포렌식): 확정 직후 위습 13<15 로 7라운드를 "보호"라는 말만
+  // 반복하며 침묵했다 — 부족분이 위습뿐이면 카운트다운으로 말한다.  또
+  // 옛 문구는 전면 잠금을 약속했지만 v16.6 이후 실제 동작은 트리 재료만
+  // 보호하고 생존 결손 마감은 계속이다 — 문구를 사실에 맞춘다.
+  wispShortNow=Math.max(0,num(quote.wisp.cost)-num(quote.wisp.before)),
+  wispOnly=!quote.feasible&&wispShortNow>0&&!(quote.blocked||[]).length,
+  reason=quote.feasible?`확정한 메인 상위 ${nameOf(unit)}를 먼저 완성합니다. 다른 제작으로 예약 재료를 소비하지 않습니다.`:`${storyBlocked?`스토리 10라운드 보상에서 레일리(히든)+해적선을 선택하면 ${nameOf(unit)} 경로가 열립니다(${C.STORY10_FORFEITS} 포기). `:''}${wispOnly?`확정 상위 ${nameOf(unit)}까지 선택 위습 ${wispShortNow}개 부족(보유 ${num(quote.wisp.before)}/필요 ${num(quote.wisp.cost)}) — 라운드 수입으로 모으면 됩니다. 트리 재료는 보호 중이고, 그동안 다른 제작은 생존 필수 결손을 닫을 때만 승인됩니다.`:`확정한 메인 상위 ${nameOf(unit)}의 트리 재료를 보호합니다. 생존 필수 결손 마감은 계속 승인됩니다.${quote.blocked.length?` · 차단: ${quote.blocked.join(' · ')}`:''}`}`,row=makeRow(model,quote,after,reason),candidate={id:unit.id,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:quote.feasible?num(quote.wisp.after):null,result:'committed-upper-first',reason,deltas,stopCondition:`표시 재료가 하나라도 바뀌거나 선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path:quote.feasible?[{id:unit.id,name:nameOf(unit),wispCost:num(quote.wisp.cost)}]:[]};
   return{state,label:quote.feasible?'확정 상위 지금 제작':'확정 상위 재료 보호',reason,action:quote.feasible?candidate:null,blockedAction:quote.feasible?null:candidate,assessment:before,afterAction:after,bestPath:quote.feasible?{steps:candidate.path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]}:null,rare:rareLedgerForQuote(model,quote,state,`확정 상위 ${nameOf(unit)}`),alternatives:[],unknowns:before.unknowns||[],search:{candidateCount:1,pathCount:quote.feasible?1:0,horizon:0,beamWidth:0,committedUpper:true},evidence:{observed:M.observedEvidence(model),ledger:'exact-current-stock',lockedUpper:unit.id,upperFirst:true,futureDropsCredited:false,clearClaim:false}};
 }
 // v20.2(0806 실측 · 사용자 재보고 "만들고 있는 중에 지금 할 일이 바뀐다"):
@@ -5777,6 +5810,10 @@ function craftLockDecision(model,route,locks,lockId,fallback){
 function applyCraftLock(decision,model,locks){
   const lockId=String(model&&model.settings&&model.settings._craftLockId||'');
   if(!lockId||!decision||CRAFT_LOCK_SKIP_STATES.has(String(decision.state||'')))return decision;
+  // v22.1(0809 포렌식): 확정 상위가 마침내 제작 가능해진 승인(committed-
+  // upper-first ACT_NOW)은 다른 유닛의 표시 잠금이 최대 2라운드 덮을 수
+  // 있었다 — 사용자 확정이 표시 안정성보다 위다.
+  if(decision.state==='ACT_NOW'&&decision.evidence&&decision.evidence.upperFirst)return decision;
   const current=decision.action||decision.blockedAction||null;
   if(current&&String(current.id||'')===lockId)return decision;
   const held=craftLockDecision(model,P.resolveRoute(model.intent,model.settings),locks,lockId,decision);
@@ -6493,6 +6530,11 @@ function reconcileSquadExecutionRaw(decision,squad,locks){
   // blockedAction으로 남겨 무엇을 왜 기다리는지 보이게 한다.
   const blockedFallback=()=>decision&&(decision.action||decision.blockedAction)||null;
   const blocked=(state,reason,extra,showAction)=>withEvidence({state,label:state==='SYNC_BLOCKED'?'현재 패 재검증 필요':'최종 파티 제작 순서 보류',reason,action:null,blockedAction:showAction||blockedFallback()},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:true,squadPrefixRejectReason:reason,...extra});
+  // v22.1(0809 포렌식): 사용자가 확정한 상위를 정확 원장이 현재 패에서 제작
+  // 가능으로 증명한 승인은 파티 플래너의 룰 차이(reserved 정책 등)로 뒤집지
+  // 않는다 — r32·r35 료쿠규 승인이 다른 층에 가려질 여지를 없앤다.  플래너
+  // 검증은 그 밖의 모든 제작에 그대로 권위다.
+  if(decision&&decision.state==='ACT_NOW'&&decision.evidence&&decision.evidence.upperFirst)return withEvidence({},{executionAuthority:'committed-upper-first',squadBypassCommittedUpper:true});
   if(!actions.length){
     if(decision.state==='ACT_NOW')return blocked('HOLD','최종 파티의 현재 패 검증 순서에 없는 제작이라 승인하지 않습니다. 패가 바뀌면 파티와 제작 순서를 함께 다시 계산합니다.',{rawActionId:String(rawAction&&rawAction.id||'')});
     return withEvidence({}, {executionAuthority:'squad-prefix-requoted-v15',squadPrefixEmpty:true});
@@ -6803,12 +6845,31 @@ function buildDecision(input){
   input=input||{};let routeAuto=null;const model=input.model||M.build(input),locks=input.locks||[],roundNow=model.round.value,final=M.finalSummary(model,model.effective.counts),rareTotal=model.knowledge.db.rares.reduce((total,unit)=>total+Math.max(0,num(model.effective.counts[unit.id])),0),finalize=raw=>{const decision=applyCraftLock(raw,model,locks);return Object.assign(decision,{version:VERSION,authority:true,authorityEngine:AUTHORITY,inputFingerprint:model.fingerprint,model},routeAuto?{routeAuto:{adopted:routeAuto.adopted,routeKey:routeAuto.routeKey,label:routeAuto.label,topUpperId:routeAuto.topUpperId,topUpperName:routeAuto.topUpperName,rankingAuthority:routeAuto.rankingAuthority},routeCandidates:decision.routeCandidates||routeAuto.routeCandidates,routeCandidateLanes:decision.routeCandidateLanes||routeAuto.routeCandidateLanes}:null,coachGuidance(decision,model,roundNow));};
   // Milestones are inventory states, not date windows. Missing the nominal
   // deadline must not silently advance the user into upper planning.
-  if(rareTotal<=0&&final.legendEquivalent<=0)return finalize(completionDecision(model,model.knowledge.db.rares.filter(unit=>intentFamilyOk(model,unit)),COMPLETION_MILESTONES.firstRare));
-  if(final.legendEquivalent<=0){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.firstFinal));}
-  let route=P.resolveRoute(model.intent,model.settings);const lock=lockedUpper(locks),postLegend=String(model.settings.postLegendRoute||'');
+  // v22.1(0809 포렌식): 마일스톤 게이트가 lock 판독보다 앞서 return 하는 동안
+  // completionDecision 은 확정 상위 트리 재료를 예약 없이 소모하는 후보를
+  // 1순위로 승인할 수 있었다(샬롯 크래커가 료쿠규의 유일 희귀 재료 킨에몬을
+  // 소모 — 1411행 additionalFinal 에만 !lock 가드가 있던 비대칭).  이제
+  // 확정 상위가 있으면 그 트리 소모분을 뺀 재고로 마일스톤 후보를 견적한다.
+  // 보호(재료)이지 선호(순위)가 아니다 — 첫 희귀·첫 전설은 여전히 최속이
+  // 이기되, 확정 상위의 재료를 먹는 경로만 정직하게 비싸지거나 막힌다.
+  // 25라 확정 게이트 해제(v22.1)로 1라부터 lock 이 존재할 수 있어 이 봉합이
+  // 게이트 해제의 전제 조건이다.
+  const earlyLock=lockedUpper(locks);
+  const milestoneGuard=(()=>{
+    if(!earlyLock)return null;
+    const lockKey=C.canonicalUpperId(earlyLock.id),lockUnit=model.knowledge.db.byId.get(earlyLock.id)||model.knowledge.db.uppers.find(row=>C.canonicalUpperId(row.id)===lockKey);
+    if(!lockUnit||model.knowledge.db.uppers.some(unit=>num(model.effective.counts[unit.id])>0&&C.canonicalUpperId(unit.id)===lockKey))return null;
+    let lockQuote=null;try{lockQuote=L.quote(model,lockUnit,model.effective.counts,{availableRound:model.round.value});}catch(_){return null;}
+    const counts=Object.assign({},model.effective.counts);let taken=0;
+    for(const [id,qty] of Object.entries(lockQuote&&lockQuote.consumed||{})){if(id===C.WISP_ID)continue;const take=Math.min(num(counts[id]),num(qty));if(take>0){counts[id]=num(counts[id])-take;taken+=take;}}
+    return taken>0?{counts,taken,lockName:nameOf(lockUnit),lockId:lockUnit.id}:null;
+  })();
+  if(rareTotal<=0&&final.legendEquivalent<=0)return finalize(completionDecision(model,model.knowledge.db.rares.filter(unit=>intentFamilyOk(model,unit)),COMPLETION_MILESTONES.firstRare,milestoneGuard));
+  if(final.legendEquivalent<=0){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.firstFinal,milestoneGuard));}
+  let route=P.resolveRoute(model.intent,model.settings);const lock=earlyLock,postLegend=String(model.settings.postLegendRoute||'');
   // The user explicitly chose "another legend/hidden" after the first one.
   // Keep the same completion authority until they switch to upper preparation.
-  if(postLegend==='legend'&&final.nonUpperFinalCount>0&&final.upperCount<=0&&!lock){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.additionalFinal));}
+  if(postLegend==='legend'&&final.nonUpperFinalCount>0&&final.upperCount<=0&&!lock){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.additionalFinal,milestoneGuard));}
   // v21.0(전면 재설계 ① — 사용자: "애초에 방향이 엉뚱함", "전면 재설계"):
   // 방향을 사용자에게 묻고 멈추지 않는다.  0806a 실측 — 1~32라 32라운드가
   // ROUTE_CHOICE 침묵이었고 그동안 구체 추천 0건.  같은 판 r10의 후보
@@ -7638,6 +7699,9 @@ const DEFAULTS={
   currentRound:1,roundStartedAt:0,roundPrepSeconds:10,roundNormalSeconds:35,roundBossSeconds:60,roundAutoGeneration:0,roundAutoSourceEpoch:0,manualCounts:{},pendingCounts:{},pendingAt:{},pendingTransaction:null,connectionDiagnostic:null,detailId:'',message:'',
   locks:[],upperDetection:{candidateId:'',streak:0,lastSnapshotKey:'',lastSeenAt:0},watchStability:{context:'',stableIds:[],pendingIds:[],pendingStreak:0,lastObservationKey:''},rerollsUsed:0,pendingReroll:null,awaitingNewGameFingerprint:'',
   transcendUsed:0,seraphUsed:0,changedUsed:0,
+  // v22.1(0809 "스토리가 35라 전에 13까지 밀려야하는데 안밀려서 죽었어"):
+  // TMO 데이터에 스토리 단계가 없어 수동 스텝퍼로 받는다.
+  storyStage:0,
   // v17.12: 유닛 강화는 항상 풀로 되어 있다고 가정한다(사용자 지시).
   // 연구소 4종(공업+12% 이감+10 체젠+0.45 마젠+0.8) 전부 구매,
   // 상위 공업 연구는 데이터 상한 Lv21. 실제와 다르면 데이터 탭에서 조정.
@@ -7648,7 +7712,7 @@ const DEFAULTS={
 
 const REACHABLE_TABS=new Set(['coach','runlog','deck','data','story']);
 const REMOVED_SETTING_KEYS=['firstRareRewardClaimed','moneyRareReward','storyRareRewards','highGambleDone','highGambleRares','stunConditions','allowWarped','recommendWarped'];
-const RUN_LOG_ACTIONS=new Set(['post-legend-route','purpose','super-kuma','mark-made','reroll-confirmed','cancel-reroll','unit-adjust','clear-unit-override','preview-direction','choose-direction','hold-direction','select-upper','confirm-upper','party-preview','lock-legend','lock-rare','remove-lock','reset-route','round-reset','round-step','round-pause','round-start','reroll-step','new-game','dismiss-transaction','accept-snapshot','counter-step','clear-overrides','confirm-second-upper','release-second-upper','confirm-party','release-party','restore-released-upper','snipe-upper']);
+const RUN_LOG_ACTIONS=new Set(['post-legend-route','purpose','super-kuma','mark-made','reroll-confirmed','cancel-reroll','unit-adjust','clear-unit-override','preview-direction','choose-direction','hold-direction','select-upper','confirm-upper','party-preview','lock-legend','lock-rare','remove-lock','reset-route','round-reset','round-step','round-pause','round-start','reroll-step','new-game','dismiss-transaction','accept-snapshot','counter-step','clear-overrides','confirm-second-upper','release-second-upper','confirm-party','release-party','restore-released-upper','snipe-upper','story-stage-step']);
 const RUN_LOG_SETTING_KEYS=new Set(['mode','magicRoute','gorosei','story10Reward','currentRound','roundPrepSeconds','roundNormalSeconds','roundBossSeconds','wispOverride','virtualSpecialId','transcendUsed','seraphUsed','changedUsed']);
 const RUN_RESULT_DEFAULTS=Object.freeze({kind:'r50_failed',failureReason:'unknown',followedProgram:'unknown',round:'',bossHpPercent:'',attackUpgrade:'',slowUpgrade:'',hpRegenUpgrade:'',mpRegenUpgrade:'',helperUsed:false,note:''});
 const RUN_FAILURE_KINDS=new Set(['r50_failed','r51_65_failed']);
@@ -8525,6 +8589,7 @@ class App{
     // "정보 중구난방"의 원인이라 한 자리에서 갈아 끼운다.
     if(a==='v211-tab'){const tab=String(b.dataset.tab||'');if(['craft','party','rare'].includes(tab)){this._v211Tab=tab;this._v22DrawerOpen=true;this.render();}return;}
     if(a==='v22-drawer-close'){this._v22DrawerOpen=false;this.render();return;}
+    if(a==='story-stage-step'){this.state.storyStage=Math.max(0,Math.min(15,C.num(this.state.storyStage)+C.num(b.dataset.delta)));this.persist();this.render();return;}
     if(a==='tab'){const tab=String(b.dataset.tab||'');if(!REACHABLE_TABS.has(tab))return;const previousTab=this.state.tab;this._focusAfterRender=tab==='coach'?(previousTab==='runlog'?'[data-act="run-log-open"]':`[data-act="tab"][data-tab="${previousTab}"]`):'.v151-aux-bar [data-act="tab"][data-tab="coach"]';this.state.tab=tab;if(tab==='runlog'){this._runLogSelectedId=this._runLogSelectedId||this.runLog&&this.runLog.currentRun&&this.runLog.currentRun.runId||'';this._runLogSelectedRun=this._runLogSelectedRun||this.runLog&&this.runLog.currentRun||null;this.refreshRunLogHistory(false);}this.persist();this.render();return;}
     if(a==='purpose'){this.state.purpose=b.dataset.value||'';this.persist();this.render();return;}
     if(a==='post-legend-route'){
@@ -8569,7 +8634,7 @@ class App{
     if(a==='choose-direction'){
       const current=this.plan(),decision=current.plan&&current.plan.v15Decision,candidate=(decision&&decision.routeCandidates||[]).find(row=>row.id===id&&row.routeKey===b.dataset.key);
       if(candidate){
-        if(this.actualRound()<25){this.toast('상위 후보는 미리 볼 수 있지만 방향 확정은 25라운드부터 가능합니다.');return;}
+        // v22.1(사용자: "25라전에 확정안되는거 풀어" · 0809 포렌식): 25라 게이트 해제 — 확정은 언제든, 이르면 이를수록 재료가 보호된다.
         if(!routeCandidateReady(candidate)){this.toast('상위와 보조 전설급 파티 평가가 끝난 후보만 확정할 수 있습니다. 잠시 뒤 다시 확인해 주세요.');return;}
         const key=candidate.routeKey,mode=key==='physical'?'physical':'magic',existing=this.upperLock();
         if(candidate.keepUpper){
@@ -8585,8 +8650,7 @@ class App{
     if(a==='preview-direction'||a==='choose-direction'){
       const key=b.dataset.key,valid=['physical','dual','singleEnd'].includes(key),row=(this._upperRankCache||[]).find(item=>item.upperId===id&&item.directionKey===key);if(!valid||!row){this.toast('현재 패가 바뀌어 이 방향을 다시 계산해야 합니다.');return;}
       if(a==='choose-direction'){
-        if(this.actualRound()<25){this.toast('상위·조합 방향 확정은 25라운드부터 가능합니다. 지금은 후보만 미리보세요.');return;}
-        const mode=key==='physical'?'physical':'magic',fullBlueprint=row.guaranteedComplete?this.captureUpperBlueprint(id,row.plan):null,blueprint=fullBlueprint||this.captureUpperCommitment(id,mode,key),routeFamily=upperRouteFamily(id);this.state.upperBlueprint=blueprint;this.state.locks=this.state.locks.filter(lock=>lock.stage!=='upper'&&lock.stage!=='legend');this.state.locks.push({stage:'upper',id,source:fullBlueprint?'manual-blueprint':'manual-route',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:id,activeVariantId:id});this.state.directionStatus='selected';this.state.directionKey=key;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';this.state.releasedUpperHint=null;this.state.mode=mode;this.state.magicRoute=key==='physical'?'auto':key;this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this._squadCacheKey='';this._directionRankCacheKey='';this.persist();this.toast(fullBlueprint?'상위와 현재 보조 청사진을 잠갔습니다. 패가 바뀌면 보조 조합만 가변 재계산합니다.':'상위 방향을 잠갔습니다. 30라 전후에는 이 상위를 먼저 올리고, 보조 조합은 남은 패로 가변 재계산합니다.');return;
+                const mode=key==='physical'?'physical':'magic',fullBlueprint=row.guaranteedComplete?this.captureUpperBlueprint(id,row.plan):null,blueprint=fullBlueprint||this.captureUpperCommitment(id,mode,key),routeFamily=upperRouteFamily(id);this.state.upperBlueprint=blueprint;this.state.locks=this.state.locks.filter(lock=>lock.stage!=='upper'&&lock.stage!=='legend');this.state.locks.push({stage:'upper',id,source:fullBlueprint?'manual-blueprint':'manual-route',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:id,activeVariantId:id});this.state.directionStatus='selected';this.state.directionKey=key;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';this.state.releasedUpperHint=null;this.state.mode=mode;this.state.magicRoute=key==='physical'?'auto':key;this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this._squadCacheKey='';this._directionRankCacheKey='';this.persist();this.toast(fullBlueprint?'상위와 현재 보조 청사진을 잠갔습니다. 패가 바뀌면 보조 조합만 가변 재계산합니다.':'상위 방향을 잠갔습니다. 30라 전후에는 이 상위를 먼저 올리고, 보조 조합은 남은 패로 가변 재계산합니다.');return;
       }
       this.state.directionStatus='preview';this.state.directionKey=key;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';this.state.mode=key==='physical'?'physical':'magic';this.state.magicRoute=key==='physical'?'auto':key;this.state.upperPreviewId=id;this.state.postLegendRoute='upper';this.state.purpose='upper';this._squadCacheKey='';this.persist();this.render();return;
     }
@@ -8676,8 +8740,7 @@ class App{
     if(a==='select-upper'){const row=(this._upperRankCache||[]).find(item=>item.upperId===id);if(row&&row.directionKey){this.state.directionStatus='preview';this.state.directionKey=row.directionKey;this.state.directionUpperId=id;this.state.mode=row.directionKey==='physical'?'physical':'magic';this.state.magicRoute=row.directionKey==='physical'?'auto':row.directionKey;}this.state.upperPreviewId=id;this.state.postLegendRoute='upper';this.state.purpose='upper';this._squadCacheKey='';this.persist();this.render();return;}
     if(a==='confirm-upper'){
       const locked=this.upperLock();if(locked&&C.canonicalUpperId(locked.id)!==C.canonicalUpperId(id)){const current=this.normalized().db.byId.get(locked.id);this.toast(`메인 상위 ${displayNameOf(current)}가 이미 고정돼 있습니다. 바꾸려면 경로만 초기화하세요.`);return;}
-      if(!locked&&this.actualRound()<25){this.toast('상위·조합 방향 확정은 25라운드부터 가능합니다. 지금은 후보만 미리보세요.');return;}
-      const reusePreview=this.state.upperPreviewId===id&&!!this._squadCacheKey&&!!this._squadCache;this.state.upperPreviewId=id;this.state.purpose='upper';if(!reusePreview)this._squadCacheKey='';const preview=this.plan(),ranked=(preview.plan.upperRankings||[]).find(item=>item.upperId===id),squad=preview.plan.squadPlan||ranked&&ranked.plan,blueprint=this.captureUpperBlueprint(id,squad),unit=preview.state&&preview.state.db.byId.get(id);if(!unit||!C.isUpper(unit)){this.toast('현재 패에서 이 상위를 다시 찾지 못했습니다. TMO를 동기화해 주세요.');return;}
+            const reusePreview=this.state.upperPreviewId===id&&!!this._squadCacheKey&&!!this._squadCache;this.state.upperPreviewId=id;this.state.purpose='upper';if(!reusePreview)this._squadCacheKey='';const preview=this.plan(),ranked=(preview.plan.upperRankings||[]).find(item=>item.upperId===id),squad=preview.plan.squadPlan||ranked&&ranked.plan,blueprint=this.captureUpperBlueprint(id,squad),unit=preview.state&&preview.state.db.byId.get(id);if(!unit||!C.isUpper(unit)){this.toast('현재 패에서 이 상위를 다시 찾지 못했습니다. TMO를 동기화해 주세요.');return;}
       const suggestedMode=squad&&squad.mode||ranked&&ranked.mode,mode=['physical','magic'].includes(suggestedMode)?suggestedMode:C.familyOf(unit)==='magic'?'magic':'physical',routeHint=ranked&&ranked.directionKey||squad&&squad.magicRoute||this.state.directionKey||this.state.magicRoute,route=mode==='physical'?'physical':['dual','singleEnd'].includes(routeHint)?routeHint:'singleEnd',fullBlueprint=blueprint,commitment=fullBlueprint||this.captureUpperCommitment(id,mode,route);this.state.upperBlueprint=commitment;this.state.mode=mode;if(mode==='magic'&&['dual','singleEnd'].includes(route))this.state.magicRoute=route;this.state.directionStatus='selected';this.state.directionKey=mode==='physical'?'physical':route;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';this.state.releasedUpperHint=null;if(!locked){const routeFamily=upperRouteFamily(id);this.state.locks=[{stage:'upper',id,source:fullBlueprint?'manual-blueprint':'manual-route',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:id,activeVariantId:id}];}this.state.upperDetection=emptyUpperDetection();this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this._squadCacheKey='';this.persist();this.toast(fullBlueprint?'상위와 현재 보조 청사진을 잠갔습니다. 패가 막히면 보조 자리만 가변 재계산합니다.':'상위 방향을 잠갔습니다. 30라 전후에는 이 상위를 먼저 올리고, 보조 조합은 남은 패로 가변 재계산합니다.');return;
     }
     if(a==='lock-legend'){this.state.locks=this.state.locks.filter(x=>x.stage!=='legend');this.state.locks.push({stage:'legend',id});this.persist();this.toast('전설·히든 경로 재료와 선위를 예약했습니다.');return;}
@@ -8757,7 +8820,7 @@ class App{
     const body=this.state.tab==='coach'?this.renderCoach(state,plan,phase,clock,health):this.renderAuxiliaryPage(this.state.tab,state,plan,health);
     this.root.innerHTML=`<div class="ord-app v151-shell" data-view="${C.esc(this.state.tab)}">${body}${this.renderDetail(state,plan)}${this.renderV151PartyModal(state,plan)}${this.renderV151ShipModal(state)}${this.renderSnipeModal(state)}${this.renderRunResultModal(health)}${this.state.message?`<div class="ord-toast" role="status">${C.esc(this.state.message)}</div>`:''}</div>`;
     this.restoreScrollPositions(savedScroll);
-    this.root.querySelectorAll('[data-act="confirm-upper"]').forEach(button=>{if(settings.currentRound>=25){button.disabled=false;button.removeAttribute('aria-disabled');button.title='상위 방향을 먼저 잠급니다. 보조 조합은 패가 바뀔 때마다 가변 재계산합니다.';return;}button.disabled=true;button.setAttribute('aria-disabled','true');button.title='상위·조합 방향 확정은 25라운드부터 가능합니다.';button.textContent='25라부터 확정';});
+    this.root.querySelectorAll('[data-act="confirm-upper"]').forEach(button=>{button.disabled=false;button.removeAttribute('aria-disabled');button.title='상위 방향을 먼저 잠급니다. 보조 조합은 패가 바뀔 때마다 가변 재계산합니다.';});
     const focusSelector=this._focusAfterRender;this._focusAfterRender='';if(focusSelector&&this.root.querySelector){const target=this.root.querySelector(focusSelector);if(target&&typeof target.focus==='function'){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}
   }
   renderAuxiliaryPage(tab,state,plan,health){
@@ -8811,7 +8874,7 @@ class App{
     return`<section class="v15-route-board"><header><div><small>첫 전설·히든 완성 확인</small><h2>다음 한 갈래만 선택하세요</h2><p>지금 선택은 최종 9기를 고정하지 않습니다. 한 번 제작하거나 상위를 올리면 현재 패로 다시 판단합니다.</p></div></header><div class="v15-route-cards"><article class="v15-route-card"><h3>전설·히든 한 기 더</h3><p>모든 전설·히든 중 부족 재료가 가장 적은 한 기만 추천합니다.</p><div class="v15-route-actions"><button class="primary" data-act="post-legend-route" data-value="legend">이 경로 선택</button></div></article><article class="v15-route-card recommended"><h3>메인 상위 준비</h3><p>25라 전후 희귀·특별·안흔 패와 선위를 보고 상위 후보를 비교합니다.</p><div class="v15-route-actions"><button class="primary" data-act="post-legend-route" data-value="upper">이 경로 선택</button></div></article></div></section>`;
   }
   renderV15RouteChoice(state,plan){
-    const decision=plan.v15Decision||{},candidates=(decision.routeCandidates||[]).slice(0,6),detailChoice=decision.routeChoiceKind==='locked-magic-detail',roundReady=this.actualRound()>=25,cards=candidates.map((row,index)=>{const selected=this.state.directionKey===row.routeKey&&C.canonicalUpperId(this.state.directionUpperId)===C.canonicalUpperId(row.id),evaluated=routeCandidateReady(row),canConfirm=roundReady&&evaluated,tiers=row.tiers||{},availability=row.tierAvailable||{},exact=!!(row.projectedSupport&&row.projectedSupport.exactPrefix),tierLabel=exact?'소비':'상위 필요',cv=row.clearValue||{},overdue=cv.overdue===true,etaText=row.feasible?'':C.num(cv.eta)>0?` · 빨라야 ${C.num(cv.eta)}라${overdue?` (마감 ${C.num(cv.deadline)}라 초과)`:''}`:'',status=row.locked?'고정 상위 유지':!evaluated?'상위+보조 파티 평가 중':row.feasible?'현재 패 제작 가능':`선위 ${C.num(row.wispGap)} 부족${etaText}`,wisp=row.locked?'소모 없음':`${C.num(row.wispCost)}${row.feasible&&row.wispAfter!=null?` · 후 ${C.num(row.wispAfter)}`:''}`,steps=row.projectedSupport&&row.projectedSupport.steps||[],path=steps.map(step=>`${step.order}. ${step.name} (선위 ${C.num(step.wispCost)})`).join(' → '),buttonText=!roundReady?'25라부터 확정':!evaluated?'파티 평가 중':selected?'선택 유지':row.locked?'세부 경로 확정':'상위 방향 확정';return`<article class="v15-route-card ${index===0?'recommended':''} ${selected?'selected':''} ${overdue?'overdue':''}"><header><small>${index+1}순위 · ${C.esc(row.routeLabel||'')}</small><h3>${C.esc(row.name||'상위 후보')}</h3><em>${C.esc(status)}</em></header><p>${C.esc(row.reason||'현재 패의 정확 원장으로 비교했습니다.')}</p>${path?`<div class="v15-route-prefix"><small>상위 + 확정 보조 경로</small><b>${C.esc(path)}</b><span>미래 드랍·최종 9기 가정 없음</span></div>`:''}<dl><dt>누적 선택위습</dt><dd>${C.esc(wisp)}</dd>${row.feasible||!C.num(cv.eta)?'':`<dt>예상 완성</dt><dd class="${overdue?'overdue':''}">${C.num(cv.eta)}~${C.num(cv.etaSlow)}라${overdue?` · ${C.num(cv.deadline)}라 마감 초과`:''}<small>부족분이 전부 흔함이면 ${cv.optimisticRate}/라, 안흔함 이상이면 ${cv.pessimisticRate}/라로 해소</small></dd>`}${C.num(row.clearValue&&row.clearValue.metaGames)>0?`<dt>전체 실측</dt><dd>${C.num(row.clearValue.metaGames)}판 (${row.clearValue.metaShare}%)</dd>`:''}${(()=>{const cs=C.clearStatsFor&&C.clearStatsFor(row.id);if(!cs)return'';const roles=cs.roles;const short=name=>String(name||'').split(/[\s(]/)[0];return`<dt>클리어 조합 실측</dt><dd class="v1916-clear">이감 ${roles.slow.p50} · 스턴 ${roles.stun.p50} · 체젠 ${roles.regen.p50} <small>(${C.num(cs.games)}판 중앙값)</small><br><small>실측 파트너 · ${C.esc(cs.partners.slice(0,3).map(item=>`${short(item.name)} ${item.share}%`).join(' · '))}</small></dd>`;})()}${row.locked?'':`<dt>희귀 ${tierLabel}</dt><dd>${C.num(tiers.rare)}/${C.num(availability.rare)}</dd><dt>특별·안흔 ${tierLabel}</dt><dd>${C.num(tiers.special)}/${C.num(availability.special)} · ${C.num(tiers.uncommon)}/${C.num(availability.uncommon)}</dd>`}</dl>${row.warped&&row.warped.required?'<span class="v15-route-warped">왜곡 제작 비용이 위 선위에 포함됨</span>':''}${row.recentUse?`<span class="v15-route-warped v1914-recent">최근 ${C.num(row.recentUse.gamesAgo)}판 전 메인 — 다양성 위해 순위 뒤로</span>`:''}${row.challengeAngle?'<span class="v15-route-warped v1915-challenge">도전 각 — 비주류지만 이 패로 성립</span>':''}<div class="v15-route-actions"><button data-act="detail" data-id="${C.esc(row.id)}">상위 재료</button><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${canConfirm?'':'disabled aria-disabled="true"'}>${buttonText}</button></div></article>`;}).join('');
+    const decision=plan.v15Decision||{},candidates=(decision.routeCandidates||[]).slice(0,6),detailChoice=decision.routeChoiceKind==='locked-magic-detail',roundReady=true,cards=candidates.map((row,index)=>{const selected=this.state.directionKey===row.routeKey&&C.canonicalUpperId(this.state.directionUpperId)===C.canonicalUpperId(row.id),evaluated=routeCandidateReady(row),canConfirm=roundReady&&evaluated,tiers=row.tiers||{},availability=row.tierAvailable||{},exact=!!(row.projectedSupport&&row.projectedSupport.exactPrefix),tierLabel=exact?'소비':'상위 필요',cv=row.clearValue||{},overdue=cv.overdue===true,etaText=row.feasible?'':C.num(cv.eta)>0?` · 빨라야 ${C.num(cv.eta)}라${overdue?` (마감 ${C.num(cv.deadline)}라 초과)`:''}`:'',status=row.locked?'고정 상위 유지':!evaluated?'상위+보조 파티 평가 중':row.feasible?'현재 패 제작 가능':`선위 ${C.num(row.wispGap)} 부족${etaText}`,wisp=row.locked?'소모 없음':`${C.num(row.wispCost)}${row.feasible&&row.wispAfter!=null?` · 후 ${C.num(row.wispAfter)}`:''}`,steps=row.projectedSupport&&row.projectedSupport.steps||[],path=steps.map(step=>`${step.order}. ${step.name} (선위 ${C.num(step.wispCost)})`).join(' → '),buttonText=!evaluated?'파티 평가 중':selected?'선택 유지':row.locked?'세부 경로 확정':'상위 방향 확정';return`<article class="v15-route-card ${index===0?'recommended':''} ${selected?'selected':''} ${overdue?'overdue':''}"><header><small>${index+1}순위 · ${C.esc(row.routeLabel||'')}</small><h3>${C.esc(row.name||'상위 후보')}</h3><em>${C.esc(status)}</em></header><p>${C.esc(row.reason||'현재 패의 정확 원장으로 비교했습니다.')}</p>${path?`<div class="v15-route-prefix"><small>상위 + 확정 보조 경로</small><b>${C.esc(path)}</b><span>미래 드랍·최종 9기 가정 없음</span></div>`:''}<dl><dt>누적 선택위습</dt><dd>${C.esc(wisp)}</dd>${row.feasible||!C.num(cv.eta)?'':`<dt>예상 완성</dt><dd class="${overdue?'overdue':''}">${C.num(cv.eta)}~${C.num(cv.etaSlow)}라${overdue?` · ${C.num(cv.deadline)}라 마감 초과`:''}<small>부족분이 전부 흔함이면 ${cv.optimisticRate}/라, 안흔함 이상이면 ${cv.pessimisticRate}/라로 해소</small></dd>`}${C.num(row.clearValue&&row.clearValue.metaGames)>0?`<dt>전체 실측</dt><dd>${C.num(row.clearValue.metaGames)}판 (${row.clearValue.metaShare}%)</dd>`:''}${(()=>{const cs=C.clearStatsFor&&C.clearStatsFor(row.id);if(!cs)return'';const roles=cs.roles;const short=name=>String(name||'').split(/[\s(]/)[0];return`<dt>클리어 조합 실측</dt><dd class="v1916-clear">이감 ${roles.slow.p50} · 스턴 ${roles.stun.p50} · 체젠 ${roles.regen.p50} <small>(${C.num(cs.games)}판 중앙값)</small><br><small>실측 파트너 · ${C.esc(cs.partners.slice(0,3).map(item=>`${short(item.name)} ${item.share}%`).join(' · '))}</small></dd>`;})()}${row.locked?'':`<dt>희귀 ${tierLabel}</dt><dd>${C.num(tiers.rare)}/${C.num(availability.rare)}</dd><dt>특별·안흔 ${tierLabel}</dt><dd>${C.num(tiers.special)}/${C.num(availability.special)} · ${C.num(tiers.uncommon)}/${C.num(availability.uncommon)}</dd>`}</dl>${row.warped&&row.warped.required?'<span class="v15-route-warped">왜곡 제작 비용이 위 선위에 포함됨</span>':''}${row.recentUse?`<span class="v15-route-warped v1914-recent">최근 ${C.num(row.recentUse.gamesAgo)}판 전 메인 — 다양성 위해 순위 뒤로</span>`:''}${row.challengeAngle?'<span class="v15-route-warped v1915-challenge">도전 각 — 비주류지만 이 패로 성립</span>':''}<div class="v15-route-actions"><button data-act="detail" data-id="${C.esc(row.id)}">상위 재료</button><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${canConfirm?'':'disabled aria-disabled="true"'}>${buttonText}</button></div></article>`;}).join('');
     return`<section class="v15-route-board"><header><div><small>${detailChoice?'자동 감지 상위 보호':'v15 단일 판단 엔진 · 최대 6개'}</small><h2>${detailChoice?'메인 상위는 그대로, 마딜 경로만 선택':'현재 패에서 이어갈 상위'}</h2><p>${C.esc(decision.reason||'상위는 전설 3기분으로 계산하며 보조 조합은 매 패 다시 계산합니다.')}</p></div><div class="damage-mode-switch"><button class="${this.state.mode==='physical'?'on':''}" data-act="mode" data-value="physical" ${detailChoice?'disabled':''}>물딜</button><button class="${this.state.mode==='magic'?'on':''}" data-act="mode" data-value="magic">마딜</button></div></header><div class="v15-route-cards">${cards||'<article class="v15-route-card"><h3>현재 검증 가능한 후보 없음</h3><p>특수 선행재료와 실제 TMO 패를 다시 확인하세요. 희귀는 리롤하지 않고 보류합니다.</p></article>'}</div></section>`;
   }
   renderV15Decision(plan){
@@ -8869,6 +8932,43 @@ class App{
     }).join(''):'';
     return planRows?`<div class="v215-rare-plan"><small>희귀 사용 계획 — 전량 활용, 남는 것만 리롤</small>${planRows}</div>`:'';
   }
+  v221UpperMaterials(state){
+    // v22.1(사용자: "상위를 정했을 때 그 상위에 들어가는 희귀함은 따로
+    // 알려줘야할 것 같아"): 확정 상위 레시피의 희귀·특별 재료를 보유(소모
+    // 예정)/제작 필요로 나눠 항상 보이게 한다.  0809 판은 코치 추천이
+    // 료쿠규의 유일 희귀 재료 킨에몬을 소모하는 제작이었다 — 재료가
+    // 이름으로 보이면 사용자도 코치도 그 실수를 잡을 수 있다.
+    const lock=this.upperLock();if(!lock||!state||!state.db)return null;
+    const unit=state.db.byId.get(lock.id);if(!unit)return null;
+    let solve=null;try{solve=C.recipeSolve(state.db,lock.id,state.counts||{});}catch(_){return null;}
+    if(!solve)return null;
+    const name=id=>C.materialName(state.db,id);
+    const use=Object.entries(solve.rareUse||{}).filter(([,count])=>C.num(count)>0).map(([id,count])=>({id,name:name(id),count:C.num(count)}));
+    const specialUse=Object.entries(solve.specialUse||{}).filter(([,count])=>C.num(count)>0).map(([id,count])=>({id,name:name(id),count:C.num(count)}));
+    const build=Object.entries((solve.buildNeeded||{}).rare||{}).map(([id,count])=>({id,name:name(id),count:C.num(count)}));
+    const hard=(solve.hardMissing||[]).map(entry=>({id:String(entry.id||''),name:String(entry.name||entry.id||''),count:C.num(entry.count)||1}));
+    return{upperName:displayNameOf(unit),upperId:unit.id,use,specialUse,build,hard,wispCost:C.num(solve.wispCost),wispHave:C.num(state.wisp)};
+  }
+  v221UpperMaterialsBlock(state){
+    const mats=this.v221UpperMaterials(state);if(!mats)return'';
+    const chip=(item,kind)=>`<em class="${kind}">${C.esc(item.name)}${item.count>1?` ×${item.count}`:''}</em>`;
+    const wispShort=Math.max(0,mats.wispCost-mats.wispHave);
+    return`<div class="v221-upper-mats"><small>확정 상위 <b>${C.esc(mats.upperName)}</b>에 들어가는 재료 — 아래 희귀·특별은 다른 데 쓰면 상위가 멀어집니다</small><div>${mats.use.map(item=>chip(item,'use')).join('')}${mats.specialUse.map(item=>chip(item,'use')).join('')}${mats.build.map(item=>chip(item,'build')).join('')}${mats.hard.map(item=>chip(item,'hard')).join('')}${!mats.use.length&&!mats.specialUse.length&&!mats.build.length&&!mats.hard.length?'<em class="none">희귀 소모 없음 — 흔함·위습만으로 완성</em>':''}</div><span class="v221-upper-wisp ${wispShort>0?'short':'ok'}">${wispShort>0?`선택위습 ${wispShort}개 부족 (보유 ${mats.wispHave}/필요 ${mats.wispCost}) — 모으면 됩니다`:`선택위습 충분 (보유 ${mats.wispHave}/필요 ${mats.wispCost}) — 지금 올릴 수 있는지 카드를 확인하세요`}</span></div>`;
+  }
+  v221StoryBlock(){
+    // v22.1(사용자: "스토리가 35라 전에 13까지 밀려야하는데 안밀려서
+    // 죽었어" · 0809): TMO 데이터에 스토리 단계가 없어 수동 스텝퍼로
+    // 받는다.  마감선 — 30라 스토리 10(보상 시점) · 35라 스토리 13(사용자
+    // 실측).  상위가 스토리 담당이므로 뒤처지면 상위 완성부터 다그친다.
+    const roundNow=this.actualRound(),stage=Math.max(0,C.num(this.state.storyStage));
+    if(roundNow<8||roundNow>50)return'';
+    const marks=[{round:30,stage:10,label:'30라 · 스토리 10 (보상)'},{round:35,stage:13,label:'35라 · 스토리 13 (실측 최소선)'}];
+    const next=marks.find(mark=>roundNow<=mark.round)||marks[marks.length-1];
+    const behind=stage<next.stage&&roundNow>=next.round-3;
+    const late=stage<next.stage&&roundNow>=next.round;
+    const upperMissing=!this.upperLock();
+    return`<div class="v221-story ${late?'late':behind?'behind':''}"><small>스토리 진행 — 상위가 담당 · ${C.esc(next.label)}</small><div class="v221-story-row"><button data-act="story-stage-step" data-delta="-1" aria-label="스토리 단계 내리기">−</button><b>${stage}단계</b><button data-act="story-stage-step" data-delta="1" aria-label="스토리 단계 올리기">＋</button><span>${late?`마감선 지남 — ${next.stage}단계까지 ${next.stage-stage} 남음${upperMissing?' · 스토리 담당(상위)이 아직 없습니다':''}`:behind?`${next.round}라까지 ${next.stage}단계 — ${next.stage-stage} 남음, 서둘러야 합니다`:stage>=next.stage?'페이스 정상':`${next.round}라까지 ${next.stage}단계 목표`}</span></div></div>`;
+  }
   renderV22PhasePanel(state,plan){
     // v22.0 국면 패널 — 명세서의 그 국면 목표만.  전체 스펙 표는 어느
     // 국면에서든 접힌 폴드로 접근 가능(정보를 지우는 게 아니라 미룬다).
@@ -8887,17 +8987,17 @@ class App{
       return`<div class="v22-gauges">${open.map(bar).join('')}${closed.map(bar).join('')}</div>`;
     };
     if(ph.key==='p1')return`${goal(milestone!=='firstRare','7라 전 희귀 1 → 흔한 선택위습 보상')}${goal(false,'스토리 S급이면 +2선위까지 투자, 아니면 최저 선위')}<p class="v22-note">다음 국면(첫 전설)은 희귀 완성 즉시 자동 전환됩니다.</p>${fullSpec}`;
-    if(ph.key==='p2')return`${goal(milestone!=='firstRare'&&milestone!=='firstFinal','20라 보스 전 전설급 1')}${milestone==='firstRare'?goal(false,'첫 희귀가 아직입니다 — 이것부터'):''}${goal(false,'S급이 +5선위 안이면 투자, 아니면 최저 선위')}${fullSpec}`;
+    if(ph.key==='p2')return`${goal(milestone!=='firstRare'&&milestone!=='firstFinal','20라 보스 전 전설급 1')}${milestone==='firstRare'?goal(false,'첫 희귀가 아직입니다 — 이것부터'):''}${goal(false,'S급이 +5선위 안이면 투자, 아니면 최저 선위')}${this.v221UpperMaterialsBlock(state)}${this.v221StoryBlock()}${fullSpec}`;
     if(ph.key==='p3'){
       const auto=decision.routeAuto&&decision.routeAuto.adopted?`<p class="v22-note">방향 자동 채택: <b>${C.esc(decision.routeAuto.label||'')}</b> — 상위 확정·저격으로 언제든 바꿀 수 있습니다.</p>`:'<p class="v22-note">방향은 클리어 실측 순으로 자동 채택됩니다 — 8라 스토리·고급 도박 희귀 유입 후가 정확합니다.</p>';
-      return`${this.v215PlanBlock(state,plan)||'<p class="v22-note">상위가 정해지면 보유 희귀별 사용 계획(전량 소비·잉여 리롤)이 여기 뜹니다.</p>'}${auto}${fullSpec}`;
+      return`${this.v221UpperMaterialsBlock(state)}${this.v215PlanBlock(state,plan)||'<p class="v22-note">상위가 정해지면 보유 희귀별 사용 계획(전량 소비·잉여 리롤)이 여기 뜹니다.</p>'}${auto}${this.v221StoryBlock()}${fullSpec}`;
     }
     if(ph.key==='p4'){
       const upperChosen=!!(plan.upper||this.upperLock());
       const db=state&&state.db,legendOwned=!!(db&&Object.entries(state.counts||{}).some(([id,count])=>C.num(count)>0&&(unit=>unit&&C.isLegendish(unit))(db.byId.get(id))));
-      return`${goal(upperChosen,'상위 1 확보 — 스토리 담당')}${goal(legendOwned,'전설급 1 확보 — 라인 방어')}${goal(false,'바제스 미션(30~40라) — 보라 배지 유닛 확인')}${gauges()}${fullSpec}`;
+      return`${goal(upperChosen,'상위 1 확보 — 스토리 담당')}${goal(legendOwned,'전설급 1 확보 — 라인 방어')}${goal(false,'바제스 미션(30~40라) — 보라 배지 유닛 확인')}${this.v221UpperMaterialsBlock(state)}${this.v221StoryBlock()}${gauges()}${fullSpec}`;
     }
-    if(ph.key==='p5')return`${gauges()}${fullSpec}`;
+    if(ph.key==='p5')return`${this.v221UpperMaterialsBlock(state)}${this.v221StoryBlock()}${gauges()}${fullSpec}`;
     const singleEnd=String(this.state.magicRoute||'')==='singleEnd';
     return`${goal(false,singleEnd?'단끝 덱 — 유닛 추가 제작 자제, 컨트롤이 클리어를 좌우':'흔함 위습을 끌어모아 전설급 또는 스펙 희귀로 환원')}<p class="v22-note">명세 ⑥ — 55·60·65라 보스만 통과하면 종결입니다.</p>${gauges()}${fullSpec}`;
   }
@@ -8936,7 +9036,7 @@ class App{
       // v17.8: 두 실전 로그 모두 방향 선택을 10라운드 이상 미뤘다 —
       // 대기 중에는 제작·리롤이 잠긴다는 비용을 명시하고, 상위 2개
       // 후보를 바로 이 자리에서 확정할 수 있게 한다.
-      const quick=(decision.routeCandidates||[]).slice(0,2),canConfirm=this.actualRound()>=25;
+      const quick=(decision.routeCandidates||[]).slice(0,2),canConfirm=true;
       // v19.2(사용자 요청): "물딜 가려다가 마딜로 바꿔서" — 계통 전환으로
       // 해제된 확정 상위가 있고 지금 그 계통으로 돌아와 있으면, 후보를 다시
       // 훑을 필요 없이 원클릭으로 되돌릴 수 있게 최상단에 보여준다.
@@ -8948,7 +9048,7 @@ class App{
       // 그동안 무엇을 모아야 하는지는 아무 데도 없었다.  엔진은 이미
       // 알고 있다(coachAction).  기다리는 시간에도 할 일을 준다.
       const waitCoach=decision.confidence&&decision.coachAction?`<div class="v151-route-wait"><em class="v151-confidence lv-${C.esc(decision.confidence.key)}">${C.esc(decision.confidence.level)}</em><b>${C.esc(decision.coachAction.name||'')}</b>${C.num(decision.coachAction.wispCost)?`<i>선위 ${C.num(decision.coachAction.wispCost)}</i>`:''}<small>${C.esc(decision.confidence.note||'')}</small></div>`:'';
-      const quickHtml=quick.length?`<div class="v151-route-quick">${quick.map((row,index)=>{const ready=routeCandidateReady(row),enabled=canConfirm&&ready;return`<div><span><b>${index+1}. ${C.esc(row.name)}</b><small>${C.esc(row.routeLabel||'')} · 선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</small></span><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${enabled?'':'disabled aria-disabled="true"'}>${!canConfirm?'25라 이후':ready?'확정':'파티 평가 중'}</button></div>`;}).join('')}</div>`:'';
+      const quickHtml=quick.length?`<div class="v151-route-quick">${quick.map((row,index)=>{const ready=routeCandidateReady(row),enabled=canConfirm&&ready;return`<div><span><b>${index+1}. ${C.esc(row.name)}</b><small>${C.esc(row.routeLabel||'')} · 선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</small></span><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${enabled?'':'disabled aria-disabled="true"'}>${ready?'확정':'파티 평가 중'}</button></div>`;}).join('')}</div>`:'';
       // v17.12: 최근 3판 모두 방향 선택을 25라+ 미뤘다(마지막 판 25라 대기)
       // — 확정 가능 라운드부터는 대기 비용을 긴급 톤으로 명시한다.
       return`<div class="v151-action choice${canConfirm?' urgent':''}"><span class="v151-state">상위 선택 필요${canConfirm?' · 지금 확정 가능':''}</span><b class="v151-action-title">${C.esc(decision.label||'메인 상위 방향 선택')}</b><p>${C.esc(decision.reason||'아래 상위 정보에서 현재 패 후보를 비교하세요.')} 선택 전에는 제작·리롤이 잠깁니다.${canConfirm?' 이미 확정 가능한 라운드입니다 — 미룰수록 잠금 비용만 쌓입니다.':''}</p>${restoreHtml}${waitCoach}${quickHtml}<span class="v151-jump-note">④ 상위·파티 특징에서 전체 후보를 비교할 수 있습니다.</span>${this.v151ActionFacts(state,decision)}</div>`;
@@ -10011,7 +10111,7 @@ class App{
     return out.sort((a,b)=>b.short-a.short||a.name.localeCompare(b.name,'ko'));
   }
   renderV151UpperInfo(state,plan){
-    const decision=plan.v15Decision||{},lock=this.upperLock(),upper=lock&&state.db.byId.get(lock.id)||plan.upper||null,candidates=(decision.routeCandidates||[]).slice(0,6),canConfirm=this.actualRound()>=25;
+    const decision=plan.v15Decision||{},lock=this.upperLock(),upper=lock&&state.db.byId.get(lock.id)||plan.upper||null,candidates=(decision.routeCandidates||[]).slice(0,6),canConfirm=true;
     const upperStrategyInfo=upper&&C.upperStrategy?C.upperStrategy(upper):null,lineBadge=upperStrategyInfo&&upperStrategyInfo.lineSelf==='self'?'<i class="v151-line-badge self">라인 자립</i>':upperStrategyInfo&&upperStrategyInfo.lineSelf==='support'?'<i class="v151-line-badge support">보조딜 필요</i>':'';
     // v17: 평타 실효 DPS(스킬 제외) vs 다음 보스 필요 DPS.  방깎은 현재
     // 스펙 값, 등급 공업 레벨은 3번 패널 입력값을 쓴다.
@@ -10072,7 +10172,7 @@ class App{
       const missingRares=row.locked?[]:this.v151MissingRares(state,row.id).slice(0,3);
       const costLine=row.locked?'':`<small class="v151-cost-line">필요 선위 <b>${C.num(row.wispCost)}</b>${C.num(row.wispGap)>0?` · 현재 부족 <b>${C.num(row.wispGap)}</b>`:' · 지금 충당 가능'}${missingRares.length?` · 부족 희귀: ${missingRares.map(item=>`${C.esc(item.name)}${item.short>1?`×${item.short}`:''}`).join(' · ')}`:''}</small>`;
       // v17.12(사용자 요청 4): 파티는 카드의 "미리 파티" 버튼으로만 연다.
-      const evaluated=routeCandidateReady(row),enabled=canConfirm&&evaluated,buttonText=!canConfirm?'25라':!evaluated?'파티 평가 중':selected?'유지':'확정';
+      const evaluated=routeCandidateReady(row),enabled=canConfirm&&evaluated,buttonText=!evaluated?'파티 평가 중':selected?'유지':'확정';
       return`<article class="${index===0?'best':''} ${selected?'selected':''}"><span><b>${index+1}. ${C.esc(row.name)}${tierBadge}${angleBadge}${nearestBadge}${storyBadge}${gateBadge}</b>${costLine}${whyLine}</span><span class="v151-card-actions"><button data-act="detail" data-id="${C.esc(row.id)}">재료</button><button data-act="party-preview" data-id="${C.esc(row.id)}">미리 파티</button><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${enabled?'':'disabled aria-disabled="true"'}>${buttonText}</button></span></article>`;}).join('');
     const gatedUppers=(decision.routeCandidates||{}).gatedUppers||[];
     const gatedHtml=gatedUppers.length?`<div class="v151-gated-uppers"><small>특수재료 확보 시 열리는 상위</small>${gatedUppers.map(item=>`<button data-act="detail" data-id="${C.esc(item.id)}"><b>${C.esc(item.name)}</b><span>← ${item.items.map(mat=>C.esc(mat.name)).join('·')} · 선위 ${C.num(item.wispCost)}</span></button>`).join('')}</div>`:'';
@@ -10129,7 +10229,7 @@ class App{
     if(!local||local.midJoin!==true)return'';
     if(this.state.v1912MidJoinAck)return'';
     if(this.actualRound()>3)return'';
-    return`<div class="v159-endgame v1912-midjoin">${this.v153Icon('warn')}<span><b>중간 합류 감지</b> — 게임 시작(패 0→1)을 보지 못해 1라부터 세는 중일 수 있습니다. 상단 −1/+1로 <b>실제 라운드</b>를 맞춰주세요. 보스 예고·상위 확정(25라)·마감 계산이 라운드에 걸려 있습니다.</span></div>`;
+    return`<div class="v159-endgame v1912-midjoin">${this.v153Icon('warn')}<span><b>중간 합류 감지</b> — 게임 시작(패 0→1)을 보지 못해 1라부터 세는 중일 수 있습니다. 상단 −1/+1로 <b>실제 라운드</b>를 맞춰주세요. 보스 예고·마감 계산이 라운드에 걸려 있습니다(상위 확정은 언제든 가능).</span></div>`;
   }
   renderV153Status(state,clock,health){
     // v19.3(사용자 요청): ORD COACH 전술판 목업의 탑바로 개편.
@@ -10489,7 +10589,7 @@ class App{
         const ghostSlots=Array.from({length:9},(_,index)=>`<i><span>${index+1}</span></i>`).join('');
         return`<div class="v155-party-idle"><div class="v153-upper-empty"><b>상위 후보 계산 대기</b><span>25라 전후 현재 희귀·특별 패에서 상위 3개만 비교합니다.</span></div><div class="v155-party-ghost" aria-label="9환산 파티 빈 자리">${ghostSlots}</div></div><button class="v153-snipe-open" data-act="snipe-open">원하는 상위 직접 저격…</button>`;
       }
-      const canConfirm=this.actualRound()>=25;
+      const canConfirm=true; // v22.1: 25라 게이트 해제
       // v19.8(사용자 요청 ⑤): "너무 같은 것만 나오니까 재미가 없다" — 최근
       // 5판에서 안 간 상위에 배지를 붙인다.  순위는 그대로다(표시 전용) —
       // 강제로 가고 싶으면 저격이 공식 경로.
@@ -10502,7 +10602,7 @@ class App{
         const edge=tr!==sr?(tr>sr?`티어 우위(${top.powerTier.letter}>${second.powerTier&&second.powerTier.letter||'?'})`:`티어는 낮지만 각 우위`):String(top.angleLabel||'')!==String(second.angleLabel||'')?`각 우위(${top.angleLabel||'미평가'} vs ${second.angleLabel||'미평가'})`:C.num(top.wispCost)!==C.num(second.wispCost)?`선위 우위(${C.num(top.wispCost)} vs ${C.num(second.wispCost)})`:'준비도 우위';
         return`<small class="v1910-runner">2위 ${C.esc(second.name)} 대비: ${C.esc(edge)}</small>`;
       };
-      return`<div class="v153-upper-list">${candidates.map((row,index)=>{const tier=row.powerTier&&row.powerTier.known?`${row.powerTier.letter}티어`:'티어 확인 중',ready=routeCandidateReady(row),enabled=canConfirm&&ready,freshPick=recentMains.size>0&&!recentMains.has(String(C.canonicalUpperId(row.id)));return`<article class="${index===0?'best':''}"><header><span>${index+1}</span><div><b>${C.esc(row.name)}</b>${freshPick?'<i class="v158-fresh">최근 5판에 안 간 각</i>':''}<small>${C.esc(tier)} · ${C.esc(row.angleLabel||'미평가')} · ${C.esc(row.routeLabel||'')}</small></div></header><div><strong>선위 ${C.num(row.wispCost)}</strong><span>${C.num(row.wispGap)>0?`현재 ${C.num(row.wispGap)}개 부족`:'현재 충당 가능'}</span></div><p>${C.esc(row.reason||'상위와 보조 전설급을 같은 파티로 평가합니다.')}</p>${playbookHtml(db&&db.byId.get(String(row.id)),{compact:true})}${index===0?runnerNote(row,candidates[1]):''}<footer><button data-act="party-preview" data-id="${C.esc(row.id)}">파티 보기</button><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${enabled?'':'disabled aria-disabled="true"'}>${!canConfirm?'25라부터':ready?'상위 확정':'파티 평가 중'}</button></footer></article>`;}).join('')}</div><button class="v153-snipe-open" data-act="snipe-open">목록에 없는 상위 저격…</button>`;
+      return`<div class="v153-upper-list">${candidates.map((row,index)=>{const tier=row.powerTier&&row.powerTier.known?`${row.powerTier.letter}티어`:'티어 확인 중',ready=routeCandidateReady(row),enabled=canConfirm&&ready,freshPick=recentMains.size>0&&!recentMains.has(String(C.canonicalUpperId(row.id)));return`<article class="${index===0?'best':''}"><header><span>${index+1}</span><div><b>${C.esc(row.name)}</b>${freshPick?'<i class="v158-fresh">최근 5판에 안 간 각</i>':''}<small>${C.esc(tier)} · ${C.esc(row.angleLabel||'미평가')} · ${C.esc(row.routeLabel||'')}</small></div></header><div><strong>선위 ${C.num(row.wispCost)}</strong><span>${C.num(row.wispGap)>0?`현재 ${C.num(row.wispGap)}개 부족`:'현재 충당 가능'}</span></div><p>${C.esc(row.reason||'상위와 보조 전설급을 같은 파티로 평가합니다.')}</p>${playbookHtml(db&&db.byId.get(String(row.id)),{compact:true})}${index===0?runnerNote(row,candidates[1]):''}<footer><button data-act="party-preview" data-id="${C.esc(row.id)}">파티 보기</button><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${enabled?'':'disabled aria-disabled="true"'}>${ready?'상위 확정':'파티 평가 중'}</button></footer></article>`;}).join('')}</div><button class="v153-snipe-open" data-act="snipe-open">목록에 없는 상위 저격…</button>`;
     }
     const squad=plan.squadPlan||this.v151ComputeParty(state,plan,upper.id);if(squad&&!squad.error)plan.squadPlan=squad;
     const power=C.upperPowerTier?C.upperPowerTier(upper,db):null,requirements=(decision.assessment&&decision.assessment.requirements||[]).filter(row=>row.required!==false&&!row.waived&&C.num(row.gap)>0).slice(0,3),ship=this.v153ShipOpportunity(state,plan),baseSupports=this.v151BuildableLegendRows(state,plan).filter(row=>!ship||String(row.unit.id)!==String(ship.unit.id)),supports=ship?[baseSupports[0],ship,baseSupports[1]].filter(Boolean).slice(0,3):baseSupports.slice(0,3);

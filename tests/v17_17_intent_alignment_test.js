@@ -53,8 +53,12 @@ test('단계 3(20~22라): 보상·도박 유입은 예측하지 않고 관측 �
   assert(engineSource.includes('futureDropsCredited:false'), '미래 드랍 무신용 원칙이 사라짐');
 });
 
-test('단계 4(23~30라): 상위 확정 25라부터 + 리롤 게임당 2회(사용자 확인: 항법 시 최대 4회지만 2회 기준)', () => {
-  assert(appSource.includes("actualRound()>=25"), '상위 확정 25라 게이트가 사라짐');
+test('단계 4(23~30라): 상위 확정은 라운드 무관(v22.1) + 리롤 게임당 2회(사용자 확인: 항법 시 최대 4회지만 2회 기준)', () => {
+  // v22.1(사용자: "25라전에 확정안되는거 풀어" · 0809 포렌식): 확정 25라
+  // 게이트는 제거됐다 — 일찍 확정할수록 마일스톤 견적이 확정 상위 트리
+  // 재료를 보호한다.  25라 비교는 리롤 게이트만 남는다.
+  assert(!appSource.includes('방향 확정은 25라운드부터'), '확정 게이트 문구가 되살아남');
+  assert(appSource.includes("actualRound()<25?'25라 전 리롤 잠금"), '리롤 25라 게이트는 유지되어야 한다');
   assert(/2\s*-\s*C\.num\(this\.state\.rerollsUsed\)|rerollBudget/.test(appSource + engineSource), '리롤 2회 예산이 사라짐');
   assert(engineSource.includes('리롤 2회'), '리롤 2회 소진 안내가 사라짐');
 });

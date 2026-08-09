@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='22.0.0';
+const VERSION='22.1.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -240,11 +240,14 @@ function metaUsage(unit){
   return META_STATS.byCode[id]||META_STATS.byCode[id.toLowerCase()]||META_STATS.byCode[id.toUpperCase()]||null;
 }
 function metaUsageRate(unit){const hit=metaUsage(unit);return hit?num(hit.rate):0;}
-function completionDecision(model,units,milestone){
+function completionDecision(model,units,milestone,guard){
   const milestoneSpec=completionMilestone(milestone),label=milestoneSpec.label;
+  // v22.1(0809 포렌식): guard 는 확정 상위 트리 소모분을 뺀 재고다 — 견적만
+  // 이 재고로 뜨고, 보유 판정·원장 표시는 실제 패 그대로 둔다.
+  const quoteCounts=guard&&guard.counts||model.effective.counts;
   // v16.7: 같은 완성도·같은 선위 소모라면 스토리 파괴 속도(스토리 등급
   // 점수)가 빠른 쪽을 먼저 설계한다 — 첫 희귀·첫 전설 공통.
-  const quoted=units.map(unit=>{const completion=M.completionFor?M.completionFor(model,unit):null;return{unit,quote:L.quote(model,unit,model.effective.counts,{availableRound:model.round.value}),completion:completion?num(completion.rankingPercent):num(model.effective.percent[unit.id]),completionDetail:completion,story:num(C.storyGrade(unit).score),usage:metaUsageRate(unit),
+  const quoted=units.map(unit=>{const completion=M.completionFor?M.completionFor(model,unit):null;return{unit,quote:L.quote(model,unit,quoteCounts,{availableRound:model.round.value}),completion:completion?num(completion.rankingPercent):num(model.effective.percent[unit.id]),completionDetail:completion,story:num(C.storyGrade(unit).score),usage:metaUsageRate(unit),
   // v21.3(사용자 실전): 뽑기·드랍으로만 얻는 특별 재료가 패에 없는 후보는
   // "빠른 후보"가 아니다.  실사례 — 희귀 페로나(이감20)는 압살롬×1이
   // 필요하고 압살롬은 좀비×3(후반 재료)으로만 제작되는데, 원장의 압살롬
@@ -288,9 +291,9 @@ function completionDecision(model,units,milestone){
       .sort((a,b)=>b.story-a.story||a.quote.wisp.cost-b.quote.wisp.cost)[0];
     if(sPick){storyPremium={tier:String(C.storyGrade(sPick.unit).tier),delta:Math.max(0,num(sPick.quote.wisp.cost)-num(best.quote.wisp.cost)),over:nameOf(best.unit)};best=sPick;}
   }}
-  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',hardNote=best.hardShort>0?`주의 — 뽑기·드랍으로만 얻는 재료(${(best.quote.solve&&best.quote.solve.hardMissing||[]).map(entry=>String(entry.name||entry.id)).join('·')}) 미보유. 모든 후보가 같은 처지라 순서만 제시합니다. `:'',usageNote=best.usage>0?` — 실전 채용률 ${Math.round(best.usage*1000)/10}% (${num(META_STATS&&META_STATS.gameCount).toLocaleString('ko-KR')}판)`:'',completionReason=`${escapeNote}${hardNote}${label} 후보 중 ${storyPremium?`스토리 ${storyPremium.tier}급 — 최저 선위(${storyPremium.over})보다 ${storyPremium.delta} 더 들지만 스토리가 빠릅니다${milestoneSpec.key==='firstRare'?' · 7라 미션 가속':' · 20라 보스 대비'}`:milestoneSpec.key!=='additionalFinal'?'지금 패에서 부족한 재료와 선택 위습이 가장 적습니다':'지금 패 기준 완성도·실전 가치가 가장 높습니다'}${usageNote}.`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible&&best.hardShort<=0?'ACT_NOW':'PREPARE';
+  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',hardNote=best.hardShort>0?`주의 — 뽑기·드랍으로만 얻는 재료(${(best.quote.solve&&best.quote.solve.hardMissing||[]).map(entry=>String(entry.name||entry.id)).join('·')}) 미보유. 모든 후보가 같은 처지라 순서만 제시합니다. `:'',usageNote=best.usage>0?` — 실전 채용률 ${Math.round(best.usage*1000)/10}% (${num(META_STATS&&META_STATS.gameCount).toLocaleString('ko-KR')}판)`:'',guardNote=guard&&guard.taken>0?` 확정 상위 ${guard.lockName}의 트리 재료 ${guard.taken}개는 이 견적에서 제외했습니다 — 마일스톤 제작이 상위 재료를 먹지 않습니다.`:'',completionReason=`${escapeNote}${hardNote}${label} 후보 중 ${storyPremium?`스토리 ${storyPremium.tier}급 — 최저 선위(${storyPremium.over})보다 ${storyPremium.delta} 더 들지만 스토리가 빠릅니다${milestoneSpec.key==='firstRare'?' · 7라 미션 가속':' · 20라 보스 대비'}`:milestoneSpec.key!=='additionalFinal'?'지금 패에서 부족한 재료와 선택 위습이 가장 적습니다':'지금 패 기준 완성도·실전 가치가 가장 높습니다'}${usageNote}.${guardNote}`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible&&best.hardShort<=0?'ACT_NOW':'PREPARE';
   const candidate={id:best.unit.id,name:nameOf(best.unit),unit:best.unit,row,quote:best.quote,completion:best.completionDetail,wispCost:best.quote.wisp.cost,wispAfter:best.quote.wisp.after,result:'completion-rule',stopCondition:`선택 위습이 ${best.quote.wisp.cost}개보다 적거나 패가 바뀌면 만들지 말고 다시 동기화`};
-  return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',rankingAuthority:'fastest-first-usage-tiebreak',metaUsageRate:best.usage,hardMaterialGated:best.hardShort>0,storyPremium:storyPremium?{tier:storyPremium.tier,extraWisp:storyPremium.delta}:null,virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
+  return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',rankingAuthority:'fastest-first-usage-tiebreak',metaUsageRate:best.usage,hardMaterialGated:best.hardShort>0,storyPremium:storyPremium?{tier:storyPremium.tier,extraWisp:storyPremium.delta}:null,lockedUpperGuard:guard&&guard.taken>0?{id:guard.lockId,name:guard.lockName,reservedUnits:guard.taken}:null,virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
 }
 function rareLedgerForQuote(model,quote,state,label){
   const rows=[];for(const unit of model.knowledge.db.rares){const initial=Math.max(0,num(model.effective.counts[unit.id]));if(initial<=0)continue;const planned=Math.min(initial,num(quote&&quote.rareUse&&quote.rareUse[unit.id])),use=state==='ACT_NOW'?planned:0,hold=initial-use,reason=use?`${label} 즉시 재료`:planned?`${label} 제작 재료 보호`:`${label} 확정 전 안전 보류`;rows.push({id:unit.id,name:nameOf(unit),unit,initial,use,hold,reroll:0,reason,proof:{planned,use,exclusive:use+hold===initial}});}
@@ -302,7 +305,13 @@ function committedUpperDecision(model,route,locks,lock){
   // v17.5: 레일리(히든)·해적선 차단은 재료 문제가 아니라 스토리 10 보상
   // 미수령이다 — 보호 문구 대신 수령 안내를 앞세운다.
   storyBlocked=!quote.feasible&&quote.blocked.some(text=>/레일리|해적선/.test(String(text)))&&story10RewardOpen(model),
-  reason=quote.feasible?`확정한 메인 상위 ${nameOf(unit)}를 먼저 완성합니다. 다른 제작으로 예약 재료를 소비하지 않습니다.`:`${storyBlocked?`스토리 10라운드 보상에서 레일리(히든)+해적선을 선택하면 ${nameOf(unit)} 경로가 열립니다(${C.STORY10_FORFEITS} 포기). `:''}확정한 메인 상위 ${nameOf(unit)}의 재료와 선택 위습을 보호합니다. 완성 전에는 다른 제작과 희귀 리롤을 잠급니다.${quote.blocked.length?` · 차단: ${quote.blocked.join(' · ')}`:''}`,row=makeRow(model,quote,after,reason),candidate={id:unit.id,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:quote.feasible?num(quote.wisp.after):null,result:'committed-upper-first',reason,deltas,stopCondition:`표시 재료가 하나라도 바뀌거나 선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path:quote.feasible?[{id:unit.id,name:nameOf(unit),wispCost:num(quote.wisp.cost)}]:[]};
+  // v22.1(0809 포렌식): 확정 직후 위습 13<15 로 7라운드를 "보호"라는 말만
+  // 반복하며 침묵했다 — 부족분이 위습뿐이면 카운트다운으로 말한다.  또
+  // 옛 문구는 전면 잠금을 약속했지만 v16.6 이후 실제 동작은 트리 재료만
+  // 보호하고 생존 결손 마감은 계속이다 — 문구를 사실에 맞춘다.
+  wispShortNow=Math.max(0,num(quote.wisp.cost)-num(quote.wisp.before)),
+  wispOnly=!quote.feasible&&wispShortNow>0&&!(quote.blocked||[]).length,
+  reason=quote.feasible?`확정한 메인 상위 ${nameOf(unit)}를 먼저 완성합니다. 다른 제작으로 예약 재료를 소비하지 않습니다.`:`${storyBlocked?`스토리 10라운드 보상에서 레일리(히든)+해적선을 선택하면 ${nameOf(unit)} 경로가 열립니다(${C.STORY10_FORFEITS} 포기). `:''}${wispOnly?`확정 상위 ${nameOf(unit)}까지 선택 위습 ${wispShortNow}개 부족(보유 ${num(quote.wisp.before)}/필요 ${num(quote.wisp.cost)}) — 라운드 수입으로 모으면 됩니다. 트리 재료는 보호 중이고, 그동안 다른 제작은 생존 필수 결손을 닫을 때만 승인됩니다.`:`확정한 메인 상위 ${nameOf(unit)}의 트리 재료를 보호합니다. 생존 필수 결손 마감은 계속 승인됩니다.${quote.blocked.length?` · 차단: ${quote.blocked.join(' · ')}`:''}`}`,row=makeRow(model,quote,after,reason),candidate={id:unit.id,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:quote.feasible?num(quote.wisp.after):null,result:'committed-upper-first',reason,deltas,stopCondition:`표시 재료가 하나라도 바뀌거나 선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path:quote.feasible?[{id:unit.id,name:nameOf(unit),wispCost:num(quote.wisp.cost)}]:[]};
   return{state,label:quote.feasible?'확정 상위 지금 제작':'확정 상위 재료 보호',reason,action:quote.feasible?candidate:null,blockedAction:quote.feasible?null:candidate,assessment:before,afterAction:after,bestPath:quote.feasible?{steps:candidate.path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]}:null,rare:rareLedgerForQuote(model,quote,state,`확정 상위 ${nameOf(unit)}`),alternatives:[],unknowns:before.unknowns||[],search:{candidateCount:1,pathCount:quote.feasible?1:0,horizon:0,beamWidth:0,committedUpper:true},evidence:{observed:M.observedEvidence(model),ledger:'exact-current-stock',lockedUpper:unit.id,upperFirst:true,futureDropsCredited:false,clearClaim:false}};
 }
 // v20.2(0806 실측 · 사용자 재보고 "만들고 있는 중에 지금 할 일이 바뀐다"):
@@ -377,6 +386,10 @@ function craftLockDecision(model,route,locks,lockId,fallback){
 function applyCraftLock(decision,model,locks){
   const lockId=String(model&&model.settings&&model.settings._craftLockId||'');
   if(!lockId||!decision||CRAFT_LOCK_SKIP_STATES.has(String(decision.state||'')))return decision;
+  // v22.1(0809 포렌식): 확정 상위가 마침내 제작 가능해진 승인(committed-
+  // upper-first ACT_NOW)은 다른 유닛의 표시 잠금이 최대 2라운드 덮을 수
+  // 있었다 — 사용자 확정이 표시 안정성보다 위다.
+  if(decision.state==='ACT_NOW'&&decision.evidence&&decision.evidence.upperFirst)return decision;
   const current=decision.action||decision.blockedAction||null;
   if(current&&String(current.id||'')===lockId)return decision;
   const held=craftLockDecision(model,P.resolveRoute(model.intent,model.settings),locks,lockId,decision);
@@ -1093,6 +1106,11 @@ function reconcileSquadExecutionRaw(decision,squad,locks){
   // blockedAction으로 남겨 무엇을 왜 기다리는지 보이게 한다.
   const blockedFallback=()=>decision&&(decision.action||decision.blockedAction)||null;
   const blocked=(state,reason,extra,showAction)=>withEvidence({state,label:state==='SYNC_BLOCKED'?'현재 패 재검증 필요':'최종 파티 제작 순서 보류',reason,action:null,blockedAction:showAction||blockedFallback()},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:true,squadPrefixRejectReason:reason,...extra});
+  // v22.1(0809 포렌식): 사용자가 확정한 상위를 정확 원장이 현재 패에서 제작
+  // 가능으로 증명한 승인은 파티 플래너의 룰 차이(reserved 정책 등)로 뒤집지
+  // 않는다 — r32·r35 료쿠규 승인이 다른 층에 가려질 여지를 없앤다.  플래너
+  // 검증은 그 밖의 모든 제작에 그대로 권위다.
+  if(decision&&decision.state==='ACT_NOW'&&decision.evidence&&decision.evidence.upperFirst)return withEvidence({},{executionAuthority:'committed-upper-first',squadBypassCommittedUpper:true});
   if(!actions.length){
     if(decision.state==='ACT_NOW')return blocked('HOLD','최종 파티의 현재 패 검증 순서에 없는 제작이라 승인하지 않습니다. 패가 바뀌면 파티와 제작 순서를 함께 다시 계산합니다.',{rawActionId:String(rawAction&&rawAction.id||'')});
     return withEvidence({}, {executionAuthority:'squad-prefix-requoted-v15',squadPrefixEmpty:true});
@@ -1403,12 +1421,31 @@ function buildDecision(input){
   input=input||{};let routeAuto=null;const model=input.model||M.build(input),locks=input.locks||[],roundNow=model.round.value,final=M.finalSummary(model,model.effective.counts),rareTotal=model.knowledge.db.rares.reduce((total,unit)=>total+Math.max(0,num(model.effective.counts[unit.id])),0),finalize=raw=>{const decision=applyCraftLock(raw,model,locks);return Object.assign(decision,{version:VERSION,authority:true,authorityEngine:AUTHORITY,inputFingerprint:model.fingerprint,model},routeAuto?{routeAuto:{adopted:routeAuto.adopted,routeKey:routeAuto.routeKey,label:routeAuto.label,topUpperId:routeAuto.topUpperId,topUpperName:routeAuto.topUpperName,rankingAuthority:routeAuto.rankingAuthority},routeCandidates:decision.routeCandidates||routeAuto.routeCandidates,routeCandidateLanes:decision.routeCandidateLanes||routeAuto.routeCandidateLanes}:null,coachGuidance(decision,model,roundNow));};
   // Milestones are inventory states, not date windows. Missing the nominal
   // deadline must not silently advance the user into upper planning.
-  if(rareTotal<=0&&final.legendEquivalent<=0)return finalize(completionDecision(model,model.knowledge.db.rares.filter(unit=>intentFamilyOk(model,unit)),COMPLETION_MILESTONES.firstRare));
-  if(final.legendEquivalent<=0){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.firstFinal));}
-  let route=P.resolveRoute(model.intent,model.settings);const lock=lockedUpper(locks),postLegend=String(model.settings.postLegendRoute||'');
+  // v22.1(0809 포렌식): 마일스톤 게이트가 lock 판독보다 앞서 return 하는 동안
+  // completionDecision 은 확정 상위 트리 재료를 예약 없이 소모하는 후보를
+  // 1순위로 승인할 수 있었다(샬롯 크래커가 료쿠규의 유일 희귀 재료 킨에몬을
+  // 소모 — 1411행 additionalFinal 에만 !lock 가드가 있던 비대칭).  이제
+  // 확정 상위가 있으면 그 트리 소모분을 뺀 재고로 마일스톤 후보를 견적한다.
+  // 보호(재료)이지 선호(순위)가 아니다 — 첫 희귀·첫 전설은 여전히 최속이
+  // 이기되, 확정 상위의 재료를 먹는 경로만 정직하게 비싸지거나 막힌다.
+  // 25라 확정 게이트 해제(v22.1)로 1라부터 lock 이 존재할 수 있어 이 봉합이
+  // 게이트 해제의 전제 조건이다.
+  const earlyLock=lockedUpper(locks);
+  const milestoneGuard=(()=>{
+    if(!earlyLock)return null;
+    const lockKey=C.canonicalUpperId(earlyLock.id),lockUnit=model.knowledge.db.byId.get(earlyLock.id)||model.knowledge.db.uppers.find(row=>C.canonicalUpperId(row.id)===lockKey);
+    if(!lockUnit||model.knowledge.db.uppers.some(unit=>num(model.effective.counts[unit.id])>0&&C.canonicalUpperId(unit.id)===lockKey))return null;
+    let lockQuote=null;try{lockQuote=L.quote(model,lockUnit,model.effective.counts,{availableRound:model.round.value});}catch(_){return null;}
+    const counts=Object.assign({},model.effective.counts);let taken=0;
+    for(const [id,qty] of Object.entries(lockQuote&&lockQuote.consumed||{})){if(id===C.WISP_ID)continue;const take=Math.min(num(counts[id]),num(qty));if(take>0){counts[id]=num(counts[id])-take;taken+=take;}}
+    return taken>0?{counts,taken,lockName:nameOf(lockUnit),lockId:lockUnit.id}:null;
+  })();
+  if(rareTotal<=0&&final.legendEquivalent<=0)return finalize(completionDecision(model,model.knowledge.db.rares.filter(unit=>intentFamilyOk(model,unit)),COMPLETION_MILESTONES.firstRare,milestoneGuard));
+  if(final.legendEquivalent<=0){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.firstFinal,milestoneGuard));}
+  let route=P.resolveRoute(model.intent,model.settings);const lock=earlyLock,postLegend=String(model.settings.postLegendRoute||'');
   // The user explicitly chose "another legend/hidden" after the first one.
   // Keep the same completion authority until they switch to upper preparation.
-  if(postLegend==='legend'&&final.nonUpperFinalCount>0&&final.upperCount<=0&&!lock){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.additionalFinal));}
+  if(postLegend==='legend'&&final.nonUpperFinalCount>0&&final.upperCount<=0&&!lock){const candidates=model.knowledge.db.legendish.filter(unit=>!C.isUpper(unit)&&/전설|히든/.test(C.groupName(unit))&&!C.isShip(unit)&&intentFamilyOk(model,unit));return finalize(completionDecision(model,candidates,COMPLETION_MILESTONES.additionalFinal,milestoneGuard));}
   // v21.0(전면 재설계 ① — 사용자: "애초에 방향이 엉뚱함", "전면 재설계"):
   // 방향을 사용자에게 묻고 멈추지 않는다.  0806a 실측 — 1~32라 32라운드가
   // ROUTE_CHOICE 침묵이었고 그동안 구체 추천 0건.  같은 판 r10의 후보

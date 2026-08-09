@@ -67,7 +67,9 @@ check('upper rows expose both preview and confirmation controls plus whole-hand 
   assert(source.includes('plan.directionBoard=board'));
   assert(source.includes('exactConfirmable'));
   assert(source.includes('containsPreviewUpper'));
-  assert(source.includes('settings.currentRound>=25'));
+  // v22.1: confirm-upper 버튼의 25라 disable 게이트 제거 — 버튼은 항상
+  // 활성이고 안내 문구만 남는다.
+  assert(!source.includes('settings.currentRound>=25'));
   assert(source.includes('상위 방향을 먼저 잠급니다. 보조 조합은 패가 바뀔 때마다 가변 재계산합니다.'));
   assert(source.includes('전체 패 적합도 기준 상위 후보'));
   assert(source.includes('희귀·특별·안흔함만 표시'));
@@ -81,7 +83,9 @@ check('future-drop 보조안은 상위 방향 잠금을 막지 않고 adaptive d
   assert(source.includes('captureUpperCommitment'));
   assert(source.includes('fullPartyVerified:false'));
   assert(source.includes("commitment:'upper-route'"));
-  assert(source.includes('상위·조합 방향 확정은 25라운드부터'));
+  // v22.1(사용자: "25라전에 확정안되는거 풀어"): 25라 확정 게이트 문구는
+  // 제거가 계약이다 — 되살아나면 실패.
+  assert(!source.includes('상위·조합 방향 확정은 25라운드부터'));
   assert(source.includes('재료 계통 충돌'));
   assert(source.includes('lineupIds.length<targetBoard||plannedEquivalent<targetEquivalent||!planned.complete'));
   assert(source.includes("this.state.gorosei==='nasjuro'?117:102"));

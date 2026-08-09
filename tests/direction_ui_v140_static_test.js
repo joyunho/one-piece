@@ -34,7 +34,7 @@ check('direction selection state is persisted and invalid legacy values reopen',
   assert(source.includes("['open','preview','selected','hold'].includes(state.directionStatus)"));
 });
 
-check('25라부터 incomplete 방향도 잠그고 보조 조합은 adaptive draft로 둔다',()=>{
+check('방향 확정은 라운드 무관(v22.1) — 24라에도 잠기고 보조 조합은 adaptive draft로 둔다',()=>{
   const app=Object.create(App.prototype);
   let renders=0;
   const messages=[];
@@ -57,11 +57,10 @@ check('25라부터 incomplete 방향도 잠그고 보조 조합은 adaptive draf
     ['preview','physical','190H','physical','auto','190H']
   );
 
-  app.act('choose-direction',{dataset:{id:'V80H',key:'dual'}});
-  assert.match(messages.at(-1),/25라운드부터/);
-  assert.strictEqual(app.upperLock(),null);
-
-  app.state.currentRound=25;
+  // v22.1(사용자: "25라전에 확정안되는거 풀어" · 0809 포렌식): 24라 확정이
+  // 더는 토스트로 막히지 않는다 — 일찍 확정할수록 마일스톤 견적이 상위
+  // 트리 재료를 보호하므로 이르면 이를수록 낫다.  라운드는 24 그대로 두고
+  // 확정 흐름 전체를 검증한다.
   app._directionRankCache={provisionalDirection:{upperId:'V80H',upperCanonicalId:'V80H',upperName:'나미 상위',routeKeys:['dual'],checkpoint:{dueRound:30},actions:[{id:'V80H',name:'나미 상위',wispCost:0}]}};
   app.act('choose-direction',{dataset:{id:'190H',key:'physical'}});
   assert.deepStrictEqual(
