@@ -25,8 +25,13 @@ assert.strictEqual(ace.wispCost,21,'failed-run fixture drift: Warped Ace cost ch
 assert.strictEqual(blackMaria.wispCost,11,'failed-run fixture drift: Warped Black Maria cost changed');
 assert.strictEqual(prefix.economyGuarded,true,'non-closing high-wisp candidates were not filtered');
 assert(first,'an immediately craftable recovery action is required');
-assert.strictEqual(first.id,'Z20h',`expected Bartolomeo, received ${first.name}`);
-assert.strictEqual(first.wispCost,8);
+// v21.5(전략 구상 ③ 암브 배선): 이 가드의 원칙은 "최소 선위로 스턴
+// 마감을 닫는다"이다.  암브가 방깎 판정에 들어오자 시키(1스턴, 암브)가
+// 선위 3으로 같은 스턴 마감을 닫으면서 방깎까지 보탠다 — 바르톨로메오
+// (선위 8)보다 원칙에 더 부합한다.  옛 핀은 암브 가치가 0이던 시절의
+// 산물이다.
+assert.strictEqual(first.id,'930h',`expected Shiki(stun+armor-break, 3 wisp), received ${first.name}`);
+assert.strictEqual(first.wispCost,3);
 assert(stun&&stun.gap<=0,'the economical replacement did not close the minimum stun floor');
 assert(!prefix.actions.some(action=>C.isWarped(action.unit)),'a warped candidate survived the economy guard');
 assert.match(prefix.note,/고비용 후보를 제외/);

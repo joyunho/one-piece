@@ -98,7 +98,11 @@ function snapshotAtSeq(file,seq){
     squad.safePrefix.actions[0];
 
   assert.strictEqual(raw.state,'ACT_NOW');
-  assert.strictEqual(raw.action.id,'V20h','packaged R35 raw-action fixture drift');
+  // v21.5(암브 배선): 방깎이 암브 인정으로 싸게 닫히자 원시 엔진의 R35
+  // 픽이 바뀌었다(V20h → 네코).  이 픽스처의 계약은 특정 유닛이 아니라
+  // '원시 판단과 파티 접두 판단이 갈라지는 상황의 재현'이다 — 갈라짐
+  // 검사는 아래에서 그대로 지킨다.
+  assert.strictEqual(raw.action.id,'Z90h','packaged R35 raw-action fixture drift');
   assert(first,'final squad produced no safePrefix action');
   assert.strictEqual(first.id,'830h','packaged R35 squad-prefix fixture drift');
   assert.notStrictEqual(raw.action.id,first.id,'fixture no longer reproduces split authority');

@@ -49,15 +49,22 @@ test('암브 모델: 62라 전멸 재현(정적 83·카이도 방어 395·암브
   assert(model.perStackGainPercent>0,'스택당 한계 효율 없음');
 });
 
-test('암브는 표시·참고 계산 전용 — 정적 방깎 하드 게이트를 낮추지 않는다',()=>{
-  // 같은 정적 방깎에 암브 소스만 추가돼도 armor 필수 행의 current/gap은 불변.
+test('암브는 포화 모델로만 방깎 판정에 들어간다 — 75 전액 인정 금지 (v21.5 반전)',()=>{
+  // v17.8 은 "암브는 표시 전용, 게이트 불변"을 못 박았다 — 당시 걱정은
+  // 스택 상한 75를 상시 방깎처럼 전액 인정해 게이트가 무너지는 것이었다.
+  // v21.5(전략 구상 ③ + 사용자: "유닛 수에 따라 올라가는 속도가 달라져,
+  // 계산식은 너가"): 반영하되 포화 모델 armorBreakStacks(w)=75×(1−0.5^w)
+  // 로만 — 가중 3이면 66, 75에는 영원히 못 미친다.  원 계약의 알맹이
+  // (전액 인정 금지)는 그대로 지켜진다.
   const spec=extra=>Object.assign({source:'t',mode:'physical',main:1,stun:1.5,slow:102,triggerSlow:0,triggerSlowSources:0,armor:120,triggerArmor:0,boss:1,frenzy:1,armorBreak:0,armorBreakUnits:0},extra);
   const settings={mode:'physical',gorosei:'none'};
   const without=C.deficits(spec({}),'physical',settings);
   const withAb=C.deficits(spec({armorBreak:3,armorBreakUnits:3}),'physical',settings);
   const armorOf=result=>result.requirements.find(row=>row.key==='armor');
-  assert.strictEqual(armorOf(withAb).current,armorOf(without).current,'암브가 정적 방깎 현재값에 새어 들어갔다');
-  assert.strictEqual(armorOf(withAb).gap,armorOf(without).gap,'암브가 방깎 게이트를 완화했다');
+  const delta=armorOf(withAb).current-armorOf(without).current;
+  assert.strictEqual(delta,C.armorBreakStacks(3),'암브 기여가 포화 모델 값이 아니다');
+  assert(delta<75,'암브 75 전액이 게이트에 새어 들어갔다 — v17.8 이 막던 바로 그 사고');
+  assert(armorOf(withAb).gap<armorOf(without).gap,'암브 기여가 판정에 반영되지 않았다');
 });
 
 test('보유 집계: 스모커+베르고+S-샤크 = 가중 2.5 · 소스 3기',()=>{

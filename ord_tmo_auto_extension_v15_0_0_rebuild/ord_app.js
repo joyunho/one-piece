@@ -2771,10 +2771,20 @@ class App{
     const body=rerollRows.length
       ?`<div class="v153-reroll-now"><span><small>${upperChosen?'리롤 가능':'상위 전 안전 리롤'}</small><b>${rerollTotal}장 · 파티 재료와 겹침 없음</b></span><em>남은 ${rerollLeft}/2</em></div><div class="v153-unused-chips">${rerollRows.map(chip).join('')}</div><button class="v153-reroll-btn" data-act="tab" data-tab="deck">${this.v153Icon('reroll')}한 장씩 리롤</button>`
       :`<div class="v153-reroll-safe"><b>${upperChosen?'현재 리롤할 희귀 없음':'상위 후보 재료는 전부 보류'}</b><span>${upperChosen?'확정 파티에서 사용처 없는 희귀가 생기면 표시합니다.':'후보 중 하나라도 사용하는 희귀는 돌리지 않습니다.'}</span></div>`;
+    // v21.5(사용자: "상위를 정하면 어떤 희귀 2개로 이걸 만들고를 알려주고,
+    // 활용 못할 희귀는 리롤로 추천"): 원장 행(use/hold/reroll + 목적지가
+    // 담긴 reason)은 이미 다 있었는데 접힌 근거 폴드에 숨어 있었다.  상위가
+    // 정해지면 희귀별 사용 계획을 목록으로 승격한다 — 전량 활용이 목표고,
+    // 사용처가 없는 희귀만 리롤 추천으로 표시된다.
+    const planRows=upperChosen?rows.filter(row=>C.num(row.initial)>0).map(row=>{
+      const isReroll=C.num(row.reroll)>0&&C.num(row.use)<=0,kind=isReroll?'reroll':C.num(row.use)>0?'use':'hold';
+      return`<div class="v215-plan-row ${kind}"><b>${C.esc(row.name)}${C.num(row.initial)>1?` ×${C.num(row.initial)}`:''}</b><i>${isReroll?'리롤 추천':kind==='use'?'사용':'보류'}</i><span>${C.esc(String(row.reason||''))}</span></div>`;
+    }).join(''):'';
+    const planBlock=planRows?`<div class="v215-rare-plan"><small>희귀 사용 계획 — 전량 활용, 남는 것만 리롤</small>${planRows}</div>`:'';
     const groups=[{key:'use',label:'사용'},{key:'hold',label:'보류'}];
     // v19.10(P0-2): 근거 접기에서 이름 나열 대신 목적지·마감을 같이 적는다.
     const ledgerRows=groups.map(group=>{const list=rows.filter(row=>C.num(row[group.key])>0);return`<div class="${group.key}"><b>${group.label} ${list.reduce((sum,row)=>sum+C.num(row[group.key]),0)}장</b><span>${list.map(row=>{const dest=[...new Set((row.destinations||[]).map(item=>item.unitName).filter(Boolean))].slice(0,2);return C.esc(`${row.name||row.id}${dest.length?`→${dest.join('·')}`:''}${row.deadlineRound?`(${row.deadlineRound}라)`:''}`);}).join(' · ')||'없음'}</span></div>`;}).join('');
-    return`${ledger.conflict?'<div class="v153-ledger-warning">희귀 분류 충돌 — 제작·리롤을 멈추고 TMO를 다시 읽으세요.</div>':''}${body}<details class="v153-rare-ledger-fold"><summary>사용·보류 근거</summary><div class="v153-rare-fold-body">${ledgerRows}</div></details>`;
+    return`${ledger.conflict?'<div class="v153-ledger-warning">희귀 분류 충돌 — 제작·리롤을 멈추고 TMO를 다시 읽으세요.</div>':''}${planBlock}${body}<details class="v153-rare-ledger-fold"><summary>사용·보류 근거</summary><div class="v153-rare-fold-body">${ledgerRows}</div></details>`;
   }
 
   renderV153UpperParty(state,plan){

@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='21.4.0';
+const VERSION='21.5.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -1125,7 +1125,15 @@ function routeDistance(requirements){
 function clearProfileDetails(spec,mode,settings){
   spec=spec||{};settings=settings||{};mode=mode==='magic'?'magic':'physical';const g=GOROSEI[settings.gorosei]||GOROSEI.none,ctl=controlState(spec,mode,settings),slowTarget=mode==='magic'?g.slowMagic:g.slowPhysical,stun=num(spec.stun),stunBase=Math.min(STUN_BASE_FLOOR,Math.max(0,stun)),stunFull=Math.max(0,stun),bossFrenzy=Math.min(num(spec.boss),num(spec.frenzy));
   if(mode==='physical'){
-    const upper=settings._upperUnit||null,exceptionEligible=physicalArmorException(upper),buffReady=enoughPhysicalBuffs(spec,settings),exceptionActive=exceptionEligible&&buffReady,armorFloor=exceptionActive?120:g.armorSoft,armorIdeal=exceptionActive?120:g.armorSafe,armorTarget=armorFloor,armorCurrent=num(spec.armor),triggerArmor=Math.max(0,num(spec.triggerArmor)),armorExpected=armorCurrent+triggerArmor*.65,armorMaximum=armorCurrent+triggerArmor;
+    const upper=settings._upperUnit||null,exceptionEligible=physicalArmorException(upper),buffReady=enoughPhysicalBuffs(spec,settings),exceptionActive=exceptionEligible&&buffReady,armorFloor=exceptionActive?120:g.armorSoft,armorIdeal=exceptionActive?120:g.armorSafe,armorTarget=armorFloor,
+    // v21.5(전략 구상 ③ · 사용자: "암브는 최대 75까지 쌓이는데 시간이
+    // 걸리므로 75로 계산하면 안 되고, 유닛이 많을수록 중복되어 빨리
+    // 쌓인다"): 암브 스택 기여를 요구 판정에 넣되 75 전액이 아니라
+    // 기존 포화 모델 armorBreakStacks(w)=75×(1−0.5^w) 로 넣는다 —
+    // 유닛 1기 37.5 · 2기 56 · 3기 66 · 4기 70, 상한 75에는 영원히
+    // 못 미친다.  이 모델은 v19 부터 보스 미리보기 표시용으로만 있었고
+    // 정작 방깎 180 판정에는 0으로 계산되고 있었다(표시-판정 불일치).
+    armorBreakCredit=armorBreakStacks(num(spec.armorBreak)),armorStaticOnly=num(spec.armor),armorCurrent=armorStaticOnly+armorBreakCredit,triggerArmor=Math.max(0,num(spec.triggerArmor)),armorExpected=armorCurrent+triggerArmor*.65,armorMaximum=armorStaticOnly+armorBreakCredit+triggerArmor;
     const secondUpperCommitted=!!String(settings.secondUpperId||'');
     const requirements=[
       // v19(사용자 요청): "물딜도 2상위 각이 보이면 갈 수 있게".
@@ -1164,7 +1172,7 @@ function clearProfileDetails(spec,mode,settings){
       // 그룹 정렬(fillLast)이 맡고, 여기서는 필수 여부만 선언한다.
       {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:35,required:true,meta:{lastPriority:true,fillLast:true}}
     ];
-    return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorCurrent),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 최소 0.7스턴(그 밑은 스턴이 안 잡히는 실측 최소선)과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 2기 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
+    return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorStaticOnly),armorBreakCredit:round2(armorBreakCredit),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 최소 0.7스턴(그 밑은 스턴이 안 잡히는 실측 최소선)과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 2기 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
   }
   // v19.9.7(0802 패배 포렌식 "스턴이 새서 죽었어"): v18.9 는 이감 충족 시
   // 1.5스턴 필수를 해제했다("그 자리는 딜러가 낫다").  0802 실전에서 46라에

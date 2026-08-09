@@ -101,7 +101,11 @@ test('Absalom exception stays buildable in both rank and preview without showing
   // 정직하게 미완성이고, 압살롬 예외는 좀비 하드 결손 없이 A50h 를 그대로
   // 제시해야 한다.
   assert(ranked&&ranked.plan.finalLineup.some(row=>row.id==='A50h'));
-  assert.strictEqual(ranked.clearComplete,false);
+  // v21.5(전략 구상 ③ 암브 배선): 암브 스택이 방깎 판정에 들어오자 이
+  // 합성 패의 방깎이 닫히고, 풀린 예산이 광보잡 2까지 채워 설계도가
+  // 정직하게 완성된다.  이 검사의 계약은 '닫힌 척 하지 않는다'였고,
+  // 이제는 실제로 닫혀서 완성이라 말하는 것이 정직이다.
+  assert.strictEqual(ranked.clearComplete,true);
   const openRows=ranked.plan.roleCoverage.planned.rows.filter(row=>row.gap>0);
   // v18.8(사용자 교정): 광보잡 2기 요구가 들어오면서 이 픽스처의 1위 설계도가
   // 바뀌었다.  v19.9.8(최소 스턴 0.7): 최소선이 오르자 엔진은 다시 교환을
@@ -109,7 +113,7 @@ test('Absalom exception stays buildable in both rank and preview without showing
   // 됐다.  이 검사가 지키려는 건 "압살롬 예외 설계도가 정직하게 미완성으로
   // 남는다"이므로, 어떤 행이 열렸는지는 엔진의 교환 그대로 적는다(닫힌 척
   // 하지 않는 것이 계약이다).
-  assert.deepStrictEqual(openRows.map(row=>row.key),['bossFrenzy'],'미완성 사유가 예상과 다르다');
+  assert.deepStrictEqual(openRows.map(row=>row.key),[],'v21.5: 암브 인정 후 전 행이 닫혀야 한다');
   assert(openRows.every(row=>row.gap>0),'열린 행은 실제로 부족해야 한다');
   assert.deepStrictEqual(ranked.plan.actions[0].solve.hardMissing,[]);
   const preview=P.planFinalSquad({state,settings:settings({upperPreviewId:'A50h'}),upperBlueprint:ranked.blueprint});
@@ -118,9 +122,11 @@ test('Absalom exception stays buildable in both rank and preview without showing
   // 완성이 돼 adapted 였지만, v19.9(사용자 교정)가 물딜 1.5스턴을 다시 항상
   // 필수(순서만 최후)로 되돌리면서 이 합성 패(혈통 상한 1.435)는 다시
   // 정직하게 미완성이다 — invalid 로 떨어지는 원래 계약으로 복귀한다.
-  assert.strictEqual(preview.blueprint.status,'invalid');
+  // v21.5: 완성된 설계도의 미리보기는 invalid 로 떨어지지 않는다 —
+  // 가변 조정(adapted)이 새 정직한 상태다.
+  assert.strictEqual(preview.blueprint.status,'adapted');
   assert.notStrictEqual(preview.blueprint.status,'kept','조정 없이 잠근 것처럼 보고하면 안 된다');
-  assert.strictEqual(preview.wispBudget.roleComplete,false,'1.5스턴 필수 복귀로 이 합성 패는 미완성이어야 한다');
+  assert.strictEqual(preview.wispBudget.roleComplete,true,'v21.5: 암브 인정으로 이 합성 패는 완성이다');
   assert.strictEqual(preview.targetBoardCount,7);assert.strictEqual(preview.finalLineup.length,7);assert.strictEqual(preview.plannedCount,9);assert(preview.finalLineup.some(row=>row.id==='A50h'));assert(!preview.blueprint.replacedIds.includes('A50h'),'Absalom upper itself was released');const absalomAction=preview.actions.find(action=>action.id==='A50h');assert(absalomAction);assert.deepStrictEqual(absalomAction.solve.hardMissing,[]);
 });
 
