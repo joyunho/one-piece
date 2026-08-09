@@ -6,7 +6,7 @@ if(root)root.ORDV15Model=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='22.1.0';
+const VERSION='22.2.0';
 const HAND_TIERS=['rare','special','uncommon','common'];
 
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
@@ -69,7 +69,13 @@ function applyScenarioPatch(observed,settings){
   // Kuma while transcend is available so transcend uppers stay comparable in
   // the route choice; '소진' removes it.  Other special prerequisites
   // (레일리·해적선 등) must still be observed in the TMO hand.
-  if(settings&&settings.superKumaOwned===false){if(num(counts[C.SUPER_KUMA_ID])>0){const before=num(counts[C.SUPER_KUMA_ID]);counts[C.SUPER_KUMA_ID]=0;assumptions.push({kind:'transcend-unavailable',id:C.SUPER_KUMA_ID,before,after:0,evidence:'user-setting'});}}
+  // v22.2(0809b 포렌식): 스토리 10 보상에서 레일리/상자를 고르면 초월
+  // 쿠마는 포기된 것이다 — 그런데 이 주입은 story10Reward 를 전혀 보지
+  // 않아, 레일리는 골라야만 크레딧되면서 쿠마는 공짜로 크레딧되는
+  // 비대칭이 있었다(사용자: "초월 쿠마를 선택 안했는데 초월 유닛을
+  // 추천").  몰수 선택이 기록되면 유령 쿠마 주입을 끈다.
+  const kumaForfeited=settings&&['rayleigh','chest'].includes(String(settings.story10Reward||''));
+  if(settings&&(settings.superKumaOwned===false||kumaForfeited)){if(num(counts[C.SUPER_KUMA_ID])>0){const before=num(counts[C.SUPER_KUMA_ID]);counts[C.SUPER_KUMA_ID]=0;assumptions.push({kind:'transcend-unavailable',id:C.SUPER_KUMA_ID,before,after:0,evidence:kumaForfeited?'story10-forfeit':'user-setting'});}}
   else if(num(counts[C.SUPER_KUMA_ID])<=0){counts[C.SUPER_KUMA_ID]=1;assumptions.push({kind:'transcend-available',id:C.SUPER_KUMA_ID,before:0,after:1,evidence:'game-rule-until-spent'});}
   if(settings&&settings.wispOverride!==''&&settings&&settings.wispOverride!=null){const before=num(counts[C.WISP_ID]),after=Math.max(0,num(settings.wispOverride));counts[C.WISP_ID]=after;if(before!==after)assumptions.push({kind:'wisp-override',id:C.WISP_ID,before,after,evidence:'user'});}
   return{counts,assumptions,virtualId,virtualApplied,alreadyObserved,baselineId:baselineCaptured?baselineId:'',baselineCount:virtualBaselineCount,baselineCaptured,observedVirtualCount};

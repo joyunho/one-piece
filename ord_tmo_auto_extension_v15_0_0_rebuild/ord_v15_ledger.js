@@ -6,7 +6,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='22.1.0';
+const VERSION='22.2.0';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
@@ -45,6 +45,7 @@ function ruleBlocks(model,unit,counts,options,solve,prerequisite){
   // 있어야 prerequisite가 열리므로, 상위 확정 뒤 현재 패에서 0선위로
   // 닫히는 방주맥심 같은 좋은 보강을 50라까지 숨길 이유가 없다.
   if(unit&&C.isTranscend(unit)&&settings.superKumaOwned===false)reasons.push('이번 판 초월 불가');
+  if(unit&&C.isTranscend(unit)&&['rayleigh','chest'].includes(String(settings.story10Reward||'')))reasons.push('스토리 10 보상에서 초월 쿠마 포기');
   if(unit&&C.isChanged(unit)&&Math.max(usageCount(db,counts,C.isChanged),num(settings.changedUsed))>=2)reasons.push('변화됨 2회 소진');
   if(unit&&C.isSeraph(unit)&&(usageCount(db,counts,C.isSeraph)>0||num(settings.seraphUsed)>0))reasons.push('세라핌 1회 소진');
   if(unit&&C.isTranscend(unit)&&(usageCount(db,counts,C.isTranscend)>0||num(settings.transcendUsed)>0))reasons.push('초월 1회 소진');

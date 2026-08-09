@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='22.1.0';
+const VERSION='22.2.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 // v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
 // 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
@@ -636,7 +636,7 @@ function allowedCandidate(u,mode,route,settings,state,counts){
   // v17.25: 해적선 재료 실보유 여부는 prerequisiteStatus가 엄격히
   // 검사한다. 라운드 50 하드코드는 현재 패의 0선위 방주맥심까지 막았다.
   if(C.isChanged(u)&&settings.currentRound<50&&!settings.allowChangedEarly&&!settings._deferredFuture)return false;
-  if(C.isTranscend(u)&&!settings.superKumaOwned)return false;
+  if(C.isTranscend(u)&&(!settings.superKumaOwned||['rayleigh','chest'].includes(String(settings.story10Reward||''))))return false;
   if(C.isUpper(u)&&mode==='magic'&&route==='singleEnd'&&family!=='magic')return false;
   if(state&&!prerequisiteStatus(state,u,counts).allowed)return false;return true;
 }

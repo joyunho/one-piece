@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='22.1.0';
+const VERSION='22.2.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -207,9 +207,15 @@ function combatRareCandidates(model,route,assessment,counts){
     return[...keys].some(key=>num(contribution[key])>0);
   });
 }
+function vetoedIds(model){return new Set((model&&model.settings&&model.settings._vetoIds||[]).map(String));}
 function actionUniverse(model,route,locks,assessment,counts){
-  const base=allCandidates(model,route,locks,counts),seen=new Set(base.map(unit=>unit.id));
-  return base.concat(combatRareCandidates(model,route,assessment,counts).filter(unit=>!seen.has(unit.id)));
+  // v22.2(사용자: "아닌 것 같은건 넘어가기"): 사용자가 거부한 유닛은 후보
+  // 우주에서 빠진다 — 탐색·회복 목표·sticky 재주입이 전부 이 우주를
+  // 쓰므로 여기 한 곳이면 일반 경로가 다 걸러진다(마일스톤 경로는
+  // completionDecision 이 따로 거른다).  새 게임에 초기화된다.
+  const veto=vetoedIds(model);
+  const base=allCandidates(model,route,locks,counts).filter(unit=>!veto.has(String(unit.id))),seen=new Set(base.map(unit=>unit.id));
+  return base.concat(combatRareCandidates(model,route,assessment,counts).filter(unit=>!seen.has(unit.id)&&!veto.has(String(unit.id))));
 }
 function relevantKeys(assessment){const keys=new Set();for(const group of assessment.groups||[])for(const row of group.rows||[])if(num(row.gap)>0)keys.add(row.key);return keys;}
 function potentialScore(unit,assessment,route,lock){
@@ -254,7 +260,7 @@ function completionDecision(model,units,milestone,guard){
   // 예외가 빈 패에서도 feasible=true 를 내는 바람에 1라 1순위로 올라갔다.
   // 원장(제작 증명)은 그대로 두고 순위에서만 뒤로 보낸다 — 압살롬이
   // 패에 실제로 있으면 hardMissing 이 비어 정상 순위로 돌아온다.
-  hardShort:0,wispGap:0};}).map(item=>Object.assign(item,{hardShort:(item.quote.solve&&item.quote.solve.hardMissing||[]).length,wispGap:Math.max(0,num(item.quote.wisp&&item.quote.wisp.cost)-num(item.quote.wisp&&item.quote.wisp.before))})).filter(item=>num(model.effective.counts[item.unit.id])<=0&&item.quote.prerequisite.allowed&&!item.quote.blocked.some(reason=>/조합 근거 부족|레시피 순환/.test(reason)))
+  hardShort:0,wispGap:0};}).map(item=>Object.assign(item,{hardShort:(item.quote.solve&&item.quote.solve.hardMissing||[]).length,wispGap:Math.max(0,num(item.quote.wisp&&item.quote.wisp.cost)-num(item.quote.wisp&&item.quote.wisp.before))})).filter(item=>num(model.effective.counts[item.unit.id])<=0&&!vetoedIds(model).has(String(item.unit.id))&&item.quote.prerequisite.allowed&&!item.quote.blocked.some(reason=>/조합 근거 부족|레시피 순환/.test(reason)))
   // v21.3(사용자: "희귀랑 전설or히든은 제일 빠르게 만들 수 있는 걸로 나오고
   // 그 뒤에는 패를 보고 가면 좋아"): 첫 픽(firstRare·firstFinal)의 1순위
   // 근거는 속도다 — 지금 제작 가능 > 부족 선위 적은 순 > 싼 순, 같은

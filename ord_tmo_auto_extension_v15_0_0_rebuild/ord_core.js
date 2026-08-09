@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='22.1.0';
+const VERSION='22.2.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -901,7 +901,7 @@ function normalizeState(catalog,snapshot,settings){
     virtualResolved=baselineCaptured?rawVirtualCount>virtualBaselineCount:rawVirtualCount>0;
     if(!virtualResolved){counts[virtualId]=Math.max(0,num(counts[virtualId]))+1;virtualApplied=true;}
   }
-  if(settings&&settings.superKumaOwned===false)counts[SUPER_KUMA_ID]=0;else counts[SUPER_KUMA_ID]=Math.max(1,num(counts[SUPER_KUMA_ID]));
+  if(settings&&(settings.superKumaOwned===false||['rayleigh','chest'].includes(String(settings.story10Reward||''))))counts[SUPER_KUMA_ID]=0;else counts[SUPER_KUMA_ID]=Math.max(1,num(counts[SUPER_KUMA_ID])); // v22.2: 스토리 10 몰수 배선
   const wispOverride=settings&&settings.wispOverride;if(wispOverride!==''&&wispOverride!=null)counts[WISP_ID]=Math.max(0,num(wispOverride));
   const currentAbilities={};for(const [k,v] of Object.entries(snapshot&&snapshot.currentAbilities||{}))currentAbilities[canonicalAbility(k)]=num(v);
   const percent={};for(const u of merged)percent[u.id]=clamp(num(u.tmoPercent),0,100);
@@ -1314,7 +1314,7 @@ function inferMode(state,locks,settings){
   if(settings&&(settings.mode==='physical'||settings.mode==='magic'))return settings.mode;const upper=mainUpper(state,locks,settings);if(upper){const f=familyOf(upper);if(f!=='neutral')return f;}const legend=(locks||[]).find(x=>x.stage==='legend');if(legend){const u=state.db.byId.get(legend.id),f=familyOf(u);if(f!=='neutral')return f;}const owned=ownedUnits(state,u=>isLegendish(u)||isUpper(u));let p=0,m=0;for(const u of owned){const f=familyOf(u);if(f==='physical')p++;if(f==='magic')m++;}return m>p?'magic':'physical';
 }
 function hardBlocked(state,u,solve,settings,round,ruleCounts){
-  const counts=ruleCounts||state.counts;if(!u)return['유닛 없음'];const reasons=[],sameFamilyOwned=state.db.uppers.some(x=>canonicalUpperId(x.id)===canonicalUpperId(u.id)&&num(counts[x.id])>0);if(sameFamilyOwned)reasons.push('이미 보유');if(isChanged(u)&&round<50)reasons.push('변화됨은 50라부터');if(isTranscend(u)&&settings&&settings.superKumaOwned===false)reasons.push('이번 판 초월 사용 불가');
+  const counts=ruleCounts||state.counts;if(!u)return['유닛 없음'];const reasons=[],sameFamilyOwned=state.db.uppers.some(x=>canonicalUpperId(x.id)===canonicalUpperId(u.id)&&num(counts[x.id])>0);if(sameFamilyOwned)reasons.push('이미 보유');if(isChanged(u)&&round<50)reasons.push('변화됨은 50라부터');if(isTranscend(u)&&settings&&settings.superKumaOwned===false)reasons.push('이번 판 초월 사용 불가');if(isTranscend(u)&&settings&&['rayleigh','chest'].includes(String(settings.story10Reward||'')))reasons.push('스토리 10 보상에서 초월 쿠마 포기');
   const inventorySeraph=state.db.units.some(x=>isSeraph(x)&&num(counts[x.id])>0),inventoryTrans=state.db.units.some(x=>isTranscend(x)&&num(counts[x.id])>0),inventoryChanged=state.db.units.reduce((n,x)=>n+(isChanged(x)?num(counts[x.id]):0),0),ownedSeraph=inventorySeraph||num(settings&&settings.seraphUsed)>0,ownedTrans=inventoryTrans||num(settings&&settings.transcendUsed)>0,ownedChanged=Math.max(inventoryChanged,num(settings&&settings.changedUsed)),upperFamilies=new Set(state.db.uppers.filter(x=>num(counts[x.id])>0).map(x=>canonicalUpperId(x.id))),upperCount=upperFamilies.size;
   if(isSeraph(u)&&(ownedSeraph||settings&&settings._plannedSeraph))reasons.push('세라핌은 게임당 1회');if(isTranscend(u)&&(ownedTrans||settings&&settings._plannedTranscend))reasons.push('초월은 게임당 1회');if(isChanged(u)&&ownedChanged+(ruleCounts?0:num(settings&&settings._plannedChanged))>=2)reasons.push('변화됨은 게임당 2회');if(isUpper(u)&&upperCount>=2)reasons.push('상위 2개 보유로 추가 상위 제외');
   const prerequisite=specialPrerequisiteStatus(state.db,u,counts);for(const x of prerequisite.missing)reasons.push(`${x.name} 필요`);

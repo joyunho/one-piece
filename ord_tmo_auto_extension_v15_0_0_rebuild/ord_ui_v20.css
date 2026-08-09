@@ -977,3 +977,12 @@ body.ord-overlay-mode .command-line{display:flex}
 .v221-story.behind .v221-story-row span{color:var(--warn);font-weight:600}
 .v221-story.late{border-color:rgba(232,112,112,.6)}
 .v221-story.late .v221-story-row span{color:var(--bad);font-weight:700}
+
+/* v22.2(0809b): 넘어가기 — 아닌 것 같은 추천을 이번 판에서 제외.
+   제외는 조용하면 안 된다: 넘어간 목록이 카드 밑에 항상 보이고
+   한 번에 복원된다. */
+.v222-veto{border:1px solid rgba(232,112,112,.45);border-radius:7px;background:transparent;color:var(--bad);font-size:11.5px;padding:5px 10px;cursor:pointer}
+.v222-veto:hover{background:rgba(232,112,112,.12)}
+.v222-vetoed{display:flex;flex-wrap:wrap;gap:5px;align-items:center;margin-top:7px;font-size:11px;color:var(--muted)}
+.v222-vetoed button{border:1px solid var(--line);border-radius:5px;background:var(--panel-2);color:var(--sub);font-size:10.5px;padding:1px 7px;cursor:pointer}
+.v222-vetoed button:hover{border-color:rgba(232,112,112,.45);color:var(--bad)}
