@@ -137,6 +137,9 @@ const REGIONS=['game-status','next-action','next-preview','clear-gaps','referenc
     // v19.1(사용자 요청): "내 파티에 확정 이런거 있으면 좋을듯? 내가 버튼
     // 누르면 자꾸 사라지니까 짜증나네" — 5번 패널의 파티 확정 버튼이 실제로
     // 상태를 뒤집는지 왕복으로 확인한다.
+    // v22.0(사용자 승인 목업): 참고 패널은 기본 접힘 서랍이 됐다 — 파티
+    // 검사는 서랍(최종 파티 탭)을 열고 진행한다.
+    await page.locator('[data-act="v211-tab"][data-tab="party"]').click();
     await page.waitForSelector('[data-region="upper-party"] .v153-party-lock');
     const lockBefore=await page.evaluate(()=>document.querySelector('[data-region="upper-party"] .v153-party-lock').className);
     assert(/\boff\b/.test(lockBefore),`파티 확정이 미확정 상태로 시작하지 않음: ${lockBefore}`);

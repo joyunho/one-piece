@@ -207,7 +207,11 @@ test('v15 trust UI exposes evidence boundaries and never paints advice as clear 
   assert(!gaps.includes('클리어 확률'));
   assert(!decision.includes('흔함 소비'));
   assert(coach.includes('renderV151NextAction(state,plan,health)'));
-  assert(coach.includes('renderV153Spec(state,plan)'));
+  // v22.0(사용자 승인 목업): 스펙 자리는 국면 패널이 됐다 — 전체 스펙 표는
+  // 국면 패널 안의 접힌 폴드로 이동했다(renderV22PhasePanel → renderV153Spec).
+  // 지키는 계약은 그대로다: 스펙 표가 화면에서 사라지면 안 된다.
+  assert(coach.includes('renderV22PhasePanel(state,plan)'));
+  assert(app.includes('renderV153Spec(state,plan)'),'전체 스펙 표 폴드가 사라짐');
   assert(!coach.includes('renderV15RareBoard('));
   // v18.4(사용자 목업): 상시 판단 영역 6개 → v21.1: 참고 탭 컨테이너
   // (reference)가 추가돼 7개.  세 참고 패널 자체는 탭 안에 그대로 있다.

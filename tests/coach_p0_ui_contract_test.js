@@ -26,6 +26,11 @@ check('live coach exposes one status strip and four decision regions',()=>{
   const app=Object.create(App.prototype);
   app.state={mode:'physical',magicRoute:'auto',virtualSpecialId:'',locks:[]};
   app.upperLock=()=>null;
+  // v22.0(사용자 승인 목업): 다음 제작 레일은 마감 국면(40~50라)에만 열린다
+  // — 후보 배선 검사는 그 국면(45라)에서 한다.  국면 패널의 게이지는
+  // observedDeficits 를 읽으므로 스텁을 준다.
+  app.state.currentRound=45;
+  app.observedDeficits=()=>({clearRows:[]});
   app.renderV151NextAction=()=>'<i data-test="next"></i>';
   app.renderV153Status=()=>'<section data-region="game-status"><i data-test="status"></i></section>';
   app.renderV153Preview=()=>'<i data-test="candidate"></i>';
@@ -189,7 +194,11 @@ check('upper choice consumes only v15 route candidates, caps them at six and hid
 
 check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   const coachSource=between('  renderCoach(state,plan,phase,clock,health){','  renderCoachDetails(state,plan,open=false){');
-  for(const method of ['renderV153Status','renderV151NextAction','renderV153Preview','renderV153Spec','renderV153CraftableLegends','renderV153UpperParty'])assert(coachSource.includes(method),method);
+  // v22.0(사용자 승인 목업): 스펙 자리는 국면 패널(renderV22PhasePanel)이
+  // 됐다 — 전체 스펙 표(renderV153Spec)는 그 패널의 접힌 폴드에서 계속
+  // 호출된다.  단일 화면 위계 계약 자체는 그대로다.
+  for(const method of ['renderV153Status','renderV151NextAction','renderV153Preview','renderV22PhasePanel','renderV153CraftableLegends','renderV153UpperParty'])assert(coachSource.includes(method),method);
+  assert(source.includes('renderV153Spec(state,plan)'),'전체 스펙 표 폴드 호출이 사라짐');
   // v17.28: 희귀 장부의 제작 목록은 보유 희귀를 실제로 쓰는 조합만 싣는
   // 계산으로 바뀌었다.  옛 계산은 희귀 소모를 요구하지 않아 "희귀 직접
   // 소모 없음" 항목이 그대로 실렸다.
