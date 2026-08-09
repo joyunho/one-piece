@@ -8,7 +8,7 @@ $desktopSrc = Join-Path $repo 'desktop'
 
 Write-Host '=== ORD 악몽 코치 — 바탕화면 설치 ==='
 
-# v21.3.0: 무엇을 설치하는지 먼저 말한다.  실사례 — 예전 ZIP 폴더에서
+# v21.4.0: 무엇을 설치하는지 먼저 말한다.  실사례 — 예전 ZIP 폴더에서
 # 이 스크립트를 돌리면 옛 코드가 그대로 다시 빌드돼 바탕화면 앱이 계속
 # 옛 버전으로 남는다.  스크립트는 성공했다고 말하므로 사용자는 원인을
 # 알 수 없었다("계속 20.4 인데? 병합이 안된건가?").
@@ -42,10 +42,10 @@ if (-not (Test-Path (Join-Path $desktopSrc 'node_modules'))) {
 if ($LASTEXITCODE -ne 0) { throw 'exe 빌드 실패 — 위 오류 메시지를 확인하세요.' }
 
 # 3) 바탕화면으로 복사 (OneDrive 바탕화면 리디렉션 대응)
-# v21.3.0 보강: 코치가 켜져 있으면 exe가 잠겨 교체가 실패하고 예전
+# v21.4.0 보강: 코치가 켜져 있으면 exe가 잠겨 교체가 실패하고 예전
 # 버전이 그대로 남는다("예전 버전이 설치되는데?" 실사례) — 실행 중인
 # 코치를 먼저 조용히 종료한다.
-# v21.3.0: taskkill 은 대상이 없으면 stderr 로 "프로세스를 찾을 수 없습니다"
+# v21.4.0: taskkill 은 대상이 없으면 stderr 로 "프로세스를 찾을 수 없습니다"
 # 를 쓰고, PowerShell 은 그걸 NativeCommandError 로 빨갛게 토해낸다
 # ($ErrorActionPreference='Stop' 이라 더 무섭게 보인다).  2>$null 로도 안
 # 막힌다 — 네이티브 stderr 는 리디렉션 대상이 아니라 오류 레코드로 승격되기

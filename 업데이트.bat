@@ -1,5 +1,5 @@
 @echo off
-rem v21.3.0: run from this file's own folder, not the caller's.
+rem v21.4.0: run from this file's own folder, not the caller's.
 rem The clone lives in %USERPROFILE%\one-piece, not on the Desktop - the
 rem Desktop only holds the built app folder. Invoking this bat by full
 rem path from any other folder used to run git pull outside the repo.

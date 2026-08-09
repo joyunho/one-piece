@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='21.3.0';
+const VERSION='21.4.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -273,9 +273,24 @@ function completionDecision(model,units,milestone){
     if(feasibleBest){deadlineEscape={passedName:nameOf(best.unit),passedCompletion:round(best.completion,1),dueRound};best=feasibleBest;}
   }
   if(!best)return{version:VERSION,state:'HOLD',authority:true,label:`${label} 후보 없음`,reason:'특수 선행재료가 없거나 조합 데이터를 확인할 수 없습니다.',action:null,alternatives:[],unknowns:[]};
-  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',hardNote=best.hardShort>0?`주의 — 뽑기·드랍으로만 얻는 재료(${(best.quote.solve&&best.quote.solve.hardMissing||[]).map(entry=>String(entry.name||entry.id)).join('·')}) 미보유. 모든 후보가 같은 처지라 순서만 제시합니다. `:'',usageNote=best.usage>0?` — 실전 채용률 ${Math.round(best.usage*1000)/10}% (${num(META_STATS&&META_STATS.gameCount).toLocaleString('ko-KR')}판)`:'',completionReason=`${escapeNote}${hardNote}${label} 후보 중 ${milestoneSpec.key!=='additionalFinal'?'지금 패에서 부족한 재료와 선택 위습이 가장 적습니다':'지금 패 기준 완성도·실전 가치가 가장 높습니다'}${usageNote}.`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible&&best.hardShort<=0?'ACT_NOW':'PREPARE';
+
+  // v21.4(사용자 구상 ①②): 첫 희귀는 7라 미션(흔한 선택위습) 때문에,
+  // 첫 전설은 20라 보스 대비 스토리 진행 때문에 스토리 속도가 값어치를
+  // 갖는다 — 스토리 S급이면 최저 선위 대비 첫 희귀 +2 · 첫 전설 +5까지
+  // 더 써도 된다.  그 밖에는 최저 선위 유지(구상 원문).  프리미엄은 지금
+  // 실제로 만들 수 있는 후보끼리만 비교한다 — 없는 선위를 상상해 프리미엄을
+  // 주지 않고, 뽑기·드랍 재료 미보유(hardShort) 후보도 대상이 아니다.
+  let storyPremium=null;
+  {const premiumBudget=milestoneSpec.key==='firstRare'?2:milestoneSpec.key==='firstFinal'?5:0;
+  if(premiumBudget>0&&best.quote.feasible&&best.hardShort<=0&&!/^S/.test(String(C.storyGrade(best.unit).tier||''))){
+    const cap=num(best.quote.wisp.cost)+premiumBudget;
+    const sPick=quoted.filter(item=>item!==best&&item.hardShort<=0&&item.quote.feasible&&/^S/.test(String(C.storyGrade(item.unit).tier||''))&&num(item.quote.wisp.cost)<=cap)
+      .sort((a,b)=>b.story-a.story||a.quote.wisp.cost-b.quote.wisp.cost)[0];
+    if(sPick){storyPremium={tier:String(C.storyGrade(sPick.unit).tier),delta:Math.max(0,num(sPick.quote.wisp.cost)-num(best.quote.wisp.cost)),over:nameOf(best.unit)};best=sPick;}
+  }}
+  const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',hardNote=best.hardShort>0?`주의 — 뽑기·드랍으로만 얻는 재료(${(best.quote.solve&&best.quote.solve.hardMissing||[]).map(entry=>String(entry.name||entry.id)).join('·')}) 미보유. 모든 후보가 같은 처지라 순서만 제시합니다. `:'',usageNote=best.usage>0?` — 실전 채용률 ${Math.round(best.usage*1000)/10}% (${num(META_STATS&&META_STATS.gameCount).toLocaleString('ko-KR')}판)`:'',completionReason=`${escapeNote}${hardNote}${label} 후보 중 ${storyPremium?`스토리 ${storyPremium.tier}급 — 최저 선위(${storyPremium.over})보다 ${storyPremium.delta} 더 들지만 스토리가 빠릅니다${milestoneSpec.key==='firstRare'?' · 7라 미션 가속':' · 20라 보스 대비'}`:milestoneSpec.key!=='additionalFinal'?'지금 패에서 부족한 재료와 선택 위습이 가장 적습니다':'지금 패 기준 완성도·실전 가치가 가장 높습니다'}${usageNote}.`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible&&best.hardShort<=0?'ACT_NOW':'PREPARE';
   const candidate={id:best.unit.id,name:nameOf(best.unit),unit:best.unit,row,quote:best.quote,completion:best.completionDetail,wispCost:best.quote.wisp.cost,wispAfter:best.quote.wisp.after,result:'completion-rule',stopCondition:`선택 위습이 ${best.quote.wisp.cost}개보다 적거나 패가 바뀌면 만들지 말고 다시 동기화`};
-  return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',rankingAuthority:'fastest-first-usage-tiebreak',metaUsageRate:best.usage,hardMaterialGated:best.hardShort>0,virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
+  return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',rankingAuthority:'fastest-first-usage-tiebreak',metaUsageRate:best.usage,hardMaterialGated:best.hardShort>0,storyPremium:storyPremium?{tier:storyPremium.tier,extraWisp:storyPremium.delta}:null,virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};
 }
 function rareLedgerForQuote(model,quote,state,label){
   const rows=[];for(const unit of model.knowledge.db.rares){const initial=Math.max(0,num(model.effective.counts[unit.id]));if(initial<=0)continue;const planned=Math.min(initial,num(quote&&quote.rareUse&&quote.rareUse[unit.id])),use=state==='ACT_NOW'?planned:0,hold=initial-use,reason=use?`${label} 즉시 재료`:planned?`${label} 제작 재료 보호`:`${label} 확정 전 안전 보류`;rows.push({id:unit.id,name:nameOf(unit),unit,initial,use,hold,reroll:0,reason,proof:{planned,use,exclusive:use+hold===initial}});}

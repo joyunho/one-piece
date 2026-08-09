@@ -34,9 +34,17 @@ check('① 뽑기·드랍 전용 재료 미보유 후보는 첫 픽이 아니다
 });
 
 check('① 재료가 실제 패에 있으면 정상 순위로 복귀한다',()=>{
+  // v21.4 갱신: 전략 구상 ①(스토리 S급 +2선위 투자)이 이 위에 얹혔다.
+  // 계약의 알맹이는 "압살롬이 패에 있으면 페로나가 차단에서 풀린다"이지
+  // 무조건 1위가 아니다 — S급 프리미엄 픽이 있으면 그쪽이 이기고,
+  // 페로나는 정상 후보(1위 또는 대안)로 보이면 된다.
   const withAbs=engine.decide(mk({[absalom.id]:1},12)),pick=withAbs.action||withAbs.blockedAction;
-  assert.strictEqual(pick&&pick.id,peronaRare.id,
-    `압살롬 보유 패에서 페로나(채용률 1위·즉시 제작 가능)가 1순위가 아님: ${pick&&pick.name}`);
+  const premium=withAbs.evidence&&withAbs.evidence.storyPremium;
+  const inContention=pick&&pick.id===peronaRare.id
+    ||(withAbs.alternatives||[]).some(alt=>alt.id===peronaRare.id);
+  assert(inContention,`압살롬 보유 패에서 페로나가 후보권 밖: 픽=${pick&&pick.name}, 대안=${(withAbs.alternatives||[]).map(a=>a.name).join(',')}`);
+  if(pick&&pick.id!==peronaRare.id)
+    assert(premium&&/^S/.test(premium.tier),`페로나를 밀어낸 것이 S급 프리미엄이 아님: ${pick.name}`);
 });
 
 check('② 첫 픽은 속도 우선 — 부족 선위가 적은 쪽이 완성도를 이긴다',()=>{
