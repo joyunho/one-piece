@@ -74,9 +74,19 @@ $shortcut.TargetPath = (Join-Path $target 'ORDCoach.exe')
 $shortcut.WorkingDirectory = $target
 $shortcut.Save()
 
+# v21.6.0: 업데이트가 cmd 폴더 경로 문제로 여섯 번 넘게 막힌 실사례 —
+# 바탕화면에 "ORD 코치 업데이트" 바로가기를 함께 만든다.  더블클릭이면
+# 저장소에서 git pull 후 재설치까지 전부 진행된다(업데이트.bat 은 자기
+# 폴더 기준으로 돌므로 작업 폴더를 몰라도 된다).
+$updater = $shell.CreateShortcut((Join-Path $desk 'ORD 코치 업데이트.lnk'))
+$updater.TargetPath = (Join-Path $repo '업데이트.bat')
+$updater.WorkingDirectory = $repo
+$updater.Save()
+
 Write-Host ''
 $ver = (Get-Content (Join-Path $desktopSrc 'package.json') -Raw | ConvertFrom-Json).version
 Write-Host ('설치 완료: ' + $target + ' (코치 v' + $ver + ')')
 Write-Host ('창 제목에 v' + $ver + ' 가 보이지 않으면 옛 창이 그대로 열려 있는 것입니다 - 닫고 다시 여세요.')
 Write-Host '바탕화면의 "ORD 악몽 코치" 바로가기로 실행하세요.'
+Write-Host '다음부터 업데이트는 바탕화면의 "ORD 코치 업데이트" 더블클릭이면 끝납니다.'
 Write-Host '(TMO.GG 데스크톱 프로그램을 먼저 켜 두세요 — 게임 중 F8 = 오버레이)'

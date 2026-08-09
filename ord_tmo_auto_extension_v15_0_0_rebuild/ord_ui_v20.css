@@ -914,3 +914,15 @@ body.ord-overlay-mode .command-line{display:flex}
 .v152-rare-head,.v152-rare-summary{display:flex;gap:8px;align-items:baseline;justify-content:space-between;font-size:12px}
 /* 조합 줄은 카드 밖으로 넘치지 않게 두 줄까지만(v19.9.1 계약 유지). */
 .v159-action-recipe,.v159-recipe{display:-webkit-box;overflow:hidden;-webkit-box-orient:vertical;-webkit-line-clamp:2}
+
+/* v21.6(0808 포렌식): 실행 독촉 — 방치 격상은 카드 전체가 맥동하고,
+   경고 줄은 굵어진다.  두 판 연속 "제작 가능 방치 + 위습 사재기 + 43라
+   사망"에서 나온 계약: 절박함은 글자 크기가 아니라 카드 상태로 말한다. */
+.v151-action.v216-urgent{border-color:rgba(232,112,112,.75);animation:v216pulse 1.15s ease-in-out infinite alternate}
+@keyframes v216pulse{from{box-shadow:0 0 0 1px rgba(232,112,112,.28)}to{box-shadow:0 0 0 2px rgba(232,112,112,.7),0 0 16px rgba(232,112,112,.28)}}
+.v159-skip-warn.v216-critical{color:var(--bad);font-weight:700}
+.v216-hoard-warn{display:flex;gap:6px;align-items:center;color:var(--bad);font-size:11.5px}
+.v216-freeze-note{display:flex;gap:6px;align-items:flex-start;color:var(--warn);font-size:11.5px}
+.v216-freeze-note button{border:1px solid var(--line);border-radius:5px;background:var(--panel-2);color:var(--text);padding:0 7px;font-size:11px;cursor:pointer}
+/* 바제스 미션(30~40라) 가능 유닛 배지 — 구상 ④ */
+.v216-barges{display:inline-block;margin-left:6px;border:1px solid rgba(148,112,255,.55);border-radius:5px;padding:1px 7px;background:rgba(148,112,255,.16);color:#b9a8ff;font-size:10.5px;font-weight:700;vertical-align:middle}

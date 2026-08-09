@@ -1222,6 +1222,15 @@ class App{
     if(!grade||!C.num(grade.leagueRank))return'';
     return`<span class="v151-story tier-${C.esc(String(grade.leagueTier||'f').toLowerCase())}" title="${C.esc(grade.note||'')}">${C.esc(grade.leagueLabel||'')} ${C.esc(grade.leagueTier||'')} · ${C.num(grade.leagueRank)}위</span>`;
   }
+  v216BargesTag(unit){
+    // v21.6(구상 ④ · 30~40라 바제스 특별 미션): 티모지지의 "자제스" 표식은
+    // 카탈로그 abilities['바제스'] 키로 이미 들어와 있다(상위·전설급 72유닛).
+    // 미션 구간과 그 직전(26~40라)에만 배지를 달아 준비를 유도한다.
+    if(!unit||!unit.abilities||!unit.abilities['바제스'])return'';
+    const roundNow=this.actualRound();
+    if(roundNow<26||roundNow>40)return'';
+    return'<span class="v216-barges" title="바제스 특별 미션(30~40라) 가능 유닛 — 이 유닛이 있으면 미션 보상을 노릴 수 있습니다">바제스</span>';
+  }
   // v17.8(사용자 요청 2): 1번 패널의 빈 공간을 판단에 쓰이는 실측
   // 데이터로 채운다 — 다음 마감 체크포인트, 다음 보스 카운트다운,
   // 리롤 잔여(로그 A에서 리롤 0/2 미사용으로 13라운드 HOLD), 선위 보유.
@@ -1288,7 +1297,30 @@ class App{
     // v19.9(개선 ②): 추천 카드에 오른 유닛은 수동 제작 경고 대상에서 제외한다.
     if(shown&&shown.id)(this._v199RecommendedIds||(this._v199RecommendedIds=new Map())).set(String(shown.id),Date.now());
     const target=status==='REROLL_ONE'&&reroll?`${reroll.name} 1장 리롤`:shown&&shown.name||decision.label||'현재 패 소비 보류',waivedKeys=new Set(((decision.assessment||{}).requirements||[]).filter(row=>row.waived).map(row=>row.key)),deltas=(shown&&shown.deltas||[]).filter(row=>!waivedKeys.has(row.key)&&(Math.abs(C.num(row.delta))>.001||row.closed)).slice(0,3),cost=shown?C.num(shown.wispCost):0,after=shown&&shown.wispAfter!=null?C.num(shown.wispAfter):C.num(state.wisp),button=status==='ACT_NOW'&&decision.action?`<button class="primary" data-act="mark-made" data-step="0" data-id="${C.esc(decision.action.id)}">제작함 · TMO 확인</button>`:status==='REROLL_ONE'&&reroll?`<button class="primary danger" data-act="reroll-confirmed" data-id="${C.esc(reroll.id)}">1장 리롤함</button>`:status==='SYNC_BLOCKED'?`<button data-act="connection">TMO 다시 읽기</button>${this.state.pendingTransaction?'<button data-act="dismiss-transaction">거래 취소 · TMO 현재값 사용</button>':''}${this.state.pendingReroll?'<button data-act="cancel-reroll">리롤 대기 해제</button>':''}`:'<button disabled>지금은 재료 보존</button>',stop=shown&&shown.stopCondition?shown.stopCondition:status==='PREPARE'?'재료나 선위가 달라지면 실행하지 않습니다.':'패가 바뀌면 먼저 다시 읽습니다.';
-    return`<div class="v151-action ${C.esc(status.toLowerCase())}" data-state="${C.esc(status)}">${status==='HOLD'?'<div class="v1915-hold-banner">이 카드는 지금 만들라는 추천이 아닙니다 — 필수 역할을 지키기 위해 <b>보류</b>된 후보입니다. 사유와 회복 목표를 먼저 확인하세요.</div>':''}${(()=>{
+    // v21.6(0808 포렌식): 두 판 연속 43라 사망 — 마감 유닛이 8~13라운드
+    // "제작 가능" 상태로 방치됐고, 죽는 순간 위습 14·19개가 남아 있었다.
+    // 기존 스킵 추적(v19.9)은 상태가 잠깐 튀기만 해도 초기화돼 절박함이
+    // 누적되지 못했다.  제작 가능 목격 원장은 이제 다른 카드가 끼어들어도
+    // 유지되고(같은 유닛이 비실행 상태로 목격될 때만 리셋), 방치가 길어지면
+    // 카드 전체를 격상한다.  덤으로 40라+ 위습 사재기와 사망 후 관전 동결
+    // (1판 43~65라, 22라운드 헛돈 추천)도 여기서 감지한다.
+    const v216=(()=>{
+      const roundNow=this.actualRound();
+      const ledger=this._v216FeasibleSince||(this._v216FeasibleSince=new Map());
+      if(roundNow<C.num(this._v216MaxRound)-2){ledger.clear();this._v216FreezeSig='';this._v216FreezeRound=0;this._v216FreezeCount=0;this._v216MaxRound=0;}
+      this._v216MaxRound=Math.max(C.num(this._v216MaxRound),roundNow);
+      const actId=status==='ACT_NOW'&&decision.action?String(decision.action.id||''):'';
+      if(actId){if(!ledger.has(actId))ledger.set(actId,roundNow);}
+      else if(shown&&shown.id&&ledger.has(String(shown.id)))ledger.delete(String(shown.id));
+      const idle=actId?roundNow-C.num(ledger.get(actId))+1:0;
+      const gaps=((decision.assessment||{}).requirements||[]).filter(row=>row.required!==false&&!row.waived&&C.num(row.gap)>0);
+      const sig=`${C.num(state.wisp)}|${Object.values(state.counts||{}).reduce((sum,n)=>sum+C.num(n),0)}|${gaps.map(row=>`${row.key}:${fmt(row.gap)}`).join(',')}`;
+      if(roundNow!==C.num(this._v216FreezeRound)){this._v216FreezeCount=sig===this._v216FreezeSig?C.num(this._v216FreezeCount)+1:0;this._v216FreezeSig=sig;this._v216FreezeRound=roundNow;}
+      const frozen=roundNow>40&&C.num(this._v216FreezeCount)>=3?C.num(this._v216FreezeCount):0;
+      const hoard=roundNow>=40&&gaps.length&&status==='ACT_NOW'&&shown&&C.num(state.wisp)>=C.num(shown.wispCost)?{have:C.num(state.wisp),cost:C.num(shown.wispCost)}:null;
+      return{roundNow,idle,critical:idle>=5||roundNow>=38&&idle>=2,frozen,hoard};
+    })();
+    return`<div class="v151-action ${C.esc(status.toLowerCase())}${v216.critical?' v216-urgent':''}" data-state="${C.esc(status)}">${status==='HOLD'?'<div class="v1915-hold-banner">이 카드는 지금 만들라는 추천이 아닙니다 — 필수 역할을 지키기 위해 <b>보류</b>된 후보입니다. 사유와 회복 목표를 먼저 확인하세요.</div>':''}${(()=>{
       // v20.2: 제작 진행 중 잠금이 걸려 있으면 그 사실을 카드에 명시한다 —
       // "왜 안 바뀌지"도 "왜 바뀌지"만큼 혼란스럽다.  엔진의 이번 1순위가
       // 다르면 그것도 같이 말해 사용자가 스스로 바꿀 수 있게 한다.
@@ -1301,7 +1333,7 @@ class App{
       const action=decision&&(decision.action||decision.blockedAction),reg=action&&action.regression;
       if(!reg||!(reg.rows||[]).length)return'';
       return`<div class="v203-regress-warn"><b>${C.esc(reg.headline||'')}</b><small>${C.esc(reg.detail||'')}</small></div>`;
-    })()}<div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${decision.routeAuto&&decision.routeAuto.adopted?`<em class="v151-confidence lv-continue" title="엔진이 클리어 실측 순 1위 방향을 자동 채택했습니다. 방향판·상위 확정으로 언제든 바꿀 수 있습니다.">방향 자동 · ${C.esc(decision.routeAuto.label||'')}</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기',ROUTE_CHOICE:'상위 방향 확정 필요'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v151StoryTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}</div>${deltas.length?`<div class="v151-deltas">${deltas.map(row=>{
+    })()}<div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${decision.routeAuto&&decision.routeAuto.adopted?`<em class="v151-confidence lv-continue" title="엔진이 클리어 실측 순 1위 방향을 자동 채택했습니다. 방향판·상위 확정으로 언제든 바꿀 수 있습니다.">방향 자동 · ${C.esc(decision.routeAuto.label||'')}</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기',ROUTE_CHOICE:'상위 방향 확정 필요'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v151StoryTag(unit)}${this.v216BargesTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}</div>${deltas.length?`<div class="v151-deltas">${deltas.map(row=>{
       // v18.4(목업): 인라인 알약 대신 "무엇이 얼마나 오르는가" 타일.
       const ic=/스턴/.test(row.label)?'blade':/이감|둔화/.test(row.label)?'target':/방깎|방어/.test(row.label)?'snow':/보잡|보스/.test(row.label)?'skull':'gear';
       return`<span>${this.v153Icon(ic)}<small>${C.esc(row.label)}</small><b>${fmt(row.before)}<i>→</i>${fmt(row.after)}</b></span>`;
@@ -1309,15 +1341,13 @@ class App{
       // v19.9(개선 ①): 0731 판은 승인된 레베카·쵸파 카드를 여러 라운드
       // 건너뛰어 방깎 -29로 끝났다.  같은 승인 카드가 다음 라운드에도 실행되지
       // 않고 남아 있으면 마감 역산과 함께 경고한다(표시 전용 · 승인은 그대로).
-      const roundNow=this.actualRound(),track=this._v199ActionTrack||{id:'',round:0};
-      const trackId=status==='ACT_NOW'&&decision.action?String(decision.action.id||''):'';
-      if(!trackId){if(track.id)this._v199ActionTrack={id:'',round:0};return'';}
-      if(track.id!==trackId){this._v199ActionTrack={id:trackId,round:roundNow};return'';}
-      const held=roundNow-C.num(track.round);
-      if(held<1)return'';
-      const checkpoint=(decision.assessment||{}).checkpoint||null,due=checkpoint?C.num(checkpoint.dueRound):0,left=due>roundNow?due-roundNow:0;
-      return`<div class="v159-skip-warn">${this.v153Icon('warn')}<span><b>이 승인 카드가 ${held+1}라운드째 실행되지 않았습니다</b> — ${checkpoint?`${C.esc(checkpoint.label)} 마감 ${due}라${left?`까지 ${left}라`:' 초과'}`:'마감 역산 대기'} · 승인 스킵은 0731 판 방깎 -29의 원인이었습니다.</span></div>`;
-    })()}${(()=>{
+      // v21.6(0808 포렌식): 방치 라운드는 위의 목격 원장(v216)이 센다 —
+      // 다른 카드가 잠깐 끼어들어도 초기화되지 않는다.
+      if(v216.frozen)return`<div class="v216-freeze-note">${this.v153Icon('warn')}<span><b>${v216.frozen+1}라운드째 패·위습·결손이 그대로입니다</b> — 라운드만 흐르고 있습니다. 전멸 후 관전 중이라면 <button data-act="run-result-open">게임 결과</button>를 기록하세요. 0808 1판은 사망 뒤 22라운드 동안 추천이 헛돌았습니다.</span></div>`;
+      if(v216.idle<2)return'';
+      const checkpoint=(decision.assessment||{}).checkpoint||null,due=checkpoint?C.num(checkpoint.dueRound):0,left=due>v216.roundNow?due-v216.roundNow:0;
+      return`<div class="v159-skip-warn${v216.critical?' v216-critical':''}">${this.v153Icon('warn')}<span><b>이 승인 카드가 ${v216.idle}라운드째 실행되지 않았습니다</b> — ${checkpoint?`${C.esc(checkpoint.label)} 마감 ${due}라${left?`까지 ${left}라`:' 초과'}`:'마감 역산 대기'} · ${v216.critical?'0808 두 판 모두 이 지연(마감 유닛 8·13라운드 방치)이 사인이었습니다':'승인 스킵은 0731 판 방깎 -29의 원인이었습니다'}.</span></div>`;
+    })()}${v216.hoard&&!v216.frozen?`<div class="v216-hoard-warn">${this.v153Icon('spiral')}<span>선택위습 <b>${v216.hoard.have}</b> 보유 — 이 마감 비용 <b>${v216.hoard.cost}</b>. 40라 이후 필수 결손을 열어둔 채 아끼는 위습은 0808 두 판(14·19개 미사용 사망)의 사인입니다.</span></div>`:''}${(()=>{
       // v17.4: 55라 도플라밍고 2연속 사망 — 생존 조각은 닫히는데 보스
       // 화력 역할(단일·끝딜·1.5스턴·토키)이 열린 채 보스전에 들어가는
       // 것을 라운드 중에 경고한다.  46라부터 다음 보스와 열린 화력
@@ -1548,7 +1578,7 @@ class App{
     const shipPlan=this.v151ShipPlan(state);
     const shipReco=shipPlan?[...shipPlan.legendRows,...shipPlan.upperRows].find(row=>row.unit.id===shipPlan.recommendedId)||null:null;
     const shipHint=shipPlan&&shipReco?`<div class="v151-ship-line"><small>해적선 ${shipPlan.shipCount}척</small><button data-act="detail" data-id="${C.esc(shipReco.unit.id)}"><b>추천 ${C.esc(displayNameOf(shipReco.unit))}</b><span>${shipReco.kind==='upper'?'상위(제한됨) · 메인 상위 자리 소모':'전설급 완성체'} · ${shipReco.feasible?'지금 제작 가능':`부족: ${shipReco.missing.slice(0,2).map(m=>`${C.esc(m.name)}${m.need>1?`×${m.need}`:''}`).join('·')}${shipReco.missing.length>2?` 외 ${shipReco.missing.length-2}`:''}`}</span></button><button class="v151-ship-all" data-act="ship-plan">전체 ${shipPlan.legendRows.length+shipPlan.upperRows.length}개</button></div>`:'';
-    return items.length||shipHint?`<div class="v151-prep-list"><small class="v152-prep-title">이어질 행동 후보 · 우선순위순</small>${items.slice(0,4).map((item,index)=>{const unit=state.db&&state.db.byId.get(item.id);return`<button data-act="detail" data-id="${C.esc(item.id)}">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:`<i>${index+2}</i>`}<span class="v151-prep-copy"><span class="v151-prep-name"><b>${index+2}. ${C.esc(item.name)}</b>${this.v151StoryTag(unit)}</span><small>${C.esc(item.note)}</small></span><em>선위 ${C.num(item.wispCost)}</em></button>`;}).join('')}${shipHint}<p>1번(위 카드)만 확정 행동이며, 이후 순번은 TMO 패 변화 뒤 다시 계산합니다.</p></div>`:`<div class="v151-empty"><b>현재 행동만 확정</b><span>다음 행동은 지금 미리 고정하지 않고 TMO 변화 뒤 계산합니다.</span></div>`;
+    return items.length||shipHint?`<div class="v151-prep-list"><small class="v152-prep-title">이어질 행동 후보 · 우선순위순</small>${items.slice(0,4).map((item,index)=>{const unit=state.db&&state.db.byId.get(item.id);return`<button data-act="detail" data-id="${C.esc(item.id)}">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:`<i>${index+2}</i>`}<span class="v151-prep-copy"><span class="v151-prep-name"><b>${index+2}. ${C.esc(item.name)}</b>${this.v151StoryTag(unit)}${this.v216BargesTag(unit)}</span><small>${C.esc(item.note)}</small></span><em>선위 ${C.num(item.wispCost)}</em></button>`;}).join('')}${shipHint}<p>1번(위 카드)만 확정 행동이며, 이후 순번은 TMO 패 변화 뒤 다시 계산합니다.</p></div>`:`<div class="v151-empty"><b>현재 행동만 확정</b><span>다음 행동은 지금 미리 고정하지 않고 TMO 변화 뒤 계산합니다.</span></div>`;
   }
 
   // v17.15(사용자 요청 3): 희귀 활용 방안 — ①대상 상위 기준 9~11환산 파티
@@ -3261,7 +3291,7 @@ class App{
   }
   renderDetail(state,plan){
     const id=this.state.detailId;if(!id)return'';const u=state.db.byId.get(id);if(!u)return'';const linked=plan.actions.concat(plan.watch||[],plan.prep||[],plan.rows||[]).find(x=>x.unit.id===id),inspected=linked||C.candidateRow(state,u,{mode:plan.mode,spec:plan.spec,deficits:plan.deficits,settings:plan.settings||{},round:plan.round||1,purpose:plan.purpose,upper:plan.upper,stock:plan.reserved&&plan.reserved.stock||state.counts,ruleCounts:plan.reserved&&plan.reserved.stock||state.counts,availableWisp:plan.availableWisp,synergyMemo:global.ORD_SYNERGY_MEMO,costBasis:plan.reserved&&plan.reserved.reservedWispCost?'protected':'current'}),solve=inspected.solve,available=inspected.availableWisp,wisp=this.wispDisplay(state,inspected),role=C.roleProfile(u),sourceStory=inspected.story||C.storyGrade(u),story=C.storyLeagueGrade&&C.storyLeagueGrade(u,sourceStory)||sourceStory,facts=C.skillFacts?C.skillFacts(u):{always:[],trigger:[],research:[],researchVariants:[],penalties:[],mechanics:[]},status=inspected.blocked&&inspected.blocked.length?inspected.blocked.join(' · '):(solve.wispCost<=available?'지금 제작 가능':`선위 ${solve.wispCost-available}개 부족`),direct=solve.direct.map(x=>`<div><span>${C.esc(C.materialName(state.db,x.id))}</span><b>${x.owned}/${x.count}</b></div>`).join('')||'<small>직접 재료 없음</small>',command=this.commandInfo(u),impact=(inspected.impact&&inspected.impact.rows||[]).filter(x=>Math.abs(C.num(x.delta))>.005||x.closed||x.regressed),impactHtml=impact.map(x=>`<div class="${x.regressed?'bad':x.closed?'good':'warn'}"><span>${C.esc(x.label)}</span><b>${fmt(x.before)} → ${fmt(x.after)}</b><small>${x.closed?'조건 충족':x.regressed?'재료 소모로 감소':`목표 ${fmt(x.target)}`}</small></div>`).join(''),why=inspected.why||{},factHtml=(facts.always||[]).map(x=>`<span class="always">${C.esc(x.label)} <b>${x.key==='stun'?fmtStun(x.value):fmt(x.value)}</b></span>`).concat((facts.trigger||[]).map(x=>`<span class="trigger">${C.esc(x.label)} <b>${fmt(x.value)}</b></span>`),(facts.research||[]).map(x=>`<span class="research">${C.esc(x.label)} <b>${fmtStun(x.value)} · ${fmt(x.capture)}%</b></span>`),(facts.researchVariants||[]).map(x=>`<span class="research condition ${x.active?'active':''}">${C.esc(x.label)} <b>${fmtStun(x.value)} · ${fmt(x.capture)}%${x.active?' · 적용 중':''}</b></span>`),(facts.penalties||[]).map(x=>`<span class="penalty">${C.esc(x.label)} <b>${fmt(x.value)}</b></span>`),(facts.mechanics||[]).map(x=>`<span class="mechanic">${C.esc(x.label)}</span>`)).join('');
-    return`<div class="modal-back" data-act="close-detail"><article class="detail-modal" role="dialog" aria-modal="true" aria-label="${C.esc(displayNameOf(u))} 상세"><button class="modal-x" data-act="close-detail" aria-label="닫기">×</button><header><img src="${C.esc(u.image||'')}" alt=""><div><h2>${C.esc(displayNameOf(u))}</h2><p>${C.esc(tierLabel(u))}</p>${storyBadge(u,story)}</div></header><div class="detail-hero"><div><small>${C.esc(wisp.basisLabel)} 필요 선택위습</small><b>${wisp.planned}</b><span>가용 ${wisp.available} · 제작 후 ${wisp.after}${wisp.different?` · 현재 패 단독 ${wisp.current}`:''}</span></div><div><small>판정</small><b>${C.esc(status)}</b><span>${C.esc(C.summarizeRoles({role},plan.mode))}</span></div><div class="story-detail"><small>스토리 등급 · ${C.esc(story.basisLabel)}</small><b>${C.esc(story.label)}</b><span>${C.esc(story.note)}</span></div><div class="detail-command"><small>조합 명령어</small><span><i>한글</i><b>${C.esc(command.koreanDisplay)}</b></span><span><i>English</i><b>${C.esc(command.englishDisplay)}</b></span>${command.inherited?`<em>원형 ${C.esc(command.sourceName)} 최초 제작 명령</em>`:''}</div></div><section class="why-detail"><h3>왜 이 유닛을 만드나</h3><p>${C.esc(why.headline||'제작 후 순증 스펙과 재료 효율을 확인하세요.')}</p>${impactHtml?`<div class="impact-grid">${impactHtml}</div>`:'<small>현재 클리어 조건의 직접 순증이 없습니다.</small>'}${why.alternative?`<div class="cheaper-alt">더 싼 대안: <b>${C.esc(displayNameOf(why.alternative.unit))}</b> · 선위 ${why.alternative.wispCost}</div>`:''}${why.tradeoffs&&why.tradeoffs.length?`<div class="trade-warning">소모 재료 영향: ${C.esc(why.tradeoffs.join(' · '))}</div>`:''}</section>${(()=>{
+    return`<div class="modal-back" data-act="close-detail"><article class="detail-modal" role="dialog" aria-modal="true" aria-label="${C.esc(displayNameOf(u))} 상세"><button class="modal-x" data-act="close-detail" aria-label="닫기">×</button><header><img src="${C.esc(u.image||'')}" alt=""><div><h2>${C.esc(displayNameOf(u))}${this.v216BargesTag(u)}</h2><p>${C.esc(tierLabel(u))}</p>${storyBadge(u,story)}</div></header><div class="detail-hero"><div><small>${C.esc(wisp.basisLabel)} 필요 선택위습</small><b>${wisp.planned}</b><span>가용 ${wisp.available} · 제작 후 ${wisp.after}${wisp.different?` · 현재 패 단독 ${wisp.current}`:''}</span></div><div><small>판정</small><b>${C.esc(status)}</b><span>${C.esc(C.summarizeRoles({role},plan.mode))}</span></div><div class="story-detail"><small>스토리 등급 · ${C.esc(story.basisLabel)}</small><b>${C.esc(story.label)}</b><span>${C.esc(story.note)}</span></div><div class="detail-command"><small>조합 명령어</small><span><i>한글</i><b>${C.esc(command.koreanDisplay)}</b></span><span><i>English</i><b>${C.esc(command.englishDisplay)}</b></span>${command.inherited?`<em>원형 ${C.esc(command.sourceName)} 최초 제작 명령</em>`:''}</div></div><section class="why-detail"><h3>왜 이 유닛을 만드나</h3><p>${C.esc(why.headline||'제작 후 순증 스펙과 재료 효율을 확인하세요.')}</p>${impactHtml?`<div class="impact-grid">${impactHtml}</div>`:'<small>현재 클리어 조건의 직접 순증이 없습니다.</small>'}${why.alternative?`<div class="cheaper-alt">더 싼 대안: <b>${C.esc(displayNameOf(why.alternative.unit))}</b> · 선위 ${why.alternative.wispCost}</div>`:''}${why.tradeoffs&&why.tradeoffs.length?`<div class="trade-warning">소모 재료 영향: ${C.esc(why.tradeoffs.join(' · '))}</div>`:''}</section>${(()=>{
       const entry=upperPlaybookOf(u);if(!entry)return'';
       return`<section class="playbook-detail"><h3>전수 메모 플레이북 <small>표시 전용 · 엔진 점수에는 미반영</small></h3><p>${C.esc(entry.summary||'')}</p>${entry.use?`<p class="use">활용 · ${C.esc(entry.use)}</p>`:''}${entry.pairs&&entry.pairs.length?`<div class="pairs"><b>같이 쓰면 좋은 유닛</b>${entry.pairs.map(name=>`<span>${C.esc(name)}</span>`).join('')}</div>`:''}</section>`;
     })()}<section><h3>실제 스킬 · 상시/발동 분리</h3><div class="detail-facts">${factHtml||'<span>표시할 수치 역할 없음</span>'}</div></section>${(()=>{
