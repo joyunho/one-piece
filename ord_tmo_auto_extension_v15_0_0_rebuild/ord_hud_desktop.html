@@ -1,14 +1,46 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="ord-helper" content="v22.6.0-desktop-hud"><title>ORD HUD</title><link rel="stylesheet" href="ord_app.css"><link rel="stylesheet" href="ord_cockpit_v15.css"><style>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="ord-helper" content="v22.7.0-desktop-hud"><title>ORD HUD</title><link rel="stylesheet" href="ord_app.css"><link rel="stylesheet" href="ord_ui_v20.css"><style>
 /* 인게임 HUD — 창이 아니라 게임 위에 뜬 글자·칩처럼 보여야 한다.
    배경은 완전 투명, 콘텐츠 블록만 반투명 판.  클릭은 전부 게임으로
-   통과하므로(메인 프로세스 setIgnoreMouseEvents) 상호작용 없음. */
+   통과하므로(메인 프로세스 setIgnoreMouseEvents) 상호작용 없음.
+
+   v22.7(사용자: "f8 f9 기능이 너무 별로야 정보가 중구난방으로 정리되어
+   있고 글씨도 작아"): 두 가지 근본 수정 —
+   ① 이 페이지는 v20.1 리스킨 이후에도 은퇴한 구형 cockpit 시트를
+      로드하고 있었다.  중계 조각(.v153-hud/.v151-action)의 스타일은
+      전부 ord_ui_v20.css 에 있으므로 지금까지 HUD 는 맨몸 HTML 로
+      그려졌다 — "중구난방"의 정체.  본창과 같은 신작 시트를 싣고,
+      루트에 v153-screen 클래스를 달아 디자인 토큰(var(--…))을 살린다.
+   ② HUD 전용 재배치·확대 — 표시 순서를 고정(라운드 → 국면 → 마감 →
+      선위·리롤 → 지금 할 일 카드)하고 글씨를 게임 위에서 읽히는
+      크기(제목 22px·본문 14.5px)로 키운다.  카드의 보조 블록(그다음
+      후보·스토리 스텝퍼·넘어간 추천·리롤 칩)은 클릭 통과 화면에서
+      정보가 아니라 소음이라 숨긴다. */
 html,body{background:transparent !important;margin:0;padding:0;overflow:hidden;}
-#ord-hud-root{display:flex;flex-direction:column;gap:6px;padding:6px;font-size:12.5px;pointer-events:none;}
-#ord-hud-root>*{background:rgba(8,13,24,.88) !important;border:1px solid rgba(120,150,220,.25);border-radius:10px;padding:8px !important;box-shadow:0 4px 18px rgba(0,0,0,.45);}
-#ord-hud-root .v153-hud{display:flex;flex-wrap:wrap;gap:6px;align-items:center;}
+#ord-hud-root{display:flex;flex-direction:column;gap:8px;padding:8px;font-size:15px;pointer-events:none;}
+#ord-hud-root>*{background:rgba(10,8,12,.92) !important;border:1px solid rgba(224,92,126,.3);border-radius:12px;padding:10px 12px !important;box-shadow:0 6px 22px rgba(0,0,0,.5);}
+/* ── 상단 스트립: 순서 고정 — 라운드(0) → 국면(1) → 마감(2) → 필(3) ── */
+#ord-hud-root .v153-hud{display:flex;flex-wrap:wrap;gap:8px;align-items:center;}
+#ord-hud-root .v153-round{order:0;}
+#ord-hud-root .v22-phase{order:1;font-size:14px;}
+#ord-hud-root .v22-due{order:2;font-size:14px;font-weight:700;}
+#ord-hud-root .v153-pill{order:3;font-size:13px;}
+#ord-hud-root .v153-round strong{font-size:22px;min-width:0;}
+#ord-hud-root .v153-pill b{font-size:17px;}
+/* 시계 라벨·계통 스위치는 HUD 에서 정보가 아니다. */
+#ord-hud-root [data-clock],#ord-hud-root .v153-mode{display:none !important;}
+/* ── 지금 할 일 카드: 제목·이유 확대, 보조 블록 정리 ── */
+#ord-hud-root .v151-action{overflow:visible;}
+#ord-hud-root .v151-action-title,#ord-hud-root .v151-action-main b{font-size:22px;line-height:1.25;}
+#ord-hud-root .v151-action-main p{font-size:14.5px;color:var(--sub,#c4bccb);}
+#ord-hud-root .v151-action-main>img,#ord-hud-root .v151-action-main>i{width:54px;height:54px;}
+#ord-hud-root .v151-cost b{font-size:20px;}
+#ord-hud-root .v153-next-candidates,#ord-hud-root .v221-story,#ord-hud-root .v222-vetoed,#ord-hud-root .v151-action-facts,#ord-hud-root .v151-continue{display:none !important;}
 /* 클릭이 통과되는 화면에서 기능 없는 버튼은 노이즈 — 전부 숨긴다.
    회복 목표 줄(v151-recovery-row)만 정보라서 평면 표시로 유지. */
 #ord-hud-root button:not(.v151-recovery-row){display:none !important;}
 #ord-hud-root button{pointer-events:none;}
+/* 예외: 관전 동결 경고의 "게임 결과" 버튼은 문장 일부다 — 숨기면
+   "…라면 를 기록하세요"로 깨진다.  평문으로 눕혀 문장을 지킨다. */
+#ord-hud-root .v216-freeze-note button{display:inline !important;border:0;padding:0;background:transparent !important;color:inherit;font:inherit;font-weight:700;}
 #ord-hud-root .v151-phase,#ord-hud-root .v151-action-foot,#ord-hud-root .v151-inline-actions{display:none !important;}
-</style></head><body><div id="ord-hud-root"></div><script src="ord_hud_desktop.js"></script></body></html>
+</style></head><body><div id="ord-hud-root" class="v153-screen"></div><script src="ord_hud_desktop.js"></script></body></html>
