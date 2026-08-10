@@ -1000,3 +1000,7 @@ body.ord-overlay-mode .command-line{display:flex}
 .v224-snipe-top img{width:26px;height:26px;border-radius:5px}
 .v224-snipe-top b{font-size:12.5px}
 .v224-snipe-top i{margin-left:auto;font-style:normal;color:var(--accent,#a78bfa);font-weight:700;font-size:12px}
+
+/* v22.5: 스토리 밀기 포기 토글 — 국면 ①② 패널. */
+.v225-story-rush{border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--sub);font-size:11.5px;padding:5px 10px;cursor:pointer;margin:3px 0}
+.v225-story-rush.on{border-color:rgba(232,112,112,.55);color:var(--bad);font-weight:700}

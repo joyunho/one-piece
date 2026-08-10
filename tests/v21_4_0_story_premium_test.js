@@ -24,10 +24,16 @@ check('① 첫 희귀 — S급이 최저가 +2 안이면 투자하고 근거를 
   if(premium){
     assert(/^S/.test(premium.tier),'프리미엄이 S급이 아닌 후보에 발동');
     assert(premium.extraWisp<=2,`첫 희귀 투자 한도 초과: +${premium.extraWisp}`);
+    assert(C.num(pick.wispCost)<=2,`v22.5 절대 상한 초과: 총 ${pick.wispCost}선위`);
     assert(/스토리 S급/.test(String(d.reason)),'사유에 프리미엄 근거 없음');
     assert(/7라 미션/.test(String(d.reason)),'7라 미션 근거 없음');
   }else{
-    assert(/^S/.test(pickTier),`프리미엄도 없고 픽도 S급이 아님: ${pick.name}`);
+    // v22.5(사용자: "희귀함은 아무리 스토리 랭크가 높더라도 3개쓰는건
+    // 오바야 2개가 최대"): 절대 상한 2선위 — 최저가 자체가 상한 밖이면
+    // 프리미엄 불발이 계약이다(빈 패 실측: 샹크스 10 · 거프 12).
+    // 최저가가 상한 안(≤2)인데도 프리미엄이 없다면 그때만 픽이 S급이어야
+    // 한다(v21.4 원 계약의 살아남는 부분).
+    assert(/^S/.test(pickTier)||C.num(pick.wispCost)>2,`상한 안(${pick.wispCost}선위)인데 프리미엄도 S급 픽도 없음: ${pick.name}`);
   }
 });
 
