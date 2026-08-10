@@ -1004,3 +1004,26 @@ body.ord-overlay-mode .command-line{display:flex}
 /* v22.5: 스토리 밀기 포기 토글 — 국면 ①② 패널. */
 .v225-story-rush{border:1px solid var(--line);border-radius:7px;background:var(--panel-2);color:var(--sub);font-size:11.5px;padding:5px 10px;cursor:pointer;margin:3px 0}
 .v225-story-rush.on{border-color:rgba(232,112,112,.55);color:var(--bad);font-weight:700}
+
+/* v22.6(사용자: "게임 결과 적는 칸 글씨가 너무 작고 쉽게 적을 수 있게
+   바꿔줘"): 결과 모달 전면 대형화 — 7~10px 시대의 폰트를 12~16px 로,
+   셀렉트는 큰 세그먼트 버튼으로. */
+.run-result-modal.v226>header small{font-size:12px}
+.run-result-modal.v226>header h2{font-size:24px}
+.run-result-modal.v226>header p{font-size:13px}
+.run-result-modal.v226 .result-kinds{gap:9px}
+.run-result-modal.v226 .result-kinds button{padding:14px 13px;border-radius:12px;cursor:pointer}
+.run-result-modal.v226 .result-kinds b{font-size:16px}
+.run-result-modal.v226 .result-kinds small{font-size:11.5px}
+.run-result-modal.v226 .result-health b{font-size:13px}
+.run-result-modal.v226 .result-health span,.run-result-modal.v226 .result-health em{font-size:11.5px}
+.run-result-modal.v226 .result-form{gap:13px;font-size:13.5px}
+.run-result-modal.v226 .result-form label{font-size:13.5px}
+.run-result-modal.v226 .result-form input,.run-result-modal.v226 .result-form textarea{font-size:15px;padding:10px 12px;border-radius:10px;min-height:44px}
+.run-result-modal.v226 .result-note textarea{min-height:88px}
+.run-result-modal.v226 .result-check span{font-size:14px}
+.run-result-modal.v226 footer button{font-size:15px;padding:12px 22px;border-radius:10px;cursor:pointer}
+.run-result-modal.v226 .v226-field{grid-column:1/-1;display:grid;gap:7px}
+.v226-seg{display:flex;flex-wrap:wrap;gap:7px}
+.v226-seg button{border:1px solid #2e4868;border-radius:10px;background:#0b192e;color:#d9e7f7;font-size:14px;padding:11px 16px;cursor:pointer}
+.v226-seg button.on{border-color:#28c5e4;background:rgba(37,194,231,.16);font-weight:700}

@@ -38,7 +38,11 @@ class MemoryStorage{
   const html=app.renderRunResultModal(app.health());
   assert.ok(html.includes('data-value="r51_65_failed"'));
   assert.ok(html.includes('51~65라 실패'));
-  assert.ok(html.includes('data-run-field="failureReason"'),'late failure needs the same cause selector as round-50 failure');
+  // v22.6(사용자: "게임 결과 적는 칸 글씨가 너무 작고 쉽게 적을 수 있게"):
+  // 실패 원인 입력이 셀렉트에서 세그먼트 버튼(data-field)으로 바뀌었다 —
+  // 지키는 원칙은 그대로다: 51~65라 실패에도 50라 실패와 같은 원인
+  // 선택기가 있어야 한다.
+  assert.ok(html.includes('data-field="failureReason"'),'late failure needs the same cause selector as round-50 failure');
   const eventInfo=app.runLogEventInfo({type:'outcome',payload:{kind:'r51_65_failed',failureReason:'line'}},null);
   assert.strictEqual(eventInfo.tone,'outcome fail');
   assert.ok(eventInfo.headline.includes('51~65라 실패'));
