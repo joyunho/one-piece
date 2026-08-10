@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='22.8.0';
+const VERSION='22.9.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -1156,6 +1156,29 @@ function reconcileSquadExecution(decision,squad,locks){
   if(!model)return reconciled;
   return applyCraftLock(reconciled,model,locks||[]);
 }
+// v22.9(0810b 포렌식): 51라+ 무회귀 승인 안전 검사 — 신세계 구간에서 파티
+// 플래너의 라인업 불일치·prefix 부재로 정규 승인을 뒤집기 전에, 그 제작이
+// 어떤 필수 역할도 악화시키지 않고 체크포인트 벡터도 회귀하지 않음을
+// 원장으로 재검증한다.  0810b 판은 r49~52 위습 9~14를 든 채 이 층에서
+// 침묵했고("검증된 첫 제작이 최종 파티 목록과 일치하지 않습니다"), 그
+// 창이 카쿠 끝딜의 마지막 제작 기회였다.
+function lateSqueezeSafe(model,action,locks){
+  try{
+    if(!action||!action.quote||!action.quote.feasible)return false;
+    const route=P.resolveRoute(model.intent,model.settings);
+    if(!route||route.key==='singleEnd')return false;
+    const activeLocks=Array.isArray(locks)?locks:[];
+    const before=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks:activeLocks});
+    const after=P.evaluate(model,action.quote.after,route,{round:model.round.value,locks:activeLocks});
+    if(P.compareVector(after.checkpointVector,before.checkpointVector)>0)return false;
+    const afterByKey=new Map((after.requirements||[]).map(row=>[row.key,row]));
+    return(before.requirements||[]).every(row=>{
+      if(row.required===false||row.waived)return true;
+      const next=afterByKey.get(row.key);
+      return !next||num(next.gap)<=num(row.gap)+1e-9;
+    });
+  }catch(_){return false;}
+}
 function reconcileSquadExecutionRaw(decision,squad,locks){
   if(!decision||!decision.model||!squad||squad.error)return decision;
   const model=decision.model,prefix=squad.safePrefix||{},actions=Array.isArray(prefix.actions)?prefix.actions:[],audit=prefix.audit||{},rawAction=decision.action||decision.blockedAction||null,withEvidence=(patch,extra)=>Object.assign({},decision,patch,{evidence:Object.assign({},decision.evidence||{},extra||{})});
@@ -1168,12 +1191,23 @@ function reconcileSquadExecutionRaw(decision,squad,locks){
   // 승인은 계속 막되(action은 null 유지), 엔진이 원래 만들려던 유닛을
   // blockedAction으로 남겨 무엇을 왜 기다리는지 보이게 한다.
   const blockedFallback=()=>decision&&(decision.action||decision.blockedAction)||null;
-  const blocked=(state,reason,extra,showAction)=>withEvidence({state,label:state==='SYNC_BLOCKED'?'현재 패 재검증 필요':'최종 파티 제작 순서 보류',reason,action:null,blockedAction:showAction||blockedFallback()},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:true,squadPrefixRejectReason:reason,...extra});
+  // v22.9(0810b): 신세계 구간(51라+)의 무회귀 정규 승인은 플래너 계획 밖
+  // 이라는 이유로 뒤집지 않는다 — 9칸 라인업이 사실상 끝난 뒤의 추가
+  // 제작은 정의상 계획 밖 짜내기다.  안전성은 lateSqueezeSafe 재검증이
+  // 담보하고, 회귀가 실측되면 기존대로 차단된다.
+  const lateOverride=()=>decision&&decision.state==='ACT_NOW'&&num(model.round&&model.round.value)>=OPERATIONS_ROUND&&lateSqueezeSafe(model,decision.action,locks);
+  const blocked=(state,reason,extra,showAction)=>{
+    if(lateOverride())return withEvidence({},{executionAuthority:'late-squeeze',squadBypassLateSqueeze:true});
+    return withEvidence({state,label:state==='SYNC_BLOCKED'?'현재 패 재검증 필요':'최종 파티 제작 순서 보류',reason,action:null,blockedAction:showAction||blockedFallback()},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:true,squadPrefixRejectReason:reason,...extra});
+  };
   // v22.1(0809 포렌식): 사용자가 확정한 상위를 정확 원장이 현재 패에서 제작
   // 가능으로 증명한 승인은 파티 플래너의 룰 차이(reserved 정책 등)로 뒤집지
   // 않는다 — r32·r35 료쿠규 승인이 다른 층에 가려질 여지를 없앤다.  플래너
   // 검증은 그 밖의 모든 제작에 그대로 권위다.
   if(decision&&decision.state==='ACT_NOW'&&decision.evidence&&decision.evidence.upperFirst)return withEvidence({},{executionAuthority:'committed-upper-first',squadBypassCommittedUpper:true});
+  // v22.9: 엔진이 신세계 짜내기로 승인한 판정은 정의상 파티 계획 밖이다 —
+  // 라인업 불일치로 뒤집으면 r49~52 위습 방치 침묵이 재현된다.
+  if(decision&&decision.state==='ACT_NOW'&&decision.evidence&&decision.evidence.lateSqueeze)return withEvidence({},{executionAuthority:'late-squeeze',squadBypassLateSqueeze:true});
   if(!actions.length){
     if(decision.state==='ACT_NOW')return blocked('HOLD','최종 파티의 현재 패 검증 순서에 없는 제작이라 승인하지 않습니다. 패가 바뀌면 파티와 제작 순서를 함께 다시 계산합니다.',{rawActionId:String(rawAction&&rawAction.id||'')});
     return withEvidence({}, {executionAuthority:'squad-prefix-requoted-v15',squadPrefixEmpty:true});
@@ -1275,6 +1309,11 @@ const COACH_LEVELS=Object.freeze({approved:'확정',likely:'유력',fallback:'�
 // 마감 국면 진입선.  50라 보스 구조 마감이 지나면 판단의 성격이 바뀐다 —
 // 제작 최적화 문제가 아니라 가진 것을 어떻게 쓰느냐의 문제가 된다.
 const OPERATIONS_ROUND=51;
+// v22.9(0810b 포렌식): 희귀 필러 유예 경계.  단독 슬로우 희귀 승인은
+// 이감 마감(45라)의 5라운드 전(=40라)부터만 정상 승인한다 — 그 전에는
+// 전설·상위 진행이 우선이고, 마감 절벽(남은 라운드로 결손을 못 채움)일
+// 때만 조기 개방한다.
+const RARE_FILLER_ROUND=40,SLOW_DEADLINE_ROUND=45;
 // 지목하는 목표에는 감당 가능 여부를 반드시 붙인다.
 //
 // 침묵을 없애다가 거짓말로 바꾸면 더 나쁘다.  실제로 그럴 뻔했다 —
@@ -1544,7 +1583,7 @@ function buildDecision(input){
     upperFallback=committed;
     upperReserve={id:committed.blockedAction.id,name:committed.blockedAction.name,reservedUnits,wispCost:num(committedQuote.wisp.cost),wispBefore:num(committedQuote.wisp.before),wispShort,holdBand:Math.max(UPPER_HOLD_WISP_BAND,round(num(committedQuote.wisp.cost)*UPPER_HOLD_WISP_RATIO,1)),storyRewardNeeded:(committedQuote.blocked||[]).some(text=>/레일리|해적선/.test(String(text)))&&story10RewardOpen(model)};
   }}}
-  const searched=search(searchModel,route,locks),stickyId=model.settings&&model.settings._stickyActionId,best=stickyPath(searched.paths,searched.best,stickyId);
+  const searched=search(searchModel,route,locks),stickyId=model.settings&&model.settings._stickyActionId;let best=stickyPath(searched.paths,searched.best,stickyId);
   // v18.2: 관성으로 붙잡지 못한 경우 — 즉 직전 추천과 이번 최선이 서로
   // 다른 역할을 닫는 진짜 교환일 때 — 엔진 판단을 덮어쓰지는 않는다.
   // 대신 "시작한 것도 여전히 유효한가"를 따로 알려준다.  사용자가 겪는
@@ -1557,6 +1596,49 @@ function buildDecision(input){
     // recovery targets computed on the reserved stock.
     if(upperFallback&&!rare.safeReroll)return finalize(Object.assign(upperFallback,{recovery,upperReserve}));
     return finalize({state:rare.safeReroll?'REROLL_ONE':'HOLD',label:rare.safeReroll?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:rare.safeReroll?`${rare.safeReroll.name}은 검토한 현재 패 경로와 현재 전투 역할에 사용처가 없습니다.`:recovery?'지금 증명되는 제작은 없습니다. 아래 회복 목표의 재료를 모으거나 리롤로 찾으세요.':'현재 패로 다음 필수 조건을 안전하게 개선하는 제작을 증명하지 못했습니다.',action:null,blockedAction:recoveryHoldCard(searchModel,route,locks,recovery,roundNow),assessment:searched.initialAssessment,rare,recovery,upperReserve,alternatives:[],unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,pathCount:0,horizon:HORIZON}});}
+  // v22.9(0810b 포렌식 · 사용자: "첫 전설 만들고 희귀함은 왜 추천하는거야?"):
+  // r16~20 다섯 라운드 연속 슬로우 희귀(아오키지·X-드레이크·키드)가 top
+  // 추천이었다.  v22.3은 우주(어떤 희귀가 후보인가)만 좁혔고 승인 시점은
+  // 안 건드려서, 전설·상위 견적이 전부 막히는 첫 전설 직후 국면에선
+  // 슬로우 희귀가 매번 유일한 feasible 경로 = 즉시 승인이 됐다.  이감
+  // 마감까지 27라운드 남은 시점의 필러 승인은 사용자 의도("희귀는 마감용
+  // 필러")와 반대다.  유예 규칙: 40라 전 + 마감 절벽 아님일 때, 단독 희귀
+  // 첫수 대신 — ① 탐색에 전설·상위 첫수 경로가 있으면 그 경로를 선점하고
+  // ② 없으면 위습 지평 안의 최저 선위 전설·상위 목표를 들어 승인만 보류
+  // 한다.  뒤 스텝의 전설·상위가 그 희귀를 재료로 소비하는 시퀀스는
+  // 필러가 아니라 진행이므로 유예 대상이 아니다.  우주·재료 보호
+  // (protectCriticalBudget·materialLineProtection·rareDisposition)는 그대로
+  // 이감 경로를 지킨다.
+  let rareFillerHeld=null;
+  if(roundNow<RARE_FILLER_ROUND&&!best.stickyHold){
+    const fillerStep=best.sequence[0],fillerUnit=fillerStep&&fillerStep.quote.unit;
+    const rareFirst=!!fillerUnit&&!C.isLegendish(fillerUnit)&&!C.isUpper(fillerUnit)&&/희귀/.test(C.groupName(fillerUnit));
+    const feedsFinal=rareFirst&&best.sequence.slice(1).some(step=>(C.isLegendish(step.quote.unit)||C.isUpper(step.quote.unit))&&num(step.quote.consumed&&step.quote.consumed[fillerStep.quote.targetId])>0);
+    if(rareFirst&&!feedsFinal){
+      const slowRow=(searched.initialAssessment.requirements||[]).find(item=>item.key==='slow'&&item.required!==false&&!item.waived&&num(item.gap)>0);
+      const closers=combatRareCandidates(searchModel,route,searched.initialAssessment,searchModel.effective.counts);
+      const maxCloser=Math.max(1,...closers.map(unit=>num(C.roleContribution(unit,route.mode).slow)));
+      const slowCliff=!!slowRow&&roundNow+Math.ceil(num(slowRow.gap)/maxCloser)>=SLOW_DEADLINE_ROUND;
+      if(!slowCliff){
+        const finalPath=searched.paths.find(node=>{const unit=node.sequence[0]&&node.sequence[0].quote.unit;return unit&&(C.isLegendish(unit)||C.isUpper(unit))&&node.regression===0;});
+        if(finalPath)best=finalPath;
+        else{
+          // 진행 목표: 후보 우주의 전설·상위 중 뽑기 차단(hardMissing) 없는
+          // 최저 선위 1기 — 위습 지평 조건은 걸지 않는다.  실측(0810b r18)
+          // 첫 전설 직후의 진행 목표는 상위(선위 50~150)라 어떤 수입 지평
+          // 으로도 "가깝다" 판정이 안 되는데, 사용자 규칙은 거리와 무관하게
+          // "희귀는 마감용 필러"다.  목표가 우주에 아예 없을 때만(극단 방어)
+          // 필러 승인을 유지한다.
+          const target=(searched.rawPool||[]).filter(item=>{
+            const unit=item.unit,quote=item.quote;
+            if(!unit||!quote||!(C.isLegendish(unit)||C.isUpper(unit)))return false;
+            return !(quote.hardMissing||[]).length;
+          }).sort((left,right)=>num((left.quote.blocked||[]).length)-num((right.quote.blocked||[]).length)||num(left.quote.wisp.cost)-num(right.quote.wisp.cost))[0]||null;
+          if(target)rareFillerHeld={id:String(target.unit.id),name:nameOf(target.unit),wispCost:num(target.quote.wisp.cost)};
+        }
+      }
+    }
+  }
   const first=best.sequence[0],firstAssessment=P.evaluate(searchModel,first.quote.after,route,{round:roundNow,locks}),deltas=requirementDeltas(searched.initialAssessment,firstAssessment),improves=P.improved(searched.initialAssessment,firstAssessment),pathLoss=best.coverage.deadEnds.length>searched.initialCoverage.deadEnds.length,budgetProtected=!!(searched.budgetGuard&&searched.budgetGuard.applied&&searched.budgetGuard.criticalIds.includes(first.quote.targetId)),freeRepair=freeNonRegressiveRepair(first.quote,searched.initialAssessment,firstAssessment),openRequiredKeys=new Set((searched.initialAssessment.requirements||[]).filter(row=>row.required!==false&&!row.waived&&num(row.gap)>0).map(row=>row.key)),requiredRepair=deltas.some(row=>openRequiredKeys.has(row.key)&&(row.closed||row.gapGain>0)),
   // v16.5: when every remaining open requirement is a coverage dead end (no
   // affordable closer exists in the current hand), a feasible non-regressive
@@ -1573,7 +1655,10 @@ function buildDecision(input){
   // 환산은 사용자 정의상 '경제 경고선'이지 보스전 화력 거부 사유가
   // 아니다.  안전선은 noHarm — 어떤 필수 역할의 결손도 다시 열리지
   // 않아야 한다(충족 초과분 안에서의 소모는 허용).
-  firepowerUpgrade=first.quote.feasible&&openRequiredKeys.size===0&&roundNow>=50&&noHarm&&equivalentGain>=0&&combatGain>0,
+  // v22.9(0810b): 50라 창의 같은 트랩 보정 — 열린 필수가 fillLast 잔결손
+  // (stunFull)뿐이고 현재 패로 닫을 수 없으면, 전부 닫힘과 같은 화력 예외로
+  // 취급한다(r50 한 라운드 침묵 방지).  안전선 noHarm 은 동일.
+  firepowerUpgrade=first.quote.feasible&&(openRequiredKeys.size===0||!openGroupsClosable&&[...openRequiredKeys].every(key=>key==='stunFull'))&&roundNow>=50&&noHarm&&equivalentGain>=0&&combatGain>0,
   // v19.12(0804 패배): 승인(ACT_NOW) 상태에서도 열린 필수 결손의 회복
   // 목표를 계속 계산한다 — 0804 판은 단끝 조각이 승인되는 15라운드 내내
   // 이감 노리기 안내가 0이었다.  회복 목표의 최저 선위는 아래 예약 문구
@@ -1589,15 +1674,55 @@ function buildDecision(input){
   // "계획 밖 전설"이 사용자가 말한 이상한 추천이었다.
   planIds=new Set([...(model.settings.preferredLineupIds||[]),...(model.settings.prescribedSecondUpperIds||[])].map(String)),
   planLegendOk=!lock||!first.quote.unit||!C.isLegendish(first.quote.unit)||C.isUpper(first.quote.unit)||planIds.has(String(first.quote.unit.id))||requiredRepair||surplusUpgrade||firepowerUpgrade,
-  commit=first.quote.feasible&&planLegendOk&&(best.regression===0&&(improves&&meaningfulProgress&&(!pathLoss||budgetProtected||freeRepair||requiredRepair)||surplusUpgrade)||firepowerUpgrade),reasonParts=deltas.filter(row=>row.gapGain>0).slice(0,3).map(row=>row.closed?`${row.label} 충족`:`${row.label} ${round(row.before)}→${round(row.after)}`),result=firstAssessment.structuralPass?'structural-only':'progress-only',guardReason=budgetProtected?`${searched.budgetGuard.reason} `:freeRepair&&pathLoss?'선택 위습을 쓰지 않고 필수 역할을 회귀 없이 보강합니다. ':'',
+  commit=first.quote.feasible&&!rareFillerHeld&&planLegendOk&&(best.regression===0&&(improves&&meaningfulProgress&&(!pathLoss||budgetProtected||freeRepair||requiredRepair)||surplusUpgrade)||firepowerUpgrade),reasonParts=deltas.filter(row=>row.gapGain>0).slice(0,3).map(row=>row.closed?`${row.label} 충족`:`${row.label} ${round(row.before)}→${round(row.after)}`),result=firstAssessment.structuralPass?'structural-only':'progress-only',guardReason=budgetProtected?`${searched.budgetGuard.reason} `:freeRepair&&pathLoss?'선택 위습을 쓰지 않고 필수 역할을 회귀 없이 보강합니다. ':'',
   // v19.12: "N선위를 남겨 보호" — 남은 선위로 열린 필수 결손을 실제로
   // 닫을 수 없으면 보호한다고 말하지 않는다 ("0선위를 남겨 보호합니다"가
   // 0804 패배 로그에 그대로 찍혀 있었다).
   reserveNote=openRequiredKeys.size===0?`${best.reserve.remaining}선위를 남겨 후속 필수 역할 경로를 보호합니다.`:Number.isFinite(recoveryNeedMin)&&num(best.reserve.remaining)<recoveryNeedMin?`경고 — 남은 선위 ${best.reserve.remaining}로는 열린 필수 결손 마감(최소 ${recoveryNeedMin}선위)이 닫히지 않습니다. 회복 목표 재료·선위부터 확보하세요.`:`${best.reserve.remaining}선위를 남겨 열린 필수 결손 마감 경로를 보호합니다.`,
   harmNote=requiredHarm.length?` 주의: 이 제작으로 ${requiredHarm.map(item=>`${item.label} ${round(item.before)}→${round(item.after)}`).join(' · ')} — 열린 필수 결손이 더 벌어집니다.`:'',
   reason=reasonParts.length?`${guardReason}${reasonParts.join(' · ')}. ${reserveNote}${harmNote}`:firepowerUpgrade&&!improves&&!surplusUpgrade?`필수 역할은 모두 충족 — 검증된 전투 기여 점수 ${round(combatBefore,1)}→${round(combatAfter,1)}를 회귀 없이 올립니다. 실제 보스 DPS는 자동 측정하지 않으므로 화력 충분 판정은 하지 않습니다.`:surplusUpgrade&&!improves?`남은 필수 결손은 현재 패로 닫을 수 없습니다. 회귀 없이 스펙을 더 올리는 제작에 여유 자원을 씁니다.`:`${guardReason}현재 마감과 전체 필수 조건을 동시에 개선하는 현재 패 경로입니다.${harmNote}`,row=makeRow(searchModel,first.quote,firstAssessment,reason),action={id:first.quote.targetId,name:nameOf(first.quote.unit),unit:first.quote.unit,row,quote:first.quote,wispCost:first.quote.wisp.cost,wispAfter:first.quote.wisp.after,result,reason,deltas,stopCondition:`${Object.keys(first.quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${first.quote.wisp.cost}개 미만이면 만들지 말고 다시 동기화`,path:first.quote.targetId?best.sequence.map(step=>({id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost})):[]},rare=rareDisposition(searchModel,route,locks,searched),alternatives=searched.paths.slice(1,3).map(path=>{const step=path.sequence[0];return{id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost,reason:exclusionReason(best,path),residual:path.assessment.blockers.slice(0,3)};}),state=commit?'ACT_NOW':rare.safeReroll?'REROLL_ONE':'HOLD',compactGuard=searched.budgetGuard?{applied:!!searched.budgetGuard.applied,reason:searched.budgetGuard.reason||'',criticalIds:(searched.budgetGuard.criticalIds||[]).slice(),filteredIds:(searched.budgetGuard.filteredIds||[]).slice()}:null;
-  return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:!planLegendOk&&first.quote.feasible?`${nameOf(first.quote.unit)}은(는) 확정 상위 계획 밖 전설이라 승인을 보류합니다 — 열린 필수 결손을 닫거나 파티 계획에 있는 제작만 승인합니다.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:openRecovery,upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair,planLegendHeld:!planLegendOk&&first.quote.feasible||false}});
+  // v22.9(0810b 포렌식 · #56 신세계 정책 실구현 — 사용자: "마지막에 전설급
+  // 유닛 짜내는게 부족한 것 같아 다 만들고 선택위습이 많이 남았는데도
+  // 이걸 사용해서 짜내지 않더라"): r49~52 위습 9~14를 든 채 침묵했고 그
+  // 창에 카쿠 끝딜(선위 4)이 완주 가능했다(51라 재고 실측).  51라+ 정규
+  // 승인이 없으면, 회귀 없는(모든 필수 행 비악화 + 체크포인트 벡터
+  // 비회귀) 전설급·상위 완주 후보 중 열린 결손 기여 → 화력 델타 → 최저
+  // 선위 순 1기를 승인한다.  단끝 덱은 구상 ⑥ 원문대로 제작 억제라 제외,
+  // 확정 상위 예약이 살아 있으면 그 완성이 우선이라 제외, veto·예산 가드
+  // 필터는 존중한다.  위습 보전: 열린 결손의 회복 목표 최소 선위는 남긴다.
+  if(roundNow>=OPERATIONS_ROUND&&state!=='ACT_NOW'&&route&&route.key!=='singleEnd'&&!upperReserve){
+    const guardIds=new Set(((searched.budgetGuard&&searched.budgetGuard.filteredIds)||[]).map(String));
+    const wispFloor=openRequiredKeys.size>0&&Number.isFinite(recoveryNeedMin)?recoveryNeedMin:0;
+    const squeezePool=(searched.rawPool||[]).filter(item=>{
+      const unit=item.unit,quote=item.quote;
+      if(!unit||!quote||!quote.feasible)return false;
+      if(!(C.isLegendish(unit)||C.isUpper(unit)))return false;
+      if(guardIds.has(String(unit.id)))return false;
+      return num(quote.wisp.after)>=wispFloor;
+    }).map(item=>{
+      const after=P.evaluate(searchModel,item.quote.after,route,{round:roundNow,locks});
+      if(P.compareVector(after.checkpointVector,searched.initialAssessment.checkpointVector)>0)return null;
+      const afterByKey=new Map((after.requirements||[]).map(row=>[row.key,row]));
+      let gapGain=0;
+      for(const row of searched.initialAssessment.requirements||[]){
+        if(row.required===false||row.waived)continue;
+        const next=afterByKey.get(row.key);if(!next)continue;
+        const gain=num(row.gap)-num(next.gap);
+        if(gain<-1e-9)return null;
+        if(openRequiredKeys.has(row.key))gapGain+=Math.max(0,gain);
+      }
+      return{item,after,gapGain:round(gapGain,3),combatDelta:round(boardCombatScore(searchModel,item.quote.after,route)-combatBefore)};
+    }).filter(Boolean).sort((left,right)=>right.gapGain-left.gapGain||right.combatDelta-left.combatDelta||num(left.item.quote.wisp.cost)-num(right.item.quote.wisp.cost)||nameOf(left.item.unit).localeCompare(nameOf(right.item.unit),'ko'));
+    const pick=squeezePool[0];
+    if(pick&&(pick.gapGain>0||pick.combatDelta>0)){
+      const quote=pick.item.quote,squeezeDeltas=requirementDeltas(searched.initialAssessment,pick.after);
+      const squeezeReason=`신세계(${OPERATIONS_ROUND}라+) 잉여 위습 환원 — ${pick.gapGain>0?`열린 필수 결손 ${round(pick.gapGain,2)} 축소 · `:''}전투 기여 ${round(combatBefore,1)}→${round(combatBefore+pick.combatDelta,1)}, 필수 역할 회귀 없음. 선위 ${quote.wisp.cost} 사용 후 ${quote.wisp.after} 잔여 — 위습을 쥔 채 죽는 것이 최악입니다.`;
+      const squeezeAction={id:quote.targetId,name:nameOf(quote.unit),unit:quote.unit,row:makeRow(searchModel,quote,pick.after,squeezeReason),quote,wispCost:quote.wisp.cost,wispAfter:quote.wisp.after,result:'late-squeeze',reason:squeezeReason,deltas:squeezeDeltas,stopCondition:`표시 재료가 하나라도 바뀌거나 선택 위습이 ${quote.wisp.cost}개 미만이면 만들지 말고 다시 동기화`,path:[{id:quote.targetId,name:nameOf(quote.unit),wispCost:quote.wisp.cost}]};
+      return finalize({state:'ACT_NOW',label:'신세계 · 잉여 위습 환원',reason:squeezeReason,action:squeezeAction,blockedAction:null,assessment:searched.initialAssessment,afterAction:pick.after,bestPath:{steps:squeezeAction.path,assessment:pick.after,remainingWisp:num(quote.wisp.after),deadEnds:searched.initialCoverage.deadEnds},rare,recovery:openRecovery,upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,lateSqueeze:true}});
+    }
+  }
+  return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:rareFillerHeld&&first.quote.feasible?`${nameOf(first.quote.unit)}은(는) 이감 필러 희귀라 지금은 승인하지 않습니다 — 첫 전설 이후엔 전설·상위 진행이 우선입니다. ${rareFillerHeld.name}(선위 ${rareFillerHeld.wispCost})까지 위습을 모으고, 필러는 ${RARE_FILLER_ROUND}라 이후나 이감 마감이 위험해지면 승인합니다.`:!planLegendOk&&first.quote.feasible?`${nameOf(first.quote.unit)}은(는) 확정 상위 계획 밖 전설이라 승인을 보류합니다 — 열린 필수 결손을 닫거나 파티 계획에 있는 제작만 승인합니다.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:openRecovery,upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair,planLegendHeld:!planLegendOk&&first.quote.feasible||false,rareFillerHeld:rareFillerHeld||false}});
 }
 
-return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{craftLockDecision,applyCraftLock,coachGuidance,reachableRecovery,operationsNote,decisionPhase,stickyPath,continuableStep,withStickyCandidate,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};
+return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{craftLockDecision,applyCraftLock,coachGuidance,reachableRecovery,operationsNote,decisionPhase,stickyPath,continuableStep,withStickyCandidate,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,lateSqueezeSafe,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};
 });

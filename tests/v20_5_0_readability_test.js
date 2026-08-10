@@ -81,7 +81,11 @@ check('④ 완성도 % 는 화면 어디에도 없다',()=>{
   // 상태줄도 마찬가지 — 없는 표시를 기다리라고 말하지 않는다.
   assert(!read('ord_core.js').includes('%·능력치는 TMO 탭 보강 대기'),'상태줄이 사라진 %를 계속 기다림');
   // 대체 사실 — 행동을 바꾸는 것만 남는다.
-  assert(app.includes('흔함 ${C.num(progress.short)}장 남음'),'남은 흔함 장수가 없음');
+  // v22.9 재핀: 푸터의 흔함 장수가 부족 희귀 수(progress.short) 오배선에서
+  // 계획 차감 실비용(shownCost = 부족 흔함 = 선위)으로 바로잡혔다 —
+  // '행동을 바꾸는 사실만 남긴다'는 이 테스트의 원칙 그대로, 수치만
+  // 정직해졌다.
+  assert(app.includes('부족 흔함 ${shownCost}장 = 선위'),'남은 흔함 장수가 없음');
 });
 
 console.log(`\n${checks} checks passed (v20.5.0 — 가독성·구조)`);

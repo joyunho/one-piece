@@ -135,7 +135,10 @@ check('⑦ 완성도% — v20.5 사용자 결정으로 화면에서 철거됐다
   for(const gone of ['TMO 완성도','원 TMO'])
     assert(!engine.includes(gone),`엔진 사유에 완성도% 잔재: ${gone}`);
   // 대체 사실은 남아 있어야 한다 — 빈칸으로 두는 게 목적이 아니다.
-  assert(app.includes('흔함 ${C.num(progress.short)}장 남음'),'희귀 카드 대체 사실 없음');
+  // v22.9 재핀: 그 대체 사실(남은 흔함 장수)이 부족 희귀 수 오배선에서
+  // 계획 차감 실비용(shownCost)으로 바로잡혔다 — 사실이 남는다는 원칙
+  // 그대로, 수치만 정직해졌다.
+  assert(app.includes('부족 흔함 ${shownCost}장 = 선위'),'희귀 카드 대체 사실 없음');
   assert(engine.includes('흔함 ${short}장 남음'),'대안 부제 대체 사실 없음');
   // 계산 함수 자체는 코어에 남긴다(다시 필요해지면 화면만 붙이면 된다).
   assert(typeof global.ORDCore.ledgerCompletion==='function','ledgerCompletion 제거됨 — 계산은 남겨 둔다');

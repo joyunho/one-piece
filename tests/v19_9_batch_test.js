@@ -84,7 +84,12 @@ check('② 제작 카드 — TMO% · 직접 조합식 · 노리기 카드 % 숨�
   assert(craft.includes("<strong>희귀 ${owned}/${total}</strong>"),'희귀 보유 비율이 사라짐');
   assert(craft.includes('v159-recipe'),'직접 조합식 라인이 없다');
   assert(craft.includes('solve.direct'),'조합식이 direct stuffs 기반이 아니다');
-  assert(craft.includes('흔함 ${C.num(progress.short)}장 남음'),'푸터에 남은 흔함 장수가 없다');
+  // v22.9(사용자: "선택위습 숫자가 잘못 표기 — 7이라 적혔는데 실제론 더
+  // 필요"): 푸터의 '흔함 N장'이 부족 '희귀' 수(progress.short)를 흔함으로
+  // 잘못 말했고, 선위도 계획 예약을 무시한 과소치였다.  지키는 원칙은
+  // 그대로다 — 푸터는 남은 흔함(=선위와 동치)을 말해야 한다.  이제 계획
+  // 차감 실비용(shownCost)으로 두 수치를 일치시켜 말한다.
+  assert(craft.includes('부족 흔함 ${shownCost}장 = 선위'),'푸터에 남은 흔함 장수가 없다');
   assert(css.includes('.v159-recipe'),'조합식 스타일이 없다');
 });
 

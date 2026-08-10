@@ -1969,6 +1969,23 @@ class App{
     for(const row of plan&&plan.actions||[])remember(row&&row.id||row&&row.unit&&row.unit.id);
     for(const row of plan&&plan.squadPlan&&plan.squadPlan.actions||[])remember(row&&row.id||row&&row.unit&&row.unit.id);
     const seen=new Set(),out=[],db=state&&state.db,counts=state&&state.counts||{};
+    // v22.9(사용자: "후반에 희귀->전설 페이지에서 선택위습 숫자가 잘못 표기되는
+    // 것 같아 7개라고 적혀있는데 그것보다 많이 필요할때가 많아"): 표기 선위가
+    // 생 counts 로 풀려서, 파티 계획이 즉시 사용·미래 참고로 예약한 재료를
+    // 이 카드도 공짜로 쓰는 걸로 가정했다 — 실전에서 그 재료는 이미 임자가
+    // 있으니 실비용이 더 크다.  카드마다 계획 차감 재고(planStock)로 다시
+    // 풀어 실비용을 표기하고, 차이가 나면 '예약 겹침 +N' 칩으로 밝힌다.
+    // 자기 카드로 향하는 예약분은 되돌린다(이중과금 방지).  정렬·후보 수집
+    // (rareCraftableLegends)은 생 counts 유지 — 표기만 정직해진다.
+    const planClaims=(()=>{
+      const fit=plan&&plan.squadPlan&&plan.squadPlan.handFit,tiers=fit&&fit.tiers||null,claims=new Map();
+      if(!tiers)return claims;
+      for(const tierKey of ['rare','special','uncommon','common'])for(const item of (tiers[tierKey]&&tiers[tierKey].rows)||[]){
+        const claimed=C.num(item.spent)+C.num(item.reserved);
+        if(claimed>0)claims.set(String(item.id),{claimed,usedBy:(item.usedBy||[]).map(dest=>({id:String(dest.id||''),count:C.num(dest.count)}))});
+      }
+      return claims;
+    })();
     const upper=plan&&plan.upper||null,settings=Object.assign({},plan&&plan.settings||{},{currentRound:this.actualRound(),allowWarped:true,recommendWarped:true});
     const context={mode,purpose:'spec',round:this.actualRound(),settings,stock:counts,ruleCounts:counts,availableWisp:C.num(state&&state.wisp),deficits:plan&&plan.deficits||{rows:[]},spec:plan&&plan.spec||null,upper};
     for(const group of groups)for(const row of group.rows){
@@ -1991,7 +2008,19 @@ class App{
       if(owned<=0||total<=0)continue;
       const blocked=candidate&&Array.isArray(candidate.blocked)?candidate.blocked:[];
       const feasible=candidate?!!candidate.feasible:!Object.keys(solve.hardMissing||{}).length&&C.num(solve.wispCost)<=C.num(state&&state.wisp);
+      // 계획 차감 재고로 실비용 재계산 — 이 카드로 향하는 예약분은 반환.
+      let planWispCost=null,planExtra=0;
+      if(planClaims.size){
+        const planCounts=Object.assign({},counts);
+        for(const [materialId,claim] of planClaims){
+          const back=(claim.usedBy||[]).filter(dest=>dest.id===String(row.id)).reduce((sum,dest)=>sum+C.num(dest.count),0);
+          const take=Math.max(0,C.num(claim.claimed)-back);
+          if(take>0)planCounts[materialId]=Math.max(0,C.num(planCounts[materialId])-take);
+        }
+        try{const planSolve=C.recipeSolve(db,row.id,planCounts);planWispCost=C.num(planSolve&&planSolve.wispCost);planExtra=Math.max(0,planWispCost-C.num(solve.wispCost));}catch(_){planWispCost=null;planExtra=0;}
+      }
       out.push({
+        planWispCost,planExtra,
         unit:row.unit,
         solve,
         roles:row.roles||'역할 보조',
@@ -2946,7 +2975,11 @@ class App{
         const unit=db&&db.byId.get(String(item.id)),img=unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="" loading="lazy">`:'';
         return`<span class="${C.num(item.short)>0?'missing':'owned'}">${img}${C.esc(item.name)} <b>${C.num(item.owned)}/${C.num(item.total)}</b></span>`;
       }).join('');
-      const status=row.upcoming?`노리기 · 희귀 ${C.num(progress.short)}장 필요`:row.feasible?'제작 가능':row.blocked&&row.blocked.length?row.blocked[0]:C.num(row.wispGap)>0?`선위 ${C.num(row.wispGap)} 부족`:'재료 대기';
+      // v22.9: 상태·선위는 계획 차감 실비용(planWispCost) 기준 — 예약 겹침이
+      // 있으면 '제작 가능'처럼 보이던 카드가 실은 선위 부족일 수 있다.
+      const shownCost=row.planWispCost!=null?C.num(row.planWispCost):C.num(row.solve&&row.solve.wispCost);
+      const shownGap=Math.max(0,shownCost-C.num(state&&state.wisp));
+      const status=row.upcoming?`노리기 · 희귀 ${C.num(progress.short)}장 필요`:row.feasible&&shownGap<=0?'제작 가능':row.blocked&&row.blocked.length?row.blocked[0]:shownGap>0?`선위 ${shownGap} 부족`:'재료 대기';
       const recommended=C.num(row.recommendationRank)>0;
       const covers=(row.covers||[]).slice(0,3);
       const coversHtml=covers.length?`<div class="v156-covers">${this.v153Icon('check')}<span>${covers.map(label=>`<b>${C.esc(label)}</b>`).join('')}</span></div>`:`<div class="v156-covers muted">${this.v153Icon('gear')}<span><b>${C.esc(row.roles||'역할 보조')}</b></span></div>`;
@@ -2962,7 +2995,7 @@ class App{
       // v19.9(사용자 요청): 노리기 카드의 우상단 %를 숨긴다 — 배지와 겹쳐
       // "0%"가 읽히지도 않았고, 희귀 0장 카드의 0%는 정보가 아니다.
       const ratioHtml='';
-      return`<button class="${recommended?'recommended':''} ${row.upcoming?'upcoming':row.feasible?'ready':'waiting'}" data-act="detail" data-id="${C.esc(row.unit.id)}">${recommended?'<i class="v153-pick">추천</i>':row.upcoming?'<i class="v153-pick dim">노리기</i>':''}<header>${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:this.v153Icon('placeholder')}<span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(row.roles||'역할 보조')}</small></span>${ratioHtml}</header><div class="v154-rare-progress"><strong>희귀 ${owned}/${total}</strong><em>${C.esc(status)}</em></div><i class="v154-rare-bar${row.feasible?' full':''}"><span style="width:${total>0?Math.round(owned/total*100):0}%"></span></i>${recipeLine}${usedLine}${coversHtml}<div class="v154-rare-mats">${ingredients}</div><footer>${this.v153Icon('spiral')}<b>선위 ${C.num(row.solve&&row.solve.wispCost)}</b><span>흔함 ${C.num(progress.short)}장 남음</span></footer></button>`;
+      return`<button class="${recommended?'recommended':''} ${row.upcoming?'upcoming':row.feasible?'ready':'waiting'}" data-act="detail" data-id="${C.esc(row.unit.id)}">${recommended?'<i class="v153-pick">추천</i>':row.upcoming?'<i class="v153-pick dim">노리기</i>':''}<header>${row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:this.v153Icon('placeholder')}<span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(row.roles||'역할 보조')}</small></span>${ratioHtml}</header><div class="v154-rare-progress"><strong>희귀 ${owned}/${total}</strong><em>${C.esc(status)}</em></div><i class="v154-rare-bar${row.feasible?' full':''}"><span style="width:${total>0?Math.round(owned/total*100):0}%"></span></i>${recipeLine}${usedLine}${coversHtml}<div class="v154-rare-mats">${ingredients}</div><footer>${this.v153Icon('spiral')}<b>선위 ${shownCost}</b>${C.num(row.planExtra)>0?`<em class="v229-claim" title="파티 계획이 즉시 사용·미래 참고로 예약한 재료를 빼고 다시 계산한 실비용입니다 — 예약 재료를 여기 쓰면 계획이 그만큼 비싸집니다">예약 겹침 +${C.num(row.planExtra)}</em>`:''}<span>부족 흔함 ${shownCost}장 = 선위</span></footer></button>`;
     };
     const cards=nowRows.slice(0,6).map(renderCard).join('');
     const upcomingCards=upcomingRows.slice(0,Math.max(2,6-Math.min(6,nowRows.length))).map(renderCard).join('');
