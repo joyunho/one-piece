@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='22.2.0';
+const VERSION='22.3.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -195,16 +195,28 @@ function boardCombatScore(model,counts,route){
   return round(score);
 }
 function combatRareCandidates(model,route,assessment,counts){
-  const open=new Set((assessment&&assessment.requirements||[]).filter(row=>num(row.gap)>0&&!row.waived).map(row=>row.key));
-  // v17.6(감사 P0-5): 필수 결손이 전부 닫힌 50라+ 보스 창에서는 보스
-  // 화력 축에 기여하는 희귀도 후보 우주에 남긴다 — 아니면 화력 보강
-  // 제작이 탐색 자체에 들어오지 못해 영구 HOLD가 된다.
-  const keys=open.size?open:model.round.value>=50?new Set(['single','end','singleEndExpected','attack','toki','subdamage','boss','frenzy','bossFrenzy','magicSupport']):null;
-  if(!keys||!keys.size)return[];
+  // v22.3(사용자: "희귀함은 이감 부족한 거 채우는 목적 아니면 추천하지마
+  // 그리고 첫 전설 만들고 희귀함은 왜 자꾸 추천하는거야"): 단독 희귀
+  // 제작은 판 본편에서 이감 마감 전용이다.  희귀는 상위·전설의 재료
+  // (구상 ③ 전량 소비)이지 스턴·방깎 패치가 아니다 — 필수 결손이 하나
+  // 라도 열려 있는 동안엔, 열린 이감 결손 + 이감 기여 희귀(크로커다일·
+  // 페로나 등 5종)만 후보 우주에 들어온다.
+  // 예외 하나만 남긴다: 필수가 전부 닫힌 50라+ 보스 창의 화력 희귀
+  // (v17.6 — 55라 도플 2연속 사망 방지).  이는 사용자 명세와도 일치한다:
+  // 구상 ⑥ 신세계 "스펙에 도움이 되는 희귀함을 만듬".  재료 소비·리롤
+  // 판단(원장)은 영향 없다.
+  const required=(assessment&&assessment.requirements||[]).filter(row=>!row.waived&&row.required!==false);
+  const anyOpen=required.some(row=>num(row.gap)>0),slowOpen=required.some(row=>row.key==='slow'&&num(row.gap)>0);
+  if(anyOpen){
+    if(!slowOpen)return[];
+    return model.knowledge.db.rares.filter(unit=>!(!unit||pseudoUnit(unit))&&num(C.roleContribution(unit,route.mode).slow)>0);
+  }
+  if(model.round.value<50)return[];
+  const firepowerKeys=['single','end','singleEndExpected','attack','toki','subdamage','boss','frenzy','bossFrenzy','magicSupport'];
   return model.knowledge.db.rares.filter(unit=>{
     if(!unit||pseudoUnit(unit))return false;
     const contribution=C.roleContribution(unit,route.mode);
-    return[...keys].some(key=>num(contribution[key])>0);
+    return firepowerKeys.some(key=>num(contribution[key])>0);
   });
 }
 function vetoedIds(model){return new Set((model&&model.settings&&model.settings._vetoIds||[]).map(String));}
@@ -1068,12 +1080,48 @@ function liveRareProtection(model,counts,route,locks,rareId){
   }
   return[...new Set(labels)];
 }
+function materialLineProtection(model,route,locks,assessment,rare){
+  // v22.3(0810 재생 실측): 희귀는 재료다(구상 ③ 전량 소비 · v21.5 "전량
+  // 활용, 남는 것만 리롤").  자기 전투 역할이 없어도, 열린 필수 결손을
+  // 닫는 전설·상위의 직계 재료면 리롤로 내보내지 않는다 — 이감 62 부족
+  // 상태에서 마르코(이감30)의 재료 베이비 5가 "사용처 없음"으로 리롤에
+  // 노출된 것이 계기다(희귀 후보 축소로 마르코 경로가 상위 3개 검토
+  // 경로에서 밀린 부작용).
+  const openKeys=new Set((assessment&&assessment.requirements||[]).filter(row=>row.required!==false&&!row.waived&&num(row.gap)>0).map(row=>row.key));
+  if(!openKeys.size)return[];
+  // 경계 두 가지 — v16.7의 "무용 마딜 희귀는 리롤 후보"(P0-1) 계약과의
+  // 선이다.  기여만 보면 거의 모든 희귀가 어떤 전설의 재료라 리롤이
+  // 말라 버린다.
+  // ① 부모는 엔진 자신이 후보로 쓰는 유닛이어야 한다(allCandidates 와
+  //   같은 계통·락 게이트) — 엔진이 안 만들 전설을 이유로 재료를 묶는
+  //   것은 모순이다.
+  // ② 도달 가능해야 한다: 남은 라운드 수입(0.5/라)까지 합친 위습
+  //   지평 안의 견적만 인정.
+  const wispHorizon=num(model.effective.counts[C.WISP_ID])+Math.max(0,C.MAX_ROUND-model.round.value)*C.SELECTION_WISP_INCOME_PER_ROUND;
+  const labels=[];
+  for(const pid of rare.parentUnitIds||[]){
+    const parent=model.knowledge.db.byId.get(String(pid));
+    if(!parent||!(C.isLegendish(parent)||C.isUpper(parent)))continue;
+    if(pseudoUnit(parent)||!routeFamilyOk(parent,route)||!upperAllowed(model,parent,route,locks,model.effective.counts))continue;
+    const contribution=C.roleContribution(parent,route.mode);
+    if(![...openKeys].some(key=>num(contribution[key])>0))continue;
+    // 정확 원장 견적으로 심사 — "이미 보유"(P0-1 에이스 사례)·규칙 차단·
+    // 뽑기 전용 결손이 있는 부모는 실존하는 라인이 아니다.  위습만
+    // 부족한 경우는 지평 안에서 인정한다.
+    let quote=null;try{quote=L.quote(model,parent,model.effective.counts,{availableRound:model.round.value});}catch(_){continue;}
+    const wispOnlyShort=!quote.feasible&&!(quote.blocked||[]).length&&!(quote.solve&&(quote.solve.hardMissing||[]).length)&&num(quote.wisp.cost)>num(quote.wisp.before);
+    if(!(quote.feasible||wispOnlyShort))continue;
+    if(num(quote.wisp.cost)>wispHorizon)continue;
+    labels.push(nameOf(parent));if(labels.length>=2)break;
+  }
+  return labels;
+}
 function rareDisposition(model,route,locks,searchResult){
   const counts=model.effective.counts,best=searchResult.best,paths=searchResult.paths||[],first=best&&best.sequence[0],useMap=clone(first&&first.quote.rareUse),bestFuture={};for(const step of best&&best.sequence.slice(1)||[])for(const [id,value] of Object.entries(step.quote.rareUse||{}))bestFuture[id]=num(bestFuture[id])+num(value);const pathMaximum={};for(const path of paths){const pathUse={};for(const step of path.sequence||[])for(const [id,value] of Object.entries(step.quote.rareUse||{}))pathUse[id]=num(pathUse[id])+num(value);for(const [id,value] of Object.entries(pathUse))pathMaximum[id]=Math.max(num(pathMaximum[id]),num(value));}const rows=[];
   // v17.6(감사 P0-1): 희귀 리롤은 게임당 총 2회 확정 규칙.  소진하면
   // 리롤 후보 자체를 만들지 않는다 — REROLL_ONE 상태도 자연히 사라진다.
   const rerollBudget=Math.max(0,2-num(model.settings.rerollsUsed));
-  for(const unit of model.knowledge.db.rares){const initial=Math.max(0,num(counts[unit.id]));if(initial<=0)continue;let remaining=initial,use=Math.min(remaining,num(useMap[unit.id]));remaining-=use;const liveLabels=liveRareProtection(model,counts,route,locks,unit.id),alternativeNeed=Math.max(0,num(pathMaximum[unit.id])-use),future=Math.max(num(bestFuture[unit.id]),alternativeNeed);let hold=Math.min(remaining,Math.max(future,liveLabels.length?1:0));remaining-=hold;const rerollAllowed=model.round.value>=25&&rerollBudget>0,reroll=rerollAllowed?remaining:0;if(!rerollAllowed){hold+=remaining;remaining=0;}const reason=use?`${first&&nameOf(first.quote.unit)} 즉시 재료`:liveLabels.length?`현재 전투 ${liveLabels.join(' · ')} 보호`:hold?(model.round.value>=25&&rerollBudget<=0?'리롤 2회 모두 사용 — 남은 희귀는 보류':'검토한 모든 현재 패 경로에서 사용'):'검토한 현재 패 경로와 전투 역할에 사용처 없음';rows.push({id:unit.id,name:nameOf(unit),unit,initial,use,hold,reroll,reason,proof:{consideredPaths:paths.length,committedFuture:num(bestFuture[unit.id]),alternativeNeed,liveCombat:liveLabels,exclusive:use+hold+reroll===initial}});}
+  for(const unit of model.knowledge.db.rares){const initial=Math.max(0,num(counts[unit.id]));if(initial<=0)continue;let remaining=initial,use=Math.min(remaining,num(useMap[unit.id]));remaining-=use;const liveLabels=liveRareProtection(model,counts,route,locks,unit.id),materialLabels=liveLabels.length?[]:materialLineProtection(model,route,locks,searchResult.initialAssessment,unit),alternativeNeed=Math.max(0,num(pathMaximum[unit.id])-use),future=Math.max(num(bestFuture[unit.id]),alternativeNeed);let hold=Math.min(remaining,Math.max(future,liveLabels.length||materialLabels.length?1:0));remaining-=hold;const rerollAllowed=model.round.value>=25&&rerollBudget>0,reroll=rerollAllowed?remaining:0;if(!rerollAllowed){hold+=remaining;remaining=0;}const reason=use?`${first&&nameOf(first.quote.unit)} 즉시 재료`:liveLabels.length?`현재 전투 ${liveLabels.join(' · ')} 보호`:materialLabels.length?`${materialLabels.join('·')} 재료 — 열린 필수 마감 후보 보호`:hold?(model.round.value>=25&&rerollBudget<=0?'리롤 2회 모두 사용 — 남은 희귀는 보류':'검토한 모든 현재 패 경로에서 사용'):'검토한 현재 패 경로와 전투 역할에 사용처 없음';rows.push({id:unit.id,name:nameOf(unit),unit,initial,use,hold,reroll,reason,proof:{consideredPaths:paths.length,committedFuture:num(bestFuture[unit.id]),alternativeNeed,liveCombat:liveLabels,materialLine:materialLabels,exclusive:use+hold+reroll===initial}});}
   const conflict=rows.some(row=>!row.proof.exclusive),safeReroll=conflict?null:rows.filter(row=>row.reroll>0).sort((a,b)=>b.reroll-a.reroll||a.name.localeCompare(b.name,'ko')||String(a.id).localeCompare(String(b.id)))[0]||null;return{basis:'single-authority-with-feasible-path-proof',rows,use:rows.filter(row=>row.use>0),hold:rows.filter(row=>row.hold>0),reroll:rows.filter(row=>row.reroll>0),safeReroll,conflict};
 }
 function exclusionReason(best,path){if(path.coverage.deadEnds.length>best.coverage.deadEnds.length)return'남은 선택 위습으로 필수 역할을 닫는 경로가 줄어듭니다.';const checkpoint=P.compareVector(path.assessment.checkpointVector,best.assessment.checkpointVector);if(checkpoint>0)return'현재 라운드 마감 결손을 덜 줄입니다.';const full=P.compareVector(path.assessment.fullVector,best.assessment.fullVector);if(full>0)return'전체 필수 역할 결손이 더 많이 남습니다.';if(path.resources.wisp>best.resources.wisp)return`같은 수준의 진행에 선택 위습을 ${path.resources.wisp-best.resources.wisp}개 더 씁니다.`;return'희귀·특별·안흔 패의 전체 경로 활용도가 낮습니다.';}
@@ -1524,14 +1572,22 @@ function buildDecision(input){
   openRecovery=recoveryPlan(searchModel,route,locks,searched.initialAssessment,{limit:6}),
   requiredHarm=deltas.filter(item=>num(item.gapGain)<0&&openRequiredKeys.has(item.key)).slice(0,2),
   recoveryNeedMin=(openRecovery&&openRecovery.targets||[]).reduce((minimum,target)=>{const need=Math.max(num(target.wispCost),num(target.wispGap));return need>0?Math.min(minimum,need):minimum;},Infinity),
-  commit=first.quote.feasible&&(best.regression===0&&(improves&&meaningfulProgress&&(!pathLoss||budgetProtected||freeRepair||requiredRepair)||surplusUpgrade)||firepowerUpgrade),reasonParts=deltas.filter(row=>row.gapGain>0).slice(0,3).map(row=>row.closed?`${row.label} 충족`:`${row.label} ${round(row.before)}→${round(row.after)}`),result=firstAssessment.structuralPass?'structural-only':'progress-only',guardReason=budgetProtected?`${searched.budgetGuard.reason} `:freeRepair&&pathLoss?'선택 위습을 쓰지 않고 필수 역할을 회귀 없이 보강합니다. ':'',
+  // v22.3(사용자: "상위 선택해도 이상한 전설 추천하고" · 명세 ⑤ "구상해뒀던
+  // 상위의 부족한 스펙을 채워주는 전설급"): 상위 확정 후 비상위 전설은
+  // ① 파티 계획(최종 라인업·처방 2상위)에 있거나 ② 열린 필수 결손을
+  // 직접 닫거나(requiredRepair) ③ 기존 잉여·화력 예외(v16.5·v17.6)에
+  // 해당할 때만 승인한다.  구조 가점·잔가지 개선만으로 승인되던
+  // "계획 밖 전설"이 사용자가 말한 이상한 추천이었다.
+  planIds=new Set([...(model.settings.preferredLineupIds||[]),...(model.settings.prescribedSecondUpperIds||[])].map(String)),
+  planLegendOk=!lock||!first.quote.unit||!C.isLegendish(first.quote.unit)||C.isUpper(first.quote.unit)||planIds.has(String(first.quote.unit.id))||requiredRepair||surplusUpgrade||firepowerUpgrade,
+  commit=first.quote.feasible&&planLegendOk&&(best.regression===0&&(improves&&meaningfulProgress&&(!pathLoss||budgetProtected||freeRepair||requiredRepair)||surplusUpgrade)||firepowerUpgrade),reasonParts=deltas.filter(row=>row.gapGain>0).slice(0,3).map(row=>row.closed?`${row.label} 충족`:`${row.label} ${round(row.before)}→${round(row.after)}`),result=firstAssessment.structuralPass?'structural-only':'progress-only',guardReason=budgetProtected?`${searched.budgetGuard.reason} `:freeRepair&&pathLoss?'선택 위습을 쓰지 않고 필수 역할을 회귀 없이 보강합니다. ':'',
   // v19.12: "N선위를 남겨 보호" — 남은 선위로 열린 필수 결손을 실제로
   // 닫을 수 없으면 보호한다고 말하지 않는다 ("0선위를 남겨 보호합니다"가
   // 0804 패배 로그에 그대로 찍혀 있었다).
   reserveNote=openRequiredKeys.size===0?`${best.reserve.remaining}선위를 남겨 후속 필수 역할 경로를 보호합니다.`:Number.isFinite(recoveryNeedMin)&&num(best.reserve.remaining)<recoveryNeedMin?`경고 — 남은 선위 ${best.reserve.remaining}로는 열린 필수 결손 마감(최소 ${recoveryNeedMin}선위)이 닫히지 않습니다. 회복 목표 재료·선위부터 확보하세요.`:`${best.reserve.remaining}선위를 남겨 열린 필수 결손 마감 경로를 보호합니다.`,
   harmNote=requiredHarm.length?` 주의: 이 제작으로 ${requiredHarm.map(item=>`${item.label} ${round(item.before)}→${round(item.after)}`).join(' · ')} — 열린 필수 결손이 더 벌어집니다.`:'',
   reason=reasonParts.length?`${guardReason}${reasonParts.join(' · ')}. ${reserveNote}${harmNote}`:firepowerUpgrade&&!improves&&!surplusUpgrade?`필수 역할은 모두 충족 — 검증된 전투 기여 점수 ${round(combatBefore,1)}→${round(combatAfter,1)}를 회귀 없이 올립니다. 실제 보스 DPS는 자동 측정하지 않으므로 화력 충분 판정은 하지 않습니다.`:surplusUpgrade&&!improves?`남은 필수 결손은 현재 패로 닫을 수 없습니다. 회귀 없이 스펙을 더 올리는 제작에 여유 자원을 씁니다.`:`${guardReason}현재 마감과 전체 필수 조건을 동시에 개선하는 현재 패 경로입니다.${harmNote}`,row=makeRow(searchModel,first.quote,firstAssessment,reason),action={id:first.quote.targetId,name:nameOf(first.quote.unit),unit:first.quote.unit,row,quote:first.quote,wispCost:first.quote.wisp.cost,wispAfter:first.quote.wisp.after,result,reason,deltas,stopCondition:`${Object.keys(first.quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${first.quote.wisp.cost}개 미만이면 만들지 말고 다시 동기화`,path:first.quote.targetId?best.sequence.map(step=>({id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost})):[]},rare=rareDisposition(searchModel,route,locks,searched),alternatives=searched.paths.slice(1,3).map(path=>{const step=path.sequence[0];return{id:step.quote.targetId,name:nameOf(step.quote.unit),wispCost:step.quote.wisp.cost,reason:exclusionReason(best,path),residual:path.assessment.blockers.slice(0,3)};}),state=commit?'ACT_NOW':rare.safeReroll?'REROLL_ONE':'HOLD',compactGuard=searched.budgetGuard?{applied:!!searched.budgetGuard.applied,reason:searched.budgetGuard.reason||'',criticalIds:(searched.budgetGuard.criticalIds||[]).slice(),filteredIds:(searched.budgetGuard.filteredIds||[]).slice()}:null;
-  return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:openRecovery,upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair}});
+  return finalize({state,label:state==='ACT_NOW'?'지금 제작':state==='REROLL_ONE'?'희귀 1장 리롤 후 재계산':'현재 패 소비 보류',reason:state==='ACT_NOW'?reason:state==='REROLL_ONE'?`${rare.safeReroll.name} 1장만 리롤하고 즉시 다시 읽으세요.`:!planLegendOk&&first.quote.feasible?`${nameOf(first.quote.unit)}은(는) 확정 상위 계획 밖 전설이라 승인을 보류합니다 — 열린 필수 결손을 닫거나 파티 계획에 있는 제작만 승인합니다.`:'후속 필수 역할 경로를 보존하는 확정 제작을 찾지 못했습니다.',action:state==='ACT_NOW'?action:null,blockedAction:state==='ACT_NOW'?null:action,assessment:searched.initialAssessment,afterAction:firstAssessment,bestPath:{steps:action.path,assessment:best.assessment,remainingWisp:best.reserve.remaining,deadEnds:best.coverage.deadEnds},rare,recovery:openRecovery,upperReserve,alternatives,unknowns:searched.initialAssessment.unknowns,search:{candidateCount:searched.basePool.length,unfilteredCandidateCount:searched.rawPool.length,pathCount:searched.paths.length,horizon:HORIZON,beamWidth:BEAM_WIDTH,budgetGuard:compactGuard},stickyHold:best.stickyHold||'',continueOption,evidence:{observed:M.observedEvidence(model),ledger:'exact-sequential',futureDropsCredited:false,clearClaim:false,freeNonRegressiveRepair:freeRepair,planLegendHeld:!planLegendOk&&first.quote.feasible||false}});
 }
 
 return{VERSION,AUTHORITY,COACH_LEVELS,OPERATIONS_ROUND,decide:buildDecision,reconcileSquadExecution,metaPairs:metaPairEvidence,metaStaleness,_test:{craftLockDecision,applyCraftLock,coachGuidance,reachableRecovery,operationsNote,decisionPhase,stickyPath,continuableStep,withStickyCandidate,injectedBlueprintRankings,blueprintPlanTargets,applyBlueprintRanking,reconcileSquadExecution,allCandidates,combatPowerScore,boardCombatScore,combatRareCandidates,actionUniverse,recoveryPlan,intentFamilyOk,familyIntent,potentialScore,candidatePool,protectCriticalBudget,futureCoverage,nodeRank,compareNodes,search,rareDisposition,liveRareProtection,completionDecision,requirementDeltas,freeNonRegressiveRepair,resourceTotals,makeRow,upperAllowed,recipeProfile,pairMaterialOverlap,introducesLineageConflict,upperRouteCandidates,upperRouteRow,routeCandidateCompare,clearValueScore,clearValueCompare,routeOptions,expand,metaEvidence,metaStaleness}};

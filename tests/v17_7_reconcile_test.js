@@ -111,6 +111,12 @@ function firepowerFixture(round){
   const akainu=units.find(u=>u.id==='P10h');
   for(const s of akainu.stuffs)picks[s.id]=(picks[s.id]||0)+s.count;
   picks['810e']=3;
+  // v22.3(사용자: "희귀함은 이감 부족한 거 채우는 목적 아니면 추천하지마"):
+  // 단독 희귀는 필수가 전부 닫힌 50라+ 화력 창에서만 허용된다.  이 픽스처는
+  // v17_6 사본(v18.8에서 피셔타이거 보강)과 달리 광보잡 1/2이 열린 채였다 —
+  // 같은 보강으로 "완전 충족 + 화력 창" 전제를 지킨다.  이 테스트의 원칙
+  // (대안 목록 중복 제거)은 그대로다.
+  picks['740h']=(picks['740h']||0)+1;
   const locks=[{stage:'upper',id:'F50h',source:'t'}];
   return{model:M.build({catalog:units,snapshot:{source:'t',sessionId:'s',seq:round,at:round,dataChangedAt:round,counts:picks,currentAbilities:{},wispCountFound:true,wispCount:3},settings:{mode:'physical',magicRoute:'auto',currentRound:round,gorosei:'none',postLegendRoute:'upper',superKumaOwned:true},locks}),locks};
 }
