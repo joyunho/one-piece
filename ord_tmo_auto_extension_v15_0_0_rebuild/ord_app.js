@@ -1155,10 +1155,11 @@ class App{
     // pages are reachable from panel 7 without reviving the legacy tab bar.
     if(!REACHABLE_TABS.has(this.state.tab))this.state.tab='coach';
     const pack=this.plan(),state=pack.state,plan=pack.plan,settings=pack.settings,phase=phaseForPurpose(plan,settings.currentRound),clock=C.roundClock(settings,Date.now()),health=this.health();this._renderedRound=settings.currentRound;this._renderedHealthKey=health.key;this._deferredExternalRender=false;this.captureRunDecision(pack);
-    const savedScroll=this.captureScrollPositions();
+    const savedScroll=this.captureScrollPositions(),savedFolds=this.captureOpenFolds();
     const body=this.state.tab==='coach'?this.renderCoach(state,plan,phase,clock,health):this.renderAuxiliaryPage(this.state.tab,state,plan,health);
     this.root.innerHTML=`<div class="ord-app v151-shell" data-view="${C.esc(this.state.tab)}">${body}${this.renderDetail(state,plan)}${this.renderV151PartyModal(state,plan)}${this.renderV151ShipModal(state)}${this.renderSnipeModal(state)}${this.renderRunResultModal(health)}${this.state.message?`<div class="ord-toast" role="status">${C.esc(this.state.message)}</div>`:''}</div>`;
     this.restoreScrollPositions(savedScroll);
+    this.restoreOpenFolds(savedFolds);
     this.root.querySelectorAll('[data-act="confirm-upper"]').forEach(button=>{button.disabled=false;button.removeAttribute('aria-disabled');button.title='상위 방향을 먼저 잠급니다. 보조 조합은 패가 바뀔 때마다 가변 재계산합니다.';});
     const focusSelector=this._focusAfterRender;this._focusAfterRender='';if(focusSelector&&this.root.querySelector){const target=this.root.querySelector(focusSelector);if(target&&typeof target.focus==='function'){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}
   }
@@ -1192,6 +1193,41 @@ class App{
       if(this.root&&this.root.querySelectorAll){
         const nodes=this.root.querySelectorAll(this.scrollableSelector()),tops=Array.isArray(saved.panels)?saved.panels:[];
         for(let index=0;index<nodes.length&&index<tops.length;index++)if(tops[index])nodes[index].scrollTop=tops[index];
+      }
+    }catch(_){}
+  }
+  // v22.8(사용자: "오로성 선택하는거랑 특별 선택하는거 하나 선택하면
+  // 접히던데 선택할 때는 안접히고 내가 원할 때 접히게"): 전체 innerHTML
+  // 재렌더가 <details> 열림을 매번 초기화했다 — 설정 팝업(v153-tools)의
+  // 오로성·152킬 특별함·스토리 10 셀렉트는 setOpt 끝의 render()로 선택
+  // 즉시 팝업을 접었고, 연구소(v153-lab)·전체 스펙 표(v22-spec-fold)·
+  // 2상위 접기 등 살아있는 접힘 전부가 같은 증상이었다.  스크롤 보존과
+  // 같은 방식으로 렌더 전 열림 목록을 떠서 렌더 후 DOM에만 복원한다 —
+  // 마크업은 불변(태그 리터럴 계약 유지)이고, 닫기는 사용자가 summary를
+  // 누를 때 브라우저가 라이브 DOM에서 처리하므로 다음 캡처가 그대로
+  // 존중한다.  키는 클래스명 + 같은 클래스 내 등장 순서(스크롤 보존의
+  // 인덱스 관례).  복원은 열기만 한다 — 강제로 닫지 않는다.
+  captureOpenFolds(){
+    const open=[];
+    try{
+      if(!this.root||!this.root.querySelectorAll)return open;
+      const seen=new Map();
+      for(const el of this.root.querySelectorAll('details')){
+        const cls=String(el.className||''),n=C.num(seen.get(cls));
+        seen.set(cls,n+1);
+        if(el.open)open.push(`${cls}#${n}`);
+      }
+    }catch(_){}
+    return open;
+  }
+  restoreOpenFolds(open){
+    try{
+      if(!this.root||!this.root.querySelectorAll||!Array.isArray(open)||!open.length)return;
+      const want=new Set(open),seen=new Map();
+      for(const el of this.root.querySelectorAll('details')){
+        const cls=String(el.className||''),n=C.num(seen.get(cls));
+        seen.set(cls,n+1);
+        if(want.has(`${cls}#${n}`))el.open=true;
       }
     }catch(_){}
   }
