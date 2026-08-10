@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='22.9.0';
+const VERSION='22.10.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -114,7 +114,22 @@ function nameOf(unit){return C.displayNameOf?C.displayNameOf(unit):String(unit&&
 function tierOf(unit){return C.tierKey(unit);}
 function sum(map){return Object.values(map||{}).reduce((total,value)=>total+num(value),0);}
 function lockedUpper(locks){return(locks||[]).find(lock=>lock&&lock.stage==='upper')||null;}
-function routeFamilyOk(unit,route){if(!unit||!route)return false;const family=C.familyOf(unit);if(C.isUpper(unit))return family===route.mode||family==='neutral';return family===route.mode||family==='neutral'||C.roleContribution(unit,route.mode).utility>0;}
+// v22.10(0810c 포렌식 · 사용자: "분명 마딜로 설정되어있는데 스모커 나오고
+// 굳이 레이쥬가 나오고 뭔가 이상한게 많았어"): 반대 계통 전설이 유틸
+// (이감·암브)만으로 우주에 들어오던 예외를 걷는다 — 마딜 판에서 마르코
+// (r46~53 top)·레이쥬(r42~46 top)·스모커(재료 보호 사유)·흰수염(회복
+// 목표)이 전부 이 구멍으로 들어왔고, 넷 다 그룹이 "전설 [물딜]"로 계통을
+// 명시한 유닛이다.  배제 근거는 그 명시 표기만 쓴다 — 표기 없는 그룹
+// (해적선·왜곡됨·변화된·세라핌·[스턴]·히든)은 실전 공용 자원이고, 이름
+// 휴리스틱 계통(familyOf)은 점수용 추정이지 배제 근거가 아니다(퀸 왜곡 =
+// 0805L 마딜 판 체젠 마감, 모비딕호 = 0810c 마딜 판 엔진 1순위).
+function routeFamilyOk(unit,route){
+  if(!unit||!route)return false;
+  const group=C.groupName(unit);
+  if(group.includes('[물딜]'))return route.mode==='physical';
+  if(group.includes('[마딜]'))return route.mode==='magic';
+  return true;
+}
 function pseudoUnit(unit){const group=C.groupName(unit),name=nameOf(unit);return /아이템|랜덤|신비/.test(group)||/풀이감|풀방깎/.test(name);}
 function finalUnit(unit){return!!unit&&(C.isLegendish(unit)||C.isUpper(unit));}
 // v16.1: a pre-game 물딜/마딜 choice restricts completion-phase candidates to
@@ -413,6 +428,11 @@ function craftLockDecision(model,route,locks,lockId,fallback){
 function applyCraftLock(decision,model,locks){
   const lockId=String(model&&model.settings&&model.settings._craftLockId||'');
   if(!lockId||!decision||CRAFT_LOCK_SKIP_STATES.has(String(decision.state||'')))return decision;
+  // v22.10(0810c 포렌식): 넘어간(veto) 유닛은 표시 잠금으로도 붙잡지 않는다
+  // — r54~55 베이비5 가 veto 후에도 "제작 진행 중" sticky 로 유지됐다(앱이
+  // 잠금을 풀어도 프리픽스 재승인이 다시 잠갔다).  잠금 대상이 veto 면
+  // 이번 계산의 신선한 판정을 그대로 쓴다.
+  if(vetoedIds(model).has(lockId))return decision;
   // v22.1(0809 포렌식): 확정 상위가 마침내 제작 가능해진 승인(committed-
   // upper-first ACT_NOW)은 다른 유닛의 표시 잠금이 최대 2라운드 덮을 수
   // 있었다 — 사용자 확정이 표시 안정성보다 위다.
@@ -1215,6 +1235,12 @@ function reconcileSquadExecutionRaw(decision,squad,locks){
   if(['stop','hold'].includes(String(audit.level||'')))return blocked('HOLD',`최종 파티 검증이 ${audit.level==='stop'?'필수 역할 회귀':'현재 체크포인트 개선 없음'}으로 판정되어 제작을 잠급니다.`,{squadAuditLevel:String(audit.level||'')});
   const planned=actions[0],plannedId=String(planned&&planned.id||''),unit=model.knowledge&&model.knowledge.db&&model.knowledge.db.byId.get(plannedId);
   if(!plannedId||!unit)return blocked('SYNC_BLOCKED','최종 파티의 첫 제작 유닛을 현재 카탈로그에서 확인하지 못했습니다.',{plannedId});
+  // v22.10(0810c 포렌식): 사용자가 넘어간(veto) 유닛을 파티 프리픽스가
+  // 재견적으로 되살렸다 — r54 베이비5 veto 2회에도 squad-prefix-requote 가
+  // r56~63 여덟 라운드 내내 같은 유닛을 top 으로 유지했다.  플래너는 veto
+  // 를 모르므로 승격 지점(여기)에서 거른다: 프리픽스 첫수가 veto 대상이면
+  // 승격하지 않고 엔진 원 판정(veto 필터 적용됨)을 그대로 쓴다.
+  if(vetoedIds(model).has(plannedId))return withEvidence({},{executionAuthority:'veto-respected',squadPrefixVetoed:plannedId});
   const lineupIds=new Set((squad.finalLineup||[]).map(item=>String(item&&item.id||item&&item.unit&&item.unit.id||'')));
   if(lineupIds.size&&!lineupIds.has(plannedId))return blocked('SYNC_BLOCKED','검증된 첫 제작이 최종 파티 목록과 일치하지 않습니다.',{plannedId});
   const quote=L.quote(model,unit,model.effective.counts,{availableRound:model.round.value});

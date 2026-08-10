@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='22.9.0';
+const VERSION='22.10.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -671,6 +671,12 @@ function roleProfile(u){
   // Koala (warped) is shared physical/magic utility, not a boss/frenzy handler.
   // ID correction wins even when a live TMO payload still contains both flags.
   if(u&&u.id==='V30h'){boss=false;frenzy=false;}
+  // v22.10(사용자 실측 2.312: "베이비 5 이제 광보잡 유닛이 아니라 암브
+  // 유닛으로 봐야할듯"): (변화)베이비5 — 2.310 리뉴얼로 암브 기반 유틸이
+  // 됐는데 카탈로그 잔존 플래그(보스 잡기·광폭화)가 광보잡 인분으로
+  // 계속 세었다.  V30h(코알라)와 같은 ID 교정 — 라이브 TMO 페이로드가
+  // 옛 플래그를 실어도 이긴다.  암브 가중치는 patch2310 이 넣는다.
+  if(u&&u.id==='N70h'){boss=false;frenzy=false;}
   if(/바제스/.test(n)&&isWarped(u))single=1;
   let armor=abilityValue(u,'방어력 감소'),triggerArmor=abilityValue(u,'발동방어력 감소'),singleArmor=abilityValue(u,'단일방어력 감소'),stackArmor=abilityValue(u,'중첩방어력 감소');
   if(/바제스/.test(n)&&isWarped(u)){armor=0;triggerArmor=0;}

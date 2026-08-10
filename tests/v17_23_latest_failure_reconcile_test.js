@@ -102,7 +102,11 @@ function snapshotAtSeq(file,seq){
   // 픽이 바뀌었다(V20h → 네코).  이 픽스처의 계약은 특정 유닛이 아니라
   // '원시 판단과 파티 접두 판단이 갈라지는 상황의 재현'이다 — 갈라짐
   // 검사는 아래에서 그대로 지킨다.
-  assert.strictEqual(raw.action.id,'Z90h','packaged R35 raw-action fixture drift');
+  // v22.10(계통 게이트): 물딜 판(카벤딧슈 락)의 옛 픽 네코(Z90h)는 그룹이
+  // "전설 [마딜]"로 계통을 명시한 유닛 — 유틸 예외로 들어오던 바로 그
+  // 구멍의 표본이라 우주에서 빠졌고, 픽이 중립(히든 [스턴]) 아오키지
+  // (140h)로 바뀌었다.  갈라짐(원시 140h ≠ 접두 830h)은 그대로다.
+  assert.strictEqual(raw.action.id,'140h','packaged R35 raw-action fixture drift');
   assert(first,'final squad produced no safePrefix action');
   assert.strictEqual(first.id,'830h','packaged R35 squad-prefix fixture drift');
   assert.notStrictEqual(raw.action.id,first.id,'fixture no longer reproduces split authority');

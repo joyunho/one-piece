@@ -1,5 +1,5 @@
 'use strict';
-// v22.9.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
+// v22.10.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
 //
 // 확장(크롬) 없이 코치를 독립 프로그램으로 돌린다.  브라우저 제약
 // (타이머 조임·MV3 정책·CORS)이 사라지므로 보험 장치 없이 단순하다:
@@ -105,6 +105,31 @@ function toggleOverlay() {
   return overlayOn;
 }
 
+// v22.10(사용자: "f8 f9 누르면 나오는 화면을 어떤 모니터에 띄울지 알려줬으면
+// 해"): F10 = HUD·미니 패널을 다음 모니터로 보낸다.  F9 패널을 끌어 놓는
+// 방법도 여전히 유효하지만, 멀티 모니터에선 단축키 한 번이 빠르다.  옮긴
+// 자리는 기존 bounds 파일에 저장되므로 F8 HUD 도 같은 자리를 쓰고 재실행
+// 에도 유지된다.  창이 하나도 안 떠 있으면 다음에 열릴 자리만 바꾼다.
+function currentOverlayBounds() {
+  if (overlayOn && win && !win.isDestroyed()) return win.getBounds();
+  if (hudOn && hudWin && !hudWin.isDestroyed()) return hudWin.getBounds();
+  return loadOverlayBounds();
+}
+function moveOverlayToNextDisplay() {
+  const displays = screen.getAllDisplays();
+  if (!displays.length) return;
+  const bounds = currentOverlayBounds() || {x: 0, y: 0, width: 400, height: 560};
+  const current = screen.getDisplayMatching(bounds);
+  const index = Math.max(0, displays.findIndex(d => d.id === current.id));
+  const area = displays[(index + 1) % displays.length].workArea;
+  const width = Math.min(bounds.width || 400, area.width - 24);
+  const height = Math.min(bounds.height || 560, area.height - 24);
+  const target = {x: area.x + area.width - width - 12, y: area.y + 12, width, height};
+  try { fs.writeFileSync(OVERLAY_BOUNDS_FILE(), JSON.stringify(target)); } catch (_) {}
+  if (overlayOn && win && !win.isDestroyed()) win.setBounds(target);
+  if (hudOn && hudWin && !hudWin.isDestroyed()) hudWin.setBounds(target);
+}
+
 // v19.15.0("게임 내에서 녹아들 수 없나"): 인게임 HUD — 창테두리 없는
 // 완전 투명 창에 코치 칩·카드만 그린다.  클릭은 전부 게임으로 통과
 // (setIgnoreMouseEvents)하고 포커스도 못 가져가(focusable:false) 게임
@@ -207,6 +232,8 @@ app.whenReady().then(() => {
   // (조작·위치 잡기용).  HUD 위치를 옮기려면 F9 패널을 끌어 놓으면 된다.
   globalShortcut.register('F8', toggleHud);
   globalShortcut.register('F9', toggleOverlay);
+  // F10 = HUD·미니 패널을 다음 모니터로 (자리 기억 공유).
+  globalShortcut.register('F10', moveOverlayToNextDisplay);
   // 지난 실행에서 HUD 를 켠 채였다면 자동 복원.
   try {
     const saved = JSON.parse(fs.readFileSync(HUD_STATE_FILE(), 'utf8'));

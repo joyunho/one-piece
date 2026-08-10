@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v22.9.0 live cockpit bridge; connector protocol stays v13.
+  // v22.10.0 live cockpit bridge; connector protocol stays v13.
   // v19.4(사용자 요청): 도우미 번호 무관 — 숫자 id 전부 후보. 여러 탭이면
   // 주 도우미(32172) 우선.
   const PATTERNS = [
