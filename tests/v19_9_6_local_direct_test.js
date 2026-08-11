@@ -31,12 +31,12 @@ await check('① 매핑 확정 — 궤적 3종만, 상수 동률 PA0H·Y50h 는 
     'H00h':'unit_1767884889420_456',  // 좀비: 단독 스파이크 2 일치
     'S40h':'unit_1767884940750_9880'  // 초월쿠마: 첫 표본 단독 1 일치
   },'궤적 확정 3종 외 매핑이 섞임');
-  // PA0H·Y50h 는 판 내내 상수 1이라 랜덤유닛/토큰과 궤적이 셋 다 같았다 —
-  // 어느 쪽인지 구분 불가하므로 확정 금지, 무시 목록에 있어야 한다.
-  for(const code of ['PA0H','Y50h']){
-    assert(!(code in LM.CODE_MAP),`${code} 를 상수 궤적 위양성인데 확정함`);
-    assert(LM.IGNORE_CODES.includes(code),`${code} 가 무시 목록에 없음`);
-  }
+  // PA0H 는 판 내내 상수 1(위양성)이라 확정 금지·무시 유지.  Y50h 는
+  // v23.0 재핀: 2312 카탈로그가 '고대의 배'의 codes 로 직접 확정해 무시를
+  // 해제했다 — 카탈로그 직결이 궤적 추정보다 권위가 높다.
+  assert(!('PA0H' in LM.CODE_MAP),'PA0H 를 상수 궤적 위양성인데 확정함');
+  assert(LM.IGNORE_CODES.includes('PA0H'),'PA0H 가 무시 목록에 없음');
+  assert(!LM.IGNORE_CODES.includes('Y50h'),'Y50h 무시가 남아 카탈로그 직결(고대의 배)을 가린다');
   for(const code of ['GOLD','LUMBER','FOOD'])assert(LM.IGNORE_CODES.includes(code),`자원 ${code} 무시 누락`);
   // 카탈로그에 실존하는 id 를 무시 목록에 넣으면 실제 유닛이 사라진다.
   for(const code of LM.IGNORE_CODES)assert(!catalogIds.has(code),`무시 코드 ${code} 가 카탈로그 id 와 충돌`);

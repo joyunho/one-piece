@@ -66,7 +66,9 @@ test('③ patch2312 — I50h 발동이감 60 실효 + 설명 패치 4건',()=>{
   const i50=context.ORD_TMO_UNITS.find(u=>u.id==='I50h');
   assert(i50,'I50h 레베카가 카탈로그에 없다');
   assert.strictEqual(C.num(i50.abilities['발동이동속도 감소']),60,'발동이감이 60이 아니다');
-  assert(/발동이감60/.test(String(i50.name)),`이름이 교정되지 않았다: ${i50.name}`);
+  // v23.0 재핀: 2312 카탈로그 베이스는 이름에 발동이감 태그를 달지 않는다
+  // ("레베카 💙 (스플딜러 방깍38)") — 이름 교정 계약은 '옛 50 표기가 없다'
+  // 로만 남긴다.  수치 실효(60)와 roleProfile 이 본계약이다.
   assert(!/발동이감50/.test(String(i50.name)),'이름에 옛 발동이감50 표기가 남았다');
   assert.strictEqual(C.num(C.roleProfile(i50).triggerSlow),60,'roleProfile triggerSlow 실효가 60이 아니다');
   // v22.12.1: 방주맥심 스턴 1.2초는 맵 원본(A0BG) 확정 — desc 로만 명시

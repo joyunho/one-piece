@@ -88,7 +88,7 @@ check('⑤ 보호 희귀가 전량 표시된다(v19.9: 표시 위치는 사용·
 
 check('감사 기타 — snapshotHealth 숫자 번호 허용·루트 README 버전 부패 제거',()=>{
   const now=Date.now();
-  const health=C.snapshotHealth({source:'tmo',parser:'ord-tmo-parser-v13-adapter',helperId:'54321',at:now,scanAt:now,bridgeAt:now,dataChangedAt:now,unitCount:307,collection:{found:true,confidence:.95},countDiscovery:{found:true,parsed:307,missing:0,ambiguous:0},wispCountFound:true},now);
+  const health=C.snapshotHealth({source:'tmo',parser:'ord-tmo-parser-v13-adapter',helperId:'54321',at:now,scanAt:now,bridgeAt:now,dataChangedAt:now,unitCount:324,collection:{found:true,confidence:.95},countDiscovery:{found:true,parsed:324,missing:0,ambiguous:0},wispCountFound:true},now);
   assert.strictEqual(health.ready,true,'임의 숫자 도우미가 상태 판정에서 거부됨');
   const readme=fs.readFileSync(path.resolve(__dirname,'../README.txt'),'utf8');
   assert(!/v?18\.9\.0|v18_9_0/.test(readme),'루트 README 에 낡은 버전이 남음');

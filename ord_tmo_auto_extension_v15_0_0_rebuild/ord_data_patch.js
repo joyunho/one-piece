@@ -22,11 +22,11 @@ const liveIdentity={
   'unit_1761061295036_310':{name:'옌',groupName:'랜덤유닛',aliases:['요우무 전용 재료']},
   'unit_1761061550524_6203':{name:'카미조 토우마(단일스턴/코비용기의외침)',groupName:'랜덤유닛',aliases:['카미조 토우마','죠타로 전용 재료']}
 };
-// v19.7.1(외부 감사): 2.305 실측 수치 교정 — 오프라인 카탈로그가 낡은 값을
-// 갖고 있던 항목.  (A)키드 이감 33 → 35 (ordsearch 현재 상세 기준).
-const abilityPatches={
-  '4B0H':{abilities:{'이동속도 감소':35},renameFrom:/이감33/,renameTo:'이감35'}
-};
+// v19.7.1(외부 감사): 2.305 실측 수치 교정 — (A)키드 이감 33→35 는
+// v23.0 에서 은퇴.  2.312 카탈로그(새 베이스)가 33 으로 표기하고 이름
+// 문자열 자체가 '이감33'이다 — v19.7 근거였던 ordsearch 상세는 2.305
+// 시대의 것.  카탈로그가 더 새 정본이라 패치를 비워 둔다.
+const abilityPatches={};
 // v20.0(2.310 패치노트 tmo.gg/ko/posts/39095 판독): 오프라인 카탈로그는
 // 2.305 덤프다 — 게시된 리뉴얼 중 역할 원장·표시에 닿는 항목만 손패치한다.
 //  · 개별 유닛 버프/너프 목록은 게시글 기준 "-- 준비중 --" — 공개되면 후속.
@@ -47,8 +47,10 @@ const patch2310={
   'F40h':{desc:'2.310 리뉴얼: 산먹깨비(공격시 45% 단일 100만×1~3 물리 + 3초 스턴, 20회마다 부천락 추가발동) · 부천락(타입별 전체체력 비례 고정딜 — 라인/광폭 55%·보스 15%·스토리 10%) · 견문색 패기(공격력 25%↑, 기본공격 방깎 60·보스 70) · 참격(단일 875만×1~1.5 물리 + 라인 전체체력 20%). 특성강화 팔십효사. 조합에 목재 10 추가(목재는 게임 내 자원 — 코치 계산 밖).'},
   // 특수함 개편(등장 3%→1%, 성능 상향):
   'unit_1767884457709_1523':{abilities:{'보스 잡기':true,'광폭화':true},renameFrom:/탐색/,renameTo:'광보잡, 라인딜',desc:'2.310 개편: 탐색 삭제 → 도끼손(기본공격 11% 8배 크리 + 단일 0.8초 스턴, 11% 타입별 추가 고정딜 — 라인/스토리 2만·보스 현재체력 0.9%·광폭 전체체력 4.5%) — 신세계 이후 딜러.'},
-  'unit_1767884591387_9300':{renameFrom:/배2개제작/,renameTo:'모든 배 건조',desc:'2.310 개편: 초 일류 조선공(Z) — 조합식 선박 유닛에게 사용시 목재로 즉시 건조(해적선 2 · 발라티에/모비딕호 10 · 방주맥심/사운드써니호 15 · 레드포스호 20).'},
-  'unit_1767884647613_2996':{abilities:{'공격력 증가':40},renameFrom:/공증버프/,renameTo:'공증버프40',desc:'2.310: 오라 공증 60% → 40% 하향.'},
+  'unit_1767884591387_9300':{renameFrom:/배2개제작|배 제작/,renameTo:'모든 배 건조',desc:'2.310 개편: 초 일류 조선공(Z) — 조합식 선박 유닛에게 사용시 목재로 즉시 건조(해적선 2 · 발라티에/모비딕호 10 · 방주맥심/사운드써니호 15 · 레드포스호 20).'},
+  // v23.0 유지: 2312 카탈로그는 페루 공증을 100 으로 싣지만 맵 원본
+  // A0LR 툴팁이 "650범위 아군 유닛 공격력 40% 증가" — 카탈로그 오기.
+  'unit_1767884647613_2996':{abilities:{'공격력 증가':40},renameFrom:/공증버프/,renameTo:'공증버프40',desc:'2.310: 오라 공증 60% → 40% 하향 (2.312R 맵 원본 A0LR 확정 40% — tmo 카탈로그의 100 은 오기).'},
   'unit_1767884539590_2352':{desc:'2.310 개편: 격려격려 열매::고무(Q) — 선택 아군 체력·마나 3초간 90 회복(쿨 100초) — 극대화 버퍼.'},
   'unit_1767884779838_643':{desc:'2.310: 공격 기능 추가.'}
 };
@@ -69,10 +71,24 @@ const patch2312={
   'B90H':{desc:'2.311: 10톤해머 크리티컬 확률 10% → 15% (툴팁 정정 — 실값 15%).'},
   // 검은수염(초월) — 지진이 물리로 적용되던 버그 수정 → 마법뎀 정상화 (2.312).
   '090H':{desc:'2.312: 강진 데미지+현기증 미적용 버그 수정 · 지진 물리 적용 버그 수정(마법뎀 정상화).'},
-  // 방주맥심 — v22.12.1(2.312R 맵 원본 A0BG/A0BH): 액티브에 스턴 1.2초가
-  // 실존.  roleProfile stun 산입은 협의 대상(1.2초 액티브 ≠ 풀스턴 인분)
-  // 이라 우선 원문만 밝힌다 — 맵데이터_분석_20260811.txt ⑤.
-  'X30h':{desc:'2.312R 맵 원문: 액티브(마나150·800범위) 마법 215만 + 스턴 1.2초 + 마방 10% 감소 + 폭발형 10% 증폭 / 공격시 14%(600범위) 마법 20만 + 3초간 이감 30%.  스턴 1.2초는 아직 코치 스턴 인분에 미산입.'}
+  // 나미(전설) — v23.0(2.312R 맵 원본 A0AL 크리마텍트): 여진 이감 42%.
+  // tmo 2312 카탈로그의 45 는 오기 — 맵 툴팁이 단일 레벨 42 로 확정.
+  'P20h':{abilities:{'발동이동속도 감소':42},desc:'2.312R 맵 원본(A0AL 크리마텍트): 여진 3초간 이동속도 42% 감소 — 카탈로그 45 는 오기.'},
+  // 조로(초월) — 귀기(A0QC)는 레벨형: 방깎·이감 30/35/42.  카탈로그 표기
+  // 35(중간 레벨)를 기준값으로 유지하고 레벨 사실만 밝힌다.
+  'F90H':{desc:'2.312R 맵 원본(A0QC 귀기): 레벨별 방깎·이감 30/35/42(패왕색) — 코치 수치는 카탈로그 기준 35.'},
+  // 방주맥심 — v23.0(2.312R 맵 JASS 판독): 뇌영은 공격 카운터형(150타)
+  // 자동 발동 — 실범위 600(툴팁 800 은 과장), 1.2초 스턴(보스급 0.24초),
+  // 주기 96.6초(마젠 연구 시 ≈64초).  유효 스턴 0.05 인분으로 산입
+  // (STUN_RESEARCH X30h).
+  'X30h':{desc:'2.312R 맵 원문: 뇌영 — 공격 150타마다 자동 발동(마나=공격 카운터), 실범위 600, 마법 215만 + 스턴 1.2초(보스급 0.24초) + 마방 10% 감소 + 폭발형 10% 증폭 / 공격시 14% 마법 20만 + 3초간 이감 30%.  유효 스턴 0.05 인분 산입(마젠 연구 기준) — 스턴 전력이 아니라 광역 딜·마방깎 축.'},
+  // 오타마 — v23.0(맵 원본 A0LQ): 카탈로그 desc 의 '받는 사람 목재 2'는
+  // 오기 — 맵 원문은 '받은 사람 4 목재' (주는 사람 12 목재는 일치).
+  'unit_1767884614234_8036':{desc:'2.312R 맵 원문(경단먹이기 Q): 희귀 이하 유닛 1기 영구 귀속(1회) — 주는 사람 목재 12, 받은 사람 목재 4 (카탈로그의 2 는 오기).'},
+  // 카이도(불멸) — v23.0(맵 확인): 인간폼 h07M ↔ 용폼 h0AD 변신 유닛.
+  // 이감60·중첩깎30·공증-75 는 두 폼 공유(A0Q1) — 카탈로그가 용폼 행을
+  // 지웠어도 값은 M70h 에 보존된다.
+  'M70h':{desc:'변신 유닛(물고기물고기 열매 F): 인간폼 ↔ 용폼 — 이감60·중첩방깎30·공증-75 는 두 폼 공유(2.312R 맵 A0Q1).'}
 };
 for(const unit of Array.isArray(global.ORD_TMO_UNITS)?global.ORD_TMO_UNITS:[]){
   const p2312=patch2312[unit.id];
@@ -81,7 +97,11 @@ for(const unit of Array.isArray(global.ORD_TMO_UNITS)?global.ORD_TMO_UNITS:[]){
   if(p2312.renameFrom&&p2312.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(p2312.renameFrom,p2312.renameTo);
   if(p2312.desc)unit.desc=(String(unit.desc||'').trim()?String(unit.desc)+'\n':'')+p2312.desc;
 }
-if(Array.isArray(global.ORD_TMO_UNITS)){const ids=new Set(global.ORD_TMO_UNITS.map(u=>u.id));for(const row of missingRows)if(!ids.has(row.id))global.ORD_TMO_UNITS.push(row);for(const unit of global.ORD_TMO_UNITS){const patch=liveIdentity[unit.id];if(patch)Object.assign(unit,patch);const abilityPatch=abilityPatches[unit.id];if(abilityPatch){unit.abilities=Object.assign({},unit.abilities||{},abilityPatch.abilities);if(abilityPatch.renameFrom&&abilityPatch.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(abilityPatch.renameFrom,abilityPatch.renameTo);}const p2310=patch2310[unit.id];if(p2310){if(p2310.abilities)unit.abilities=Object.assign({},unit.abilities||{},p2310.abilities);if(p2310.renameFrom&&p2310.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(p2310.renameFrom,p2310.renameTo);if(p2310.desc)unit.desc=(String(unit.desc||'').trim()?String(unit.desc)+'\n':'')+p2310.desc;}const extraCodes=codeAliases[unit.id];if(extraCodes){unit.codes=Array.isArray(unit.codes)?unit.codes:[];for(const code of extraCodes)if(!unit.codes.includes(code))unit.codes.push(code);}}}
+if(Array.isArray(global.ORD_TMO_UNITS)){const ids=new Set(global.ORD_TMO_UNITS.map(u=>u.id));const byId=new Map(global.ORD_TMO_UNITS.map(u=>[u.id,u]));for(const row of missingRows){if(!ids.has(row.id)){global.ORD_TMO_UNITS.push(row);continue;}
+// v23.0: 2312 카탈로그가 이 유닛들을 직접 실으면서 추가 대신 병합이 됐다 —
+// 실측 조인 코드(P50h 등)는 카탈로그가 비워 오면 여기서 보강한다.
+const existing=byId.get(row.id);existing.codes=Array.isArray(existing.codes)?existing.codes:[];for(const code of row.codes||[])if(!existing.codes.includes(code))existing.codes.push(code);}
+for(const unit of global.ORD_TMO_UNITS){const patch=liveIdentity[unit.id];if(patch)Object.assign(unit,patch);const abilityPatch=abilityPatches[unit.id];if(abilityPatch){unit.abilities=Object.assign({},unit.abilities||{},abilityPatch.abilities);if(abilityPatch.renameFrom&&abilityPatch.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(abilityPatch.renameFrom,abilityPatch.renameTo);}const p2310=patch2310[unit.id];if(p2310){if(p2310.abilities)unit.abilities=Object.assign({},unit.abilities||{},p2310.abilities);if(p2310.renameFrom&&p2310.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(p2310.renameFrom,p2310.renameTo);if(p2310.desc)unit.desc=(String(unit.desc||'').trim()?String(unit.desc)+'\n':'')+p2310.desc;}const extraCodes=codeAliases[unit.id];if(extraCodes){unit.codes=Array.isArray(unit.codes)?unit.codes:[];for(const code of extraCodes)if(!unit.codes.includes(code))unit.codes.push(code);}}}
 const synergy=global.ORD_SYNERGY_MEMO;if(synergy&&synergy.byUnitId){synergy.byUnitId['unit_1767886180546_6011']=31;synergy.byUnitId.KB0H_=34;}
 function patchMemo(memo){
   for(const entry of memo&&memo.entries||[])for(const support of entry.supports||[]){const ids=support.unitIds||[],name=String(support.name||'');

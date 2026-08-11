@@ -61,10 +61,12 @@ check('③ 특수함 조인 완화 — 2.310 별명 변경에도 붙는다',()=>
   const src=read('content-tmo.js');
   assert(src.includes('re: /^모건/'),'모건 조인이 여전히 별명 괄호에 묶임');
   assert(src.includes('re: /^아이스버그/'),'아이스버그 조인이 여전히 별명 괄호에 묶임');
-  // 가이몬(신규·id 미상)은 미해석 코드 안전망으로 관측 — 데이터 패치에
-  // 억지 id를 만들지 않는다.
+  // v23.0 재핀: 2312 카탈로그가 가이몬을 실제 id(unit_1785943488472_5481,
+  // code GB0h)로 실었다 — v20.0 의 '억지 행 금지' 계약은 '진짜 id 로 실재'
+  // 로 승격된다.
   assert(read('ord_data_patch.js').includes('가이몬'),'가이몬 경계 주석 없음');
-  assert(!units.some(u=>/가이몬/.test(u.name||'')),'가이몬 억지 행 금지(id 미상)');
+  const gaimon=units.find(u=>/가이몬/.test(u.name||''));
+  assert(gaimon&&(gaimon.codes||[]).includes('GB0h'),'가이몬 실재 행(GB0h)이 없다');
 });
 
 check('④ 브랜딩 2.310 — 사용자 노출만, 데이터 출처는 2.305 보존',()=>{

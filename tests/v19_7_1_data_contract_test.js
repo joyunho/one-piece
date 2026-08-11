@@ -43,13 +43,18 @@ check('S-베어 — 마증·마방깎은 데이터팩 실측, 역할은 사용�
   assert((kit.roles.magic||[]).includes('끝딜')&&role.end>=1,'마딜 끝딜 역할 누락');
 });
 
-check('키드 초월 — 범위 이감은 데이터팩 실측',()=>{
+check('키드 초월 — 범위 이감은 카탈로그 정본(데이터팩 구실측과의 차이는 기록)',()=>{
+  // v23.0 재핀: v19.7 실측(ordsearch, 2.305 시대)은 35 였으나 2312 카탈로그
+  // (현행 TMO)가 33 으로 표기하고 이름 문자열도 '이감33'이다.  맵 문서화본
+  // 에서는 불멸 키드 개체를 특정하지 못해(이름 불일치) 카탈로그를 정본으로
+  // 채택한다 — v19.7.1 의 이감 35 손패치는 은퇴(abilityPatches 비움).
   const kit=(prescriptions.units||[]).find(row=>row.key==='transcendent:kid');
   assert(kit,'데이터팩에 키드 없음');
-  const slow=Number(((kit.provides||[]).join(' ').match(/범위\s*(\d+)%\s*이감/)||[])[1]);
-  assert(slow>0,'데이터팩 이감 파싱 실패');
+  const packSlow=Number(((kit.provides||[]).join(' ').match(/범위\s*(\d+)%\s*이감/)||[])[1]);
+  assert(packSlow>0,'데이터팩 이감 파싱 실패');
   const role=C.roleProfile(global.ORD_TMO_UNITS.find(u=>u.id==='4B0H'));
-  assert.strictEqual(role.slow,slow,`이감 불일치: 코드 ${role.slow} vs 실측 ${slow}`);
+  assert.strictEqual(role.slow,33,`카탈로그 이감이 33 이 아니다: ${role.slow}`);
+  assert.strictEqual(packSlow,35,'데이터팩 구실측(35) 기록이 바뀜 — 차이 재평가 필요');
 });
 
 check('방주맥심 — 마방깎·폭증·발동이감 묶음은 사용자 고정 규칙 수치',()=>{

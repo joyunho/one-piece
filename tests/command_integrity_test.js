@@ -15,12 +15,23 @@ const encoded=JSON.stringify(catalog.map(unit=>({name:unit.name,desc:unit.desc,c
 assert(!encoded.includes('\ufffd'),'catalog contains a replacement character');
 assert(!/[\u0080-\u009f]/.test(encoded),'catalog contains a C1 control character');
 
-const englishMissing=app.commandInfo(catalog.find(unit=>unit.id==='A40h'));
+// v23.0 재핀: 2312 카탈로그가 명령을 "한글 / 영문" 이중 표기로 완비했다 —
+// A40h·G40h 도 이제 양쪽이 검증돼 실물 미확인 표본이 없다.  실물은 이중
+// 표기 계약으로 핀하고, '조작 금지(미검증은 빈 값)' 계약은 합성 유닛으로
+// 계속 검증한다.
+const bothVerified=app.commandInfo(catalog.find(unit=>unit.id==='A40h'));
+assert.match(bothVerified.korean,/대해적흰수염/);
+assert.match(bothVerified.english,/newgate im/);
+const bothVerified2=app.commandInfo(catalog.find(unit=>unit.id==='G40h'));
+assert.match(bothVerified2.korean,/신념의흑완제트/);
+assert.match(bothVerified2.english,/z im/i);
+
+const englishMissing=app.commandInfo({id:'TEST_KO_ONLY',name:'테스트',commands:['대해적흰수염'],codes:['A40h']});
 assert.match(englishMissing.korean,/대해적흰수염/);
 assert.match(englishMissing.englishDisplay,/unverified/i);
 assert.strictEqual(englishMissing.english,'','unverified English must not be fabricated');
 
-const koreanMissing=app.commandInfo(catalog.find(unit=>unit.id==='G40h'));
+const koreanMissing=app.commandInfo({id:'TEST_EN_ONLY',name:'테스트2',commands:['z im'],codes:['G40h']});
 assert.match(koreanMissing.english,/z im/);
 assert.match(koreanMissing.koreanDisplay,/한글 명령 미확인/);
 assert.strictEqual(koreanMissing.korean,'','unverified Korean must not be fabricated');

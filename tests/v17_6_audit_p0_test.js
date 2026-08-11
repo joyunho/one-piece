@@ -59,10 +59,13 @@ test('P0-1: 리롤 0/2에서는 리롤 후보가 나오고, 2/2 소진 후에는
   assert((spent.rare.rows||[]).some(row=>/리롤 2회/.test(row.reason||'')),'소진 사유 문구 없음');
 });
 
-test('P0-1: UI가 리롤 확정을 2회로 클램프·차단한다(소스 검증)',()=>{
+test('P0-1: UI가 리롤 확정을 상한으로 클램프·차단한다(소스 검증)',()=>{
+  // v23.0 재핀: 상한이 고정 2회 → 항법 의존 rerollLimit() 이 됐다(맵 원본
+  // 확정 — 도박광/카지노/리스크헷지에서 3~5회).  클램프·이중 차단이라는
+  // 계약 자체는 유지된다.
   const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
-  assert(app.includes("Math.min(2,C.num(this.state.rerollsUsed)+1)"),'확정 핸들러 클램프 누락');
-  assert(app.includes('리롤은 게임당 2회입니다'),'UI 이중 차단 누락');
+  assert(app.includes("Math.min(this.rerollLimit(),C.num(this.state.rerollsUsed)+1)"),'확정 핸들러 클램프 누락');
+  assert(app.includes('리롤은 게임당 ${this.rerollLimit()}회입니다'),'UI 이중 차단 누락');
   assert(app.includes('rerollsUsed:C.num(settings.rerollsUsed)'),'판단 캐시 키에 rerollsUsed 누락');
 });
 
@@ -98,7 +101,10 @@ test('P0-3: 단일 전용·끝딜 전용 조합은 구조 통과하지 못한다
 });
 
 test('P0-4: 상위 동적 필수 역할(끝딜)에 기여하는 유닛 제거가 보호 라벨을 남긴다',()=>{
-  const zoro=byName('조로 1');
+  // v23.0 재핀: 2312 카탈로그에서 전설 조로(S20h)의 끝딜 1 이 '처형'으로
+  // 재편돼 끝딜 기여자가 아니게 됐다 — 계약(동적 필수 역할 보호 라벨)은
+  // 유닛 무관이므로 끝딜 1 을 가진 전설 시노부(240h)로 고정한다.
+  const zoro=units.find(x=>x.id==='240h');
   const counts={'810e':5,D40h:1};counts[zoro.id]=1;
   const locks=[{stage:'upper',id:'D40h',source:'t'}];
   const model=M.build({catalog:units,snapshot:{source:'t',sessionId:'s',seq:1,at:1,dataChangedAt:1,counts,currentAbilities:{},wispCountFound:true,wispCount:5},settings:{mode:'magic',magicRoute:'dual',currentRound:40,gorosei:'none',postLegendRoute:'upper',superKumaOwned:true},locks});
@@ -113,8 +119,10 @@ test('P0-4: 상위 동적 필수 역할(끝딜)에 기여하는 유닛 제거가
 // 스턴 전용 희귀(바제스)는 더 이상 트리거가 아니다 — 의도된 강화.
 function firepowerFixture(round){
   const picks={F50h:1};
-  for(const [n,c] of [['료쿠규 2',2],['에이스 (깍40 공증20 이감20)',2],['킹 3',1],['스모커 (이감50 암브)',1],['시키 (1스턴, 암브)',1],['바르톨로메오 (0.9스턴, 깍 12)',1],['킬러 (광보잡, 깍12)',1],['흰수염 (깍15 발동이감 보조딜)',1]]){
-    const u=byName(n);assert(u,`픽스처 유닛 없음: ${n}`);picks[u.id]=(picks[u.id]||0)+c;
+  // v23.0 재핀: 2312 카탈로그가 이름 표기를 바꿔(접두사·이모지·수치) 이름
+  // 픽스처가 깨졌다 — 같은 유닛을 id 로 고정한다(구성 불변).
+  for(const [n,c] of [['N30h',2],['unit_1779015467592_9245',2],['HA0h',1],['V20h',1],['930h',1],['Z20h',1],['540h',1],['B30h',1]]){
+    const u=units.find(x=>x.id===n);assert(u,`픽스처 유닛 없음: ${n}`);picks[u.id]=(picks[u.id]||0)+c;
   }
   // v18.8(사용자 교정): 물딜 광보잡 기준이 2기다 — 킬러 하나로는 "역할표 완성"
   // 픽스처가 성립하지 않는다. 피셔타이거(보잡+광폭)를 넣어 전제를 지킨다.

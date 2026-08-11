@@ -224,7 +224,7 @@ test('every catalog unit has an evidence-labelled story grade',()=>{
 test('v13 snapshot health uses freshness and confidence, not old row/hash constants',()=>{
   const now=Date.now(),valid={
     source:'tmo',parser:'ord-tmo-parser-v13-adapter',helperId:'32172',at:now,scanAt:now,bridgeAt:now,dataChangedAt:now,
-    unitCount:300,collection:{found:true,confidence:.95},countDiscovery:{found:true,parsed:300,missing:0,ambiguous:0},
+    unitCount:324,collection:{found:true,confidence:.95},countDiscovery:{found:true,parsed:324,missing:0,ambiguous:0},
     wispCountFound:true,abilityCount:5,connected:true
   };
   assert.strictEqual(C.snapshotHealth(valid,now).ready,true);

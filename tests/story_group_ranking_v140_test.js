@@ -29,7 +29,8 @@ test('league metadata and catalog membership are independent and exhaustive',()=
   assert(Object.isFrozen(C.STORY_LEAGUES));
   assert(Object.isFrozen(C.STORY_RARE_RANKS));
 
-  const expected={rare:[42,42],upper:[89,78],legend:[81,76]},members={};
+  // v23.0 재핀: 소환물 3기 상위 이탈 — 상위 카탈로그 89→86 (순위 원본 78 불변).
+  const expected={rare:[42,42],upper:[86,78],legend:[81,76]},members={};
   for(const key of Object.keys(expected)){
     const rows=C.storyLeagueRows(units,key),ranked=rows.filter(row=>row.grade.leagueRanked);
     assert.deepStrictEqual([rows.length,ranked.length],expected[key],`${key} catalog/ranked count`);

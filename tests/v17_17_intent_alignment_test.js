@@ -60,7 +60,8 @@ test('단계 4(23~30라): 상위 확정은 라운드 무관(v22.1) + 리롤 게�
   assert(!appSource.includes('방향 확정은 25라운드부터'), '확정 게이트 문구가 되살아남');
   assert(appSource.includes("actualRound()<25?'25라 전 리롤 잠금"), '리롤 25라 게이트는 유지되어야 한다');
   assert(/2\s*-\s*C\.num\(this\.state\.rerollsUsed\)|rerollBudget/.test(appSource + engineSource), '리롤 2회 예산이 사라짐');
-  assert(engineSource.includes('리롤 2회'), '리롤 2회 소진 안내가 사라짐');
+  // v23.0 재핀: 소진 안내가 항법 의존 상한으로 보간된다(`리롤 ${rerollLimit}회`).
+  assert(/리롤 \$\{rerollLimit\}회|리롤 2회/.test(engineSource), '리롤 소진 안내가 사라짐');
 });
 
 test('단계 4: 상위 선택은 빠른 도달과 패 소모·보완의 균형(클리어 가치 랭킹)', () => {

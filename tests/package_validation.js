@@ -116,7 +116,8 @@ for(const engineFile of ['ord_core.js','ord_squad_planner.js','ord_v15_model.js'
   assert(!read(engineFile).includes('ORD_UPPER_PLAYBOOK'),`${engineFile} 이 표시 전용 플레이북을 참조함 — 엔진 판단에 쓰면 안 된다`);
 }
 const storyLeagueCounts=C.storyLeagueRows(units).reduce((out,row)=>{out[row.league]=(out[row.league]||0)+1;return out;},{});
-assert.deepStrictEqual(JSON.parse(JSON.stringify(storyLeagueCounts)),{rare:42,upper:89,legend:81},'story league catalog counts changed');
+// v23.0 재핀: 베가펑크 소환물 3기 상위→기타(소환) 재분류 — 상위 89→86.
+assert.deepStrictEqual(JSON.parse(JSON.stringify(storyLeagueCounts)),{rare:42,upper:86,legend:81},'story league catalog counts changed');
 
 const content=read('content-tmo.js'),background=read('background.js'),boot=read('ord_boot_extension.js');
 assert(content.indexOf("'32172': Object.freeze")<content.indexOf("'34366': Object.freeze"),'32172 is not the primary adapter');
@@ -140,7 +141,7 @@ assert(background.includes('nextAutoRound')&&background.includes('ordAutoRoundSt
 
 const now=Date.now(),healthSnapshot={
   source:'tmo',parser:'ord-tmo-parser-v13-adapter',helperId:'32172',at:now,scanAt:now,bridgeAt:now,dataChangedAt:now,
-  unitCount:300,collection:{found:true,confidence:.95},countDiscovery:{found:true,parsed:300,missing:0,ambiguous:0},
+  unitCount:324,collection:{found:true,confidence:.95},countDiscovery:{found:true,parsed:324,missing:0,ambiguous:0},
   wispCountFound:true,abilityCount:5,connected:true
 };
 assert.strictEqual(C.snapshotHealth(healthSnapshot,now).ready,true,'valid confidence-based v13 snapshot is blocked');

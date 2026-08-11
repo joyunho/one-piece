@@ -181,8 +181,13 @@ test('nine-equivalent is a checkpoint, not a stop condition',()=>{
   assert(decision.action&&decision.action.id==='W50h',`engine did not continue with the available deficit repair; ${decisionSummary(decision)}`);
   const slowAfter=rowByKey(decision.afterAction,'slow');
   assert(slowAfter&&slowAfter.current>slowBefore.current,'Vivi action did not improve the mandatory slow deficit');
-  assert.strictEqual(slowAfter.current,100,'Vivi replay should raise conservative Nasjuro slow to 100');
-  assert.strictEqual(slowAfter.gap,17,'Vivi must not be mislabeled as completing the remaining slow gate');
+  // v23.0 재핀: 2312 카탈로그 이감 갱신(에이스 왜곡 +5 등)으로 같은 리플레이
+  // 의 합산이 100→105 가 됐다 — '비비 제작이 필수 이감 결손을 실제로 줄인다'
+  // 는 계약(위 >비교)은 그대로다.
+  assert.strictEqual(slowAfter.current,105,'Vivi replay should raise conservative Nasjuro slow to 105');
+  // v23.0 재핀: 현재 105 → 목표 117(나스쥬로) 잔여 17→12 — '비비 뒤에도
+  // 이감 게이트가 완결로 오표기되지 않는다'(gap>0)는 계약은 그대로다.
+  assert.strictEqual(slowAfter.gap,12,'Vivi must not be mislabeled as completing the remaining slow gate');
 });
 
 let passed=0;

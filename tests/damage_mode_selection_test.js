@@ -54,7 +54,7 @@ check('반대 계통 선택은 모순된 확정 상위와 청사진을 해제한
   assert.deepStrictEqual([app.state.directionStatus,app.state.directionKey,app.state.directionUpperId,app.state.upperPreviewId],['open','','','']);
   assert.strictEqual(app._directionRankCacheKey,'');
   assert.strictEqual(app.audit.conflictingUpperReleased,true);
-  assert.match(messages[0],/\(A\)쵸파.*확정을 해제했습니다.*물딜로 돌아오면 원클릭으로 다시 확정/);
+  assert.match(messages[0],/쵸파.*확정을 해제했습니다.*물딜로 돌아오면 원클릭으로 다시 확정/);
   // v19.2(사용자 요청): "물딜 가려다가 마딜로 바꿔서" — 해제된 상위를
   // 기억해 뒀다가 원래 계통으로 돌아오면 원클릭 복구를 제안해야 한다.
   assert.deepStrictEqual(

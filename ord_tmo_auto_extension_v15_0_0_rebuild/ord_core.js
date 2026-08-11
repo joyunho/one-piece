@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='22.12.1';
+const VERSION='23.0.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -71,7 +71,14 @@ const ABILITY_ALIASES={
   '단일 이동속도 감소':'단일이동속도 감소','단일이속도 감소':'단일이동속도 감소',
   '방어력감소':'방어력 감소','발동방어력감소':'발동방어력 감소','단일방어력감소':'단일방어력 감소','중첩방어력감소':'중첩방어력 감소',
   '보스잡기':'보스 잡기','마법방어력 감소':'마법 방어력 감소','마법데미지 증가':'마법 대미지 증가',
-  '폭발형 데미지 증폭':'폭발형 대미지 증폭','범위끝딜':'범위 끝딜','모든대미지증가':'모든피해증가'
+  '폭발형 데미지 증폭':'폭발형 대미지 증폭','범위끝딜':'범위 끝딜','모든대미지증가':'모든피해증가',
+  // v23.0(카탈로그 2312 어휘 이행): tmo 카탈로그가 '대미지'→'데미지'로
+  // 표기를 바꾸고 마뎀증 키를 '마법데미지 증폭'으로 개명했다.  라이브 TMO
+  // 페이로드도 같은 어휘를 실어올 수 있으므로 별칭으로 흡수한다.
+  '마법데미지 증폭':'마법 대미지 증가','단일마법 데미지 증가':'단일마법 대미지 증가',
+  '범위 잃은 체력 퍼센트 데미지':'범위 잃은 체력 퍼센트 대미지',
+  '범위 전체 체력 퍼센트 데미지':'범위 전체 체력 퍼센트 대미지',
+  '범위 현재 체력 퍼센트 데미지':'범위 현재 체력 퍼센트 대미지'
 };
 
 // v16.9: 2.305 [C] 맵 파싱 검증값 반영 —
@@ -83,7 +90,7 @@ const ABILITY_ALIASES={
 //  (마법방어 15%는 별도 모델 없음 — 마방깎은 유닛 능력 파싱만.)
 //  나스쥬로 이속 15%는 유지라 이감 117 목표 불변.
 // v22.12(웹 정본 확보 — 공식 누적 패치노트 dcinside ordc1 no=189308 +
-// 2.312 카탈로그 api.tmo.gg/posts/41824), v22.12.1(맵 원본 war3map.j
+// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.0.0(맵 원본 war3map.j
 // 9345-9438 IS==6 분기로 재검증 — 맵데이터_분석_20260811.txt):
 // 오로성 악몽 저주 수치 원문.
 //  · 나스쥬로: 적 이속 +15% · 아군 공속 -15% · 라인몬스터 체력 +1,500만
@@ -106,6 +113,39 @@ const GOROSEI={
   warcury:{key:'warcury',name:'워큐리',slowPhysical:102,slowMagic:102,armorSoft:195,armorSafe:226,stun:1.5,curse:'방어력 +15 · 마법방어력 +15% · 보스 체력 +1,500만 — 방깎 +15(195/226)로 보정 중, 마딜은 마방깎(%) 가치 상승'},
   saturn:{key:'saturn',name:'새턴',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5,curse:'아군 공격력 -30% · 폭발형 데미지 -10% · 적 체젠 +30만/초 — 화력 저주(스펙표 밖). 폭뎀증 의존 조합은 이중 불리, 라인딜·지속딜을 여유 있게'}
 };
+// v23.0(맵 원본 확정 — war3map.j 48457-48466·41700-41743·32723-32758·
+// 64775-64781·64743-64749·62804, 맵데이터_분석_20260811.txt ③):
+// 희귀 리롤은 고정 2회가 아니라 항법 의존이다.
+//   기본 2회 · 1회당 목재 2.  도박광 기본효과 +1(단, 연속베팅을 고르면
+//   기본효과 비활성), 카지노 +1, 리스크헷지 +2(그리고 리롤 목재 0).
+//   패왕의길은 최상위 1기만 조합 가능, 계엄령은 최상위 조합 불가 —
+//   상위 상한은 전역 규칙이 아니라 항법에서만 온다(트리플·콰트로 퀘스트
+//   코드 실존).  코치의 '상위 2기' 계획은 코치 정책이지 게임 규칙이 아님.
+const NAVIGATION={
+  none:{key:'none',name:'항법 미선택',perks:[]},
+  union:{key:'union',name:'연합세력',perks:[['ilseok','일석이조'],['recall','긴급소집'],['trait','특성공학']]},
+  conqueror:{key:'conqueror',name:'패왕의길',perks:[['martial','계엄령'],['bounty','바운티헌터'],['royal','로얄로더']]},
+  gambler:{key:'gambler',name:'도박광',perks:[['casino','카지노'],['hedge','리스크헷지'],['betting','연속베팅']]},
+  help:{key:'help',name:'최고의도움',perks:[['maxout','최대출력'],['alchemy','연금술'],['reverse','역발상']]}
+};
+function navProfile(family,perk){
+  const fam=NAVIGATION[family]?String(family):'none';
+  const perkKey=(NAVIGATION[fam].perks||[]).some(([k])=>k===perk)?String(perk):'';
+  let rerollMax=2,rerollWood=2,upperCap=null;
+  if(fam==='gambler'){
+    if(perkKey!=='betting')rerollMax+=1;
+    if(perkKey==='casino')rerollMax+=1;
+    if(perkKey==='hedge'){rerollMax+=2;rerollWood=0;}
+  }
+  if(fam==='conqueror')upperCap=perkKey==='martial'?0:1;
+  const notes=[];
+  if(rerollMax!==2)notes.push(`희귀 리롤 ${rerollMax}회`);
+  if(rerollWood===0)notes.push('리롤 목재 0');
+  if(upperCap===1)notes.push('최상위 1기만 조합 가능(패왕의길)');
+  if(upperCap===0)notes.push('최상위 조합 불가(계엄령) — 상위 계획 재검토');
+  return{family:fam,perk:perkKey,rerollMax,rerollWood,upperCap,notes};
+}
+
 // v19.9.8(사용자 실측): "아오키지 원스턴은 불가능한듯, 적어도 0.7은 잡혀야
 // 스턴이 잡히는 느낌 — 이것도 최소라 새긴 하는데."  0802 판이 스턴
 // 0.51~0.61 로 단끝에서 새서 죽은 데 이어, 하드 최소선 자체를 0.5→0.7 로
@@ -368,10 +408,31 @@ for(const family of UPPER_VARIANT_FAMILIES)family.forEach((id,index)=>{UPPER_VAR
 const UPPER_POWER_TIER_RANK=Object.freeze({F:0,D:1,C:2,B:3,A:4,S:5});
 const UPPER_POWER_TIER_LETTERS=Object.freeze(['S','A','B','C','D','F']);
 const UPPER_POWER_TIER_CACHE=new WeakMap();
+// v23.0(카탈로그 2312 이행): 2.305 카탈로그는 상위 이름에 (S)~(F) 티어
+// 접두사를 달았지만 2312 카탈로그는 접두사를 빼고 이모지(💖💙🤍)만 남겼다
+// — 이모지는 구 6단계 티어와 무상관(교차표 확인)이라 대체 불가.  구 덤프
+// (git b2e1a45)에서 추출한 73개 전량을 id 승계표로 보존한다.  이름 접두사가
+// 있으면(라이브 TMO 페이로드 등) 그쪽이 이긴다.
+const UPPER_POWER_TIER_CARRYOVER=Object.freeze({
+  "E90H":"B","890H":"A","LB0H":"S","990H":"F","490H":"C","XB0H":"F",
+  "290H":"B","DB0H":"C","B90H":"A","F90H":"A","unit_1767356628978_5789":"S","A90H":"S",
+  "190H":"A","unit_1747756917990_920":"A","X80H":"A","unit_1779054071704_519":"B","unit_1779015720197_7602":"B","unit_1779054276300_5909":"B",
+  "unit_1779054200606_9136":"B","C40h":"D","940h":"F","J40h":"A","unit_1761060002112_2027":"C","F40h":"D",
+  "M70h":"A","unit_1767886180546_6011":"A","A40h":"B","KB0H":"B","KB0H_":"B","A50h":"D",
+  "B50h":"A","I50h":"D","unit_1745689336668_9114":"D","Q80h":"B","I70h":"A","F50h":"A",
+  "IA0h":"D","090H":"F","V80H":"S","690H":"B","W80H":"B","2B0H":"A",
+  "I90H":"B","H90H":"A","unit_1767886116631_3690":"A","Z80H":"B","U80H":"B","790H":"C",
+  "590H":"A","OC0H":"A","4B0H":"A","5B0H":"S","N50H":"S","Y80H":"B",
+  "D40h":"D","Q40h":"S","E40h":"A","unit_1767886057577_8465":"A","B40h":"A","G40h":"C",
+  "JC0h":"D","850h":"B","750h":"C","950h":"A","R80h":"A","760h":"B",
+  "C50h":"S","unit_1767356778906_9384":"C","G50h":"D","O80h":"C","480h":"C","040h":"F",
+  "E50h":"A"
+});
 function directUpperPowerTier(u){
   if(!u||!isUpper(u))return'';
   const match=String(u.name||'').match(/^\s*\(\s*(S|A|B|C|D|F)\s*\)/);
-  return match?match[1]:'';
+  if(match)return match[1];
+  return UPPER_POWER_TIER_CARRYOVER[u.id]||'';
 }
 function upperPowerTier(u,db,trail){
   if(!u||!isUpper(u))return{known:false,letter:'',rank:-1,source:'not-upper',sourceId:''};
@@ -477,7 +538,15 @@ const STUN_RESEARCH={
   // v19.8.1(사용자 규칙): 블랙마리아 왜곡은 W 폼 3형태(스턴/이감40/데미지)가
   // 상호 배타다 — 이감폼을 쓰는 덱 기준으로 계산하므로 스턴은 0.  0731 판의
   // 스턴 1.25는 이 0.748 이중 계산이 부풀린 값이었다.
-  'unit_1752903381904_1445':{displayStun:0,capture:0},'IC0h':{displayStun:.427,capture:49.73},'unit_1779016778159_2512':{displayStun:.317,capture:40}
+  'unit_1752903381904_1445':{displayStun:0,capture:0},'IC0h':{displayStun:.427,capture:49.73},'unit_1779016778159_2512':{displayStun:.317,capture:40},
+  // v23.0(사용자 요청 "방주맥심 스턴도 같이 넣어줘" + 2.312R 맵 원본 판독):
+  // 뇌영(A0BG)은 마나 재생형이 아니라 **공격 카운터형** — 공격 1회당 마나
+  // +1, 150타마다 자동 발동해 600범위 1.2초 스턴(보스급 0.24초).  공속
+  // 0.64초 기준 주기 96.6초(마젠 연구소 '식량 보급' +0.8/초 시 ≈64초),
+  // 스턴 가동률 1.24%~1.88%.  코치 앵커 3종(아오키지·시키·미나토) 역산
+  // 스케일(유효 인분 ≈ 초당 기대 스턴초 ×2.6)로 마젠 연구 기준 0.05 인분
+  // — 사실상 스턴 전력이 아니라 광역 딜·마방깎 유닛이다.
+  'X30h':{displayStun:.05,capture:7.73}
 };
 
 // 희귀 42종 전체 스토리 파괴 실측 (갤러리 250029 데미지% ×100).
@@ -588,7 +657,10 @@ function groupName(u){return String(u&&u.groupName||'');}
 function nameOf(u){return u&&DISPLAY_NAME_OVERRIDES[u.id]||cleanName(u&&u.name||'');}
 function displayNameOf(u){return u&&UI_NAME_OVERRIDES[u.id]||nameOf(u);}
 function isRare(u){return groupName(u).includes('희귀함');}
-function isCommon(u){return groupName(u)==='흔함';}
+// v23.0: 2312 카탈로그가 위습(810e)을 '특수재료'→'흔함' 그룹으로 옮겼다 —
+// 위습은 자원이지 흔함 유닛이 아니므로 흔함 계산(종류 수·필러·픽스처)에서
+// 제외한다.
+function isCommon(u){return groupName(u)==='흔함'&&!(u&&u.id===WISP_ID);}
 function isUncommon(u){return groupName(u)==='안흔함';}
 function isSpecialTier(u){return groupName(u)==='특별함';}
 function isUpper(u){return /제한됨|초월|불멸|영원/.test(groupName(u));}
@@ -725,7 +797,10 @@ function roleProfile(u){
   // magic amplification and magic-defense reduction are utility as well.
   const sharedUtility=!!(u&&(u.id==='V30h'||u.id==='P30h'));
   if(sharedUtility||u&&u.id==='unit_1779017164417_3162')utility=true;
-  const mana=abilityValue(u,'마나 재생'),attackRaw=abilityValue(u,'공격력 증가'),triggerAttack=abilityValue(u,'발동공격력 증가'),speed=abilityValue(u,'공격속도 증가'),regen=abilityValue(u,'체력 재생'),deletion=abilityBool(u,'유닛삭제');
+  // v23.0(맵 확인): '처형'(조로 전설 — 라인몹 체력 15% 이하 확정 즉사,
+  // 카벤딧슈 — 암브 75중첩 즉사)은 엔진 프리미티브가 유닛삭제와 동일
+  // (최대체력 ×2 카오스 킬) — 같은 라인 정리 축으로 합산한다.
+  const mana=abilityValue(u,'마나 재생'),attackRaw=abilityValue(u,'공격력 증가'),triggerAttack=abilityValue(u,'발동공격력 증가'),speed=abilityValue(u,'공격속도 증가'),regen=abilityValue(u,'체력 재생'),deletion=abilityBool(u,'유닛삭제')||abilityBool(u,'처형');
   const profile={family,stun:round6(stun),slow,triggerSlow,singleSlow,armor,triggerArmor,singleArmor,stackArmor,boss,frenzy,single,end,magicDef,magicAmp,explosionAmp,mana,attack:Math.max(0,attackRaw),attackPenalty:Math.max(0,-attackRaw),triggerAttack,speed,regen,armorBreak,armorBreakWeight:round2(armorBreakWeight),utility,sharedUtility,supportDamage,percent,deletion};if(u&&typeof u==='object')ROLE_PROFILE_CACHE.set(u,profile);return profile;
 }
 
@@ -997,8 +1072,12 @@ function specialPrerequisiteMeta(db,id){
   if(!id||id===WISP_ID)return null;const u=db&&db.byId&&db.byId.get(id);
   if(id===RAYLEIGH_HIDDEN_ID)return{kind:'rayleigh',name:materialName(db,id)};
   if(id===PIRATE_SHIP_MATERIAL_ID||isShip(u))return{kind:'ship',name:materialName(db,id)};
-  if(isItem(u))return{kind:'item',name:materialName(db,id)};
+  // v23.0: 2312 카탈로그가 '특수재료' 그룹을 해체하고 그린블러드·토큰·
+  // 고대의 배 등을 '기타'로 옮겼다 — isItem(/아이템|기타/)이 먼저 잡으면
+  // kind 가 item 으로 바뀌어 베가펑크 계열 게이트가 풀린다.  경성 특수
+  // 판정(hard/랜덤유닛)을 item 보다 먼저 둔다.
   if(isRandom(u)||u&&u.hardSpecial===true||u&&tierKey(u)==='hard')return{kind:'special',name:materialName(db,id)};
+  if(isItem(u))return{kind:'item',name:materialName(db,id)};
   return null;
 }
 function specialPrerequisiteStatus(db,unit,counts){
@@ -1046,7 +1125,7 @@ function ownedUnits(state,pred){const out=[];for(const u of state.db.units){cons
 function hasRawAbility(state,key){return Object.prototype.hasOwnProperty.call(state.currentAbilities,canonicalAbility(key));}
 function rawAbility(state,key){return num(state.currentAbilities[canonicalAbility(key)]);}
 function isMeasuredControlUnit(u){return stunTableValue(u)!=null;}
-function isRoleBearingUnit(u){return!!u&&!isCommon(u)&&!isUncommon(u)&&(isUpper(u)||isLegendish(u)||isRare(u)||isMeasuredControlUnit(u)||Object.keys(u.abilities||{}).some(key=>['스턴','이동속도 감소','발동이동속도 감소','단일이동속도 감소','방어력 감소','발동방어력 감소','단일방어력 감소','중첩방어력 감소','아머브레이크','보스 잡기','광폭화','단일','끝딜','마나 재생','공격력 증가','발동공격력 증가','공격속도 증가','체력 재생','마법 방어력 감소','마법 대미지 증가','폭발형 대미지 증폭','유닛삭제'].includes(canonicalAbility(key))));}
+function isRoleBearingUnit(u){return!!u&&!isCommon(u)&&!isUncommon(u)&&(isUpper(u)||isLegendish(u)||isRare(u)||isMeasuredControlUnit(u)||Object.keys(u.abilities||{}).some(key=>['스턴','이동속도 감소','발동이동속도 감소','단일이동속도 감소','방어력 감소','발동방어력 감소','단일방어력 감소','중첩방어력 감소','아머브레이크','보스 잡기','광폭화','단일','끝딜','마나 재생','공격력 증가','발동공격력 증가','공격속도 증가','체력 재생','마법 방어력 감소','마법 대미지 증가','폭발형 대미지 증폭','유닛삭제','처형'].includes(canonicalAbility(key))));}
 function ownedRoleUnits(state){
   const raw=ownedUnits(state,isRoleBearingUnit),out=[],variants=new Map();for(const u of raw){if(isUpper(u)&&UPPER_VARIANT_CANONICAL[u.id]){const key=canonicalUpperId(u.id),previous=variants.get(key);if(!previous||upperVariantPriority(u.id)>upperVariantPriority(previous.id))variants.set(key,u);}else out.push(u);}return out.concat([...variants.values()]);
 }
@@ -1682,5 +1761,5 @@ function partnerShareFor(upperId,unitOrId){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,GOROSEI_COMMON_CURSE,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ledgerCompletion,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,partnerShareFor,insertMechanicPriorityGroup,mechanicRequirementKeys,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,GOROSEI_COMMON_CURSE,NAVIGATION,navProfile,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ledgerCompletion,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,partnerShareFor,insertMechanicPriorityGroup,mechanicRequirementKeys,debugFixture};
 })(window);

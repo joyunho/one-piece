@@ -37,7 +37,9 @@ const App=runtime.ORDApp.App;
 const T=runtime.ORDApp._test;
 const catalog=runtime.ORD_TMO_UNITS;
 const leagueOrder=['rare','upper','legend'];
-const expectedTotals={rare:42,upper:89,legend:81};
+// v23.0 재핀: 2312 카탈로그가 베가펑크 소환물 3기를 상위→기타(소환)으로
+// 재분류해 상위 리그가 89→86 이 됐다(희귀·전설급 불변).
+const expectedTotals={rare:42,upper:86,legend:81};
 
 test('story league state defaults to rare and rejects stale values',()=>{
   assert.match(appSource,/storyLeague:'rare'/);
@@ -75,7 +77,7 @@ test('league switch action resets a stale tier filter and ignores invalid league
   assert.deepStrictEqual([persisted,rendered],[1,1]);
 });
 
-test('core catalog partitions the shipped units into 42 Rare, 89 Upper, and 81 Legendary rows',()=>{
+test('core catalog partitions the shipped units into 42 Rare, 86 Upper, and 81 Legendary rows',()=>{
   const rows=C.storyLeagueRows(catalog),counts={rare:0,upper:0,legend:0};
   for(const row of rows){
     assert(leagueOrder.includes(row.league),`unexpected story league: ${row.league}`);
@@ -83,7 +85,9 @@ test('core catalog partitions the shipped units into 42 Rare, 89 Upper, and 81 L
     assert.strictEqual(row.grade.league,row.league);
   }
   for(const key of leagueOrder)assert.strictEqual(counts[key],expectedTotals[key],`${key} catalog count changed`);
-  assert.strictEqual(rows.length,212,'material and item rows leaked into the combat-story leagues');
+  // v23.0 재핀: 총합 212→209 (상위 -3, 소환물 재분류) — 재료·아이템 미유출
+  // 계약은 그대로다.
+  assert.strictEqual(rows.length,209,'material and item rows leaked into the combat-story leagues');
 
   const rare=C.storyLeagueRows(catalog,'rare');
   const upper=C.storyLeagueRows(catalog,'upper');

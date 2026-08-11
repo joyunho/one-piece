@@ -95,8 +95,10 @@ const altState=C.normalizeState(units,{counts:altCounts,currentAbilities:{}},{ma
 const altSpec=C.finalGradeSpec(altState,'physical',{gorosei:'none'},null);
 const altProfile=C.clearProfileDetails(altSpec,'physical',{gorosei:'none',_upperUnit:altState.db.byId.get('190H')});
 const altSlow=altProfile.requirements.find(row=>row.key==='slow');
-assert.strictEqual(altSlow.current,95);
-assert.strictEqual(altSlow.target-altSlow.current,7,'전 패 소모안은 안전 이감이 정확히 7 부족해야 합니다.');
+// v23.0 재핀: 에이스(왜곡) 이감 20→25 (2312 카탈로그) — 합 95→100.
+// 여전히 풀이감 102 에 못 미친다는 서사(클리어 게이트 우선)는 그대로다.
+assert.strictEqual(altSlow.current,100);
+assert.strictEqual(altSlow.target-altSlow.current,2,'전 패 소모안은 안전 이감이 정확히 2 부족해야 합니다.');
 
 // 선택 위습이 늘면 정확한 라인업은 바뀔 수 있다. 대신 현재 재고로
 // 증명되는 prefix와 체크포인트 진행이 뒤로 가지 않아야 한다.

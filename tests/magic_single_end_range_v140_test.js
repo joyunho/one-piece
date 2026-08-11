@@ -27,10 +27,12 @@ check('name-only matches never invent verified single/end damage',()=>{
     [0,0,0,0],
     '캐럿(변화)은 이름 추정 0.6단일을 받으면 안 됩니다.'
   );
+  // v23.0 재핀: 류마(히든) 단일 0.5 → 0.7 (2312 카탈로그 갱신 — 계약의
+  // 본질 'abilities 값만 인정, 이름 추정 금지'는 그대로다).
   assert.deepStrictEqual(
     [hiddenRyuma.directSingle,hiddenRyuma.directEnd,hiddenRyuma.directCredit],
-    [.5,0,.5],
-    '류마(히든)는 TMO abilities의 0.5단일만 인정해야 합니다.'
+    [.7,0,.7],
+    '류마(히든)는 TMO abilities의 0.7단일만 인정해야 합니다.'
   );
   assert.deepStrictEqual(
     [physicalZoro.directCredit,physicalZoro.maxCredit,headset.directCredit,headset.maxCredit],
@@ -90,11 +92,14 @@ check('unverified finish credit can open only the theoretical band',()=>{
 });
 
 check('four half-credit supports remain below the required operating value',()=>{
+  // v23.0 재핀: 2312 카탈로그 단일 갱신 — 레이쥬 0.5→0.8, 류마 0.5→0.7,
+  // 도플라 0.5→0.6 (카쿠 0.5 유지).  합 2.6 은 여전히 필요선 3 미만이라
+  // '부분 신용 4기로는 부족' 계약은 그대로다.
   const lineup=[unit('330h'),unit('440h'),unit('S50h'),unit('KC0h')];
   const result=C.evaluateMagicSingleEnd(lineup);
   assert.deepStrictEqual(
     [result.status,result.expected,result.largest,result.stable,result.maximum,result.verifiedUnits],
-    ['insufficient',2,.5,1.5,2,4]
+    ['insufficient',2.6,.8,1.8,2.6,4]
   );
   const route=planner._test.routeEvaluationFor(lineup,{rows:[]},'magic','singleEnd');
   assert.strictEqual(route.confirmable,false);

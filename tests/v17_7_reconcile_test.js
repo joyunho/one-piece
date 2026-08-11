@@ -105,8 +105,10 @@ test('전투 기여 점수: 물딜 축은 스턴·구조 지원을 세지 않는
 // v17.6 감사 테스트와 같은 화력 픽스처(아카이누)로 대안 중복 제거를 확인한다.
 function firepowerFixture(round){
   const picks={F50h:1};
-  for(const [n,c] of [['료쿠규 2',2],['에이스 (깍40 공증20 이감20)',2],['킹 3',1],['스모커 (이감50 암브)',1],['시키 (1스턴, 암브)',1],['바르톨로메오 (0.9스턴, 깍 12)',1],['킬러 (광보잡, 깍12)',1],['흰수염 (깍15 발동이감 보조딜)',1]]){
-    const u=byName(n);assert(u,`픽스처 유닛 없음: ${n}`);picks[u.id]=(picks[u.id]||0)+c;
+  // v23.0 재핀: 2312 카탈로그가 이름 표기를 바꿔(접두사·이모지·수치) 이름
+  // 픽스처가 깨졌다 — 같은 유닛을 id 로 고정한다(구성 불변).
+  for(const [n,c] of [['N30h',2],['unit_1779015467592_9245',2],['HA0h',1],['V20h',1],['930h',1],['Z20h',1],['540h',1],['B30h',1]]){
+    const u=units.find(x=>x.id===n);assert(u,`픽스처 유닛 없음: ${n}`);picks[u.id]=(picks[u.id]||0)+c;
   }
   const akainu=units.find(u=>u.id==='P10h');
   for(const s of akainu.stuffs)picks[s.id]=(picks[s.id]||0)+s.count;

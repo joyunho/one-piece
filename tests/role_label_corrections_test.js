@@ -28,9 +28,11 @@ const qualifiedNames={
 
 check('flag numbers use grade-qualified UI names without touching calculation names',()=>{
   for(const [id,expected] of Object.entries(qualifiedNames))assert.strictEqual(C.displayNameOf(unit(id)),expected,id);
-  assert(C.nameOf(unit('730h')).includes('2'),'calculation name for Sugar was mutated');
-  assert(C.nameOf(unit('X20h')).includes('3'),'calculation name for Black Maria was mutated');
-  assert(C.nameOf(unit('unit_1752903381904_1445')).includes('2'),'warped Black Maria calculation name was mutated');
+  // v23.0 재핀: 2312 카탈로그가 동명이인 숫자 표기(슈가 2·블랙마리아 3)를
+  // 깃발·괄호 표기로 바꿨다 — 계약의 본질은 '동명이인 계산명이 서로
+  // 구별된다'이므로 구별성만 핀한다.
+  assert.notStrictEqual(C.nameOf(unit('730h')),C.nameOf(unit('720h')),'legend/rare Sugar calculation names collide');
+  assert.notStrictEqual(C.nameOf(unit('X20h')),C.nameOf(unit('unit_1752903381904_1445')),'legend/warped Black Maria calculation names collide');
 });
 
 check('real character number in Baby 5 is preserved',()=>{

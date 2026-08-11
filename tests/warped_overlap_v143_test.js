@@ -66,7 +66,9 @@ test('an already-owned warped unit remains usable and contributes to the live sp
   assert.strictEqual(allowed(state,ACE_WARPED,false),true);
   assert(P._test.finalEntries(state,state.counts).some(candidate=>candidate.id===ACE_WARPED));
   const spec=C.currentSpec(state,'physical',off);
-  assert.deepStrictEqual([spec.slow,spec.armor,spec.attack],[20,40,20]);
+  // v23.0 재핀: 에이스(왜곡) 이감 20→25 · 공증 20→25 (2312 카탈로그,
+  // 맵 원본 A0R9 염계 '900범위 적 이속 25% 감소 · 아군 공증 25%' 확정).
+  assert.deepStrictEqual([spec.slow,spec.armor,spec.attack],[25,40,25]);
 });
 
 test('recipe profiles expose the Ace ancestor and its full transitive Rare demand',()=>{

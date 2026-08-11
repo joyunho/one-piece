@@ -33,10 +33,13 @@ assert.strictEqual(upperTiers.filter(row=>!row.tier.known).length,0,'an Upper wa
 assert.strictEqual(C.upperPowerTier(db.byId.get('A90H'),db).letter,'S','Jinbe tier prefix was not parsed');
 assert.strictEqual(C.upperPowerTier(db.byId.get('890H'),db).letter,'A','Robin tier prefix was not parsed');
 assert.strictEqual(C.upperPowerTier(db.byId.get('F40h'),db).letter,'D','Gaban tier prefix was not parsed');
+// v23.0 재핀: 2312 카탈로그가 베가펑크 소환물(요크 등)을 '초월 [물딜]'에서
+// '기타(소환)'으로 재분류했다 — 소환물은 상위 슬롯이 아니므로 티어 없음이
+// 맞다.  (본체 unit_1779015720197_7602 는 여전히 상위 B.)
 assert.deepStrictEqual(
   [C.upperPowerTier(db.byId.get('unit_1779054378124_5918'),db).letter,C.upperPowerTier(db.byId.get('unit_1779054378124_5918'),db).source],
-  ['B','recipe-parent'],
-  'Vegapunk variant did not inherit the single recipe-parent tier'
+  ['','not-upper'],
+  'Vegapunk summon should no longer carry an upper tier (2312 reclassification)'
 );
 
 const baseRow={
