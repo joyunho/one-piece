@@ -107,6 +107,18 @@ test('④ veto 관철 — 프리픽스 재견적·표시 잠금이 넘어간 유
   assert.strictEqual(kept,fresh,'veto 잠금이 신선한 판정을 덮었다');
 });
 
+test('⑤ 설치·업데이트 — git 미설치 PC 에서도 죽지 않는다 (v22.10.1 실사례)',()=>{
+  // ZIP 다운로드 + git 미설치 PC: Stop 정책 하의 git 호출 CommandNotFound 가
+  // 설치 전체를 죽였다.  git 은 정보 표시용 — 없으면 건너뛴다.
+  const ps1=fs.readFileSync(path.join(REPO,'tools/desktop_install.ps1'),'utf8');
+  assert(ps1.includes('Get-Command git -ErrorAction SilentlyContinue'),'ps1 git 존재 가드 없음');
+  assert(!/\n\$head = & git/.test(ps1),'가드 없는 git 직접 호출이 남아 있다');
+  const update=fs.readFileSync(path.join(REPO,'업데이트.bat'),'latin1');
+  assert(update.includes('where git'),'업데이트 bat 의 git 존재 검사 없음');
+  assert(update.includes('winget install --id Git.Git -e'),'git 설치 안내 없음');
+  assert(/^[\x00-\x7F]*$/.test(update),'업데이트.bat 에 비ASCII — 코드페이지 깨짐 위험');
+});
+
 let passed=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);passed+=1;}

@@ -16,9 +16,17 @@ $manifestPath = Join-Path $repo 'ord_tmo_auto_extension_v15_0_0_rebuild\manifest
 $srcVersion = (Get-Content $manifestPath -Raw | ConvertFrom-Json).version
 Write-Host ('설치할 폴더 : ' + $repo)
 Write-Host ('설치할 버전 : v' + $srcVersion)
-$head = & git -C $repo log --oneline -1 2>$null
-if ($LASTEXITCODE -eq 0 -and $head) { Write-Host ('커밋        : ' + $head) }
-else { Write-Host '커밋        : (git 저장소가 아님 - ZIP 설치본입니다. 최신인지 확인하세요)' }
+# v22.10.1 실사례: git 미설치 PC 에서 ZIP 으로 받아 실행하면
+# $ErrorActionPreference='Stop' 때문에 아래 git 호출의 CommandNotFound 가
+# 설치 전체를 죽였다(21행의 ZIP 안내 분기에 닿지도 못함).  git 은 커밋
+# 표시용 정보일 뿐 설치 필수가 아니다 — 없으면 조용히 건너뛴다.
+$head = ''
+if (Get-Command git -ErrorAction SilentlyContinue) {
+  $head = & git -C $repo log --oneline -1 2>$null
+  if ($LASTEXITCODE -ne 0) { $head = '' }
+}
+if ($head) { Write-Host ('커밋        : ' + $head) }
+else { Write-Host '커밋        : (git 없음 또는 ZIP 설치본 - 최신인지 확인하세요. 자동 업데이트에는 git 설치 필요: winget install --id Git.Git -e)' }
 Write-Host ''
 
 # 1) Node.js 확인 — 없으면 winget으로 LTS 설치

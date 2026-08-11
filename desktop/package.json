@@ -1,6 +1,6 @@
 {
   "name": "ord-2305-nightmare-coach-desktop",
-  "version": "22.10.0",
+  "version": "22.10.1",
   "private": true,
   "description": "ORD 2.305 악몽 실전 판단 코치 — 데스크톱 셸 (TMO 탭 불필요, 로컬 직결)",
   "main": "main.js",
