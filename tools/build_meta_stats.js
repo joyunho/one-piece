@@ -23,15 +23,20 @@ const EXT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild');
 // 시절에는 표본을 키우면 다이제스트 수치가 통째로 커져 엔진 가중치가 조용히
 // 바뀌었지만, 이제 엔진이 비율(조건부·픽률)만 읽으므로 표본 크기에 불변이다.
 // 전수 파일이 없으면 예전 상위권 표본으로 물러난다.
-function latestInput() {
+// v22.11(사용자: "시즌 2 버전 기록들을 모두 보고"): 수집본이 컷오프
+// 구간별로 나뉘어 저장되므로(겹침 없음) 전부 병합해야 시즌 2 전수다.
+// 최신 파일 하나만 읽으면 한 달치(8월)뿐이라 드리프트(두 달 비교)가
+// 계산 불가가 된다 — build_clear_stats 와 같은 병합 규칙.
+function allInputs() {
   const dir = path.join(ROOT, 'data');
   const all = fs.readdirSync(dir).filter((name) => /^tmo_nightmare_all_\d{8}\.json(\.gz)?$/.test(name)).sort();
-  if (all.length) return path.join(dir, all[all.length - 1]);
+  if (all.length) return all.map((name) => path.join(dir, name));
   const legacy = fs.readdirSync(dir).filter((name) => /^tmo_api_histories_\d{8}\.json$/.test(name)).sort();
   if (!legacy.length) throw new Error('data/tmo_nightmare_all_*.json(.gz) 이 없습니다 — tools/tmo_nightmare_collect_all.js 먼저 실행');
-  return path.join(dir, legacy[legacy.length - 1]);
+  return [path.join(dir, legacy[legacy.length - 1])];
 }
-const INPUT = process.argv[2] || latestInput();
+const INPUTS = process.argv[2] ? [process.argv[2]] : allInputs();
+const INPUT = INPUTS[INPUTS.length - 1];
 function readInput(file) {
   const buf = fs.readFileSync(file);
   return JSON.parse(/\.gz$/.test(file) ? zlib.gunzipSync(buf) : buf);
@@ -52,6 +57,8 @@ const isUpperGroup = (g) => /^(제한됨|초월|불멸|영원)/.test(g);
 const isLegendishGroup = (g) => /^(전설|히든|왜곡됨|변화된|세라핌|해적선)/.test(g);
 
 const payload = readInput(INPUT);
+payload.players = INPUTS.length > 1 ? INPUTS.flatMap((file) => readInput(file).players || []) : (payload.players || []);
+payload.source = INPUTS.map((file) => path.basename(file)).join(' + ');
 const games = [];
 for (const p of payload.players || []) {
   if (p.error) continue;
@@ -214,7 +221,7 @@ const sortedObj = (m, keyFn) => {
 
 const digest = {
   schema: 'ord-meta-stats-v1',
-  source: path.basename(INPUT),
+  source: payload.source || path.basename(INPUT),
   collectedAt: payload.collectedAt || null,
   cutoff: payload.cutoff || null,
   playerCount: (payload.players || []).filter((p) => !p.error).length,

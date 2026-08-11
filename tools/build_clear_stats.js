@@ -23,11 +23,16 @@ const zlib = require('zlib');
 const ROOT = path.join(__dirname, '..');
 const EXT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild');
 
-function latestInput() {
+// v22.11(사용자: "시즌 2 버전 기록들을 모두 보고"): 최신 파일 하나가 아니라
+// 시즌 2 수집본 전부를 병합한다.  수집은 컷오프 구간별로 나뉘어 저장되므로
+// (20260728 = 6/5~7/28, 20260811 = 8/3~ — 겹침 없음) 병합 = 시즌 2 전수다.
+// 2.310/2.312 시대 클리어(스코퍼가반 등 신메타)가 다이제스트에 들어와
+// 방향 자동 채택·실측 파트너·저격 감사가 현 메타를 따른다.
+function allInputs() {
   const dir = path.join(ROOT, 'data');
   const all = fs.readdirSync(dir).filter((name) => /^tmo_nightmare_all_\d{8}\.json(\.gz)?$/.test(name)).sort();
   if (!all.length) throw new Error('data/tmo_nightmare_all_*.json(.gz) 없음');
-  return path.join(dir, all[all.length - 1]);
+  return all.map((name) => path.join(dir, name));
 }
 
 // 카탈로그·원장 로드 (리플레이 하니스와 같은 스택, 엔진 제외)
@@ -42,9 +47,14 @@ const C = global.ORDCore;
 const LM = global.ORD_LOCAL_MAP;
 const catalog = global.ORD_TMO_UNITS;
 
-const inputPath = process.argv[2] || latestInput();
-const rawBytes = fs.readFileSync(inputPath);
-const data = JSON.parse(inputPath.endsWith('.gz') ? zlib.gunzipSync(rawBytes).toString('utf8') : rawBytes.toString('utf8'));
+const inputPaths = process.argv[2] ? [process.argv[2]] : allInputs();
+const data = { players: [], sources: [] };
+for (const inputPath of inputPaths) {
+  const rawBytes = fs.readFileSync(inputPath);
+  const one = JSON.parse(inputPath.endsWith('.gz') ? zlib.gunzipSync(rawBytes).toString('utf8') : rawBytes.toString('utf8'));
+  data.players.push(...(one.players || []));
+  data.sources.push(path.basename(inputPath));
+}
 
 const byId = new Map(catalog.map((unit) => [String(unit.id), unit]));
 const catalogIds = new Set(catalog.map((unit) => String(unit.id)));
@@ -154,7 +164,7 @@ for (const family of [...perFamily.keys()].sort()) {
 
 const digest = {
   version: 'clear-stats-v1',
-  source: path.basename(inputPath),
+  source: data.sources.join(' + '),
   purpose: '표시·경고 전용 — 게이트·목표 자동 교체 금지 (최종 조합 데이터라 "무엇을"의 근거이지 "언제"의 근거가 아님)',
   records: records.length,
   usable,

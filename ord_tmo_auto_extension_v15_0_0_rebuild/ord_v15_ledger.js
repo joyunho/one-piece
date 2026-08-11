@@ -6,7 +6,7 @@ if(root)root.ORDV15Ledger=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M){
 'use strict';
 
-const VERSION='22.10.2';
+const VERSION='22.11.0';
 const TIERS=['rare','special','uncommon','common'];
 function num(value){return C&&C.num?C.num(value):(Number(value)||0);}
 function clone(value){return Object.assign({},value||{});}
