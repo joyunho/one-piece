@@ -37,8 +37,9 @@ test('① 오로성 악몽 저주 정본 — curse 필드 + 공통 저주',()=>{
   // 나스쥬로 — 이속·공속·라인몬.  기존 이감 보정 117=102×1.15 검증치 명시.
   assert(nasjuro.curse.includes('이속 +15%')&&nasjuro.curse.includes('공속 -15%'),'나스쥬로 저주 수치 누락');
   assert(nasjuro.curse.includes('117'),'나스쥬로 검증치(117=102×1.15) 문구 없음');
-  // 워큐리 — 방·마방 +15.  기존 armorSoft 보정 195=180+15 검증치 명시.
-  assert(warcury.curse.includes('+15'),'워큐리 저주 수치 누락');
+  // 워큐리 — 방 +15(고정) · 마방 +15%(퍼센트).  v22.12.1: 맵 원본
+  // (war3map.j 9369)으로 마방이 % 임이 확정 — 고정치 표기는 오류.
+  assert(warcury.curse.includes('방어력 +15')&&warcury.curse.includes('마법방어력 +15%'),'워큐리 저주 수치 누락/마방 % 표기 누락');
   assert(warcury.curse.includes('195'),'워큐리 검증치(195=180+15) 문구 없음');
   // 새턴 — 화력 저주(스펙표 밖).  코치가 아직 목표치로 다루지 않음을 자백.
   assert(saturn.curse.includes('공격력 -30%')&&saturn.curse.includes('-10%'),'새턴 저주 수치 누락');
@@ -68,7 +69,10 @@ test('③ patch2312 — I50h 발동이감 60 실효 + 설명 패치 4건',()=>{
   assert(/발동이감60/.test(String(i50.name)),`이름이 교정되지 않았다: ${i50.name}`);
   assert(!/발동이감50/.test(String(i50.name)),'이름에 옛 발동이감50 표기가 남았다');
   assert.strictEqual(C.num(C.roleProfile(i50).triggerSlow),60,'roleProfile triggerSlow 실효가 60이 아니다');
-  const expects=[['V80H','중첩되지'],['OC0H','11만'],['B90H','15%'],['090H','강진']];
+  // v22.12.1: 방주맥심 스턴 1.2초는 맵 원본(A0BG) 확정 — desc 로만 명시
+  // (스턴 인분 산입은 협의 대상), 레베카는 맵 원본 확정 문구 포함.
+  assert(String(i50.desc||'').includes('맵 원본'),'I50h 맵 원본 확정 문구 없음');
+  const expects=[['V80H','중첩되지'],['OC0H','11만'],['B90H','15%'],['090H','강진'],['X30h','스턴 1.2초']];
   for(const[id,token]of expects){
     const unit=context.ORD_TMO_UNITS.find(u=>u.id===id);
     assert(unit,`${id} 가 카탈로그에 없다`);

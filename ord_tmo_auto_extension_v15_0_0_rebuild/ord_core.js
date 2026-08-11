@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='22.12.0';
+const VERSION='22.12.1';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -83,12 +83,16 @@ const ABILITY_ALIASES={
 //  (마법방어 15%는 별도 모델 없음 — 마방깎은 유닛 능력 파싱만.)
 //  나스쥬로 이속 15%는 유지라 이감 117 목표 불변.
 // v22.12(웹 정본 확보 — 공식 누적 패치노트 dcinside ordc1 no=189308 +
-// 2.312 카탈로그 api.tmo.gg/posts/41824): 오로성 악몽 저주 수치 원문.
+// 2.312 카탈로그 api.tmo.gg/posts/41824), v22.12.1(맵 원본 war3map.j
+// 9345-9438 IS==6 분기로 재검증 — 맵데이터_분석_20260811.txt):
+// 오로성 악몽 저주 수치 원문.
 //  · 나스쥬로: 적 이속 +15% · 아군 공속 -15% · 라인몬스터 체력 +1,500만
 //    → 손튜닝이던 이감 117 이 정확히 102×1.15 로 정본 검증됐다.
-//  · 워큐리: 방어력·마법방어력 +15 · 보스 체력 +1,500만
-//    → 방깎 +15(armorSoft 195/armorSafe 226) 정본 검증.  마딜은 마방 +15
-//    만큼 마방깎 가치가 오른다(목표 축은 없어 표시로 안내).
+//  · 워큐리: 방어력 +15(고정) · 마법방어력 +15%(퍼센트) · 보스 체력
+//    +1,500만 — 맵 원문으로 마방이 고정치가 아니라 % 임이 확정됐다
+//    (tmo 카탈로그 표기가 고정치처럼 보였던 것).  물리 방깎 +15
+//    (armorSoft 195/armorSafe 226) 보정은 그대로, 마딜은 마방깎(%)
+//    가치가 그만큼 오른다(목표 축은 없어 표시로 안내).
 //  · 새턴: 아군 공격력 -30% · 폭발형 데미지 -10% · 적 체력재생 +30만/초
 //    → 스펙표 밖 저주(화력 -30%).  2.310 방무뎀→폭발형 일괄 전환과 겹쳐
 //    폭뎀증 의존 조합은 이중으로 불리하다.  실측 클리어 스펙 분포는
@@ -99,7 +103,7 @@ const GOROSEI_COMMON_CURSE='공통(악몽): 적 체력 +1,000만 · 체력재생
 const GOROSEI={
   none:{key:'none',name:'아직 모름',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5,curse:''},
   nasjuro:{key:'nasjuro',name:'나스쥬로',slowPhysical:117,slowMagic:117,armorSoft:180,armorSafe:211,stun:1.5,curse:'적 이속 +15% · 아군 공속 -15% · 라인몬 체력 +1,500만 — 이감 117(=102×1.15)로 보정 중'},
-  warcury:{key:'warcury',name:'워큐리',slowPhysical:102,slowMagic:102,armorSoft:195,armorSafe:226,stun:1.5,curse:'방어력·마법방어력 +15 · 보스 체력 +1,500만 — 방깎 +15(195/226)로 보정 중, 마딜은 마방깎 가치 상승'},
+  warcury:{key:'warcury',name:'워큐리',slowPhysical:102,slowMagic:102,armorSoft:195,armorSafe:226,stun:1.5,curse:'방어력 +15 · 마법방어력 +15% · 보스 체력 +1,500만 — 방깎 +15(195/226)로 보정 중, 마딜은 마방깎(%) 가치 상승'},
   saturn:{key:'saturn',name:'새턴',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5,curse:'아군 공격력 -30% · 폭발형 데미지 -10% · 적 체젠 +30만/초 — 화력 저주(스펙표 밖). 폭뎀증 의존 조합은 이중 불리, 라인딜·지속딜을 여유 있게'}
 };
 // v19.9.8(사용자 실측): "아오키지 원스턴은 불가능한듯, 적어도 0.7은 잡혀야
