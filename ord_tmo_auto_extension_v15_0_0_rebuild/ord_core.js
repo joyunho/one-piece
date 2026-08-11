@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='22.11.0';
+const VERSION='22.12.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -82,11 +82,25 @@ const ABILITY_ALIASES={
 //  10→15 · 마법방어 10%→15% — 워큐리 방깎 목표 190/221→195/226.
 //  (마법방어 15%는 별도 모델 없음 — 마방깎은 유닛 능력 파싱만.)
 //  나스쥬로 이속 15%는 유지라 이감 117 목표 불변.
+// v22.12(웹 정본 확보 — 공식 누적 패치노트 dcinside ordc1 no=189308 +
+// 2.312 카탈로그 api.tmo.gg/posts/41824): 오로성 악몽 저주 수치 원문.
+//  · 나스쥬로: 적 이속 +15% · 아군 공속 -15% · 라인몬스터 체력 +1,500만
+//    → 손튜닝이던 이감 117 이 정확히 102×1.15 로 정본 검증됐다.
+//  · 워큐리: 방어력·마법방어력 +15 · 보스 체력 +1,500만
+//    → 방깎 +15(armorSoft 195/armorSafe 226) 정본 검증.  마딜은 마방 +15
+//    만큼 마방깎 가치가 오른다(목표 축은 없어 표시로 안내).
+//  · 새턴: 아군 공격력 -30% · 폭발형 데미지 -10% · 적 체력재생 +30만/초
+//    → 스펙표 밖 저주(화력 -30%).  2.310 방무뎀→폭발형 일괄 전환과 겹쳐
+//    폭뎀증 의존 조합은 이중으로 불리하다.  실측 클리어 스펙 분포는
+//    불변(v22.11 분석)이라 목표 수치는 유지하고 저주를 화면에 밝힌다.
+//  · 공통(악몽): 적 체력 +1,000만 · 체력재생 +50만/초(2.310에서 30→50만
+//    상향 — "전체 난이도 상승" 체감의 근원).
+const GOROSEI_COMMON_CURSE='공통(악몽): 적 체력 +1,000만 · 체력재생 +50만/초';
 const GOROSEI={
-  none:{key:'none',name:'아직 모름',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5},
-  nasjuro:{key:'nasjuro',name:'나스쥬로',slowPhysical:117,slowMagic:117,armorSoft:180,armorSafe:211,stun:1.5},
-  warcury:{key:'warcury',name:'워큐리',slowPhysical:102,slowMagic:102,armorSoft:195,armorSafe:226,stun:1.5},
-  saturn:{key:'saturn',name:'새턴',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5}
+  none:{key:'none',name:'아직 모름',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5,curse:''},
+  nasjuro:{key:'nasjuro',name:'나스쥬로',slowPhysical:117,slowMagic:117,armorSoft:180,armorSafe:211,stun:1.5,curse:'적 이속 +15% · 아군 공속 -15% · 라인몬 체력 +1,500만 — 이감 117(=102×1.15)로 보정 중'},
+  warcury:{key:'warcury',name:'워큐리',slowPhysical:102,slowMagic:102,armorSoft:195,armorSafe:226,stun:1.5,curse:'방어력·마법방어력 +15 · 보스 체력 +1,500만 — 방깎 +15(195/226)로 보정 중, 마딜은 마방깎 가치 상승'},
+  saturn:{key:'saturn',name:'새턴',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5,curse:'아군 공격력 -30% · 폭발형 데미지 -10% · 적 체젠 +30만/초 — 화력 저주(스펙표 밖). 폭뎀증 의존 조합은 이중 불리, 라인딜·지속딜을 여유 있게'}
 };
 // v19.9.8(사용자 실측): "아오키지 원스턴은 불가능한듯, 적어도 0.7은 잡혀야
 // 스턴이 잡히는 느낌 — 이것도 최소라 새긴 하는데."  0802 판이 스턴
@@ -1664,5 +1678,5 @@ function partnerShareFor(upperId,unitOrId){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ledgerCompletion,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,partnerShareFor,insertMechanicPriorityGroup,mechanicRequirementKeys,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,GOROSEI_COMMON_CURSE,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ledgerCompletion,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,partnerShareFor,insertMechanicPriorityGroup,mechanicRequirementKeys,debugFixture};
 })(window);

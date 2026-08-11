@@ -659,6 +659,10 @@ body{
 .v153-ledger-warning{color:var(--warn);font-size:13px}
 .v151-reroll-fuel{color:var(--muted);font-size:11px}
 
+/* v22.12: 설정 팝업 — 선택 오로성의 악몽 저주 원문 */
+.v2212-curse{display:block;grid-column:1/-1;border:1px solid var(--line);border-radius:var(--radius-sm);padding:6px 9px;background:var(--panel-2);color:var(--sub);font-size:11.5px;line-height:1.5}
+.v2212-curse.warn{border-color:var(--warn);color:var(--warn)}
+
 /* v22.9: 희귀→전설 카드 — 파티 계획 예약 겹침 실비용 칩 */
 .v229-claim{display:inline-flex;align-items:center;border:1px solid var(--warn);border-radius:99px;padding:0 7px;color:var(--warn);font-style:normal;font-size:11.5px}
 

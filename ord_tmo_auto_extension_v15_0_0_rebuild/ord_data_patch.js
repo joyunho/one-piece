@@ -52,6 +52,29 @@ const patch2310={
   'unit_1767884539590_2352':{desc:'2.310 개편: 격려격려 열매::고무(Q) — 선택 아군 체력·마나 3초간 90 회복(쿨 100초) — 극대화 버퍼.'},
   'unit_1767884779838_643':{desc:'2.310: 공격 기능 추가.'}
 };
+// v22.12(웹 정본 — 공식 누적 패치노트 dcinside ordc1 no=189308 · 2.311/2.312
+// 전문 확보): 역할 원장·표시에 닿는 항목만 손패치.  2.311/2.312 는 2.310
+// 의 픽스 버전이라 골격은 patch2310 그대로다.
+const patch2312={
+  // (D)레베카(제한) — 발동이감 50→60 (2.311 시기 변경, 패치노트 미기재·
+  // 커뮤니티 실측 dcinside 256727.  툴팁 논란이 있었으나 60 이 실값).
+  'I50h':{abilities:{'발동이동속도 감소':60},renameFrom:/발동이감50/,renameTo:'발동이감60',desc:'2.311 시기: 발동이감 50 → 60 (커뮤니티 실측 — 패치노트 미기재 변경).'},
+  // (S)나미(초월) — 발이감 중첩 불가로 정리(2.311 시기 문의 직후 패치).
+  'V80H':{desc:'2.311 시기: 발동이감은 중첩되지 않는 것으로 정리 — 다중 나미류 발이감 합산 금지.'},
+  // (A)코비(초월) — 콤비네이션 어택 분신 공격력 12.5만 → 11만 (2.311 너프).
+  'OC0H':{desc:'2.311: 콤비네이션 어택 분신 공격력 12만5000 → 11만 (너프).  방무뎀 타입은 2.310 에서 폭발형으로 전환 — 새턴 저주(폭뎀 -10%)와 상성 주의.'},
+  // (A)우솝(초월) — 10톤해머 크리티컬 10% → 15% (2.311 툴팁 정정 = 실값 15%).
+  'B90H':{desc:'2.311: 10톤해머 크리티컬 확률 10% → 15% (툴팁 정정 — 실값 15%).'},
+  // 검은수염(초월) — 지진이 물리로 적용되던 버그 수정 → 마법뎀 정상화 (2.312).
+  '090H':{desc:'2.312: 강진 데미지+현기증 미적용 버그 수정 · 지진 물리 적용 버그 수정(마법뎀 정상화).'}
+};
+for(const unit of Array.isArray(global.ORD_TMO_UNITS)?global.ORD_TMO_UNITS:[]){
+  const p2312=patch2312[unit.id];
+  if(!p2312)continue;
+  if(p2312.abilities)unit.abilities=Object.assign({},unit.abilities||{},p2312.abilities);
+  if(p2312.renameFrom&&p2312.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(p2312.renameFrom,p2312.renameTo);
+  if(p2312.desc)unit.desc=(String(unit.desc||'').trim()?String(unit.desc)+'\n':'')+p2312.desc;
+}
 if(Array.isArray(global.ORD_TMO_UNITS)){const ids=new Set(global.ORD_TMO_UNITS.map(u=>u.id));for(const row of missingRows)if(!ids.has(row.id))global.ORD_TMO_UNITS.push(row);for(const unit of global.ORD_TMO_UNITS){const patch=liveIdentity[unit.id];if(patch)Object.assign(unit,patch);const abilityPatch=abilityPatches[unit.id];if(abilityPatch){unit.abilities=Object.assign({},unit.abilities||{},abilityPatch.abilities);if(abilityPatch.renameFrom&&abilityPatch.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(abilityPatch.renameFrom,abilityPatch.renameTo);}const p2310=patch2310[unit.id];if(p2310){if(p2310.abilities)unit.abilities=Object.assign({},unit.abilities||{},p2310.abilities);if(p2310.renameFrom&&p2310.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(p2310.renameFrom,p2310.renameTo);if(p2310.desc)unit.desc=(String(unit.desc||'').trim()?String(unit.desc)+'\n':'')+p2310.desc;}const extraCodes=codeAliases[unit.id];if(extraCodes){unit.codes=Array.isArray(unit.codes)?unit.codes:[];for(const code of extraCodes)if(!unit.codes.includes(code))unit.codes.push(code);}}}
 const synergy=global.ORD_SYNERGY_MEMO;if(synergy&&synergy.byUnitId){synergy.byUnitId['unit_1767886180546_6011']=31;synergy.byUnitId.KB0H_=34;}
 function patchMemo(memo){
