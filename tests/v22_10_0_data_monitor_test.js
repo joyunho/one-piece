@@ -107,16 +107,26 @@ test('④ veto 관철 — 프리픽스 재견적·표시 잠금이 넘어간 유
   assert.strictEqual(kept,fresh,'veto 잠금이 신선한 판정을 덮었다');
 });
 
-test('⑤ 설치·업데이트 — git 미설치 PC 에서도 죽지 않는다 (v22.10.1 실사례)',()=>{
-  // ZIP 다운로드 + git 미설치 PC: Stop 정책 하의 git 호출 CommandNotFound 가
-  // 설치 전체를 죽였다.  git 은 정보 표시용 — 없으면 건너뛴다.
+test('⑤ 설치·업데이트 — git·winget 전무 PC 에서도 끝까지 간다 (v22.10.1~2 실사례)',()=>{
+  // 실사례 연쇄: ZIP 다운로드 + git 미설치 → 설치 즉사(v22.10.1 봉합),
+  // 이어서 winget 도 없어 git 설치 안내조차 못 따라감(v22.10.2) —
+  // 업데이트는 ZIP 자동 다운로드로, Node 는 공식 MSI 직접 설치로 폴백.
   const ps1=fs.readFileSync(path.join(REPO,'tools/desktop_install.ps1'),'utf8');
   assert(ps1.includes('Get-Command git -ErrorAction SilentlyContinue'),'ps1 git 존재 가드 없음');
   assert(!/\n\$head = & git/.test(ps1),'가드 없는 git 직접 호출이 남아 있다');
+  assert(ps1.includes('Get-Command winget -ErrorAction SilentlyContinue'),'ps1 winget 존재 가드 없음');
+  assert(ps1.includes("Invoke-RestMethod 'https://nodejs.org/dist/index.json'"),'Node MSI 직접 설치 폴백 없음');
+  assert(ps1.includes('/qn /norestart'),'Node MSI 무인 설치 인자 없음');
   const update=fs.readFileSync(path.join(REPO,'업데이트.bat'),'latin1');
   assert(update.includes('where git'),'업데이트 bat 의 git 존재 검사 없음');
-  assert(update.includes('winget install --id Git.Git -e'),'git 설치 안내 없음');
+  assert(update.includes('zip_update.ps1'),'ZIP 폴백 배선 없음');
+  assert(update.includes('%TEMP%\\ord_zip_update.ps1'),'ZIP 헬퍼가 TEMP 로 복사되지 않는다(자기 덮어쓰기 위험)');
   assert(/^[\x00-\x7F]*$/.test(update),'업데이트.bat 에 비ASCII — 코드페이지 깨짐 위험');
+  const zip=fs.readFileSync(path.join(REPO,'tools/zip_update.ps1'),'latin1');
+  assert(/^[\x00-\x7F]*$/.test(zip),'zip_update.ps1 에 비ASCII — BOM 없이 코드페이지 깨짐 위험');
+  assert(zip.includes('archive/refs/heads/main.zip'),'메인 브랜치 ZIP 주소 없음');
+  assert(zip.includes("desktop_install.ps1'"),'ZIP 갱신 후 설치 연결 없음');
+  assert(zip.includes('SecurityProtocol'),'구형 PS5.1 TLS1.2 보정 없음');
 });
 
 let passed=0;

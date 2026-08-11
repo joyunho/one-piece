@@ -29,11 +29,22 @@ if ($head) { Write-Host ('커밋        : ' + $head) }
 else { Write-Host '커밋        : (git 없음 또는 ZIP 설치본 - 최신인지 확인하세요. 자동 업데이트에는 git 설치 필요: winget install --id Git.Git -e)' }
 Write-Host ''
 
-# 1) Node.js 확인 — 없으면 winget으로 LTS 설치
+# 1) Node.js 확인 — 없으면 winget, winget 도 없으면 공식 MSI 직접 설치
+# (v22.10.2 실사례: winget 자체가 없는 PC — Windows 서버/구버전).
 $node = Get-Command node -ErrorAction SilentlyContinue
 if (-not $node) {
-  Write-Host 'Node.js가 없어 winget으로 설치합니다 (1~2분)...'
-  winget install --id OpenJS.NodeJS.LTS -e --accept-source-agreements --accept-package-agreements
+  if (Get-Command winget -ErrorAction SilentlyContinue) {
+    Write-Host 'Node.js가 없어 winget으로 설치합니다 (1~2분)...'
+    winget install --id OpenJS.NodeJS.LTS -e --accept-source-agreements --accept-package-agreements
+  } else {
+    Write-Host 'winget이 없어 Node.js LTS 를 nodejs.org 에서 직접 내려받아 설치합니다 (1~3분)...'
+    [Net.ServicePointManager]::SecurityProtocol = [Net.ServicePointManager]::SecurityProtocol -bor 3072
+    $index = Invoke-RestMethod 'https://nodejs.org/dist/index.json'
+    $lts = $index | Where-Object { $_.lts } | Select-Object -First 1
+    $msi = Join-Path $env:TEMP 'node-lts-x64.msi'
+    Invoke-WebRequest ('https://nodejs.org/dist/' + $lts.version + '/node-' + $lts.version + '-x64.msi') -OutFile $msi
+    Start-Process msiexec.exe -ArgumentList ('/i "' + $msi + '" /qn /norestart') -Wait
+  }
   $env:Path = "$env:ProgramFiles\nodejs;$env:Path"
   $node = Get-Command node -ErrorAction SilentlyContinue
   if (-not $node) { throw 'Node.js 설치에 실패했습니다 — https://nodejs.org 에서 LTS를 설치한 뒤 다시 실행하세요.' }

@@ -4,16 +4,16 @@ rem The clone lives in %USERPROFILE%\one-piece, not on the Desktop - the
 rem Desktop only holds the built app folder. Invoking this bat by full
 rem path from any other folder used to run git pull outside the repo.
 cd /d "%~dp0"
-rem v22.10.1: a PC without git got a cryptic pull failure - say it plainly
-rem and give the one-line install command before touching the repo.
+rem v22.10.2: a PC without git (and without winget - real case) must still
+rem update. Fall back to downloading the published main branch as a ZIP.
+rem The helper runs from TEMP so it can overwrite every repo file safely,
+rem including this bat while it is still executing - we exit first.
 where git >nul 2>&1
 if errorlevel 1 (
-  echo git is not installed on this PC.
-  echo Install it once with:
-  echo   winget install --id Git.Git -e
-  echo Then close this window, open a new one, and run the updater again.
-  pause
-  exit /b 1
+  echo git not found - updating from GitHub ZIP instead.
+  copy /y "%~dp0tools\zip_update.ps1" "%TEMP%\ord_zip_update.ps1" >nul
+  start "ORD coach ZIP update" powershell -NoProfile -ExecutionPolicy Bypass -File "%TEMP%\ord_zip_update.ps1" -Repo "%~dp0."
+  exit /b 0
 )
 rem Pull the exact published branch and stop on divergence - a silent
 rem no-op pull left an old install in place.
