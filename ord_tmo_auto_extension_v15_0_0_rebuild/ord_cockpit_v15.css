@@ -724,6 +724,8 @@
 .v151-party-stretch>button{display:flex;gap:5px;align-items:baseline;border:1px dashed #2E4A68;border-radius:8px;padding:2px 7px;background:transparent}
 .v151-party-stretch b{color:#C8D8EA;font-size:9px}.v151-party-stretch span{color:#8CA2BE;font-size:8px}
 .v151-party-note{color:#7E94B4;font-size:8px;line-height:1.4}
+/* v23.1.1: 계통 게이트로 계획에서 뺀 보유 유닛 안내 (사보 히든 리포트) */
+.v151-party-excluded{color:#E8B08C;font-size:8.5px;line-height:1.4}
 /* v17.11: 리롤 목표 블록 (2번 패널) */
 .v151-reroll-targets{display:grid;flex:0 0 auto;gap:4px;border-top:1px dashed #4A3A2E;padding-top:6px}
 .v151-reroll-targets>small{color:#EBC98E;font-size:9.5px;font-weight:900;letter-spacing:.03em}

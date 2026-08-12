@@ -2466,13 +2466,18 @@ class App{
     const stretch=(plan.rows||[]).filter(row=>row.unit&&C.isLegendish(row.unit)&&!lineupIds.has(row.unit.id)&&row.solve&&row.solve.wispCost!=null).slice(0,8)
       .sort((a,b)=>stretchPairs(b.unit)-stretchPairs(a.unit)||C.num(C.storyGrade(b.unit).score)-C.num(C.storyGrade(a.unit).score)).slice(0,2)
       .map(row=>({id:row.unit.id,name:displayNameOf(row.unit),wispCost:C.num(row.solve.wispCost)}));
-    return{upperId,rows,totalNeed,available,income,projected:Math.floor(projected),funded,plannedCount:C.num(squad.plannedCount),targetCount:C.num(squad.targetCount),stretch};
+    // v23.1.1(사용자 리포트): "사보 히든은 물딜인데 파티에 왜 넣는거냐" —
+    // 플래너가 계통 게이트로 뺀 보유 유닛을 여기서 명시해 준다.
+    const familyExcluded=(squad.familyExcluded||[]).map(row=>({id:row.id,name:row.name,family:row.family==='physical'?'물딜':row.family==='magic'?'마딜':row.family}));
+    return{upperId,rows,totalNeed,available,income,projected:Math.floor(projected),funded,plannedCount:C.num(squad.plannedCount),targetCount:C.num(squad.targetCount),stretch,mode:squad.mode,familyExcluded};
   }
   renderV151ClearParty(party){
     if(!party)return'';
     const rows=party.rows.map((row,index)=>`<button data-act="detail" data-id="${C.esc(row.id)}" class="v151-party-row ${C.esc(row.tone)}">${row.unit&&row.unit.image?`<img src="${C.esc(row.unit.image)}" alt="">`:`<i>${index+1}</i>`}<span><b>${C.esc(row.name)}${row.isUpper?' <em>(상위 · 3환산)</em>':''}</b><small>${C.esc(row.badge)}</small></span></button>`).join('');
     const stretchHtml=party.stretch.length?`<div class="v151-party-stretch"><small>여유 확장(11환산 후보)</small>${party.stretch.map(row=>`<button data-act="detail" data-id="${C.esc(row.id)}"><b>${C.esc(row.name)}</b><span>선위 ${C.num(row.wispCost)}</span></button>`).join('')}</div>`:'';
-    return`<div class="v151-clear-party"><header><b>클리어 파티 참고안 · ${C.num(party.plannedCount)}/${C.num(party.targetCount)}환산</b><em class="${party.funded?'ok':'gap'}">필요 선위 ${C.num(party.totalNeed)} vs 보유 ${C.num(party.available)}+50라까지 수입 ~${C.num(Math.floor(party.income.selectionTotal))} = ${C.num(party.projected)} ${party.funded?'충당 가능':'부족'}</em></header><div class="v151-party-rows">${rows}</div>${stretchHtml}<small class="v151-party-note">수입 근거: 선택 위습 ${party.income.selectionPerRound}/라(로그 실측) · 랜덤 위습 ${C.num(party.income.randomPerRound)}/라 흔함만(확인됨 · 9종 균등 기대). 참고 계획이며 파티 확정은 현재 패 검증만 사용합니다.</small></div>`;
+    const modeLabel=party.mode==='magic'?'마딜':'물딜';
+    const excludedHtml=(party.familyExcluded||[]).length?`<small class="v151-party-excluded">계통 제외: ${party.familyExcluded.map(row=>`${C.esc(row.name)}(${C.esc(row.family)})`).join(' · ')} — 보유 중이지만 ${modeLabel} 파티에는 계산하지 않습니다.</small>`:'';
+    return`<div class="v151-clear-party"><header><b>클리어 파티 참고안 · ${C.num(party.plannedCount)}/${C.num(party.targetCount)}환산</b><em class="${party.funded?'ok':'gap'}">필요 선위 ${C.num(party.totalNeed)} vs 보유 ${C.num(party.available)}+50라까지 수입 ~${C.num(Math.floor(party.income.selectionTotal))} = ${C.num(party.projected)} ${party.funded?'충당 가능':'부족'}</em></header><div class="v151-party-rows">${rows}</div>${excludedHtml}${stretchHtml}<small class="v151-party-note">수입 근거: 선택 위습 ${party.income.selectionPerRound}/라(로그 실측) · 랜덤 위습 ${C.num(party.income.randomPerRound)}/라 흔함만(확인됨 · 9종 균등 기대). 참고 계획이며 파티 확정은 현재 패 검증만 사용합니다.</small></div>`;
   }
   // v17.12(사용자 요청 4): 파티는 상위 후보의 "미리 파티" 버튼으로 여는
   // 모달에서만 계산·표시한다.
