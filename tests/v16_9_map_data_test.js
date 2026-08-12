@@ -36,7 +36,9 @@ function test(name,fn){tests.push([name,fn]);}
 
 test('보스 단독 최소 실효 DPS가 검증표를 재현한다',()=>{
   assert.strictEqual(C.bossPreview(21,'saturn').round,30);
-  assert.strictEqual(C.bossPreview(30,'saturn').dpsNeed,118750,'30라 에넬');
+  // v23.1 재핀: 새턴 화력 저주 산입(사용자 승인) — dpsNeed ÷0.7.
+  // 118,750 → 169,643 (= 118,750/0.7 반올림).
+  assert.strictEqual(C.bossPreview(30,'saturn').dpsNeed,169643,'30라 에넬');
   assert.strictEqual(C.bossPreview(40,'warcury').dpsNeed,459167,'40라 루치');
   assert.strictEqual(C.bossPreview(50,'nasjuro').dpsNeed,3293333,'50라 센고쿠(오로성 보정은 신세계부터)');
   // v20.0(2.310): 워큐리가 보스 증가(+1500만+공통 1000만)로 바뀌어 이제

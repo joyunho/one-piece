@@ -41,9 +41,10 @@ test('① 오로성 악몽 저주 정본 — curse 필드 + 공통 저주',()=>{
   // (war3map.j 9369)으로 마방이 % 임이 확정 — 고정치 표기는 오류.
   assert(warcury.curse.includes('방어력 +15')&&warcury.curse.includes('마법방어력 +15%'),'워큐리 저주 수치 누락/마방 % 표기 누락');
   assert(warcury.curse.includes('195'),'워큐리 검증치(195=180+15) 문구 없음');
-  // 새턴 — 화력 저주(스펙표 밖).  코치가 아직 목표치로 다루지 않음을 자백.
+  // 새턴 — 화력 저주.  v23.1 재핀: '스펙표 밖' 자백 → 보스 화력 판정 산입
+  // (bossPreview dpsNeed ÷0.7)으로 승격 — 문구가 산입 사실을 밝힌다.
   assert(saturn.curse.includes('공격력 -30%')&&saturn.curse.includes('-10%'),'새턴 저주 수치 누락');
-  assert(saturn.curse.includes('스펙표 밖'),'새턴 화력 저주가 스펙표 밖임을 밝히지 않는다');
+  assert(saturn.curse.includes('산입'),'새턴 화력 저주 산입 사실이 문구에 없다');
 });
 
 test('② 설정 화면 — 오로성 저주 표시 (.v2212-curse, 새턴 warn)',()=>{

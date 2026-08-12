@@ -374,6 +374,9 @@ class App{
   // "후단 타이브레이크 전용" id 목록으로 넘긴다.  플래너는 플레이북 전역을
   // 모른다(경계 유지) — 여기서 계열 필터를 거친 순수 id 만 건넨다.
   v197PrescribedSecondIds(){
+    // v23.1: 패왕의길(1기)·계엄령(0기)에서는 2상위 처방을 만들지 않는다.
+    const navCap=C.navProfile(this.state.navFamily,this.state.navPerk).upperCap;
+    if(navCap!=null&&navCap<=1)return[];
     const locked=this.upperLock();if(!locked)return[];
     const db=this.catalogDb(),unit=db.byId.get(String(locked.id));if(!unit)return[];
     const entry=upperPlaybookOf(unit);if(!entry||!Array.isArray(entry.second))return[];
@@ -1082,7 +1085,13 @@ class App{
     }
     if(a==='select-upper'){const row=(this._upperRankCache||[]).find(item=>item.upperId===id);if(row&&row.directionKey){this.state.directionStatus='preview';this.state.directionKey=row.directionKey;this.state.directionUpperId=id;this.state.mode=row.directionKey==='physical'?'physical':'magic';this.state.magicRoute=row.directionKey==='physical'?'auto':row.directionKey;}this.state.upperPreviewId=id;this.state.postLegendRoute='upper';this.state.purpose='upper';this._squadCacheKey='';this.persist();this.render();return;}
     if(a==='confirm-upper'){
-      const locked=this.upperLock();if(locked&&C.canonicalUpperId(locked.id)!==C.canonicalUpperId(id)){const current=this.normalized().db.byId.get(locked.id);this.toast(`메인 상위 ${displayNameOf(current)}가 이미 고정돼 있습니다. 바꾸려면 경로만 초기화하세요.`);return;}
+      // v23.1(사용자 승인 — 항법 상위 상한 강제): 계엄령은 최상위 조합
+      // 불가, 패왕의길은 최상위 1기만 — 확정 버튼에서 막는다(맵 확정 규칙).
+      const navCap=C.navProfile(this.state.navFamily,this.state.navPerk).upperCap;
+      if(navCap===0){this.toast('계엄령 항법 — 최상위 조합이 불가합니다. 상위 없는 빌드로 진행하세요.');return;}
+      const locked=this.upperLock();
+      if(navCap===1&&locked&&C.canonicalUpperId(locked.id)!==C.canonicalUpperId(id)){this.toast('패왕의길 항법 — 최상위는 1기만 조합할 수 있습니다.');return;}
+      if(locked&&C.canonicalUpperId(locked.id)!==C.canonicalUpperId(id)){const current=this.normalized().db.byId.get(locked.id);this.toast(`메인 상위 ${displayNameOf(current)}가 이미 고정돼 있습니다. 바꾸려면 경로만 초기화하세요.`);return;}
             const reusePreview=this.state.upperPreviewId===id&&!!this._squadCacheKey&&!!this._squadCache;this.state.upperPreviewId=id;this.state.purpose='upper';if(!reusePreview)this._squadCacheKey='';const preview=this.plan(),ranked=(preview.plan.upperRankings||[]).find(item=>item.upperId===id),squad=preview.plan.squadPlan||ranked&&ranked.plan,blueprint=this.captureUpperBlueprint(id,squad),unit=preview.state&&preview.state.db.byId.get(id);if(!unit||!C.isUpper(unit)){this.toast('현재 패에서 이 상위를 다시 찾지 못했습니다. TMO를 동기화해 주세요.');return;}
       const suggestedMode=squad&&squad.mode||ranked&&ranked.mode,mode=['physical','magic'].includes(suggestedMode)?suggestedMode:C.familyOf(unit)==='magic'?'magic':'physical',routeHint=ranked&&ranked.directionKey||squad&&squad.magicRoute||this.state.directionKey||this.state.magicRoute,route=mode==='physical'?'physical':['dual','singleEnd'].includes(routeHint)?routeHint:'singleEnd',fullBlueprint=blueprint,commitment=fullBlueprint||this.captureUpperCommitment(id,mode,route);this.state.upperBlueprint=commitment;this.state.mode=mode;if(mode==='magic'&&['dual','singleEnd'].includes(route))this.state.magicRoute=route;this.state.directionStatus='selected';this.state.directionKey=mode==='physical'?'physical':route;this.state.directionUpperId=id;this.state.directionHoldFingerprint='';this.state.releasedUpperHint=null;if(!locked){const routeFamily=upperRouteFamily(id);this.state.locks=[{stage:'upper',id,source:fullBlueprint?'manual-blueprint':'manual-route',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:id,activeVariantId:id}];}this.state.upperDetection=emptyUpperDetection();this.state.upperPreviewId='';this.state.postLegendRoute='upper';this.state.purpose='spec';this._squadCacheKey='';this.persist();this.toast(fullBlueprint?'상위와 현재 보조 청사진을 잠갔습니다. 패가 막히면 보조 자리만 가변 재계산합니다.':'상위 방향을 잠갔습니다. 30라 전후에는 이 상위를 먼저 올리고, 보조 조합은 남은 패로 가변 재계산합니다.');return;
     }

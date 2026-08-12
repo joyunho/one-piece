@@ -61,12 +61,14 @@ test('센고쿠 필요 raw DPS(방깎별)와 보스 방어·상성이 내장된�
   assert.deepStrictEqual(C.ATTACK_TYPE_VS_BOSS,{pierce:1.25,normal:1,siege:.75,hero:1.05});
   const preview=C.bossPreview(50,'saturn');
   assert.strictEqual(preview.bossArmor,350);
-  near(C.bossRawDpsNeed(preview,160,'normal'),15807998,3,'방깎160 → 15.808M');
-  near(C.bossRawDpsNeed(preview,180,'normal'),14490665,3,'방깎180 → 14.491M');
-  near(C.bossRawDpsNeed(preview,190,'normal'),13831999,3,'방깎190 → 13.832M');
-  near(C.bossRawDpsNeed(preview,211,'normal'),12448799,3,'방깎211 → 12.449M');
+  // v23.1 재핀: 새턴 화력 저주 산입 — preview.dpsNeed 가 ÷0.7 돼 필요
+  // raw DPS 도 같은 배율로 오른다 (15.808M → 22.583M).
+  near(C.bossRawDpsNeed(preview,160,'normal'),22582858,3,'방깎160 → 22.583M');
+  near(C.bossRawDpsNeed(preview,180,'normal'),20700953,3,'방깎180 → 20.701M');
+  near(C.bossRawDpsNeed(preview,190,'normal'),19760000,3,'방깎190 → 19.760M');
+  near(C.bossRawDpsNeed(preview,211,'normal'),17784000,3,'방깎211 → 17.784M');
   const pierceNeed=C.bossRawDpsNeed(preview,211,'pierce');
-  near(pierceNeed,12448799/1.25,3,'관통 1.25배 상성');
+  near(pierceNeed,17784000/1.25,3,'관통 1.25배 상성');
 });
 
 test('연구소 4종은 1회 구매 고정 효과로 가산되고 미체크는 불변이다',()=>{

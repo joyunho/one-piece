@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='23.0.0';
+const VERSION='23.1.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -90,7 +90,7 @@ const ABILITY_ALIASES={
 //  (마법방어 15%는 별도 모델 없음 — 마방깎은 유닛 능력 파싱만.)
 //  나스쥬로 이속 15%는 유지라 이감 117 목표 불변.
 // v22.12(웹 정본 확보 — 공식 누적 패치노트 dcinside ordc1 no=189308 +
-// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.0.0(맵 원본 war3map.j
+// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.1.0(맵 원본 war3map.j
 // 9345-9438 IS==6 분기로 재검증 — 맵데이터_분석_20260811.txt):
 // 오로성 악몽 저주 수치 원문.
 //  · 나스쥬로: 적 이속 +15% · 아군 공속 -15% · 라인몬스터 체력 +1,500만
@@ -111,7 +111,7 @@ const GOROSEI={
   none:{key:'none',name:'아직 모름',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5,curse:''},
   nasjuro:{key:'nasjuro',name:'나스쥬로',slowPhysical:117,slowMagic:117,armorSoft:180,armorSafe:211,stun:1.5,curse:'적 이속 +15% · 아군 공속 -15% · 라인몬 체력 +1,500만 — 이감 117(=102×1.15)로 보정 중'},
   warcury:{key:'warcury',name:'워큐리',slowPhysical:102,slowMagic:102,armorSoft:195,armorSafe:226,stun:1.5,curse:'방어력 +15 · 마법방어력 +15% · 보스 체력 +1,500만 — 방깎 +15(195/226)로 보정 중, 마딜은 마방깎(%) 가치 상승'},
-  saturn:{key:'saturn',name:'새턴',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5,curse:'아군 공격력 -30% · 폭발형 데미지 -10% · 적 체젠 +30만/초 — 화력 저주(스펙표 밖). 폭뎀증 의존 조합은 이중 불리, 라인딜·지속딜을 여유 있게'}
+  saturn:{key:'saturn',name:'새턴',slowPhysical:102,slowMagic:102,armorSoft:180,armorSafe:211,stun:1.5,curse:'아군 공격력 -30% · 폭발형 데미지 -10% · 적 체젠 +30만/초 — 화력 저주: 보스 화력 판정에 산입(DPS 요구 +43%). 폭뎀증 의존 조합은 이중 불리, 라인딜·지속딜을 여유 있게'}
 };
 // v23.0(맵 원본 확정 — war3map.j 48457-48466·41700-41743·32723-32758·
 // 64775-64781·64743-64749·62804, 맵데이터_분석_20260811.txt ③):
@@ -151,6 +151,17 @@ function navProfile(family,perk){
 // 0.51~0.61 로 단끝에서 새서 죽은 데 이어, 하드 최소선 자체를 0.5→0.7 로
 // 올린다.  0.7 도 '조금은 새는' 실측 최소선이고 완성 목표는 그대로 1.5 다.
 const STUN_BASE_FLOOR=.7;
+// v23.1(#60 — 사용자 구상 3, v22.11 실측 지지): 광보잡은 정수 기수가
+// 아니라 소수 인분이다.  대표 물딜 광보잡: 킬러 1인분(기본) · 히바리
+// 0.5인분(보스 특화 + 광폭 반인분) · 레드포스호 1인분 · 초월 우솝 2인분.
+// 표에 없는 광보잡(보스·광폭 둘 다 가능)은 1인분.  히바리처럼 표에 있는
+// 유닛은 한쪽 판정만 있어도 표 가중치로 광보잡 인분을 받는다.
+const BOSS_FRENZY_WEIGHTS=Object.freeze({'MC0h':.5,'B90H':2});
+function bossFrenzyCredit(u,bossCredit){
+  const w=BOSS_FRENZY_WEIGHTS[u&&u.id];
+  if(w!=null)return bossCredit.boss||bossCredit.frenzy?w:0;
+  return bossCredit.boss&&bossCredit.frenzy?1:0;
+}
 const CONTROL_ENVELOPE={
   stableStun:1.5,
   slowFloorRatio:.88,
@@ -226,14 +237,20 @@ function bossPreview(roundNow,goroseiKey){
   const hpBonus=newWorld?num(BOSS_META.goroseiBossHpBonusNewWorld[g]||0):0;
   const regen=newWorld?num(BOSS_META.goroseiBossRegenNewWorld[g]!=null?BOSS_META.goroseiBossRegenNewWorld[g]:BOSS_META.goroseiBossRegenNewWorld.base):0;
   const time=newWorld?BOSS_META.timers.newWorld:BOSS_META.timers.boss;
-  const hp=num(base.hp)+hpBonus,dpsNeed=Math.round((hp+regen*time)/time);
+  // v23.1(사용자 승인 — 새턴 화력 저주 산입): 새턴 악몽은 아군 공격력
+  // -30%(war3map.j 9400) — 같은 보스를 같은 시간에 잡으려면 원시 DPS
+  // 요구가 1/0.7 로 오른다.  준비도 96~98%에서 라인 사망하던 새턴 판의
+  // 원인을 이제 보스 화력 판정이 직접 반영한다.  (폭뎀 -10% 는 폭발형
+  // 컴포넌트 한정이라 일괄 배수에 넣지 않고 저주 표시가 안내한다.)
+  const firepowerRetained=g==='saturn'?.7:1;
+  const hp=num(base.hp)+hpBonus,dpsNeed=Math.round((hp+regen*time)/time/firepowerRetained);
   const lineRound=newWorld?next:next-1,lineBase=BOSS_META.lineCurve[lineRound]||null;
   let line=null;
   if(lineBase){
     const mobBonus=lineBase.newWorld?num(BOSS_META.goroseiMobHpBonusNewWorld[g]||0):0;
     line={round:lineRound,name:lineBase.name,hp:num(lineBase.hp)+mobBonus,armor:num(lineBase.armor)+num(BOSS_META.goroseiMobArmorBonus[g]||0),count:BOSS_META.mobs.perRound,withBoss:!!lineBase.newWorld};
   }
-  return{round:next,boss:base.boss,hp,hpBonus,regen,time,dpsNeed,newWorld,bossArmor:BOSS_META.bossArmor[next]!=null?num(BOSS_META.bossArmor[next]):null,line};
+  return{round:next,boss:base.boss,hp,hpBonus,regen,time,dpsNeed,firepowerRetained,newWorld,bossArmor:BOSS_META.bossArmor[next]!=null?num(BOSS_META.bossArmor[next]):null,line};
 }
 // v17: 2.305는 워크3 기본 방어계수 0.06을 0.02로 바꿨다(맵 상수 확정).
 // 방깎으로 방어가 음수까지 내려가며 실제로 피해가 증폭된다 —
@@ -1145,15 +1162,15 @@ function bossCreditFor(u,mode){
   const r=roleProfile(u);return{boss:!!r.boss,frenzy:!!r.frenzy};
 }
 function ownedRoleCounts(state,mode){
-  const entries=ownedRoleEntries(state);let main=0,stun=0,slow=0,triggerSlow=0,triggerSlowSources=0,armor=0,triggerArmor=0,singleArmor=0,stackArmor=0,armorBreak=0,armorBreakUnits=0,single=0,end=0,singleEndUnits=0,singleEndExpected=0,singleEndMax=0,singleEndLargest=0,toki=0,boss=0,frenzy=0,utility=0,subdamage=0,magicDef=0,magicAmp=0,explosionAmp=0,attack=0,triggerAttack=0,speed=0,regen=0,mana=0,deletion=0,total=0;let vegaSeen=false;
-  for(const entry of entries){const u=entry.unit,count=isUpper(u)&&/베가펑크/.test(nameOf(u))?(vegaSeen?0:1):entry.count;if(isUpper(u)&&/베가펑크/.test(nameOf(u)))vegaSeen=true;if(count<=0)continue;const r=roleProfile(u),finish=magicFinishProfile(u),n=nameOf(u);total+=count;if(isUpper(u)&&(r.family===mode||r.family==='neutral'))main+=count;stun+=r.stun*count;slow+=r.slow*count;triggerSlow+=r.triggerSlow*count;if(r.triggerSlow>0)triggerSlowSources+=count;armor+=r.armor*count;triggerArmor+=r.triggerArmor*count;singleArmor+=r.singleArmor*count;stackArmor+=r.stackArmor*count;armorBreak+=num(r.armorBreakWeight)*count;if(r.armorBreak)armorBreakUnits+=count;single+=r.single*count;end+=r.end*count;if(finish.directCredit>0)singleEndUnits+=count;singleEndExpected+=finish.directCredit*count;singleEndMax+=finish.maxCredit*count;singleEndLargest=Math.max(singleEndLargest,finish.directCredit);if(/^토키(?:\s|\()/.test(n))toki+=count;const bossCredit=bossCreditFor(u,mode);if(bossCredit.boss)boss+=count;if(bossCredit.frenzy)frenzy+=count;if(r.utility)utility+=count;if(r.supportDamage)subdamage+=count;magicDef+=r.magicDef*count;magicAmp+=r.magicAmp*count;explosionAmp+=r.explosionAmp*count;attack+=(r.attack-r.attackPenalty)*count;triggerAttack+=r.triggerAttack*count;speed+=r.speed*count;regen+=r.regen*count;mana+=r.mana*count;if(r.deletion)deletion+=count;}
-  return{main,stun:round6(stun),slow:round2(slow),triggerSlow:round2(triggerSlow),triggerSlowSources,armor:round2(armor),triggerArmor:round2(triggerArmor),singleArmor:round2(singleArmor),stackArmor:round2(stackArmor),armorBreak:round2(armorBreak),armorBreakUnits,single:round2(single),end:round2(end),singleEnd:round2(single+end),singleEndUnits:round2(singleEndUnits),singleEndExpected:round2(singleEndExpected),singleEndMax:round2(singleEndMax),singleEndLargest:round2(singleEndLargest),singleEndStable:round2(Math.max(0,singleEndExpected-singleEndLargest)),toki:round2(toki),boss,frenzy,bossFrenzy:Math.min(boss,frenzy),utility,subdamage,magicDef:round2(magicDef),magicAmp:round2(magicAmp),explosionAmp:round2(explosionAmp),attack:round2(attack),triggerAttack:round2(triggerAttack),speed:round2(speed),regen:round2(regen),mana:round2(mana),deletion,total};
+  const entries=ownedRoleEntries(state);let main=0,stun=0,slow=0,triggerSlow=0,triggerSlowSources=0,armor=0,triggerArmor=0,singleArmor=0,stackArmor=0,armorBreak=0,armorBreakUnits=0,single=0,end=0,singleEndUnits=0,singleEndExpected=0,singleEndMax=0,singleEndLargest=0,toki=0,boss=0,frenzy=0,bossFrenzyCreditSum=0,bossOnly=0,frenzyOnly=0,utility=0,subdamage=0,magicDef=0,magicAmp=0,explosionAmp=0,attack=0,triggerAttack=0,speed=0,regen=0,mana=0,deletion=0,total=0;let vegaSeen=false;
+  for(const entry of entries){const u=entry.unit,count=isUpper(u)&&/베가펑크/.test(nameOf(u))?(vegaSeen?0:1):entry.count;if(isUpper(u)&&/베가펑크/.test(nameOf(u)))vegaSeen=true;if(count<=0)continue;const r=roleProfile(u),finish=magicFinishProfile(u),n=nameOf(u);total+=count;if(isUpper(u)&&(r.family===mode||r.family==='neutral'))main+=count;stun+=r.stun*count;slow+=r.slow*count;triggerSlow+=r.triggerSlow*count;if(r.triggerSlow>0)triggerSlowSources+=count;armor+=r.armor*count;triggerArmor+=r.triggerArmor*count;singleArmor+=r.singleArmor*count;stackArmor+=r.stackArmor*count;armorBreak+=num(r.armorBreakWeight)*count;if(r.armorBreak)armorBreakUnits+=count;single+=r.single*count;end+=r.end*count;if(finish.directCredit>0)singleEndUnits+=count;singleEndExpected+=finish.directCredit*count;singleEndMax+=finish.maxCredit*count;singleEndLargest=Math.max(singleEndLargest,finish.directCredit);if(/^토키(?:\s|\()/.test(n))toki+=count;const bossCredit=bossCreditFor(u,mode);if(bossCredit.boss)boss+=count;if(bossCredit.frenzy)frenzy+=count;const bfCredit=bossFrenzyCredit(u,bossCredit);if(bfCredit>0)bossFrenzyCreditSum+=bfCredit*count;else if(bossCredit.boss)bossOnly+=count;else if(bossCredit.frenzy)frenzyOnly+=count;if(r.utility)utility+=count;if(r.supportDamage)subdamage+=count;magicDef+=r.magicDef*count;magicAmp+=r.magicAmp*count;explosionAmp+=r.explosionAmp*count;attack+=(r.attack-r.attackPenalty)*count;triggerAttack+=r.triggerAttack*count;speed+=r.speed*count;regen+=r.regen*count;mana+=r.mana*count;if(r.deletion)deletion+=count;}
+  return{main,stun:round6(stun),slow:round2(slow),triggerSlow:round2(triggerSlow),triggerSlowSources,armor:round2(armor),triggerArmor:round2(triggerArmor),singleArmor:round2(singleArmor),stackArmor:round2(stackArmor),armorBreak:round2(armorBreak),armorBreakUnits,single:round2(single),end:round2(end),singleEnd:round2(single+end),singleEndUnits:round2(singleEndUnits),singleEndExpected:round2(singleEndExpected),singleEndMax:round2(singleEndMax),singleEndLargest:round2(singleEndLargest),singleEndStable:round2(Math.max(0,singleEndExpected-singleEndLargest)),toki:round2(toki),boss,frenzy,bossFrenzy:round2(bossFrenzyCreditSum+Math.min(bossOnly,frenzyOnly)),utility,subdamage,magicDef:round2(magicDef),magicAmp:round2(magicAmp),explosionAmp:round2(explosionAmp),attack:round2(attack),triggerAttack:round2(triggerAttack),speed:round2(speed),regen:round2(regen),mana:round2(mana),deletion,total};
 }
 function ownedRawRoleCounts(state){
   const entries=ownedRoleEntries(state);let stun=0,slow=0,triggerSlow=0,armor=0,triggerArmor=0,singleArmor=0,stackArmor=0,armorBreak=0,magicDef=0,magicAmp=0,explosionAmp=0,attack=0,triggerAttack=0,speed=0,regen=0,mana=0;let vegaSeen=false;for(const entry of entries){const u=entry.unit,count=isUpper(u)&&/베가펑크/.test(nameOf(u))?(vegaSeen?0:1):entry.count;if(isUpper(u)&&/베가펑크/.test(nameOf(u)))vegaSeen=true;if(count<=0)continue;stun+=abilityValue(u,'스턴')*count;slow+=abilityValue(u,'이동속도 감소')*count;triggerSlow+=abilityValue(u,'발동이동속도 감소')*count;armor+=abilityValue(u,'방어력 감소')*count;triggerArmor+=abilityValue(u,'발동방어력 감소')*count;singleArmor+=abilityValue(u,'단일방어력 감소')*count;stackArmor+=abilityValue(u,'중첩방어력 감소')*count;armorBreak+=num(roleProfile(u).armorBreakWeight)*count;magicDef+=abilityValue(u,'마법 방어력 감소')*count;magicAmp+=Math.max(abilityValue(u,'마법 대미지 증가'),abilityValue(u,'단일마법 대미지 증가'),abilityValue(u,'모든피해증가'))*count;explosionAmp+=abilityValue(u,'폭발형 대미지 증폭')*count;attack+=abilityValue(u,'공격력 증가')*count;triggerAttack+=abilityValue(u,'발동공격력 증가')*count;speed+=abilityValue(u,'공격속도 증가')*count;regen+=abilityValue(u,'체력 재생')*count;mana+=abilityValue(u,'마나 재생')*count;}return{stun:round6(stun),slow:round2(slow),triggerSlow:round2(triggerSlow),armor:round2(armor),triggerArmor:round2(triggerArmor),singleArmor:round2(singleArmor),stackArmor:round2(stackArmor),armorBreak:round2(armorBreak),magicDef:round2(magicDef),magicAmp:round2(magicAmp),explosionAmp:round2(explosionAmp),attack:round2(attack),triggerAttack:round2(triggerAttack),speed:round2(speed),regen:round2(regen),mana:round2(mana)};
 }
 function transitionSpec(spec,state,beforeCounts,afterCounts,mode,sourceSuffix){
-  const before=ownedRoleCounts(Object.assign({},state,{counts:beforeCounts}),mode),after=ownedRoleCounts(Object.assign({},state,{counts:afterCounts}),mode),out=Object.assign({},spec),signed=new Set(['slow','triggerSlow','armor','triggerArmor','attack','triggerAttack']);for(const key of ['main','stun','slow','triggerSlow','triggerSlowSources','armor','triggerArmor','singleArmor','stackArmor','armorBreak','armorBreakUnits','single','end','singleEndUnits','singleEndExpected','singleEndMax','toki','boss','frenzy','utility','subdamage','magicDef','magicAmp','explosionAmp','attack','triggerAttack','speed','regen','mana','deletion']){const value=num(out[key])+num(after[key])-num(before[key]);out[key]=(key==='stun'?round6:round2)(signed.has(key)?value:Math.max(0,value));}out.singleEnd=round2(out.single+out.end);out.singleEndLargest=round2(after.singleEndLargest);out.singleEndStable=round2(Math.max(0,num(out.singleEndExpected)-num(out.singleEndLargest)));out.bossFrenzy=Math.min(num(out.boss),num(out.frenzy));if(sourceSuffix)out.source=`${out.source}${sourceSuffix}`;return out;
+  const before=ownedRoleCounts(Object.assign({},state,{counts:beforeCounts}),mode),after=ownedRoleCounts(Object.assign({},state,{counts:afterCounts}),mode),out=Object.assign({},spec),signed=new Set(['slow','triggerSlow','armor','triggerArmor','attack','triggerAttack']);for(const key of ['main','stun','slow','triggerSlow','triggerSlowSources','armor','triggerArmor','singleArmor','stackArmor','armorBreak','armorBreakUnits','single','end','singleEndUnits','singleEndExpected','singleEndMax','toki','boss','frenzy','bossFrenzy','utility','subdamage','magicDef','magicAmp','explosionAmp','attack','triggerAttack','speed','regen','mana','deletion']){const value=num(out[key])+num(after[key])-num(before[key]);out[key]=(key==='stun'?round6:round2)(signed.has(key)?value:Math.max(0,value));}out.singleEnd=round2(out.single+out.end);out.singleEndLargest=round2(after.singleEndLargest);out.singleEndStable=round2(Math.max(0,num(out.singleEndExpected)-num(out.singleEndLargest)));if(sourceSuffix)out.source=`${out.source}${sourceSuffix}`;return out;
 }
 function applyBuildStep(state,spec,stock,unit,mode,availableWisp){
   const before=cloneCounts(stock),solve=recipeSolve(state.db,unit.id,before),after=cloneCounts(solve.stockAfter),remainingWisp=Math.max(0,num(availableWisp)-solve.wispCost);after[WISP_ID]=remainingWisp;after[unit.id]=num(after[unit.id])+1;return{solve,stock:after,remainingWisp,spec:transitionSpec(spec,state,before,after,mode,'')};
@@ -1226,7 +1243,7 @@ function routeDistance(requirements){
   return round2((requirements||[]).filter(r=>r.required!==false).reduce((sum,r)=>sum+num(r.weight)*clamp((num(r.target)-num(r.current))/Math.max(.01,num(r.target)),0,1),0));
 }
 function clearProfileDetails(spec,mode,settings){
-  spec=spec||{};settings=settings||{};mode=mode==='magic'?'magic':'physical';const g=GOROSEI[settings.gorosei]||GOROSEI.none,ctl=controlState(spec,mode,settings),slowTarget=mode==='magic'?g.slowMagic:g.slowPhysical,stun=num(spec.stun),stunBase=Math.min(STUN_BASE_FLOOR,Math.max(0,stun)),stunFull=Math.max(0,stun),bossFrenzy=Math.min(num(spec.boss),num(spec.frenzy));
+  spec=spec||{};settings=settings||{};mode=mode==='magic'?'magic':'physical';const g=GOROSEI[settings.gorosei]||GOROSEI.none,ctl=controlState(spec,mode,settings),slowTarget=mode==='magic'?g.slowMagic:g.slowPhysical,stun=num(spec.stun),stunBase=Math.min(STUN_BASE_FLOOR,Math.max(0,stun)),stunFull=Math.max(0,stun),bossFrenzy=spec.bossFrenzy!=null?num(spec.bossFrenzy):Math.min(num(spec.boss),num(spec.frenzy));
   if(mode==='physical'){
     const upper=settings._upperUnit||null,exceptionEligible=physicalArmorException(upper),buffReady=enoughPhysicalBuffs(spec,settings),exceptionActive=exceptionEligible&&buffReady,armorFloor=exceptionActive?120:g.armorSoft,armorIdeal=exceptionActive?120:g.armorSafe,armorTarget=armorFloor,
     // v21.5(전략 구상 ③ · 사용자: "암브는 최대 75까지 쌓이는데 시간이
@@ -1260,7 +1277,7 @@ function clearProfileDetails(spec,mode,settings){
       // bossFrenzy = min(boss, frenzy) 라 2를 요구하면 보잡 2기와 광폭 2기를
       // 함께 요구한다.  0729 물딜 판(74라)이 정확히 여기 걸린다 — 보잡 1
       // (S-호크) · 광폭 2(센고쿠+S-호크) 라 min=1 로 "충족"이 떴다.
-      {key:'bossFrenzy',label:'광보잡 2',current:bossFrenzy,target:2,weight:95},
+      {key:'bossFrenzy',label:'광보잡 1.5',current:bossFrenzy,target:1.5,weight:95},
       // v19.9(사용자 교정): 물딜의 1.5스턴은 항상 필수지만 반드시 마지막에 채운다.
       //
       // 사용자 판단: "물딜은 방깎이 우선시 되어야 한다.  최소 스턴 잡고
@@ -1275,7 +1292,9 @@ function clearProfileDetails(spec,mode,settings){
       // 그룹 정렬(fillLast)이 맡고, 여기서는 필수 여부만 선언한다.
       {key:'stunFull',label:'충분한 1.5 스턴',current:stunFull,target:1.5,weight:35,required:true,meta:{lastPriority:true,fillLast:true}}
     ];
-    return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorStaticOnly),armorBreakCredit:round2(armorBreakCredit),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 최소 0.7스턴(그 밑은 스턴이 안 잡히는 실측 최소선)과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 2기 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
+    const navCapPhysical=navProfile(settings.navFamily,settings.navPerk).upperCap;
+  if(navCapPhysical===0)for(const row of requirements)if(row.key==='main'){row.waived=true;row.note='계엄령 — 최상위 조합 불가(항법)';}
+  return{mode,key:'physical',label:'물딜 상위 1 + 상시 풀방깎',navUpperCap:navCapPhysical,requirements,distance:routeDistance(requirements),armorFloor,armorTarget,armorIdeal,armorCurrent:round2(armorCurrent),armorStatic:round2(armorStaticOnly),armorBreakCredit:round2(armorBreakCredit),armorTrigger:round2(triggerArmor),armorExpected:round2(armorExpected),armorMaximum:round2(armorMaximum),armorConditionalOnly:armorCurrent<armorTarget&&armorExpected>=armorTarget,armorExceptionEligible:exceptionEligible,armorExceptionBuffReady:buffReady,armorExceptionActive:exceptionActive,slowTarget,stunTarget:1.5,priority:['armor','stunBase','slow','bossFrenzy','stunFull'],note:exceptionActive?'니카 영원함/거프 불멸 + 충분한 버프 예외도 상시 방깎 120부터 계산합니다.':'표준 물딜은 최소 0.7스턴(그 밑은 스턴이 안 잡히는 실측 최소선)과 상시 방깎 180을 먼저 고정하고, 이감·광보잡 1.5인분 뒤에 남는 자리로 1.5스턴을 보강합니다. 210은 완성 보강 목표입니다.'};
   }
   // v19.9.7(0802 패배 포렌식 "스턴이 새서 죽었어"): v18.9 는 이감 충족 시
   // 1.5스턴 필수를 해제했다("그 자리는 딜러가 낫다").  0802 실전에서 46라에
@@ -1302,8 +1321,17 @@ function clearProfileDetails(spec,mode,settings){
     // 끝딜 1~2)대로 두 축을 독립 필수로 하드 컷한다.
     {key:'single',label:'단일딜 환산 2',current:num(spec.single),target:2,weight:68},
     {key:'end',label:'끝딜 환산 1',current:num(spec.end),target:1,weight:66}
-  ],dualDistance=routeDistance(dual),singleEndDistance=routeDistance(singleEnd),requested=normalizeMagicRoute(settings._resolvedMagicRoute||settings.magicRoute),selected=requested==='auto'?(dualDistance<=singleEndDistance?'dual':'singleEnd'):requested,requirements=selected==='dual'?dual:singleEnd;
-  return{mode,key:selected,label:selected==='dual'?'마딜 2상위 + 토키':'마딜 1상위 + 단일·끝딜',requested,requirements,distance:selected==='dual'?dualDistance:singleEndDistance,slowTarget,stunTarget:1.5,singleEndFloor:3,singleEndStable:3,priority:selected==='dual'?['main','stunBase','slow','bossFrenzy','toki','stunFull']:['bossFrenzy','stunBase','slow','singleEndExpected','stunFull'],routes:{dual:{key:'dual',label:'2상위 + 토키',distance:dualDistance,requirements:dual},singleEnd:{key:'singleEnd',label:'1상위 + 단·끝 3~4',distance:singleEndDistance,requirements:singleEnd}},note:selected==='dual'?'두 번째 상위와 최소 0.7스턴을 최우선으로 보고, 토키·광보잡을 마감한 뒤 1.5스턴을 마지막에 반드시 채웁니다.':'광보잡과 최소 0.7스턴을 먼저 지키고, 단·끝은 메인 상위를 제외한 직접 abilities 기여만 합산합니다. 1.5스턴은 마지막에 반드시 채웁니다.'};
+  ],dualDistance=routeDistance(dual),singleEndDistance=routeDistance(singleEnd),requested=normalizeMagicRoute(settings._resolvedMagicRoute||settings.magicRoute);
+  // v23.1(사용자 승인 — 항법 상위 상한 강제): 패왕의길은 최상위 1기만
+  // 조합 가능(맵 확정) — 2상위(dual) 경로를 닫는다.  계엄령은 최상위
+  // 조합 불가 — 상위 요구를 면제 표시하고 항법 경고를 남긴다.
+  const navCap=navProfile(settings.navFamily,settings.navPerk).upperCap;
+  let selected=requested==='auto'?(dualDistance<=singleEndDistance?'dual':'singleEnd'):requested;
+  let navNote='';
+  if(navCap!=null&&navCap<=1&&selected==='dual'){selected='singleEnd';navNote=' 패왕의길 항법 — 최상위 1기 제한으로 2상위 경로를 닫았습니다.';}
+  if(navCap===0){navNote=' 계엄령 항법 — 최상위 조합 불가: 상위 요구는 면제하되 상위 없는 클리어는 코치 경로 모델 밖입니다.';for(const row of singleEnd.concat(dual))if(row.key==='main'){row.waived=true;row.note='계엄령 — 최상위 조합 불가(항법)';}}
+  const requirements=selected==='dual'?dual:singleEnd;
+  return{mode,key:selected,label:selected==='dual'?'마딜 2상위 + 토키':'마딜 1상위 + 단일·끝딜',requested,requirements,distance:selected==='dual'?dualDistance:singleEndDistance,slowTarget,stunTarget:1.5,singleEndFloor:3,singleEndStable:3,priority:selected==='dual'?['main','stunBase','slow','bossFrenzy','toki','stunFull']:['bossFrenzy','stunBase','slow','singleEndExpected','stunFull'],routes:{dual:{key:'dual',label:'2상위 + 토키',distance:dualDistance,requirements:dual},singleEnd:{key:'singleEnd',label:'1상위 + 단·끝 3~4',distance:singleEndDistance,requirements:singleEnd}},note:(selected==='dual'?'두 번째 상위와 최소 0.7스턴을 최우선으로 보고, 토키·광보잡을 마감한 뒤 1.5스턴을 마지막에 반드시 채웁니다.':'광보잡과 최소 0.7스턴을 먼저 지키고, 단·끝은 메인 상위를 제외한 직접 abilities 기여만 합산합니다. 1.5스턴은 마지막에 반드시 채웁니다.')+navNote,navUpperCap:navCap};
 }
 // v18: 역할 요구치를 축으로 나눈다.
 //
@@ -1338,10 +1366,12 @@ function roleAxis(key){return ROLE_AXIS[key]||'firepower';}
 function deficits(spec,mode,settings){
   const ctl=controlState(spec,mode,settings),profile=clearProfileDetails(spec,mode,settings),req=[],upper=settings&&settings._upperUnit,strategy=upperStrategy(upper);
   const add=(key,label,current,target,weight,required=true,meta={})=>req.push(Object.assign({key,label,axis:roleAxis(key),current:round2(current),target:round2(target),gap:round2(Math.max(0,target-current)),weight,required,recommended:!required,status:current>=target?'ok':current>=target*.7?'warn':'bad'},meta));
-  for(const r of profile.requirements)add(r.key,r.label,r.current,r.target,r.weight,r.required!==false,r.meta||{});
+  // v23.1: 프로필 행의 면제 표식(waived — 계엄령 상위 면제 등)을 상위
+  // 요구 원장까지 관철한다 — 면제 행은 게이트·점수에서 빠지되 화면에 남는다.
+  for(const r of profile.requirements)add(r.key,r.label,r.current,r.target,r.weight,r.required!==false&&r.waived!==true,Object.assign({},r.meta||{},r.waived?{waived:true,recommended:false,status:'waived',note:r.note||''}:{}));
   // v18.8: 물딜 폴백도 프로필과 같은 목표(2기)를 쓴다 — 한쪽만 1이면 경로에
   // 따라 요구가 달라져 화면이 어긋난다.
-  if(mode==='physical'&&!profile.requirements.some(r=>r.key==='bossFrenzy')){add('bossFrenzy','보스·광폭 보조 2',Math.min(num(spec.boss),num(spec.frenzy)),2,95,true);}
+  if(mode==='physical'&&!profile.requirements.some(r=>r.key==='bossFrenzy')){add('bossFrenzy','보스·광폭 보조 1.5',spec.bossFrenzy!=null?num(spec.bossFrenzy):Math.min(num(spec.boss),num(spec.frenzy)),1.5,95,true);}
   if(mode==='magic'){if(profile.key==='singleEnd')add('singleEndStable','한 기 누락 후 단일·끝딜 하한',num(spec.singleEndStable),3,34,false,{recommended:true,maximum:num(spec.singleEndMax)});add('magicSupport','마딜 증폭·마방깎',num(spec.magicDef)+num(spec.magicAmp)+num(spec.explosionAmp),1,32,false,{recommended:true});}
   for(const need of strategy.needs||[]){const current=num(spec[need.key]),existing=req.find(x=>x.key===need.key);
     // v17.6: 기본 경로 행이 이미 있으면 건너뛰지 말고 더 높은 목표로
@@ -1380,7 +1410,7 @@ function axisSummary(rows){
   return out;
 }
 function roleContribution(u,mode){
-  const r=roleProfile(u),magic=mode==='magic',finish=magicFinishProfile(u),bossCredit=bossCreditFor(u,mode);return{main:isUpper(u)&&(r.family===mode||r.family==='neutral')?1:0,stun:r.stun,stunBase:Math.min(STUN_BASE_FLOOR,r.stun),stunFull:r.stun,slow:r.slow+r.triggerSlow,armor:r.armor,triggerArmor:r.triggerArmor,boss:bossCredit.boss?1:0,frenzy:bossCredit.frenzy?1:0,bossFrenzy:bossCredit.boss&&bossCredit.frenzy?1:0,toki:magic&&/^토키(?:\s|\()/.test(nameOf(u))?1:0,single:magic?r.single:0,end:magic?r.end:0,singleEnd:magic?r.single+r.end:0,singleEndUnits:magic&&finish.directCredit>0?1:0,singleEndExpected:magic?finish.directCredit:0,singleEndMax:magic?finish.maxCredit:0,magicSupport:r.magicDef+r.magicAmp+r.explosionAmp,armorBreak:r.armorBreak?1:0,attack:r.attack-r.attackPenalty+r.triggerAttack*.65,speed:r.speed,regen:r.regen,mana:r.mana,deletion:r.deletion?1:0,utility:r.utility?1:0,subdamage:r.supportDamage?1:0};
+  const r=roleProfile(u),magic=mode==='magic',finish=magicFinishProfile(u),bossCredit=bossCreditFor(u,mode);return{main:isUpper(u)&&(r.family===mode||r.family==='neutral')?1:0,stun:r.stun,stunBase:Math.min(STUN_BASE_FLOOR,r.stun),stunFull:r.stun,slow:r.slow+r.triggerSlow,armor:r.armor,triggerArmor:r.triggerArmor,boss:bossCredit.boss?1:0,frenzy:bossCredit.frenzy?1:0,bossFrenzy:bossFrenzyCredit(u,bossCredit),toki:magic&&/^토키(?:\s|\()/.test(nameOf(u))?1:0,single:magic?r.single:0,end:magic?r.end:0,singleEnd:magic?r.single+r.end:0,singleEndUnits:magic&&finish.directCredit>0?1:0,singleEndExpected:magic?finish.directCredit:0,singleEndMax:magic?finish.maxCredit:0,magicSupport:r.magicDef+r.magicAmp+r.explosionAmp,armorBreak:r.armorBreak?1:0,attack:r.attack-r.attackPenalty+r.triggerAttack*.65,speed:r.speed,regen:r.regen,mana:r.mana,deletion:r.deletion?1:0,utility:r.utility?1:0,subdamage:r.supportDamage?1:0};
 }
 function coverageScore(contrib,def){let score=0;const covers=[];for(const d of def.rows){const v=num(contrib[d.key]);if(v>0){score+=d.weight*Math.min(1,v/Math.max(.01,d.gap));covers.push(d.label);}}return{score:round2(score),covers};}
 function netCoverageScore(beforeDef,afterDef){
@@ -1697,9 +1727,12 @@ function summarizeRoles(row,mode){
 // 서로 다른 조건을 가지면 Worker 오류·캐시 공백 때 물딜 두 번째 상위가
 // 한쪽에서만 인정된다.  마딜 dual=2, 물딜은 두 번째 상위 확정 시에만 2.
 function upperSlotLimit(routeKey,settings){
-  if(routeKey==='dual')return 2;
-  if(routeKey==='physical'&&!!String(settings&&settings.secondUpperId||''))return 2;
-  return 1;
+  // v23.1(사용자 승인): 상위 상한은 항법에서 온다 — 패왕의길 1 · 계엄령 0.
+  const navCap=navProfile(settings&&settings.navFamily,settings&&settings.navPerk).upperCap;
+  let base=1;
+  if(routeKey==='dual')base=2;
+  else if(routeKey==='physical'&&!!String(settings&&settings.secondUpperId||''))base=2;
+  return navCap!=null?Math.min(base,navCap):base;
 }
 function snapshotHealth(snapshot,now){
   const s=snapshot||{},time=now||Date.now(),seconds=value=>value?Math.floor(Math.max(0,time-num(value))/1000):9999;
@@ -1761,5 +1794,5 @@ function partnerShareFor(upperId,unitOrId){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,GOROSEI_COMMON_CURSE,NAVIGATION,navProfile,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ledgerCompletion,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,partnerShareFor,insertMechanicPriorityGroup,mechanicRequirementKeys,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,GOROSEI_COMMON_CURSE,NAVIGATION,navProfile,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,BOSS_FRENZY_WEIGHTS,bossFrenzyCredit,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ledgerCompletion,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,partnerShareFor,insertMechanicPriorityGroup,mechanicRequirementKeys,debugFixture};
 })(window);

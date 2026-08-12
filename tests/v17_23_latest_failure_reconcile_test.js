@@ -106,7 +106,10 @@ function snapshotAtSeq(file,seq){
   // "전설 [마딜]"로 계통을 명시한 유닛 — 유틸 예외로 들어오던 바로 그
   // 구멍의 표본이라 우주에서 빠졌고, 픽이 중립(히든 [스턴]) 아오키지
   // (140h)로 바뀌었다.  갈라짐(원시 140h ≠ 접두 830h)은 그대로다.
-  assert.strictEqual(raw.action.id,'140h','packaged R35 raw-action fixture drift');
+  // v23.1(#60 광보잡 1.5): 목표 완화로 R35 원시 픽이 아오키지(140h)에서
+  // 미호크 히든(340h, 물딜 깍25)으로 이동 — 물딜 판에서 계통 정합 픽이다.
+  // 계약(원시 ≠ 접두 830h 갈라짐 재현)은 그대로 지켜진다.
+  assert.strictEqual(raw.action.id,'340h','packaged R35 raw-action fixture drift');
   assert(first,'final squad produced no safePrefix action');
   assert.strictEqual(first.id,'830h','packaged R35 squad-prefix fixture drift');
   assert.notStrictEqual(raw.action.id,first.id,'fixture no longer reproduces split authority');
