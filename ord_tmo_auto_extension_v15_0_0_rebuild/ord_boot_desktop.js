@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v23.1.1 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
+  // v23.2.0 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
   // 직결 합성 경로를 그대로 옮기되 크롬 API 가 전혀 없다:
   //  · /datas 는 Electron 메인 프로세스가 1초마다 밀어준다(ORD_DESKTOP.onDatas).
   //  · 자동 라운드 세대는 localStorage 에 영속(판 중간 새로고침 보호).
@@ -98,6 +98,30 @@
       });
     } else {
       setTimeout(() => app.toast('데스크톱 브리지가 없습니다 — preload 로드를 확인하세요.'), 400);
+    }
+
+    // v23.2(0816 포렌식): 신세계 한복판에서 /datas 푸시가 죽자(메인 프로세스
+    // 폴링은 실패를 렌더러에 통지하지 않는다) 판단 잠금만 남고 회복 경로가
+    // 없었다.  ① 45초 무수신이면 렌더러가 preload.probe 로 직접 재프로브
+    // 한다(성공 시 즉시 합성 재개).  ② '판단 잠금' 배너의 'TMO 다시 읽기'
+    // 버튼도 여태 데스크톱에서 무동작이었다 — onConnectionTest 를 배선한다.
+    if (bridge && typeof bridge.probe === 'function') {
+      setInterval(async () => {
+        if (local.lastGoodAt && Date.now() - local.lastGoodAt < 45000) return;
+        try {
+          const r = await bridge.probe();
+          if (r && r.ok && r.payload && typeof r.payload.units === 'object') handleUnits(r.payload.units);
+        } catch (_) {}
+      }, 5000);
+      app.onConnectionTest = async () => {
+        const r = await bridge.probe().catch(() => null);
+        if (r && r.ok && r.payload && typeof r.payload.units === 'object') {
+          handleUnits(r.payload.units);
+          app.toast('로컬 직결 재프로브 성공 — 수신을 재개합니다.');
+        } else {
+          app.toast('로컬 직결 응답 없음: ' + String((r && r.error) || 'TMO.GG 데스크톱 앱과 게임 실행을 확인하세요.'));
+        }
+      };
     }
 
     // v19.15.0: 인게임 HUD 급전 — 메인 창이 그린 상단 HUD 조각과 "지금

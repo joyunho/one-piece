@@ -140,6 +140,10 @@ body{
   white-space:nowrap;
 }
 .v153-pill b{font-size:16px;color:var(--text)}
+/* v23.2(0816): 수신 끊김 시 선위·리롤 칩 스테일 톤 + 나이 표시 */
+.v153-pill.stale{border-color:rgba(240,185,78,.55);background:rgba(240,185,78,.08)}
+.v153-pill.stale b{color:#ffd37a}
+.v153-pill .pill-age{font-size:10.5px;font-style:normal;color:#ffb35c;font-variant-numeric:tabular-nums}
 .v153-pill.violet .v153-ic,.v153-pill.coral .v153-ic{color:var(--muted)}
 /* 국면 칩: 팩트 타일과 같은 세로 스택 — 알약형은 그리드 셀에서 꺾인다. */
 .v151-phase-chip{display:grid;gap:2px;align-content:start;border:1px solid var(--line);border-radius:var(--radius-sm);padding:6px 8px;background:var(--panel-2);color:var(--sub);font-size:12px}
@@ -344,6 +348,9 @@ body{
 .v151-recovery-row{display:grid;gap:6px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:9px 11px;background:var(--panel-2);text-align:left}
 .v159-recovery-recipe{color:var(--muted);font-size:12px}
 .v158-blocked-spec{display:grid;gap:5px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 10px;background:var(--panel-2);font-size:13px}
+/* v23.2(0816): 판단 잠금 중 마지막 유효 추천 고스트 — 승인 원천 차단 */
+.v23-ghost-card{margin-top:10px;pointer-events:none;filter:grayscale(.6);opacity:.62;border:1px dashed var(--line);border-radius:var(--radius-sm);padding:8px}
+.v23-ghost-card>small{display:block;margin-bottom:6px;color:#ffb35c;font-weight:800}
 .v158-blocked-spec span{display:inline-flex;gap:6px;margin-right:8px}
 .v151-empty{display:grid;gap:6px;place-content:center;padding:18px;color:var(--muted);text-align:center}
 
@@ -593,6 +600,11 @@ body{
 .v151-continue i{color:var(--muted);font-style:normal;font-size:12px}
 .v151-continue span{color:var(--sub);font-size:12.5px}
 .v153-party-lock{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 10px;background:var(--panel-2);font-size:12px}
+/* v23.2(0816): 파티 정직성 — 역할 미완 강조 + 미완 확정 경고 버튼 + 계통 전환 배지 */
+.v153-party>header strong.gap{color:var(--bad)}
+.v232-party-roles-open{display:block;color:var(--bad);font-size:11.5px;line-height:1.45}
+.v153-party-lock button.primary.warn{background:linear-gradient(135deg,#a2542e,#c76b35);border-color:transparent;color:#fff}
+.v232-pivot{display:inline-block;margin-left:5px;border:1px solid var(--warn);border-radius:99px;padding:1px 7px;color:var(--warn);font-size:10.5px;font-style:normal;font-weight:800;vertical-align:middle}
 .v153-party-chips{display:flex;flex-wrap:wrap;gap:5px}
 .v153-party-chips>button,.v153-party-slot{
   display:grid;

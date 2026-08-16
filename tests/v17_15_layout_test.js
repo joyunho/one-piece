@@ -91,7 +91,9 @@ test('희귀 판단은 만들 수 있는 전설급(3번)과 안 쓰는 희귀(6�
 
 test('상위 후보와 확정 후 보조·해적선 후보는 각각 최대 3개다', () => {
   const upper = slice('renderV153UpperParty(state,plan){', 'renderCoach(state,plan,phase,clock,health){');
-  assert(upper.includes('(decision.routeCandidates||[]).slice(0,3)'));
+  // v23.2: 후보는 계통 정렬(orderedCandidates)을 거친 뒤 상위 3개만 노출 —
+  // 상한 3 계약은 동일하고 정렬 단계만 추가됐다.
+  assert(upper.includes('orderedCandidates.slice(0,3)'));
   assert(upper.includes('this.v151BuildableLegendRows(state,plan)'));
   assert(upper.includes('v153ShipOpportunity(state,plan)'));
   assert(upper.includes('supports=ship?'));

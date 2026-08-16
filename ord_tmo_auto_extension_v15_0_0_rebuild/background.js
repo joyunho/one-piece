@@ -252,6 +252,15 @@ chrome.runtime.onMessage.addListener((message, sender, reply) => {
   // 직접 읽을 수 있는지 판정한다 — 가능하면 "TMO 탭을 띄워 놔야 하는"
   // 구조 자체를 없앨 수 있다(A안).  진단 전용: 응답을 저장하지 않고 화면에
   // 덤프만 한다.  주소는 로컬 Horse 서버로만 제한.
+  // v23.2(0816): 로컬 직결 워치독의 재장전 요청 — 유실된 스캔 알람을 다시
+  // 만들고 즉시 1회 /datas 수집을 시도한다(성공 시 ordLocalDirectFeed
+  // storage 이벤트가 숨김 대시보드까지 되살린다).
+  if (message && message.type === 'ORD_ENSURE_SCAN_ALARM') {
+    try { ensureScanAlarm(); } catch (_) {}
+    enqueue(collectLocalMapSample).catch(() => {});
+    reply({ok: true});
+    return true;
+  }
   if (message && message.type === 'ORD_LOCAL_PROBE') {
     const url = String(message.url || 'http://127.0.0.1:25625/datas');
     if (!/^http:\/\/127\.0\.0\.1:25625\//.test(url)) {

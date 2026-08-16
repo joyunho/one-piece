@@ -74,7 +74,9 @@ test('정합성 가드가 1번 카드를 통째로 비우지 않는다',()=>{
   const marker='const blocked=(state,reason,extra,showAction)=>';
   const at=source.indexOf(marker);
   assert(at>=0,'가드를 찾지 못했다');
-  const body=source.slice(at,at+400);
+  // v23.2: 가드 본문에 deficit-repair 우회 분기가 추가돼 창을 넓힌다 —
+  // 계약(승인 차단 + blockedAction 유지) 자체는 불변.
+  const body=source.slice(at,at+900);
   assert(/action:null/.test(body),'승인 차단(action:null)이 사라졌다 — 이 가드의 본래 목적이다');
   assert(!/blockedAction:null/.test(body),'blockedAction까지 비워 화면에 아무것도 안 남는다');
   assert(/blockedAction:showAction\|\|blockedFallback\(\)/.test(body),'대체 카드 배선이 없다');

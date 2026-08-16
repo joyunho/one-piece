@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v23.1.1 live cockpit bridge; connector protocol stays v13.
+  // v23.2.0 live cockpit bridge; connector protocol stays v13.
   // v19.4(사용자 요청): 도우미 번호 무관 — 숫자 id 전부 후보. 여러 탭이면
   // 주 도우미(32172) 우선.
   const PATTERNS = [
@@ -433,6 +433,17 @@
     if (LM) {
       local.timer = setInterval(() => { if (!document.hidden) localPoll(); }, 2500);
       localPoll();
+      // v23.2(0816 포렌식): 성공 수신이 45초 이상 끊기면 숨김 여부와 무관하게
+      // 재프로브하고, 백그라운드 알람(MV3 유실 가능)을 재장전한다 — TMO 탭
+      // 어댑터의 v19.9.2 자동 재주입에 대응하는 로컬 직결 회복 경로.
+      // fetch 는 여전히 background 경유(127.0.0.1 직접 접근 금지 계약 유지).
+      local.watchdog = setInterval(() => {
+        const now = Date.now();
+        if (local.lastGoodAt && now - local.lastGoodAt < 45000) return;
+        if (now - local.lastTriedAt < 10000) return;
+        localPoll();
+        runtime({type: 'ORD_ENSURE_SCAN_ALARM'}).catch(() => {});
+      }, 5000);
     }
 
     monitorId = setInterval(async () => {

@@ -1254,6 +1254,11 @@ body{background:
 .v153-party>header{display:flex;justify-content:space-between;align-items:baseline;gap:8px;margin-bottom:8px}
 .v153-party>header b{font-size:12px}
 /* v19.1(사용자 요청): 파티 전체 확정 — 상시 노출 한 줄 상태 · 버튼. */
+/* v23.2(0816): 파티 정직성 — 역할 미완 강조 + 미완 확정 경고 + 계통 전환 배지 */
+.v153-party>header strong.gap{color:#FFB1A6}
+.v232-party-roles-open{display:block;color:#FFB1A6;font-size:9px;line-height:1.45}
+.v153-party-lock button.primary.warn{background:linear-gradient(135deg,#a2542e,#c76b35);border-color:transparent;color:#fff}
+.v232-pivot{display:inline-block;margin-left:4px;border:1px solid rgba(243,184,75,.55);border-radius:99px;padding:0 6px;color:#ffd587;font-size:8.5px;font-style:normal;font-weight:800;vertical-align:middle}
 .v153-party-lock{display:flex;align-items:center;gap:6px;margin-bottom:8px;padding:5px 8px;border:1px solid var(--v153-line);border-radius:9px;background:rgba(11,23,44,.6);font-size:10px}
 .v153-party-lock img,.v153-party-lock svg{width:13px;height:13px;flex:0 0 auto}
 .v153-party-lock b{flex:1 1 auto;min-width:0;font-size:10.5px;font-weight:800;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}

@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='23.1.1';
+const VERSION='23.2.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -1087,6 +1087,27 @@ function upperRouteCandidates(model,locks){
     if(!challenger){challenger=pool.find(row=>!picked.includes(row)&&offMeta(row));if(challenger)pin(challenger);}
     if(challenger)challenger.challengeAngle=true;
   }
+  // v23.2(0816 리포트 "코비는 마딜인데 물딜인 크로커다일을 추천하고"):
+  // 자동 모드에서 패의 첫 전설이 한 계통으로 수렴(familyIntent)해도, 차선
+  // 합류 정렬은 계통을 몰라 물딜 상위(크로커다일 '제한됨 [물딜]')가 마딜
+  // lean 패 위에서 #2를 차지했다(r22~24 실측).  같은 계통(+무표기) 후보를
+  // 앞에 세우고, 반대 계통은 familySwitch 표시와 함께 뒤로 보낸다 — 전향은
+  // 정당한 선택지라 후보에서 빼지 않는다.  배제 근거는 v22.10 원칙대로
+  // 그룹 명시 표기([물딜]/[마딜])만 쓴다.
+  {
+    const lean=familyIntent(model);
+    if((lean==='physical'||lean==='magic')&&!lock){
+      const explicitTag=unit=>{const group=C.groupName(unit);return group.includes('[물딜]')?'physical':group.includes('[마딜]')?'magic':'';};
+      for(const row of pool){const tag=row&&row.unit?explicitTag(row.unit):'';row.familySwitch=tag&&tag!==lean?tag:'';}
+      const same=picked.filter(row=>!row.familySwitch),cross=picked.filter(row=>!!row.familySwitch);
+      if(same.length&&cross.length){
+        // 상위 3자리는 같은 계통이 우선한다 — 빠진 자리는 풀에서 승격.
+        while(same.length<3){const extra=pool.find(row=>!row.familySwitch&&!picked.includes(row)&&!same.includes(row));if(!extra)break;same.push(extra);}
+        picked.splice(0,picked.length,...same,...cross);
+        while(picked.length>Math.max(ROUTE_CANDIDATE_LIMIT,3))picked.pop();
+      }
+    }
+  }
   // 카드 6개와 별개로, 게이트 상위 전체(베가펑크 4종 등 정규화 대표)를
   // 칩 목록으로 내려 보낸다 — UI가 "그린블러드 확보 시 열리는 상위"를
   // 한 줄로 보여줄 수 있게.  게이트 상위는 정규 카드 자리를 차지하지
@@ -1201,6 +1222,47 @@ function lateSqueezeSafe(model,action,locks){
     });
   }catch(_){return false;}
 }
+// v23.2(0816 포렌식): 판단 자가 잠금 유화 — 이 판은 마딜 단끝 경로에서
+// "검증된 첫 제작이 최종 파티 목록과 일치하지 않습니다" SYNC_BLOCKED 가
+// r31~r50 에 69회 발화했다.  보유 9환산이 이미 찬 파티 라인업에는 후지토라
+// (0.7스턴·이감25) 자리가 없었고, 엔진 정규 판정은 후지토라 승인이었는데
+// 이 층이 그걸 20라운드 내내 가렸다.  최소 0.7 스턴 결손은 16라부터 끝까지
+// 열려 있었고 판은 65라에 전멸했다.  late-squeeze(v22.9)는 51라+ 비단끝
+// 한정이라 이 판(단끝)을 구하지 못했다.
+// 유화 조건은 late-squeeze 보다 엄격하다: 엔진 자체 판정(ACT_NOW)이
+// ① 신선한 견적으로 제작 가능하고 ② 필수 열린 결손을 실제로 줄이며
+// ③ 어떤 필수 행도, 체크포인트 벡터도 회귀하지 않을 때만 — 라운드·경로
+// 무관하게 파티 목록 불일치 잠금을 우회한다.  '계획 밖'이지만 결손 응급
+// 보강은 사람이라면 당연히 하는 제작이다(판정 리포트의 미실행 목록이 곧
+// 이 유닛들이었다).
+function deficitRepairSafe(model,action,locks){
+  try{
+    if(!action||!action.quote||!action.quote.feasible)return false;
+    // 낡은 견적을 신뢰하지 않는다 — 판정에 실린 quote 는 다른 패에서 계산된
+    // 것일 수 있다(v17.23 스테일 계약).  현재 패 원장으로 다시 견적해 통과할
+    // 때만 우회한다.
+    const unit=model.knowledge&&model.knowledge.db&&model.knowledge.db.byId.get(String(action.id||action.unit&&action.unit.id||''));
+    if(!unit)return false;
+    const quote=L.quote(model,unit,model.effective.counts,{availableRound:model.round.value});
+    if(!quote||!quote.feasible||!quote.after)return false;
+    const route=P.resolveRoute(model.intent,model.settings);
+    if(!route)return false;
+    const activeLocks=Array.isArray(locks)?locks:[];
+    const before=P.evaluate(model,model.effective.counts,route,{round:model.round.value,locks:activeLocks});
+    const after=P.evaluate(model,quote.after,route,{round:model.round.value,locks:activeLocks});
+    if(P.compareVector(after.checkpointVector,before.checkpointVector)>0)return false;
+    const afterByKey=new Map((after.requirements||[]).map(row=>[row.key,row]));
+    let closes=false;
+    const safe=(before.requirements||[]).every(row=>{
+      if(row.required===false||row.waived)return true;
+      const next=afterByKey.get(row.key);
+      if(!next)return true;
+      if(num(row.gap)>1e-9&&num(next.gap)<num(row.gap)-1e-9)closes=true;
+      return num(next.gap)<=num(row.gap)+1e-9;
+    });
+    return safe&&closes;
+  }catch(_){return false;}
+}
 function reconcileSquadExecutionRaw(decision,squad,locks){
   if(!decision||!decision.model||!squad||squad.error)return decision;
   const model=decision.model,prefix=squad.safePrefix||{},actions=Array.isArray(prefix.actions)?prefix.actions:[],audit=prefix.audit||{},rawAction=decision.action||decision.blockedAction||null,withEvidence=(patch,extra)=>Object.assign({},decision,patch,{evidence:Object.assign({},decision.evidence||{},extra||{})});
@@ -1218,8 +1280,11 @@ function reconcileSquadExecutionRaw(decision,squad,locks){
   // 제작은 정의상 계획 밖 짜내기다.  안전성은 lateSqueezeSafe 재검증이
   // 담보하고, 회귀가 실측되면 기존대로 차단된다.
   const lateOverride=()=>decision&&decision.state==='ACT_NOW'&&num(model.round&&model.round.value)>=OPERATIONS_ROUND&&lateSqueezeSafe(model,decision.action,locks);
+  // v23.2(0816): 결손 응급 보강 우회 — 라운드·경로 제한 없음, 조건은 더 엄격.
+  const deficitOverride=()=>decision&&decision.state==='ACT_NOW'&&deficitRepairSafe(model,decision.action,locks);
   const blocked=(state,reason,extra,showAction)=>{
     if(lateOverride())return withEvidence({},{executionAuthority:'late-squeeze',squadBypassLateSqueeze:true});
+    if(deficitOverride())return withEvidence({},{executionAuthority:'deficit-repair',squadBypassDeficitRepair:true,deficitRepairNote:'파티 목록 밖 응급 보강 — 필수 결손을 줄이고 아무 역할도 회귀하지 않음을 원장으로 재검증했습니다.'});
     return withEvidence({state,label:state==='SYNC_BLOCKED'?'현재 패 재검증 필요':'최종 파티 제작 순서 보류',reason,action:null,blockedAction:showAction||blockedFallback()},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:true,squadPrefixRejectReason:reason,...extra});
   };
   // v22.1(0809 포렌식): 사용자가 확정한 상위를 정확 원장이 현재 패에서 제작

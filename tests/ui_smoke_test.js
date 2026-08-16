@@ -144,7 +144,13 @@ const REGIONS=['game-status','next-action','next-preview','clear-gaps','referenc
     const lockBefore=await page.evaluate(()=>document.querySelector('[data-region="upper-party"] .v153-party-lock').className);
     assert(/\boff\b/.test(lockBefore),`파티 확정이 미확정 상태로 시작하지 않음: ${lockBefore}`);
     assert.strictEqual(await page.locator('[data-region="upper-party"] [data-act="confirm-party"]').count(),1,'파티 확정 버튼이 없음');
+    // v23.2(0816 포렌식): 필수 역할 미완이면 확정이 2단 확인(3.5초 arm)을
+    // 거친다 — 스턴 0.56 파티가 원클릭으로 확정되던 것을 막는 정직성 장치.
+    // 픽스처가 미완일 수 있으므로 두 번 눌러 armed → confirm 을 모두 통과한다.
     await page.locator('[data-region="upper-party"] [data-act="confirm-party"]').click();
+    await page.waitForTimeout(200);
+    if(await page.locator('[data-region="upper-party"] [data-act="confirm-party"]').count())
+      await page.locator('[data-region="upper-party"] [data-act="confirm-party"]').click();
     await page.waitForFunction(()=>{const el=document.querySelector('[data-region="upper-party"] .v153-party-lock');return el&&!el.className.includes('off');});
     assert.strictEqual(await page.locator('[data-region="upper-party"] [data-act="release-party"]').count(),1,'확정 후 해제 버튼이 없음');
     console.log('PASS  파티 확정 버튼이 잠금 줄을 미확정 상태에서 바꾼다');
