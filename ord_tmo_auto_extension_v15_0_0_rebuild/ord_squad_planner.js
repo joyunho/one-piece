@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='23.2.1';
+const VERSION='23.3.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 // v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
 // 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
@@ -340,7 +340,7 @@ function squadDecisionSummary(state,result){
 //   blueprint    = the full route, including future rewards and drops
 // Only `actual` is allowed to pass a round checkpoint.
 function finalStageSnapshot(state,counts,mode,route,settings,fixed){
-  // v23.2.1: 여기는 '실제 보드' 스냅샷이다 — 반대 계통 유닛도 보드 위에서
+  // v23.3.0: 여기는 '실제 보드' 스냅샷이다 — 반대 계통 유닛도 보드 위에서
   // 스턴·이감을 실제로 제공하므로 계통 필터 없이 전량 집계한다.
   const units=finalEntries(state,counts),spec=specFromEntries(units,mode),main=mainUpperFor(state,counts,fixed),requirements=requirementRows(spec,units,mode,route,settings,main),routeEvaluation=routeEvaluationFor(units,requirements,mode,route);
   return{source:'tmo-owned-final-only',unitIds:units.map(stableId),boardCount:units.length,legendEquivalent:legendEquivalentCount(units),upperCount:new Set(units.filter(C.isUpper).map(canonicalUpper)).size,nonUpperFinalCount:units.filter(unit=>!C.isUpper(unit)).length,spec,requirements,routeEvaluation,mainUpperId:main&&main.id||''};
@@ -538,7 +538,7 @@ function makePlanningState(base,policy){
   const state=Object.assign({},base,{counts:clone(policy.stock)});state.wisp=num(state.counts[C.WISP_ID]);return state;
 }
 
-// v23.2.1(사용자 리포트): 나미(마딜) 참고 파티에 보유 사보(히든 [물딜])가
+// v23.3.0(사용자 리포트): 나미(마딜) 참고 파티에 보유 사보(히든 [물딜])가
 // 그대로 실렸다.  미래 후보는 allowedCandidate 가 unitFamily 로 걸렀지만,
 // 보유 최종 유닛 시드는 계통 무관이었다.  mode 를 주면 반대 계통 유닛을
 // 계획 라인업에서 제외한다(neutral·같은 계통만 통과 — allowedCandidate 와
@@ -559,7 +559,9 @@ function emptyFinalSpec(mode){return{source:'최종 전설급 라인업만 집�
 function specFromEntries(entries,mode){let spec=emptyFinalSpec(mode);for(const unit of entries){spec=addUnitRole(spec,unit,mode);spec.total++;}return spec;}
 function finalOnlySpec(state,counts,mode){return specFromEntries(finalEntries(state,counts,mode),mode);}
 
-function routeFor(mode,requested){if(mode!=='magic')return'physical';return requested==='dual'?'dual':'singleEnd';}
+// v23.3(사용자 지시): 단끝 일시 중단 — auto 의 기본 해석이 dual 이 된다.
+// 명시 singleEnd 는 그대로 존중(항법 강제·수동 선택 경로).
+function routeFor(mode,requested){if(mode!=='magic')return'physical';if(requested==='dual')return'dual';if(requested==='singleEnd')return'singleEnd';return C.MAGIC_SINGLE_END_SUSPENDED?'dual':'singleEnd';}
 function targetSlow(settings,mode){const g=C.GOROSEI&&C.GOROSEI[settings.gorosei]||C.GOROSEI&&C.GOROSEI.none||{};return num(mode==='magic'?g.slowMagic:g.slowPhysical)||102;}
 
 function requirementRows(spec,lineup,mode,route,settings,mainUpper){
@@ -587,7 +589,7 @@ function routeEvaluationFor(units,requirements,mode,route){
 
 function mainUpperFor(state,counts,fixed,mode){
   for(const id of fixed||[]){const u=state.db.byId.get(id);if(u&&num(counts[u.id])>0)return u;}
-  // v23.2.1: 계획 경로에서는 mode 를 넘겨 반대 계통 보유 상위가 메인으로
+  // v23.3.0: 계획 경로에서는 mode 를 넘겨 반대 계통 보유 상위가 메인으로
   // 잡히지 않게 한다(메인의 upperStrategy 필수가 요구표에 섞이는 것 방지).
   return finalEntries(state,counts,mode).find(u=>C.isUpper(u))||null;
 }
@@ -1419,6 +1421,16 @@ function planOne(input,state,settings,policy,route,fixed,blueprint){
 }
 
 function choosePreparedPlan(input,state,settings,policy,fixed,blueprint){let result;
+  // v23.3(사용자 지시): 단끝 중단 중에는 auto 비교(dual vs singleEnd)를
+  // 건너뛰고 dual 만 계획한다.  패왕의길·계엄령(navCap<=1)은 2상위가
+  // 불가능하므로 종전 비교 경로를 유지(항법 강제가 단끝을 고른다).
+  const seNavCap=C.navProfile?C.navProfile(settings.navFamily,settings.navPerk).upperCap:null;
+  if(C.MAGIC_SINGLE_END_SUSPENDED&&settings.mode==='magic'&&settings.magicRoute==='auto'&&!(seNavCap!=null&&seNavCap<=1)){
+    result=planOne(input,state,settings,policy,'dual',fixed,blueprint);
+    result.requestedMagicRoute='auto';
+    result.routeComparison={selected:'dual',reason:'단끝 경로 일시 중단(사용자 지시) — 자동 판정은 2상위 경로만 계획합니다.',routes:[routeSnapshot(result,true)]};
+    return result;
+  }
   if(settings.mode==='magic'&&settings.magicRoute==='auto'){
     const dual=planOne(input,state,settings,policy,'dual',fixed,blueprint),single=planOne(input,state,settings,policy,'singleEnd',fixed,blueprint);result=compareRoutePlans(dual,single);const other=result===dual?single:dual;result.alternatives.unshift({route:other.magicRoute,routeLabel:other.routeLabel,score:other.score,projectedCount:other.projectedCount,readiness:other.roleCoverage.readiness,wispCost:other.resourceUse.wisp,lineup:other.finalLineup.map(x=>({id:x.id,name:x.name,status:x.status})),actions:other.actions.map(x=>({id:x.id,name:x.name,wispCost:x.wispCost}))});result.requestedMagicRoute='auto';result.routeComparison={selected:result.magicRoute,reason:result.roleCoverage.planned.complete&&!other.roleCoverage.planned.complete?'최종 9기에서 클리어 조건을 충족하는 경로를 선택했습니다.':result.roleCoverage.planned.readiness!==other.roleCoverage.planned.readiness?'최종 9기의 필수 스펙 충족도가 더 높은 경로를 선택했습니다.':excessStun(result.roleCoverage.planned.spec)<excessStun(other.roleCoverage.planned.spec)?'필수 조건이 같아 불필요한 초과 스턴이 적은 경로를 선택했습니다.':'현재 패로 더 많이 완성 가능한 경로를 선택했습니다.',routes:[routeSnapshot(dual,result===dual),routeSnapshot(single,result===single)]};
   }else result=planOne(input,state,settings,policy,routeFor(settings.mode,settings.magicRoute),fixed,blueprint);
@@ -1586,7 +1598,7 @@ function upperBlueprintCompare(a,b){
 function rankUpperBlueprints(input,options){
   input=input||{};options=options||{};const started=Date.now(),baseSettings=normalizeSettings(input),base=makeState(input,baseSettings),policy=normalizeCommonPolicy(input,base),state=makePlanningState(base,policy),supportMemo=resolveSupportMemo(input),requested=[...new Set([].concat(options.candidateIds||[]).map(String))],cacheKey=upperRankFingerprint(state,baseSettings,policy,requested,supportMemo);let cache=UPPER_RANK_RESULT_CACHE.get(state.db);if(!cache){cache=new Map();UPPER_RANK_RESULT_CACHE.set(state.db,cache);}if(cache.has(cacheKey))return cache.get(cacheKey);const candidates=requested.map(id=>state.db.byId.get(id)).filter(u=>u&&C.isUpper(u)&&prerequisiteStatus(state,u,state.counts).allowed),staticByRoute=new Map(),rankings=[];
   const getStatic=(mode,route,settings)=>{const key=`${mode}:${route}`,cached=staticByRoute.get(key);if(cached)return cached;const built=makeLightStaticData(state,mode,route,settingsForRoute(settings,route),policy);staticByRoute.set(key,built);return built;};
-  for(const upper of candidates){setAffinityContext([upper],supportMemo);const family=unitFamily(upper),mode=family==='magic'?'magic':family==='physical'?'physical':baseSettings.mode,candidateSettings=withUpperCommitments(settingsWithBlueprint(Object.assign({},baseSettings,{mode,upperPreviewId:upper.id}),state,null),state,[upper.id]),fixed=[upper.id],routes=mode==='magic'&&candidateSettings.magicRoute==='auto'?['dual','singleEnd']:[routeFor(mode,candidateSettings.magicRoute)],plans=[];
+  for(const upper of candidates){setAffinityContext([upper],supportMemo);const family=unitFamily(upper),mode=family==='magic'?'magic':family==='physical'?'physical':baseSettings.mode,candidateSettings=withUpperCommitments(settingsWithBlueprint(Object.assign({},baseSettings,{mode,upperPreviewId:upper.id}),state,null),state,[upper.id]),fixed=[upper.id],candNavCap=C.navProfile?C.navProfile(candidateSettings.navFamily,candidateSettings.navPerk).upperCap:null,routes=mode==='magic'&&candidateSettings.magicRoute==='auto'?(C.MAGIC_SINGLE_END_SUSPENDED&&!(candNavCap!=null&&candNavCap<=1)?['dual']:['dual','singleEnd']):[routeFor(mode,candidateSettings.magicRoute)],plans=[];
     for(const route of routes){const routeSettings=settingsForRoute(candidateSettings,route),staticData=getStatic(mode,route,routeSettings);let draft=draftUpperBlueprintPlan(state,routeSettings,policy,route,upper,staticData);if(draft)draft=repairDraftSingleSwap(state,routeSettings,policy,route,upper,staticData,draft);if(draft){draft=decorateLegendEquivalent(draft,candidateSettings);draft.decision=squadDecisionSummary(state,draft);draft.timelineReadiness=timelineReadiness(state,draft,routeSettings,[upper.id]);draft.safePrefix=exactPrefixPlan(state,mode,route,routeSettings,policy,[upper.id]);plans.push(draft);}}
     if(!plans.length)continue;let plan=plans[0];if(plans.length>1)plan=compareRoutePlans(plans[0],plans[1]);const candidateProjection=projectUpperCandidate(state,plan,upper,candidateSettings),upperPreparation=upperPreparationFor(state,upper),summary=plan.rareSummary||{},rareUsed=num(summary.spent)+num(summary.reserved),rareTotal=num(summary.initial),rareConflict=num(summary.conflict),containsUpper=(plan.finalLineup||[]).some(row=>{const u=row.unit||state.db.byId.get(row.id);return u&&canonicalUpper(u)===canonicalUpper(upper);}),planned=plan.roleCoverage&&plan.roleCoverage.planned||{},routeConfirmable=!plan.routeEvaluation||plan.routeEvaluation.confirmable!==false,wispFeasible=!!(plan.wispBudget&&plan.wispBudget.fullPartyFeasible),handFeasible=(!plan.handFit||plan.handFit.feasible!==false)&&wispFeasible,clearComplete=plan.plannedCount===plan.targetCount&&!!planned.complete&&routeConfirmable&&rareConflict===0&&handFeasible&&containsUpper,fullyBuildable=plan.plannedCount===plan.targetCount&&handFeasible&&containsUpper,rareClearedTypes=(plan.rareAllocation||[]).filter(row=>row.initial>0&&row.remaining<=0).length,blueprint={version:1,revision:0,upperId:upper.id,lineupIds:(plan.finalLineup||[]).map(row=>row.id),buildOrderIds:(plan.finalLineup||[]).filter(row=>row.status!=='owned').map(row=>row.id),mode:plan.mode,magicRoute:plan.magicRoute};
     const projectionSpec=candidateProjection.spec||planned.spec||emptyFinalSpec(plan.mode),projectionRows=candidateProjection.rows||planned.rows||[],plannedExcessStun=excessStun(projectionSpec),plannedExcessSlow=excessSlow({rows:projectionRows}),controlExcessScore=round(plannedExcessStun*100+plannedExcessSlow,3),controlOverflow=controlCapOverflow(plannedExcessStun,plannedExcessSlow),materialOverlap=plan.materialOverlap||{penalty:0,lineagePairs:0},rareUsedTypes=num(plan.rareUsedTypes)||(plan.rareAllocation||[]).filter(row=>row.spent>0||row.reserved>0).length,handFitMetrics=plan.handFit&&plan.handFit.metrics||{},tierUse=tierBurnVector(plan.handFit),requirementPriority=candidateProjection.requirementPriority,roleComplete=plan.plannedCount===plan.targetCount&&!!planned.complete&&routeConfirmable&&containsUpper,wispShortage=num(plan.wispBudget&&plan.wispBudget.shortage),futureDependencyCount=Array.isArray(plan.handFit&&plan.handFit.futurePending)?plan.handFit.futurePending.length:0,guaranteed=fullyBuildable&&clearComplete&&containsUpper,safePrefix=plan.safePrefix||{},prefixVector=[].concat(safePrefix.rankVector||[]),prefixActionCount=(safePrefix.actions||[]).length,prefixRequirementPriority=[].concat(safePrefix.requirementPriority||[]),prefixRareRemaining=num(safePrefix.rareRemaining),prefixWispUsed=num(safePrefix.wispUsed),prefixTierUse=clone(safePrefix.tierUse||{}),prefixCommonPressure=num(safePrefix.commonPressure),prefixStoryProxy=num(safePrefix.storyProxy),memoPackage=curatedPackageEvidence(upper,plan.finalLineup,supportMemo);plan.blueprintProposal=blueprint;const ranking=decorateUpperStrategy({rank:0,upperId:upper.id,upperCanonicalId:canonicalUpper(upper),upperName:displayNameOf(upper),mode:plan.mode,completion:round(C.completionPercent(state,upper),2),containsUpper,rareUsed,rareTotal,rareRemaining:Math.max(0,rareTotal-rareUsed),rareConflict,rareClearedTypes,rareUsedTypes,tierUse,handFitMetrics,lowerHandFitScore:num(handFitMetrics.lowerScore),handFeasible,wispFeasible,wispShortage,futureDependencyCount,guaranteed,safePrefix,prefixVector,prefixActionCount,prefixRequirementPriority,prefixRareRemaining,prefixWispUsed,prefixTierUse,prefixCommonPressure,prefixStoryProxy,hardConflictTotal:num(plan.handFit&&plan.handFit.hardConflictTotal),wispConflict:num(plan.handFit&&plan.handFit.wisp&&plan.handFit.wisp.conflict),materialOverlapPenalty:num(materialOverlap.penalty),lineagePairs:num(materialOverlap.lineagePairs),roleComplete,clearComplete,fullyBuildable,readiness:num(candidateProjection.readiness),requirementPriority,projectedCount:num(plan.projectedCount),wispCost:num(plan.handFit&&plan.handFit.wisp&&plan.handFit.wisp.required),excessStun:plannedExcessStun,excessSlow:plannedExcessSlow,controlExcessScore,controlCapOverflow:controlOverflow,routeEvaluation:plan.routeEvaluation,candidateProjection,upperPreparation,memoPackage,blueprint,plan},state,upper);rankings.push(ranking);
@@ -1657,7 +1669,7 @@ function rankDeckDirections(input,options){
 function planFinalSquad(input){
   input=input||{};const started=Date.now(),baseSettings=normalizeSettings(input),base=makeState(input,baseSettings),policy=normalizeCommonPolicy(input,base),state=makePlanningState(base,policy),blueprint=normalizeBlueprint(input,baseSettings,state),blueprintSettings=settingsWithBlueprint(baseSettings,state,blueprint),fixed=fixedUpperIds(state,input.locks||[],blueprintSettings,blueprint),settings=withUpperCommitments(blueprintSettings,state,fixed),supportMemo=resolveSupportMemo(input);setAffinityContext([settings.upperPreviewId&&state.db.byId.get(settings.upperPreviewId)].concat((fixed||[]).map(id=>state.db.byId.get(id))).filter(Boolean),supportMemo);const result=choosePreparedPlan(input,state,settings,policy,fixed,blueprint);
   result.blueprint=blueprintMetadata(state,blueprint,result);delete result._search;delete result._blueprintAttempt;result.reservedCommons=Object.entries(policy.reserved).map(([id,count])=>({id,name:displayNameOf(state.db.byId.get(id)),count}));
-  // v23.2.1: 계통 게이트가 계획에서 뺀 보유 최종 유닛을 근거로 노출한다 —
+  // v23.3.0: 계통 게이트가 계획에서 뺀 보유 최종 유닛을 근거로 노출한다 —
   // "사보(물딜)를 왜 마딜 파티에 넣냐"의 역질문("왜 빠졌냐")에 UI가 답할 것.
   result.familyExcluded=finalEntries(state,state.counts).filter(u=>{const family=unitFamily(u);return family!==settings.mode&&family!=='neutral';}).map(u=>({id:u.id,name:displayNameOf(u),family:unitFamily(u)}));
   result.elapsedMs=Date.now()-started;setAffinityContext([],supportMemo);return result;

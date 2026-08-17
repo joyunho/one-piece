@@ -1022,7 +1022,7 @@ class App{
       const db=this.normalized().db,unit=db.byId.get(id);
       if(!unit||!C.isUpper(unit)){this.toast('상위 유닛이 아닙니다.');return;}
       const family=C.familyOf(unit),mode=family==='magic'?'magic':'physical';
-      const route=mode==='physical'?'physical':['dual','singleEnd'].includes(this.state.magicRoute)?this.state.magicRoute:'singleEnd';
+      const route=mode==='physical'?'physical':['dual','singleEnd'].includes(this.state.magicRoute)?this.state.magicRoute:C.MAGIC_SINGLE_END_SUSPENDED?'dual':'singleEnd';
       const routeFamily=upperRouteFamily(id);
       this.state.locks=this.state.locks.filter(lock=>lock.stage!=='upper'&&lock.stage!=='legend');
       this.state.locks.push({stage:'upper',id,source:'sniped',sticky:true,confirmedAt:Date.now(),confirmations:1,routeRootId:routeFamily?routeFamily[0]:id,activeVariantId:id});

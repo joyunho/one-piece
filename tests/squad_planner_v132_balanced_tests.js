@@ -133,6 +133,14 @@ test('automatic magic planning compares both clear templates and reports the sel
   const counts=stockedCounts();for(const u of db.rares)counts[u.id]=Math.max(2,C.num(counts[u.id]));counts[C.WISP_ID]=120;
   const result=P.planFinalSquad({state:stateFromCounts(counts),settings:{mode:'magic',magicRoute:'auto',currentRound:55,targetSquadCount:9,superKumaOwned:true,recommendWarped:true}});
   assert(result.routeComparison&&result.routeComparison.reason);
+  // v23.3(사용자 지시): 단끝 일시 중단 중에는 auto 가 비교 없이 dual 만
+  // 계획한다 — 중단이 풀리면(플래그 false) 원래 두 경로 비교 계약이 산다.
+  if(C.MAGIC_SINGLE_END_SUSPENDED){
+    assert.strictEqual(result.magicRoute,'dual');
+    assert(result.routeComparison.reason.includes('단끝 경로 일시 중단'));
+    assert.deepStrictEqual(result.routeComparison.routes.map(row=>row.route),['dual']);
+    return;
+  }
   assert.deepStrictEqual(result.routeComparison.routes.map(row=>row.route).sort(),['dual','singleEnd']);
   assert.strictEqual(result.routeComparison.routes.filter(row=>row.selected).length,1);
   assert.strictEqual(result.routeComparison.selected,result.magicRoute);

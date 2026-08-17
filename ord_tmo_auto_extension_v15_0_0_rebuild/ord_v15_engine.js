@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='23.2.1';
+const VERSION='23.3.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -273,7 +273,7 @@ function metaUsage(unit){
   return META_STATS.byCode[id]||META_STATS.byCode[id.toLowerCase()]||META_STATS.byCode[id.toUpperCase()]||null;
 }
 function metaUsageRate(unit){const hit=metaUsage(unit);return hit?num(hit.rate):0;}
-// v23.2.1(사용자 규칙): "첫전설 레베카(히든), 킬러(히든) 추천 금지" —
+// v23.3.0(사용자 규칙): "첫전설 레베카(히든), 킬러(히든) 추천 금지" —
 // 0812·0816 실전 로그에서 매판 수동 veto 하던 두 유닛(T30h 레베카 깍18,
 // 540h 킬러 광보잡 깍12)을 첫 전설·히든 마일스톤 후보에서 상시 제외한다.
 // 금지는 첫 전설 슬롯 한정 — 추가 전설·역할 보강 국면에서는 종전대로
@@ -674,9 +674,14 @@ function freeNonRegressiveRepair(quote,before,after){
 }
 function routeOptions(model){
   const selected=P.resolveRoute(model.intent,model.settings);if(selected)return[selected];
-  if(model.intent.damageMode==='magic')return[P.ROUTES.dual,P.ROUTES.singleEnd];
+  // v23.3(사용자 지시): 단끝 일시 중단 — 자동 차선에서 singleEnd 를 뺀다.
+  // 패왕의길·계엄령(navCap<=1)은 2상위가 불가능하므로 중단을 무시하고
+  // 단끝 차선을 유지한다(핵심 게이트는 deficits 의 항법 강제).
+  const navCap=C.navProfile?C.navProfile(model.settings&&model.settings.navFamily,model.settings&&model.settings.navPerk).upperCap:null;
+  const seSuspended=C.MAGIC_SINGLE_END_SUSPENDED===true&&!(navCap!=null&&navCap<=1);
+  if(model.intent.damageMode==='magic')return seSuspended?[P.ROUTES.dual]:[P.ROUTES.dual,P.ROUTES.singleEnd];
   if(model.intent.damageMode==='physical')return[P.ROUTES.physical];
-  return[P.ROUTES.physical,P.ROUTES.dual,P.ROUTES.singleEnd];
+  return seSuspended?[P.ROUTES.physical,P.ROUTES.dual]:[P.ROUTES.physical,P.ROUTES.dual,P.ROUTES.singleEnd];
 }
 function rolePotential(unit,route){const contribution=C.roleContribution(unit,route.mode);let score=0;for(let index=0;index<route.groups.length;index++){const weight=Math.max(1,route.groups.length-index);for(const key of route.groups[index])score+=weight*Math.min(1,num(contribution[key]));}return round(score);}
 function routeCandidateCompare(left,right){
@@ -1243,7 +1248,10 @@ function lateSqueezeSafe(model,action,locks){
 // 이 유닛들이었다).
 function deficitRepairSafe(model,action,locks){
   try{
-    if(!action||!action.quote||!action.quote.feasible)return false;
+    // v23.3: id 만 있는 의사(pseudo) 액션도 허용 — 아래에서 어차피 현재 패
+    // 원장으로 신선 재견적하므로 안전성은 동일하다(관성 유지 판정 재사용).
+    if(!action)return false;
+    if(action.quote&&!action.quote.feasible)return false;
     // 낡은 견적을 신뢰하지 않는다 — 판정에 실린 quote 는 다른 패에서 계산된
     // 것일 수 있다(v17.23 스테일 계약).  현재 패 원장으로 다시 견적해 통과할
     // 때만 우회한다.
@@ -1306,7 +1314,7 @@ function reconcileSquadExecutionRaw(decision,squad,locks){
     return withEvidence({}, {executionAuthority:'squad-prefix-requoted-v15',squadPrefixEmpty:true});
   }
   if(['stop','hold'].includes(String(audit.level||'')))return blocked('HOLD',`최종 파티 검증이 ${audit.level==='stop'?'필수 역할 회귀':'현재 체크포인트 개선 없음'}으로 판정되어 제작을 잠급니다.`,{squadAuditLevel:String(audit.level||'')});
-  const planned=actions[0],plannedId=String(planned&&planned.id||''),unit=model.knowledge&&model.knowledge.db&&model.knowledge.db.byId.get(plannedId);
+  let planned=actions[0],plannedId=String(planned&&planned.id||''),unit=model.knowledge&&model.knowledge.db&&model.knowledge.db.byId.get(plannedId);
   if(!plannedId||!unit)return blocked('SYNC_BLOCKED','최종 파티의 첫 제작 유닛을 현재 카탈로그에서 확인하지 못했습니다.',{plannedId});
   // v22.10(0810c 포렌식): 사용자가 넘어간(veto) 유닛을 파티 프리픽스가
   // 재견적으로 되살렸다 — r54 베이비5 veto 2회에도 squad-prefix-requote 가
@@ -1314,8 +1322,28 @@ function reconcileSquadExecutionRaw(decision,squad,locks){
   // 를 모르므로 승격 지점(여기)에서 거른다: 프리픽스 첫수가 veto 대상이면
   // 승격하지 않고 엔진 원 판정(veto 필터 적용됨)을 그대로 쓴다.
   if(vetoedIds(model).has(plannedId))return withEvidence({},{executionAuthority:'veto-respected',squadPrefixVetoed:plannedId});
+  // v23.3(#56 관성 — 사용자 착수 지시): 승격층 현직 우위.  파티 계획이
+  // 틱마다 재계산되며 프리픽스 첫수가 바뀌어 카드가 돌았다 — 0817 실측
+  // 28~52라 타깃 교체 12회, 그동안 추천 실행 0.  직전 카드 대상이 아직
+  // ① 미제작 ② 비veto ③ 현재 패 신선 재견적 통과 ④ 필수 열린 결손을
+  // 실제로 줄임 ⑤ 아무 역할·체크포인트도 회귀 안 함 — 을 전부 증명하면,
+  // 프리픽스 첫수 대신 그 대상을 계속 승격한다.  해제는 제작 완료·veto·
+  // 재견적 불능·결손 무기여로만.
+  let stickyIncumbent='';
+  {
+    const stickyId=String(model.settings&&model.settings._stickyActionId||'');
+    if(stickyId&&stickyId!==plannedId&&num(model.effective.counts[stickyId])<=0&&!vetoedIds(model).has(stickyId)){
+      const stickyUnit=model.knowledge.db.byId.get(stickyId);
+      if(stickyUnit&&deficitRepairSafe(model,{id:stickyId},locks)){
+        planned={id:stickyId,name:nameOf(stickyUnit),reason:'관성 유지 — 직전 추천이 여전히 제작 가능하고 필수 결손을 줄여 계속 갑니다.'};
+        plannedId=stickyId;unit=stickyUnit;stickyIncumbent=stickyId;
+      }
+    }
+  }
   const lineupIds=new Set((squad.finalLineup||[]).map(item=>String(item&&item.id||item&&item.unit&&item.unit.id||'')));
-  if(lineupIds.size&&!lineupIds.has(plannedId))return blocked('SYNC_BLOCKED','검증된 첫 제작이 최종 파티 목록과 일치하지 않습니다.',{plannedId});
+  // 현직 유지 대상은 파티 목록 밖일 수 있다 — 안전성(무회귀·결손 축소)은
+  // deficitRepairSafe 가 이미 증명했으므로 목록 일치 검사를 면제한다.
+  if(!stickyIncumbent&&lineupIds.size&&!lineupIds.has(plannedId))return blocked('SYNC_BLOCKED','검증된 첫 제작이 최종 파티 목록과 일치하지 않습니다.',{plannedId});
   const quote=L.quote(model,unit,model.effective.counts,{availableRound:model.round.value});
   if(!quote||!quote.feasible||String(quote.targetId||unit.id)!==plannedId)return blocked('SYNC_BLOCKED',`최종 파티 첫 제작 ${nameOf(unit)}을 현재 패 원장으로 다시 견적했지만 완성할 수 없습니다. TMO를 다시 동기화하세요.`,{plannedId,quoteFeasible:!!(quote&&quote.feasible)});
   const route=decision.assessment&&decision.assessment.route||P.resolveRoute(Object.assign({},model.intent,{damageMode:squad.mode||model.intent&&model.intent.damageMode,magicRoute:squad.magicRoute||model.intent&&model.intent.magicRoute}),Object.assign({},model.settings,{mode:squad.mode||model.settings.mode,magicRoute:squad.magicRoute||model.settings.magicRoute}));
@@ -1384,7 +1412,7 @@ function reconcileSquadExecutionRaw(decision,squad,locks){
     detail:regressedRows.map(row=>`${row.label} ${round(row.currentBefore)}→${round(row.currentAfter)}/${round(row.target)}`).join(' · ')
   }:null;
   const deltas=requirementDeltas(before,after),reason=String(planned.reason||'최종 파티의 현재 패 검증 첫 순서'),row=makeRow(model,quote,after,reason),path=actions.map(action=>({id:String(action.id||''),name:String(action.name||''),wispCost:num(action.wispCost)})).filter(action=>action.id),action={id:plannedId,name:nameOf(unit),unit,row,quote,wispCost:num(quote.wisp.cost),wispAfter:num(quote.wisp.after),result:'squad-prefix-requoted',reason,deltas,regression:regressionNote,stopCondition:`${Object.keys(quote.consumed||{}).length?'표시 재료가 하나라도 바뀌거나 ':''}선택 위습이 ${num(quote.wisp.cost)}개 미만이면 만들지 말고 다시 동기화`,path};
-  return withEvidence({state:'ACT_NOW',label:'최종 파티 · 지금 제작',reason,action,blockedAction:null,assessment:before,afterAction:after,bestPath:{steps:path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]},rare:rareLedgerForQuote(model,quote,'ACT_NOW',`최종 파티 ${nameOf(unit)}`),alternatives:[]},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:false,plannedId,quotedId:String(quote.targetId||unit.id),rawActionId:String(rawAction&&rawAction.id||''),sourceFingerprint:String(model.fingerprint||''),rawActionReplaced:!!rawAction&&String(rawAction.id||'')!==plannedId,regressedRequired:regressed,regressionDetail:regressedRows,regressionVerdict:regressedRows.length?'passed-vector-gain':''});
+  return withEvidence({state:'ACT_NOW',label:'최종 파티 · 지금 제작',reason,action,blockedAction:null,assessment:before,afterAction:after,bestPath:{steps:path,assessment:after,remainingWisp:num(quote.wisp.after),deadEnds:[]},rare:rareLedgerForQuote(model,quote,'ACT_NOW',`최종 파티 ${nameOf(unit)}`),alternatives:[]},{executionAuthority:'squad-prefix-requoted-v15',squadPrefixRejected:false,plannedId,quotedId:String(quote.targetId||unit.id),rawActionId:String(rawAction&&rawAction.id||''),sourceFingerprint:String(model.fingerprint||''),rawActionReplaced:!!rawAction&&String(rawAction.id||'')!==plannedId,stickyIncumbent,regressedRequired:regressed,regressionDetail:regressedRows,regressionVerdict:regressedRows.length?'passed-vector-gain':''});
 }
 
 // v18 — 침묵 금지.
@@ -1580,6 +1608,22 @@ function stickyPath(paths,best,stickyId){
   //    남기는 경로를 유지했다.  계약(위 주석)은 막다른길을 결정적 구간으로
   //    명시하므로, 막다른길이 더 많은 held 는 지배가 아니다.
   if(!inferiorRequirements(held,best)&&num(held.regression)<=num(best.regression)&&stepCost(held)<=stepCost(best)&&deadEndCount(held)<=deadEndCount(best)){held.stickyHold='dominant';return held;}
+  // v23.3(#56 관성 — 사용자 착수 지시): 현직 우위.  기존 ①②는 "붙잡은
+  // 쪽이 모든 필수 역할에서 안 밀려야" 유지라, 손패·선위가 조금만 변해도
+  // 도전자가 이겨 카드가 돌았다 — 0817 실측: r39~48 사이 아오키지→페로나→
+  // 캐럿→피셔타이거→바르톨로메오→토키 6회 회전, 그동안 완성 0.  부담을
+  // 뒤집는다: 도전자는 **안전 성분(회귀·체크포인트·막다른길)에서 엄격히
+  // 이겨야만** 현직을 밀어낸다.  역할 부채(fullVector) 미세 우위는 교체
+  // 사유가 아니다 — 현직이 신선 견적으로 여전히 제작 가능하면 계속 간다.
+  // 해제 경로는 종전대로: 제작 완료(경로에서 소멸)·veto·견적 불능.
+  {
+    const fullLen=(best.assessment&&best.assessment.fullVector||[]).length;
+    const safetyLen=Math.max(0,length-fullLen);
+    const step=held.sequence&&held.sequence[0];
+    if(safetyLen>0&&step&&step.quote&&step.quote.feasible&&P.compareVector(best.rankVector.slice(0,safetyLen),held.rankVector.slice(0,safetyLen))>=0){
+      held.stickyHold='incumbent';return held;
+    }
+  }
   return best;
 }
 // 직전에 제시하던 대상이 이번 라운드에도 여전히 만들 수 있고 필수 역할을

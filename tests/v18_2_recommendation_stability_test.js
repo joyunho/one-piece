@@ -85,13 +85,19 @@ test('필수 역할에서 뒤지지 않고 더 싸면 유지한다',()=>{
   assert.strictEqual(picked.stickyHold,'dominant');
 });
 
-test('더 비싸면 열등하지 않아도 유지하지 않는다',()=>{
+test('v23.3(#56 현직 우위): 도전자가 안전 성분에서 못 이기면 값이 비싸도 유지한다',()=>{
+  // 종전 계약(v18.2)은 "더 비싸면 열등하지 않아도 해제"였다 — 경제성
+  // 미세 우위가 카드를 갈아치우는 회전의 한 원인이었다(0817 실측 12회).
+  // 새 독트린: 교체 근거는 안전 성분(회귀·체크포인트·막다른길) 승리뿐이다.
+  // 이 픽스처의 도전자(NEW [0,2,0])는 결정적 벡터에서 현직(OLD [0,1,0])을
+  // 이기지 못한다 — 현직이 제작 가능하면 값과 무관하게 유지한다.
   const best=node('NEW',[0,2,0],[0,0,0],{assessment:{requirements:[{key:'slow',required:true,gap:20}]}});
   best.sequence[0].quote.wisp={cost:2};
   const held=node('OLD',[0,1,0],[0,0,0],{assessment:{requirements:[{key:'slow',required:true,gap:10}]}});
   held.sequence[0].quote.wisp={cost:9};
   const picked=E._test.stickyPath([best,held],best,'OLD');
-  assert.strictEqual(picked.sequence[0].quote.targetId,'NEW','더 비싼 것을 관성으로 붙잡았다');
+  assert.strictEqual(picked.sequence[0].quote.targetId,'OLD','안전 동급 도전자에게 현직을 내줬다');
+  assert.strictEqual(picked.stickyHold,'incumbent');
 });
 
 test('직전 대상이 후보에 없으면 최선을 그대로 쓴다',()=>{

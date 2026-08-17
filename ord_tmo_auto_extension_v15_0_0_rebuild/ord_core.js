@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='23.2.1';
+const VERSION='23.3.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -90,7 +90,7 @@ const ABILITY_ALIASES={
 //  (마법방어 15%는 별도 모델 없음 — 마방깎은 유닛 능력 파싱만.)
 //  나스쥬로 이속 15%는 유지라 이감 117 목표 불변.
 // v22.12(웹 정본 확보 — 공식 누적 패치노트 dcinside ordc1 no=189308 +
-// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.2.1(맵 원본 war3map.j
+// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.3.0(맵 원본 war3map.j
 // 9345-9438 IS==6 분기로 재검증 — 맵데이터_분석_20260811.txt):
 // 오로성 악몽 저주 수치 원문.
 //  · 나스쥬로: 적 이속 +15% · 아군 공속 -15% · 라인몬스터 체력 +1,500만
@@ -121,6 +121,12 @@ const GOROSEI={
 //   패왕의길은 최상위 1기만 조합 가능, 계엄령은 최상위 조합 불가 —
 //   상위 상한은 전역 규칙이 아니라 항법에서만 온다(트리플·콰트로 퀘스트
 //   코드 실존).  코치의 '상위 2기' 계획은 코치 정책이지 게임 규칙이 아님.
+// v23.3(사용자 지시 0817): "당분간은 마딜 1상위 단끝딜 추천하지 말아봐" —
+// 0816(타시기)·0817(아카이누) 두 판 연속 단끝 경로 전멸(검증 단끝이 끝까지
+// 안 닫힘).  true 인 동안 자동 판정·후보 차선·플래너 기본이 단끝을 뽑지
+// 않는다.  명시 선택(magicRoute==='singleEnd')과 패왕의길·계엄령(2상위
+// 불가) 강제는 그대로 존중.  해제 = 이 값만 false 로.
+const MAGIC_SINGLE_END_SUSPENDED=true;
 const NAVIGATION={
   none:{key:'none',name:'항법 미선택',perks:[]},
   union:{key:'union',name:'연합세력',perks:[['ilseok','일석이조'],['recall','긴급소집'],['trait','특성공학']]},
@@ -1328,6 +1334,12 @@ function clearProfileDetails(spec,mode,settings){
   const navCap=navProfile(settings.navFamily,settings.navPerk).upperCap;
   let selected=requested==='auto'?(dualDistance<=singleEndDistance?'dual':'singleEnd'):requested;
   let navNote='';
+  // v23.3(사용자 지시 "당분간은 마딜 1상위 단끝딜 추천하지 말아봐"):
+  // 자동 판정에서 단끝 경로를 뽑지 않는다 — 0816·0817 두 판 연속 단끝
+  // 경로 전멸(검증 단끝이 끝까지 안 닫힘).  명시 선택(requested==='singleEnd')
+  // 은 존중하고, 패왕의길·계엄령(navCap<=1)은 2상위가 불가능하므로 단끝
+  // 강제가 그대로 이긴다.  해제하려면 MAGIC_SINGLE_END_SUSPENDED=false.
+  if(MAGIC_SINGLE_END_SUSPENDED&&requested==='auto'&&selected==='singleEnd'&&!(navCap!=null&&navCap<=1)){selected='dual';navNote=' 단끝 경로 일시 중단(사용자 지시) — 자동 판정은 2상위 경로만 권합니다.';}
   if(navCap!=null&&navCap<=1&&selected==='dual'){selected='singleEnd';navNote=' 패왕의길 항법 — 최상위 1기 제한으로 2상위 경로를 닫았습니다.';}
   if(navCap===0){navNote=' 계엄령 항법 — 최상위 조합 불가: 상위 요구는 면제하되 상위 없는 클리어는 코치 경로 모델 밖입니다.';for(const row of singleEnd.concat(dual))if(row.key==='main'){row.waived=true;row.note='계엄령 — 최상위 조합 불가(항법)';}}
   const requirements=selected==='dual'?dual:singleEnd;
@@ -1794,5 +1806,5 @@ function partnerShareFor(upperId,unitOrId){
 }
 function debugFixture(){return{VERSION,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,upperPairSynergy,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,recipeSolve,predictCompletionWithAddedMaterial,specialPrerequisiteStatus,currentSpec,controlEnvelope,controlState,clearProfileDetails,deficits,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,selectCompatibleQueue,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rowScore,roundClock,snapshotHealth};}
 
-global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,GOROSEI_COMMON_CURSE,NAVIGATION,navProfile,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,BOSS_FRENZY_WEIGHTS,bossFrenzyCredit,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ledgerCompletion,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,partnerShareFor,insertMechanicPriorityGroup,mechanicRequirementKeys,debugFixture};
+global.ORDCore={VERSION,WISP_ID,ROLE_AXIS,roleAxis,axisSummary,FINAL_UNIT_HOLD_READS,stabilizeFinalUnits,SUPER_KUMA_ID,RAYLEIGH_HIDDEN_ID,PIRATE_SHIP_ID,STORY10_FORFEITS,SPECIAL_IDS,eligible152Specials,eligible152SpecialId,COMMON_COLORS,GOROSEI,GOROSEI_COMMON_CURSE,NAVIGATION,navProfile,MAGIC_SINGLE_END_SUSPENDED,CONTROL_ENVELOPE,CONTROL_PROFILES,BOSS_META,bossPreview,UPPER_LINE_PROFILE,DEFENSE_ARMOR,armorMultiplier,SELECTION_WISP_INCOME_PER_ROUND,RANDOM_WISP_PER_ROUND,COMMON_KIND_COUNT,wispIncomeProjection,ARMOR_BREAK_CAP,armorBreakStacks,armorBreakModel,ATTACK_TYPE_VS_BOSS,upperCombatFor,upperRawDps,upperBossDps,bossRawDpsNeed,upperSkillProfile,upperSkillProcDps,skillProcTrust,simulateBossFlat,STUN_RESEARCH,STUN_BASE_FLOOR,BOSS_FRENZY_WEIGHTS,bossFrenzyCredit,STORY_RARE_BENCHMARKS,STORY_RARE_RANKS,STORY_RESEARCHED,STORY_LEAGUES,STORY_GRADE_TIERS,UPPER_VARIANT_FAMILIES,UPPER_POWER_TIER_RANK,UPPER_POWER_TIER_LETTERS,upperPowerTier,POST_LEGEND_ROUTES,MAX_ROUND,MAX_WISP_COST,PREFERRED_WISP_COST,num,esc,cleanName,canonicalAbility,groupName,nameOf,displayNameOf,mergedDbFor,liveIdMatchRate,tierKey,isRare,isCommon,isUncommon,isSpecialTier,isUpper,isLegendish,isChanged,isWarped,isShip,isSeraph,isTranscend,requiresWarpedCraft,familyOf,canonicalUpperId,activeUpperVariant,upperPairSynergy,descriptionPartnerSynergy,roleProfile,magicFinishProfile,evaluateMagicSingleEnd,skillFacts,upperStrategy,stunResearch,stunCaptureRate,storyGrade,storyLeagueKey,storyLeagueTier,storyLeagueGrade,storyLeagueRows,buildDb,mergeLiveCatalog,normalizeState,recipeSolve,predictCompletionWithAddedMaterial,reserveTargets,specialPrerequisiteStatus,materialName,mapText,commonTop,completionPercent,ledgerCompletion,ownedUnits,ownedDisplayUnits,isRoleBearingUnit,currentSpec,finalGradeSpec,applyBuildStep,controlEnvelope,controlState,clearProfileDetails,deficits,roleContribution,bossCreditFor,upperMemoFor,synergyRankFor,mainUpper,inferMode,candidateRow,recommendationPlan,gameFlow,progressionCounts,normalizePostLegendRoute,milestonePurpose,phaseForRound,roundClock,rareResolution,rareTargetsForRound,rareInventoryFor,rarePressureForInventory,rareSpendForSolve,rareCraftableLegends,upperProfileData,statusForRow,summarizeRoles,upperSlotLimit,snapshotHealth,clearStatsFor,partnerShareFor,insertMechanicPriorityGroup,mechanicRequirementKeys,debugFixture};
 })(window);
