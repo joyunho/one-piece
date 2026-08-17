@@ -1059,6 +1059,10 @@ class App{
       if(!unit||!C.isUpper(unit)){this.toast('상위 유닛이 아닙니다.');return;}
       const main=this.upperLock()&&db.byId.get(this.upperLock().id)||null;
       if(main&&C.canonicalUpperId(main.id)===C.canonicalUpperId(unit.id)){this.toast(`${displayNameOf(unit)}는 이미 메인 상위입니다.`);return;}
+      // v23.3.1(사용자 리포트 "초월 유닛은 하나만 만들 수 있는데 2개 추천"):
+      // 배타 티어 하드 가드 — 초월·세라핌은 판당 1기다.
+      if(C.isTranscend(unit)&&(main&&C.isTranscend(main)||C.num(this.state.transcendUsed)>0)){this.toast('초월은 판당 1기만 만들 수 있습니다 — 메인 상위가 이미 초월이라 확정할 수 없습니다.');return;}
+      if(C.isSeraph(unit)&&(main&&C.isSeraph(main)||C.num(this.state.seraphUsed)>0)){this.toast('세라핌은 판당 1기만 만들 수 있습니다 — 이미 사용해 확정할 수 없습니다.');return;}
       this.state.secondUpperId=String(id);this._squadCacheKey='';this._v15CacheKey='';this._directionRankCacheKey='';this._blueprintRankingsKey='';this.persist();
       this.toast(`두 번째 상위를 ${displayNameOf(unit)}로 확정했습니다. 이 자리는 다른 상위로 바뀌지 않고, 보드 목표는 5기로 줄어 9환산을 유지합니다.`);
       return;
@@ -1945,9 +1949,18 @@ class App{
     const settings=Object.assign({},plan&&plan.settings||{},{currentRound:this.actualRound(),allowWarped:true,recommendWarped:true});
     const ctx={mode,purpose:'upper',round:this.actualRound(),settings,stock:state.counts,ruleCounts:state.counts,availableWisp:state.wisp,deficits:plan&&plan.deficits||{rows:[]},spec:plan&&plan.spec||null,upper:mainUpper||null};
     const rows=[];
+    // v23.3.1(사용자 리포트 "초월 유닛은 하나만 만들 수 있는데 2개 추천"):
+    // 배타 티어 게이트 — 초월·세라핌은 판당 1기.  메인이 초월(나미 등)이면
+    // 초월 후보(키자루·타시기 등)는 2상위 목록에 오르면 안 된다.  플래너
+    // (secondUpperBlocked·티어 사용량 게이트)는 이미 막고 있었고 이 UI
+    // 목록만 뚫려 있었다.
+    const usedTranscend=(mainUpper&&C.isTranscend(mainUpper))||C.num(this.state.transcendUsed)>0;
+    const usedSeraph=(mainUpper&&C.isSeraph(mainUpper))||C.num(this.state.seraphUsed)>0;
     for(const unit of state.db.uppers){
       if(mainKey&&String(C.canonicalUpperId(unit.id))===mainKey)continue;
       if(C.familyOf(unit)!=='neutral'&&C.familyOf(unit)!==mode)continue;
+      if(C.isTranscend(unit)&&usedTranscend)continue;
+      if(C.isSeraph(unit)&&usedSeraph)continue;
       let row=null;try{row=C.candidateRow(state,unit,ctx);}catch(_){row=null;}
       if(!row||!row.solve)continue;
       const tier=C.upperPowerTier?C.upperPowerTier(unit,state.db):{known:false,letter:'',rank:-1};
@@ -3174,6 +3187,9 @@ class App{
         if(!unit||String(C.canonicalUpperId(unit.id))===mainKey)continue;
         const family=C.familyOf(unit);
         if(family!=='neutral'&&family!==routeMode)continue;
+        // v23.3.1: 처방 추천도 배타 티어(초월·세라핌 판당 1기)를 우회 못 한다.
+        if(C.isTranscend(unit)&&(C.isTranscend(upper)||C.num(this.state.transcendUsed)>0))continue;
+        if(C.isSeraph(unit)&&(C.isSeraph(upper)||C.num(this.state.seraphUsed)>0))continue;
         const existing=rows.find(row=>String(C.canonicalUpperId(row.unit.id))===String(C.canonicalUpperId(unit.id)));
         if(existing){existing.presc=rec;continue;}
         let wispCost=0;try{wispCost=C.num(C.recipeSolve(db,unit.id,state.counts||{}).wispCost);}catch(_){wispCost=0;}
