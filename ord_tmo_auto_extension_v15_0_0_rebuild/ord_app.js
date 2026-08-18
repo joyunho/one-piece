@@ -1447,7 +1447,11 @@ class App{
     // 남긴다: 리롤 잔여(안전 리롤 권장 대상 포함)와 진행 중이던 것.
     const rerollLeft=Math.max(0,this.rerollLimit()-C.num(this.state.rerollsUsed));
     const safeReroll=decision.rare&&decision.rare.safeReroll;
-    chips.push(`<span class="${rerollLeft>0&&safeReroll?'warn':''}"><small>리롤 잔여</small><b>${rerollLeft}/${this.rerollLimit()}</b><em>${safeReroll?`${C.esc(safeReroll.name)} 권장`:rerollLeft?'소비 가능 자원':'소진'}</em></span>`);
+    // v23.6(사용자 지시): 적극 리롤 항법(리스크헷지·카지노)은 리롤을 판이
+    // 끝나면 사라지는 자원으로 다룬다 — 40라 이후에도 남아 있으면 독촉.
+    const chipNav=C.navProfile(this.state.navFamily,this.state.navPerk);
+    const lateBurn=chipNav.aggressiveReroll&&rerollLeft>0&&this.actualRound()>=40;
+    chips.push(`<span class="${rerollLeft>0&&safeReroll||lateBurn?'warn':''}"><small>리롤 잔여</small><b>${rerollLeft}/${this.rerollLimit()}</b><em>${safeReroll?`${C.esc(safeReroll.name)} 권장`:lateBurn?'막판 소진 권장 — 아끼지 마세요':rerollLeft?'소비 가능 자원':'소진'}</em></span>`);
     // v18.2: 순위가 바뀌어도 직전에 만들던 것이 여전히 유효하면 그렇게
     // 말해 준다.  사용자가 겪는 문제는 순위 변동 자체가 아니라 "만들던
     // 걸 버려야 하나"를 모르는 것이다.
@@ -1839,7 +1843,7 @@ class App{
     }
     // 리롤 블록(2번 패널에서 이동 · v16.7/v17.11 규칙 유지).
     const rerollRows=decision.rare&&!decision.rare.conflict?(decision.rare.reroll||[]).filter(row=>C.num(row.reroll)>0).slice(0,2):[];
-    const rerollHint=rerollRows.length&&decision.state!=='REROLL_ONE'?`<div class="v151-reroll-hint"><small>리롤 권장</small>${rerollRows.map(row=>`<button data-act="detail" data-id="${C.esc(row.id)}"><b>${C.esc(row.name)}${C.num(row.reroll)>1?` ×${C.num(row.reroll)}`:''}</b><span>확정 상위·보조 경로에 사용처 없음 · 1장씩 리롤 후 다시 동기화 · 원하는 1종 확률 1/41(2.4%)/회</span></button>`).join('')}</div>`:'';
+    const rerollHint=rerollRows.length&&decision.state!=='REROLL_ONE'?`<div class="v151-reroll-hint"><small>리롤 권장${C.navProfile(this.state.navFamily,this.state.navPerk).rerollWood===0?' · 목재 0 — 아끼지 마세요':''}</small>${rerollRows.map(row=>`<button data-act="detail" data-id="${C.esc(row.id)}"><b>${C.esc(row.name)}${C.num(row.reroll)>1?` ×${C.num(row.reroll)}`:''}</b><span>확정 상위·보조 경로에 사용처 없음 · 1장씩 리롤 후 다시 동기화 · 원하는 1종 확률 1/41(2.4%)/회</span></button>`).join('')}</div>`:'';
     const rerollTargets=this.v151RerollTargets(state,plan,decision);
     const targetsHtml=rerollTargets?`<div class="v151-reroll-targets"><small>리롤 목표 ${rerollTargets.kinds}종 · 남은 리롤 ${rerollTargets.rerollLeft}/${this.rerollLimit()}</small><div class="v151-reroll-target-chips">${rerollTargets.list.map(row=>`<button data-act="detail" data-id="${C.esc(row.id)}"><b>${C.esc(row.name)}${row.need>1?`×${row.need}`:''}</b><span>${row.sources.map(source=>C.esc(source)).join('·')}</span></button>`).join('')}</div><em>1회당 목표 적중 ${rerollTargets.kinds}/41 = ${rerollTargets.perRollPercent}%${rerollTargets.rerollLeft?` · 남은 ${rerollTargets.rerollLeft}회 안에 1개 이상 ${rerollTargets.anyHitPercent}%`:' · 리롤 소진'}</em>${rerollTargets.rollAway.length?`<span class="v151-reroll-fuel">돌릴 후보(사용처 없음): ${rerollTargets.rollAway.map(row=>C.esc(row.name)).join(' · ')}</span>`:'<span class="v151-reroll-fuel">지금 돌릴 무용 희귀 없음 — 무용 희귀가 잡히면 위 목표를 노리세요</span>'}</div>`:'';
     const buildable=`<div class="v152-rare-buildable"><small>지금 내 패로 만들 수 있는 전설급 · <i class="v151-pick-badge">추천</i>은 전체 파티 계획이 고른 것</small>${this.renderV151BuildableLegends(state,plan)}</div>`;
@@ -2406,7 +2410,14 @@ class App{
     // v19.10(P0-2): 목적지가 하나라도 있는 희귀 종은 리롤 후보에서 뺀다 —
     // 여분 장수가 있어도 카드·파티·함선·전투역할 어딘가에 쓰이는 종을
     // "리롤"이라 부르지 않는다(수동 리롤은 여전히 사용자 자유).
-    let rerollCapacity=this.actualRound()>=25?Math.max(0,this.rerollLimit()-C.num(this.state.rerollsUsed)):0;
+    // v23.6(사용자 지시 "리스크헷지 기준으로 리롤 추천 더 적극적으로"):
+    // 리롤이 싼 항법(리스크헷지 목재 0·5회, 카지노 4회)에서는 상위가
+    // 확정돼 사용처 판정이 안정된 뒤 25라를 기다리지 않고 18라부터
+    // 원장을 연다 — 목적지 없는 여분을 굴리는 기대값이 양수다.
+    // 기본 항법(2~3회·목재 2)은 종전 25라 유지.
+    const navReroll=C.navProfile(this.state.navFamily,this.state.navPerk);
+    const rerollGateRound=navReroll.aggressiveReroll&&this.upperLock()?18:25;
+    let rerollCapacity=this.actualRound()>=rerollGateRound?Math.max(0,this.rerollLimit()-C.num(this.state.rerollsUsed)):0;
     const disposableRows=rows.filter(row=>row.disposable>0&&!row.destinations.length).sort((left,right)=>{
       const ld=deadlineRows.get(left.id),rd=deadlineRows.get(right.id);
       return Number(C.num(rd&&rd.reroll)>0)-Number(C.num(ld&&ld.reroll)>0)||right.disposable-left.disposable||left.name.localeCompare(right.name,'ko');
@@ -2415,7 +2426,7 @@ class App{
       const reroll=Math.min(row.disposable,rerollCapacity);
       row.reroll=reroll;row.hold+=row.disposable-reroll;rerollCapacity-=reroll;delete row.disposable;
       if(row.reroll>0)row.reason='현재 확정 제작·필수 보강에 사용처 없음';
-      else row.reason=this.actualRound()<25?'25라 전 리롤 잠금 · 사용처 재계산':C.num(this.state.rerollsUsed)>=this.rerollLimit()?`리롤 ${this.rerollLimit()}회 소진 · 새 제작 사용처 필요`:'남은 리롤 횟수 부족 · 새 제작 사용처 필요';
+      else row.reason=this.actualRound()<rerollGateRound?`${rerollGateRound}라 전 리롤 잠금 · 사용처 재계산`:C.num(this.state.rerollsUsed)>=this.rerollLimit()?`리롤 ${this.rerollLimit()}회 소진 · 새 제작 사용처 필요`:'남은 리롤 횟수 부족 · 새 제작 사용처 필요';
     }
     for(const row of rows){
       if(row.disposable>0&&row.destinations.length){row.hold+=row.disposable;}

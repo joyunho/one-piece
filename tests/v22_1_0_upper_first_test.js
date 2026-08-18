@@ -70,7 +70,9 @@ test('② committed-upper 승인은 파티 플래너 룰 차이로 강등되지 
 test('③ 25라 확정 게이트 제거 — 리롤 게이트는 유지',()=>{
   assert(!appSrc.includes('방향 확정은 25라운드부터'),'확정 게이트 토스트가 남아 있다');
   assert(!appSrc.includes("'25라부터 확정'"),'확정 버튼 25라 문구가 남아 있다');
-  assert(appSrc.includes("actualRound()<25?'25라 전 리롤 잠금"),'리롤 25라 게이트가 사라졌다(별개 규칙 — 유지 대상)');
+  // v23.6 재핀: 리롤 게이트는 항법 의존이 됐다 — 기본 항법 25라 유지,
+  // 적극 리롤 항법(리스크헷지·카지노)+상위 확정만 18라 개방(사용자 지시).
+  assert(appSrc.includes('rerollGateRound=navReroll.aggressiveReroll&&this.upperLock()?18:25'),'항법 의존 리롤 게이트가 사라졌다(기본 25라는 이 식 안에 산다)');
   assert(engineSrc.includes('라운드 수입으로 모으면 됩니다'),'확정 상위 위습 카운트다운 문구가 없다');
   assert(!engineSrc.includes('다른 제작과 희귀 리롤을 잠급니다'),'실동작과 다른 옛 보호 문구가 남아 있다');
 });

@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='23.5.0';
+const VERSION='23.6.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -90,7 +90,7 @@ const ABILITY_ALIASES={
 //  (마법방어 15%는 별도 모델 없음 — 마방깎은 유닛 능력 파싱만.)
 //  나스쥬로 이속 15%는 유지라 이감 117 목표 불변.
 // v22.12(웹 정본 확보 — 공식 누적 패치노트 dcinside ordc1 no=189308 +
-// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.5.0(맵 원본 war3map.j
+// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.6.0(맵 원본 war3map.j
 // 9345-9438 IS==6 분기로 재검증 — 맵데이터_분석_20260811.txt):
 // 오로성 악몽 저주 수치 원문.
 //  · 나스쥬로: 적 이속 +15% · 아군 공속 -15% · 라인몬스터 체력 +1,500만
@@ -147,13 +147,18 @@ function navProfile(family,perk){
   // v23.5(사용자 규칙 0818): 특강(특별 강화)은 판당 상위 1기만 받는다 —
   // 연합세력·특성공학만 2기 특강을 연다.
   const specialTrainingSlots=fam==='union'&&perkKey==='trait'?2:1;
+  // v23.6(사용자 지시 0818 "리스크헷지 기준으로 리롤 추천 더 적극적으로"):
+  // 리롤이 싸고 많은 항법(리스크헷지 목재 0 · 카지노 4회)은 적극 리롤
+  // 모드 — 원장 개방 라운드를 당기고 막판 미소진을 독촉한다.
+  const aggressiveReroll=rerollWood===0||rerollMax>=4;
   const notes=[];
   if(rerollMax!==2)notes.push(`희귀 리롤 ${rerollMax}회`);
   if(rerollWood===0)notes.push('리롤 목재 0');
   if(upperCap===1)notes.push('최상위 1기만 조합 가능(패왕의길)');
   if(upperCap===0)notes.push('최상위 조합 불가(계엄령) — 상위 계획 재검토');
   if(specialTrainingSlots>=2)notes.push('특강 2기 가능(특성공학)');
-  return{family:fam,perk:perkKey,rerollMax,rerollWood,upperCap,specialTrainingSlots,notes};
+  if(aggressiveReroll)notes.push('적극 리롤 권장 모드');
+  return{family:fam,perk:perkKey,rerollMax,rerollWood,upperCap,specialTrainingSlots,aggressiveReroll,notes};
 }
 
 // v23.5(사용자 규칙 0818): "상위를 2개 이상 가면 특강을 한 명밖에 못 해주
