@@ -1064,7 +1064,9 @@ class App{
       if(C.isTranscend(unit)&&(main&&C.isTranscend(main)||C.num(this.state.transcendUsed)>0)){this.toast('초월은 판당 1기만 만들 수 있습니다 — 메인 상위가 이미 초월이라 확정할 수 없습니다.');return;}
       if(C.isSeraph(unit)&&(main&&C.isSeraph(main)||C.num(this.state.seraphUsed)>0)){this.toast('세라핌은 판당 1기만 만들 수 있습니다 — 이미 사용해 확정할 수 없습니다.');return;}
       this.state.secondUpperId=String(id);this._squadCacheKey='';this._v15CacheKey='';this._directionRankCacheKey='';this._blueprintRankingsKey='';this.persist();
-      this.toast(`두 번째 상위를 ${displayNameOf(unit)}로 확정했습니다. 이 자리는 다른 상위로 바뀌지 않고, 보드 목표는 5기로 줄어 9환산을 유지합니다.`);
+      // v23.5(사용자 규칙): 2상위가 정해지는 순간이 특강 배분·항법 판단 시점.
+      const stAdv=main&&C.specialTrainingAdvice?C.specialTrainingAdvice(main,unit,{navFamily:this.state.navFamily,navPerk:this.state.navPerk}):null;
+      this.toast(`두 번째 상위를 ${displayNameOf(unit)}로 확정했습니다. 이 자리는 다른 상위로 바뀌지 않고, 보드 목표는 5기로 줄어 9환산을 유지합니다.${stAdv?` ${stAdv.text}`:''}`);
       return;
     }
     if(a==='release-second-upper'){
@@ -3202,7 +3204,14 @@ class App{
       }
       secondBlock=rows.length?`<details class="v153-second"><summary>두 번째 상위 확정 · ${plannedSecond?`현재 계획 ${C.esc(displayNameOf(plannedSecond))}`:'계획에 두 번째 상위 없음'}</summary><div class="v153-second-list">${rows.map(row=>`<article><span><b>${C.esc(displayNameOf(row.unit))}</b><small>${C.esc(secondTier(row.unit))} · ${C.esc(row.label)}</small>${row.presc?`<small class="presc">처방 · ${C.esc(row.presc.why||'시너지 추천')}</small>`:''}<small class="${row.sharedRares&&row.sharedRares.length?'clash':'okv'}">${row.sharedRares&&row.sharedRares.length?`메인과 희귀 겹침 ${C.esc(row.sharedRares.slice(0,2).join('·'))}${row.sharedRares.length>2?` 외 ${row.sharedRares.length-2}`:''}`:'메인과 희귀 겹침 없음'}</small>${row.hardBlocked&&row.hardBlocked.length?`<small class="clash">선행 막힘 · ${C.esc(row.hardBlocked.join('·'))}</small>`:''}${playbookHtml(row.unit,{compact:true,maxPairs:3})}</span><span><button data-act="detail" data-id="${C.esc(row.unit.id)}">상세</button><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}" ${row.hardBlocked&&row.hardBlocked.length?`disabled aria-disabled="true" title="선행조건 필요: ${C.esc(row.hardBlocked.join('·'))}"`:''}>2상위 확정</button></span></article>`).join('')}</div><small>확정하면 그 자리를 다른 상위에게 넘기지 않습니다. 물딜도 확정하면 2상위로 갑니다(보드 5기 + 상위 2기 = 9환산).</small></details>`:'';
     }
-    return`<div class="v153-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>확정 메인 상위${power&&power.known?` · ${C.esc(power.letter)}티어`:''}</small><b>${C.esc(displayNameOf(upper))}</b><em>${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="party-preview" data-id="${C.esc(upper.id)}">전체 파티 보기</button><button data-act="snipe-open" title="다른 상위로 강제 변경">저격</button></div>${playbookDirectionHtml(upper)}${partyBoard}${secondBlock}<div class="v153-upper-gaps"><small>이 파티에서 먼저 닫을 결손</small>${requirements.length?requirements.map(row=>`<span>${C.esc(row.label)} <b>부족 ${fmt(row.gap)}</b></span>`).join(''):'<span class="ok">필수 역할 합계 충족</span>'}</div>${(()=>{
+    // v23.5(사용자 규칙 0818): 특강은 판당 1기(특성공학만 2기).  2상위가
+    // 화면에 서는 순간(확정 또는 계획) 특강 배분과 항법 선택 조언을 함께
+    // 세운다 — 둘 다 특강 의존이면 특성공학 권고, 한쪽이 무관하면 다른
+    // 항법 기대값 권고.  조언 전용: 항법을 자동으로 바꾸지 않는다.
+    const stSecond=confirmedSecond||plannedSecond;
+    const stAdvice=stSecond&&C.specialTrainingAdvice?C.specialTrainingAdvice(upper,stSecond,{navFamily:this.state.navFamily,navPerk:this.state.navPerk}):null;
+    const stHtml=stAdvice?`<div class="v235-st"><small>특강 배분 · 이 판 특강 ${stAdvice.slots}기${stAdvice.slots>=2?' (특성공학)':''}</small><span class="v235-st-badges"><i class="st-${stAdvice.main.grade}">${C.esc(displayNameOf(upper))} · ${C.esc(stAdvice.main.label)}</i><i class="st-${stAdvice.second.grade}">${C.esc(displayNameOf(stSecond))} · ${C.esc(stAdvice.second.label)}</i></span><p class="${stAdvice.kind==='dual-required'&&stAdvice.slots<2?'warn':''}">${C.esc(stAdvice.text)}</p></div>`:'';
+    return`<div class="v153-upper-main">${upper.image?`<img src="${C.esc(upper.image)}" alt="">`:''}<span><small>확정 메인 상위${power&&power.known?` · ${C.esc(power.letter)}티어`:''}</small><b>${C.esc(displayNameOf(upper))}</b><em>${C.esc(C.summarizeRoles({role:C.roleProfile(upper)},C.familyOf(upper)))}</em></span><button data-act="party-preview" data-id="${C.esc(upper.id)}">전체 파티 보기</button><button data-act="snipe-open" title="다른 상위로 강제 변경">저격</button></div>${playbookDirectionHtml(upper)}${partyBoard}${secondBlock}${stHtml}<div class="v153-upper-gaps"><small>이 파티에서 먼저 닫을 결손</small>${requirements.length?requirements.map(row=>`<span>${C.esc(row.label)} <b>부족 ${fmt(row.gap)}</b></span>`).join(''):'<span class="ok">필수 역할 합계 충족</span>'}</div>${(()=>{
       // v19.16: 이 상위의 클리어 조합 실측(91,833판 채굴) 대비 하위 25%
       // 미만인 역할을 경고한다 — 0805 키드 판(체젠 0.45, 실측 p25 0)의
       // 후속.  표시 전용: 게이트·목표 교체 없음.
