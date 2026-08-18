@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="ord-helper" content="v23.6.0-desktop-hud"><title>ORD HUD</title><link rel="stylesheet" href="ord_app.css"><link rel="stylesheet" href="ord_ui_v20.css"><style>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="ord-helper" content="v23.7.0-desktop-hud"><title>ORD HUD</title><link rel="stylesheet" href="ord_app.css"><link rel="stylesheet" href="ord_ui_v20.css"><style>
 /* 인게임 HUD — 창이 아니라 게임 위에 뜬 글자·칩처럼 보여야 한다.
    배경은 완전 투명, 콘텐츠 블록만 반투명 판.  클릭은 전부 게임으로
    통과하므로(메인 프로세스 setIgnoreMouseEvents) 상호작용 없음.
@@ -43,4 +43,25 @@ html,body{background:transparent !important;margin:0;padding:0;overflow:hidden;}
    "…라면 를 기록하세요"로 깨진다.  평문으로 눕혀 문장을 지킨다. */
 #ord-hud-root .v216-freeze-note button{display:inline !important;border:0;padding:0;background:transparent !important;color:inherit;font:inherit;font-weight:700;}
 #ord-hud-root .v151-phase,#ord-hud-root .v151-action-foot,#ord-hud-root .v151-inline-actions{display:none !important;}
+/* v23.7(사용자: "이거 화면을 너무 가린다 이것만 보고 하기에도 힘들고"):
+   내용 다이어트.  잠금·대기 카드의 안내 문단("TMO.GG 데스크톱 프로그램이
+   응답하고 있습니다…")은 게임 위에서 소음이다 — 상태 제목 한 줄 +
+   결손 한 줄 + 마지막 유효 추천(고스트)만 남긴다.  전체 여백·글자도
+   화면 점유 대비 정보 밀도가 맞게 한 단계 줄인다(가독 하한은 v22.7
+   사용자 불만 기준으로 지킨다: 제목 18px·본문 13px 아래로는 안 간다). */
+#ord-hud-root{padding:6px;gap:6px;font-size:14px;}
+#ord-hud-root>*{padding:8px 10px !important;border-radius:10px;}
+#ord-hud-root .v151-action-title,#ord-hud-root .v151-action-main b{font-size:18px;}
+#ord-hud-root .v151-action-main p{font-size:13px;}
+#ord-hud-root .v151-action-main>img,#ord-hud-root .v151-action-main>i{width:42px;height:42px;}
+#ord-hud-root .v151-cost b{font-size:17px;}
+#ord-hud-root .v153-round strong{font-size:19px;}
+#ord-hud-root .v153-pill b{font-size:15px;}
+#ord-hud-root .v151-action.blocked .v151-action-copy p,#ord-hud-root .v151-action.blocked .v151-action-copy i{display:none !important;}
+#ord-hud-root .v151-action.blocked .v151-action-copy b{font-size:14px;font-weight:700;}
+#ord-hud-root .v151-action.blocked .v151-state{font-size:11px;}
+#ord-hud-root .v158-blocked-spec{font-size:12px;}
+#ord-hud-root .v158-blocked-spec small{font-size:10.5px;}
+#ord-hud-root .v158-blocked-spec span{display:inline-flex;gap:4px;margin-right:8px;}
+#ord-hud-root .v23-ghost-card{font-size:12.5px;}
 </style></head><body><div id="ord-hud-root" class="v153-screen"></div><script src="ord_hud_desktop.js"></script></body></html>

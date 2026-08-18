@@ -1477,6 +1477,22 @@ class App{
       return`<div class="v151-action blocked"><span class="v151-state">판단 잠금</span><div class="v151-action-copy"><i>!</i><div><b>${C.esc(health.label)}</b><p>${C.esc(health.note||'TMO 현재 패를 다시 읽어 주세요.')}</p></div></div><div class="v151-inline-actions"><button class="primary" data-act="connection">TMO 다시 읽기</button>${health.key==='waiting'?'<button data-act="accept-snapshot">현재 보이는 패로 계속</button>':''}</div>${lastChips?`<div class="v158-blocked-spec"><small>마지막 유효 패 기준 · 남은 필수 결손</small><div>${lastChips}</div></div>`:''}${ghostHtml}${recoveryHtml}</div>`;
     }
     if(branch.awaiting)return`<div class="v151-action choice"><span class="v151-state">사용자 선택 필요</span><b class="v151-action-title">첫 전설 뒤 진행 방향</b><p>한 기를 더 만들지, 메인 상위를 준비할지 선택하면 즉시 다시 계산합니다.</p><div class="v151-inline-actions"><button data-act="post-legend-route" data-value="legend">전설·히든 하나 더</button><button class="primary" data-act="post-legend-route" data-value="upper">상위 준비</button></div></div>`;
+    // v23.7(사용자 리포트 0818): "상위 준비를 누르면 지금 할 일에 상위를
+    // 선택하는 목록들이 떠야 하는데 전설급 유닛 추천하고 있더라" —
+    // '상위 준비'를 골라도 엔진은 1위 방향을 자동 채택(routeAuto)하고 일반
+    // 탐색으로 떨어져, 다음 제작이 보조 전설이면 그 전설이 카드를 차지했다.
+    // 사용자가 방금 내린 "상위를 고르겠다"는 선언이 화면에 없던 것.  상위
+    // 미확정 + 상위 준비 경로에서는 상위 후보 선택 목록을 카드로 세우고,
+    // 엔진의 현재 최선은 아래 한 줄로 유지한다(v21.0 '멈추지 않는다' 원칙
+    // — 선택을 미뤄도 제작 승인은 계속 가능).
+    if(this.state.postLegendRoute==='upper'&&!this.upperLock()&&!plan.upper&&!this.state.upperPreviewId&&status!=='ROUTE_CHOICE'){
+      const picks=(decision.routeCandidates||[]).filter(Boolean).slice(0,3);
+      if(picks.length){
+        const auto=decision.routeAuto&&decision.routeAuto.adopted?`<small class="v237-auto">확정 전 계산 기준: 1위 ${C.esc(decision.routeAuto.topUpperName||'')} 자동 채택 — 아래에서 확정하면 고정됩니다.</small>`:'';
+        const engineStep=status==='ACT_NOW'&&decision.action?`<div class="v237-engine-step"><small>그동안 할 일</small><b>${C.esc(decision.action.name)}</b><i>선위 ${C.num(decision.action.wispCost)}</i><button class="primary" data-act="mark-made" data-step="0" data-id="${C.esc(decision.action.id)}">제작함 · TMO 확인</button></div>`:'';
+        return`<div class="v151-action choice v237-upper-pick"><span class="v151-state">상위 준비 — 후보에서 확정</span><b class="v151-action-title">메인 상위를 선택하세요</b>${auto}<div class="v151-route-quick">${picks.map((row,index)=>{const ready=routeCandidateReady(row);return`<div><span><b>${index+1}. ${C.esc(row.name)}</b><small>${C.esc(row.routeLabel||'')} · 선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</small></span><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${ready?'':'disabled aria-disabled="true"'}>${ready?'상위 확정':'파티 평가 중'}</button></div>`;}).join('')}</div><button class="v153-snipe-open" data-act="snipe-open">목록에 없는 상위 저격…</button>${engineStep}</div>`;
+      }
+    }
     if(status==='ROUTE_CHOICE'){
       // v17.8: 두 실전 로그 모두 방향 선택을 10라운드 이상 미뤘다 —
       // 대기 중에는 제작·리롤이 잠긴다는 비용을 명시하고, 상위 2개

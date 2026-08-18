@@ -2619,6 +2619,12 @@ body.ord-overlay-mode .v151-action-foot small{display:none;}
 
 /* v19.16 — 클리어 조합 실측 표시 */
 .v1916-clear small{opacity:.75;}
+/* v23.7: 상위 준비 카드 — 자동 채택 안내 + 엔진 최선 한 줄 */
+.v237-auto{display:block;margin:2px 0 5px;color:#8FA6C4;font-size:11.5px}
+.v237-engine-step{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:9px;border-top:1px dashed #2C4666;padding-top:8px;font-size:12.5px}
+.v237-engine-step small{color:#8FA6C4}
+.v237-engine-step b{font-size:13.5px}
+.v237-engine-step i{font-style:normal;color:#9DB2CB}
 /* v23.5: 특강 배분·항법 조언 (판당 특강 1기 · 특성공학만 2기) */
 .v235-st{margin-top:8px;padding:8px 10px;border-radius:8px;border:1px solid rgba(120,150,220,.25);background:rgba(90,140,255,.06);font-size:12.5px}
 .v235-st>small{display:block;opacity:.7;margin-bottom:3px}

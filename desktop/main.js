@@ -1,5 +1,5 @@
 'use strict';
-// v23.6.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
+// v23.7.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
 //
 // 확장(크롬) 없이 코치를 독립 프로그램으로 돌린다.  브라우저 제약
 // (타이머 조임·MV3 정책·CORS)이 사라지므로 보험 장치 없이 단순하다:
@@ -143,7 +143,11 @@ function ensureHudWindow() {
   if (hudWin && !hudWin.isDestroyed()) return hudWin;
   const remembered = loadOverlayBounds();
   const area = screen.getDisplayMatching(win && !win.isDestroyed() ? win.getBounds() : {x: 0, y: 0, width: 800, height: 600}).workArea;
-  const bounds = remembered || {x: area.x + area.width - 412, y: area.y + 12, width: 400, height: Math.min(560, area.height - 24)};
+  // v23.7(사용자: "화면을 너무 가린다"): 기본 자리가 우상단 최상부라 게임
+  // 자체 우상단 정보(시즌 패널·유닛 카운트 체인·점수표)를 정통으로 덮었다.
+  // 기본은 그 아래(y+210)·조금 좁게(348) 잡는다.  F9 패널을 끌어 놓은
+  // 자리(remembered)가 있으면 언제나 그 자리가 우선.
+  const bounds = remembered || {x: area.x + area.width - 360, y: area.y + 210, width: 348, height: Math.min(560, area.height - 234)};
   hudWin = new BrowserWindow({
     x: bounds.x, y: bounds.y, width: bounds.width, height: bounds.height,
     transparent: true,
