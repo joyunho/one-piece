@@ -182,16 +182,18 @@ test('P0-7: 기본 계통은 자동이고 새 게임 리셋이 계통을 유지�
   assert(!/const keep=\{tab:'coach',mode:this\.state\.mode/.test(app),'새 게임 리셋이 계통을 계속 유지한다');
 });
 
-test('감사 후속: run_all SKIP 분리 집계·스토리 9단계 통일(소스 검증)',()=>{
+test('감사 후속: run_all SKIP 분리 집계·스토리 등급 사다리 통일(소스 검증)',()=>{
   const runAll=fs.readFileSync(path.join(__dirname,'run_all.js'),'utf8');
   assert(runAll.includes('skippedRun'),'run_all SKIP 식별 누락');
   assert(runAll.includes('ORD_REQUIRE_ALL'),'CI 강제 스위치 누락');
   const app=fs.readFileSync(path.join(EXT,'ord_app.js'),'utf8');
-  assert(!app.includes("['S','A','B','C','D'].map(x=>`<option"),'스토리 필터가 아직 5단계다');
-  assert(app.includes('아홉 구간'),'스토리 안내문이 9단계가 아니다');
+  assert(!app.includes("['S','A','B','C','D'].map(x=>`<option"),'스토리 필터가 아직 구 5단계다');
+  // v23.4(사용자 지시): 9단계(SSS~F, v17.7) → 7단계 S~F 균등 분위.
+  assert(app.includes('일곱 구간'),'스토리 안내문이 7단계가 아니다');
+  assert(!app.includes('SSS'),'앱에 SSS 잔재가 남아 있다');
   const readme=fs.readFileSync(path.join(EXT,'README.txt'),'utf8');
-  assert(readme.includes('SSS'),'README가 9단계(SSS~F)를 안내하지 않는다');
-  assert(!readme.includes('7단계'),'README에 7단계 잔재가 남아 있다');
+  assert(readme.includes('7단계'),'README가 7단계(S~F)를 안내하지 않는다');
+  assert(!readme.includes('SSS'),'README에 SSS 잔재가 남아 있다');
 });
 
 let passed=0;

@@ -45,10 +45,15 @@ function measureText(grade) {
   return parts[start] || note;
 }
 
+// v23.4(사용자 지시): 등급 사다리 문구도 코드와 같은 원천(ord_core의
+// STORY_GRADE_TIERS)에서 파생시킨다 — 단계 수가 또 바뀌어도 여기는 안 고친다.
+const tierSpan = `${C.STORY_GRADE_TIERS[0]}~${C.STORY_GRADE_TIERS[C.STORY_GRADE_TIERS.length - 1]}`;
+const tierCount = C.STORY_GRADE_TIERS.length;
+
 const lines = [];
-lines.push(`# 스토리 파괴 속도 등급표 (v${releaseVersion} · 리그별 SSS~F 9단계)`);
+lines.push(`# 스토리 파괴 속도 등급표 (v${releaseVersion} · 리그별 ${tierSpan} ${tierCount}단계)`);
 lines.push('');
-lines.push('> 이 파일은 `tools/build_story_grade_table.js`로 생성됩니다. 원본 실측 순위와 측정값은 바꾸지 않고, 희귀·상위·전설급을 서로 섞지 않은 채 각 리그의 원본 순위를 9개 등분위로 재분류합니다.');
+lines.push(`> 이 파일은 \`tools/build_story_grade_table.js\`로 생성됩니다. 원본 실측 순위와 측정값은 바꾸지 않고, 희귀·상위·전설급을 서로 섞지 않은 채 각 리그의 원본 순위를 ${tierCount}개 등분위로 재분류합니다.`);
 
 for (const league of ['rare', 'upper', 'legend']) {
   const meta = C.STORY_LEAGUES[league];
@@ -79,7 +84,7 @@ lines.push('');
 lines.push('## 판정 원칙');
 lines.push('');
 lines.push('- 동일 원본 순위의 변형 유닛은 같은 등급을 유지합니다.');
-lines.push('- 순위 밖 유닛은 SSS~F 실측 등급에 억지로 끼워 넣지 않습니다.');
+lines.push(`- 순위 밖 유닛은 ${tierSpan} 실측 등급에 억지로 끼워 넣지 않습니다.`);
 lines.push('- 이 등급은 스토리 파괴 속도 비교이며, 악몽 50·65라운드 클리어 확률을 뜻하지 않습니다.');
 lines.push('');
 

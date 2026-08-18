@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='23.3.1';
+const VERSION='23.4.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -90,7 +90,7 @@ const ABILITY_ALIASES={
 //  (마법방어 15%는 별도 모델 없음 — 마방깎은 유닛 능력 파싱만.)
 //  나스쥬로 이속 15%는 유지라 이감 117 목표 불변.
 // v22.12(웹 정본 확보 — 공식 누적 패치노트 dcinside ordc1 no=189308 +
-// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.3.1(맵 원본 war3map.j
+// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.4.0(맵 원본 war3map.j
 // 9345-9438 IS==6 분기로 재검증 — 맵데이터_분석_20260811.txt):
 // 오로성 악몽 저주 수치 원문.
 //  · 나스쥬로: 적 이속 +15% · 아군 공속 -15% · 라인몬스터 체력 +1,500만
@@ -610,10 +610,11 @@ const STORY_LEAGUES=Object.freeze({
 });
 // Each measured league is divided independently by its original source rank.
 // Keep this order in one exported constant so data, UI filters and tests cannot
-// silently disagree about the user-requested nine story grades.
-// v17.7: SSS~F are equal-quantile bands inside each independent league
-// (상위 / 전설급 / 희귀). Raw source ranks and measurements stay unchanged.
-const STORY_GRADE_TIERS=Object.freeze(['SSS','SS','S','A','B','C','D','E','F']);
+// silently disagree about the story grade ladder.
+// v23.4(사용자 지시 "s-f까지 다시 설정해줘 sss이런거 없애고"): 구 아홉
+// 단계(v17.7 개편)를 일곱 단계 S~F 균등 분위로 재설정한다.  리그
+// (상위 / 전설급 / 희귀)별 독립 재등급과 원본 순위·측정값 보존은 그대로.
+const STORY_GRADE_TIERS=Object.freeze(['S','A','B','C','D','E','F']);
 
 function storyMeasuredLookup(id){
   for(const source of STORY_MEASURED_SOURCES){
@@ -890,7 +891,7 @@ function storyLeagueTier(rank,size){
   const r=Math.max(0,num(rank)),n=Math.max(0,num(size));if(!r||!n||r>n)return'—';
   // Preserve the equal-quantile policy with the requested nine bands. Using
   // cumulative ceil boundaries assigns every source rank exactly once while
-  // keeping the best rank in SSS and the last rank in F for every league size.
+  // keeping the best rank in S and the last rank in F for every league size.
   const index=STORY_GRADE_TIERS.findIndex((tier,offset)=>r<=Math.ceil(n*(offset+1)/STORY_GRADE_TIERS.length));
   return STORY_GRADE_TIERS[index<0?STORY_GRADE_TIERS.length-1:index];
 }

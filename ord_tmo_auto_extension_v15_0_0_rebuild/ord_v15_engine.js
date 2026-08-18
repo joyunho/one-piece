@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='23.3.1';
+const VERSION='23.4.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -273,7 +273,7 @@ function metaUsage(unit){
   return META_STATS.byCode[id]||META_STATS.byCode[id.toLowerCase()]||META_STATS.byCode[id.toUpperCase()]||null;
 }
 function metaUsageRate(unit){const hit=metaUsage(unit);return hit?num(hit.rate):0;}
-// v23.3.1(사용자 규칙): "첫전설 레베카(히든), 킬러(히든) 추천 금지" —
+// v23.4.0(사용자 규칙): "첫전설 레베카(히든), 킬러(히든) 추천 금지" —
 // 0812·0816 실전 로그에서 매판 수동 veto 하던 두 유닛(T30h 레베카 깍18,
 // 540h 킬러 광보잡 깍12)을 첫 전설·히든 마일스톤 후보에서 상시 제외한다.
 // 금지는 첫 전설 슬롯 한정 — 추가 전설·역할 보강 국면에서는 종전대로

@@ -651,10 +651,8 @@
 .v151-aux-bar{position:sticky;top:4px;z-index:20;display:flex;flex-direction:row;align-items:center;gap:10px;padding:9px 12px}
 .v151-aux-bar>span,.v151-aux-bar b,.v151-aux-bar small{display:block}.v151-aux-bar b{color:#DCEBFF;font-size:11px}.v151-aux-bar small{margin-top:2px;color:#8FA6C4;font-size:9.5px}
 
-/* Story destruction-speed league badge (SSS~F per tier league). */
+/* Story destruction-speed league badge (S~F per tier league, v23.4). */
 .v151-story{display:inline-block;margin-left:7px;border:1px solid #2C4666;border-radius:999px;padding:2px 7px;background:#0B1B30;color:#9DB2CB;font-size:9px;font-weight:900;vertical-align:2px;white-space:nowrap}
-.v151-story.tier-sss{border-color:rgba(255,128,80,.72);background:rgba(255,111,58,.14);color:#FFD1A8;box-shadow:0 0 9px rgba(255,111,58,.18)}
-.v151-story.tier-ss{border-color:rgba(255,214,120,.68);background:rgba(255,199,88,.13);color:#FFE3A0}
 .v151-story.tier-s{border-color:rgba(255,214,120,.55);background:rgba(255,199,88,.1);color:#FFD887}
 .v151-story.tier-a{border-color:rgba(110,220,243,.45);background:rgba(56,198,232,.08);color:#8AE4F5}
 .v151-story.tier-b{border-color:rgba(54,213,138,.4);background:rgba(54,213,138,.07);color:#7ADFAD}
