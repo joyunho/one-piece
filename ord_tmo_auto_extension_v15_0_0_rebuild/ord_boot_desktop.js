@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v23.7.0 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
+  // v23.8.0 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
   // 직결 합성 경로를 그대로 옮기되 크롬 API 가 전혀 없다:
   //  · /datas 는 Electron 메인 프로세스가 1초마다 밀어준다(ORD_DESKTOP.onDatas).
   //  · 자동 라운드 세대는 localStorage 에 영속(판 중간 새로고침 보호).
@@ -79,6 +79,8 @@
       local.lastGoodAt = now;
       try { app.updateSnapshot(snapshot); }
       catch (error) { console.error(error); }
+      // v23.8: 새 패 반영 직후 HUD 즉시 갱신(렌더 완료 뒤).
+      if (window.__ORD_HUD_PUSH) setTimeout(window.__ORD_HUD_PUSH, 60);
       return true;
     }
     // 테스트 관측용 — 합성 경로를 headless 로 구동할 수 있게 노출한다.
@@ -125,20 +127,28 @@
     }
 
     // v19.15.0: 인게임 HUD 급전 — 메인 창이 그린 상단 HUD 조각과 "지금
-    // 할 일" 카드를 1.5초마다 HUD 창으로 보낸다.  앱을 두 번 돌리지
-    // 않기 위한 표시 전용 복제(엔진·런로그 이중 구동 금지).
+    // 할 일" 카드를 HUD 창으로 보낸다.  앱을 두 번 돌리지 않기 위한
+    // 표시 전용 복제(엔진·런로그 이중 구동 금지).
+    // v23.8(사용자: "우선 너무 느려 갱신이"): 1.5초 고정 주기를 버린다 —
+    // ① 스냅샷 반영 직후 즉시 push(렌더 완료 대기 60ms) ② 보조 주기
+    // 400ms.  내용이 같으면 전송하지 않아(전문 비교) HUD 쪽 재렌더
+    // 깜빡임도 함께 사라진다.
     if (bridge && typeof bridge.sendHudState === 'function') {
-      setInterval(() => {
+      let lastHudSig = '';
+      const pushHud = () => {
         try {
           const hud = document.querySelector('.v153-hud');
           const action = document.querySelector('[data-region="next-action"] .v151-action');
-          bridge.sendHudState({
-            at: Date.now(),
-            hudHtml: hud ? hud.outerHTML : '',
-            actionHtml: action ? action.outerHTML : ''
-          });
+          const hudHtml = hud ? hud.outerHTML : '';
+          const actionHtml = action ? action.outerHTML : '';
+          const sig = hudHtml + '' + actionHtml;
+          if (sig === lastHudSig) return;
+          lastHudSig = sig;
+          bridge.sendHudState({at: Date.now(), hudHtml, actionHtml});
         } catch (_) {}
-      }, 1500);
+      };
+      window.__ORD_HUD_PUSH = pushHud;
+      setInterval(pushHud, 400);
     }
 
     // ordlog 자동 저장: 판이 활성인 동안 60초마다 문서 폴더에 덮어쓴다.

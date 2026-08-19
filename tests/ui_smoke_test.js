@@ -58,6 +58,8 @@ const REGIONS=['game-status','next-action','next-preview','clear-gaps','referenc
       await page.setViewportSize({width:cfg.width,height:cfg.height});
       await page.goto('file://'+path.resolve(__dirname,'ui_fixture.html'),{waitUntil:'domcontentloaded'});
       await page.waitForSelector('.v155-dashboard');
+      // v23.8 재핀: 첫 실행 가이드 오버레이가 뜨면 닫는다(신규 사용자 흐름).
+      await page.evaluate(()=>{const b=document.querySelector('[data-act="dismiss-onboarding"]');if(b)b.click();});
       const metrics=await page.evaluate(()=>{
         const app=window.TEST_APP,decision=app.plan().plan.v15Decision||{};
         const grid=document.querySelector('.v155-dashboard'),gridRect=grid.getBoundingClientRect();
@@ -107,6 +109,8 @@ const REGIONS=['game-status','next-action','next-preview','clear-gaps','referenc
     await page.setViewportSize({width:1600,height:1000});
     await page.goto('file://'+path.resolve(__dirname,'ui_fixture.html'),{waitUntil:'domcontentloaded'});
     await page.waitForSelector('[data-region="next-action"] [data-act="detail"]');
+    // v23.8 재핀: 첫 실행 가이드 오버레이 닫기.
+    await page.evaluate(()=>{const b=document.querySelector('[data-act="dismiss-onboarding"]');if(b)b.click();});
     await page.locator('[data-region="next-action"] [data-act="detail"]').first().click();
     await page.waitForSelector('.detail-modal');
     const detail=await page.evaluate(()=>({title:(document.querySelector('.detail-modal h2')||{}).textContent||''}));

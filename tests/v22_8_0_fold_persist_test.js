@@ -80,6 +80,8 @@ check('③ 마크업 불변 — details 리터럴 핀 유지',()=>{
     await page.route('http*://**',route=>route.abort());
     await page.goto('file://'+path.resolve(__dirname,'ui_fixture.html'),{waitUntil:'domcontentloaded'});
     await page.waitForSelector('.v153-tools');
+    // v23.8 재핀: 첫 실행 가이드 오버레이가 클릭을 가로채면 닫는다.
+    await page.evaluate(()=>{const b=document.querySelector('[data-act="dismiss-onboarding"]');if(b)b.click();});
     // 팝업을 열고 오로성을 바꾼다 — 열림이 유지되어야 한다.
     await page.click('.v153-tools>summary');
     await page.waitForSelector('.v153-tools[open]');

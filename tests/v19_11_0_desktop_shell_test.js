@@ -136,7 +136,9 @@ check('⑥ 오버레이 미니 패널 — 우상단 축소·게임 클릭 보존
   assert(main.includes("register('F8', toggleHud)")&&main.includes("register('F9', toggleOverlay)"),'F8/F9 배치 없음');
   assert(main.includes("ipcMain.on('ord-hud-state'"),'HUD 상태 중계 없음');
   assert(preload.includes('sendHudState')&&preload.includes('onHudState'),'preload HUD API 없음');
-  assert(bootDesktop.includes('sendHudState')&&bootDesktop.includes('1500'),'부트 HUD 급전 없음');
+  // v23.8 재핀(사용자: "너무 느려 갱신이"): 1.5초 고정 주기 → 스냅샷
+  // 직후 즉시 push + 400ms 변경 감지 주기.
+  assert(bootDesktop.includes('sendHudState')&&bootDesktop.includes('setInterval(pushHud, 400)')&&bootDesktop.includes('__ORD_HUD_PUSH'),'부트 HUD 급전 없음(즉시 push + 400ms 주기)');
   const hudHtml=read('ord_hud_desktop.html');
   assert(hudHtml.includes('background:transparent')&&hudHtml.includes('ord_hud_desktop.js'),'HUD 페이지 투명 배경·스크립트 없음');
   assert(!/\son\w+\s*=/.test(hudHtml),'HUD 페이지에 인라인 핸들러 금지');

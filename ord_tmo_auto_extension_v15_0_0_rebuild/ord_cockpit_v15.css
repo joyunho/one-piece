@@ -2619,6 +2619,19 @@ body.ord-overlay-mode .v151-action-foot small{display:none;}
 
 /* v19.16 — 클리어 조합 실측 표시 */
 .v1916-clear small{opacity:.75;}
+/* v23.8: 스택형 상위 배지 + 첫 실행 가이드 */
+.v238-stack{display:inline-block;margin-left:5px;border:1px solid rgba(255,159,67,.55);border-radius:999px;padding:1px 7px;color:#FFC58A;font-size:10.5px;font-style:normal;font-weight:800;vertical-align:1px;white-space:nowrap}
+.v238-guide-open{margin-top:8px;border:1px solid #2C4666;border-radius:9px;padding:6px 10px;background:#0B1B30;color:#9DB2CB;font-size:12px;cursor:pointer}
+.v238-onboard{position:fixed;inset:0;z-index:900;display:flex;align-items:center;justify-content:center;background:rgba(4,6,12,.78)}
+.v238-onboard-card{width:min(560px,92vw);max-height:88vh;overflow:auto;border:1px solid #2C4666;border-radius:16px;padding:18px 20px;background:#0B1424;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.v238-onboard-card>header b{display:block;font-size:18px}
+.v238-onboard-card>header p{margin:4px 0 12px;color:#8FA6C4;font-size:13px}
+.v238-onboard-card section{display:flex;gap:10px;margin:9px 0;align-items:flex-start}
+.v238-onboard-card section i{flex:0 0 auto;width:24px;height:24px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;background:rgba(224,92,126,.3);color:#fff;font-style:normal;font-weight:900;font-size:12px}
+.v238-onboard-card section b{font-size:13.5px}
+.v238-onboard-card section p{margin:2px 0 0;color:#8FA6C4;font-size:12.5px;line-height:1.5}
+.v238-onboard-card footer{margin-top:14px;display:flex;flex-direction:column;gap:6px}
+.v238-onboard-card footer small{color:#5F769A;font-size:11px}
 /* v23.7: 상위 준비 카드 — 자동 채택 안내 + 엔진 최선 한 줄 */
 .v237-auto{display:block;margin:2px 0 5px;color:#8FA6C4;font-size:11.5px}
 .v237-engine-step{display:flex;flex-wrap:wrap;align-items:center;gap:8px;margin-top:9px;border-top:1px dashed #2C4666;padding-top:8px;font-size:12.5px}

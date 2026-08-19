@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='23.7.0';
+const VERSION='23.8.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -273,12 +273,22 @@ function metaUsage(unit){
   return META_STATS.byCode[id]||META_STATS.byCode[id.toLowerCase()]||META_STATS.byCode[id.toUpperCase()]||null;
 }
 function metaUsageRate(unit){const hit=metaUsage(unit);return hit?num(hit.rate):0;}
-// v23.7.0(사용자 규칙): "첫전설 레베카(히든), 킬러(히든) 추천 금지" —
+// v23.8.0(사용자 규칙): "첫전설 레베카(히든), 킬러(히든) 추천 금지" —
 // 0812·0816 실전 로그에서 매판 수동 veto 하던 두 유닛(T30h 레베카 깍18,
 // 540h 킬러 광보잡 깍12)을 첫 전설·히든 마일스톤 후보에서 상시 제외한다.
 // 금지는 첫 전설 슬롯 한정 — 추가 전설·역할 보강 국면에서는 종전대로
 // 정상 후보다(킬러 광보잡·레베카 방깎은 후반 역할 유닛으로는 유효).
 const FIRST_FINAL_USER_BANNED=new Set(['T30h','540h']);
+// v23.8(사용자 지시 0819): "첫 전설급 유닛을 뽑을 때 스토리 등급이 E
+// 이하인 유닛은 추천하지 말아줘" — 전설급 리그 실측 하위 두 밴드
+// (E 56~66위 · F 67~76위)는 첫 전설 슬롯에서 제외한다.  스토리 미측정
+// (리그 밖) 유닛은 근거가 없으므로 제외하지 않고, 추가 전설·역할 보강
+// 국면은 종전대로(역할 가치 우선 — 하위 밴드도 후반 역할 유닛으로 유효).
+// 레베카(75위)·킬러(68위)는 둘 다 F 라 사용자 수동 밴과 자연 합치.
+function firstFinalStoryTooSlow(unit){
+  const lg=C.storyLeagueGrade(unit,C.storyGrade(unit));
+  return !!(lg&&lg.leagueRanked&&/^[EF]$/.test(String(lg.leagueTier)));
+}
 function completionDecision(model,units,milestone,guard){
   const milestoneSpec=completionMilestone(milestone),label=milestoneSpec.label;
   // v22.5: "스토리 빨리 밀기 포기" — 스토리 랭킹을 순위에서 완전히 뺀다.
@@ -295,7 +305,7 @@ function completionDecision(model,units,milestone,guard){
   // 예외가 빈 패에서도 feasible=true 를 내는 바람에 1라 1순위로 올라갔다.
   // 원장(제작 증명)은 그대로 두고 순위에서만 뒤로 보낸다 — 압살롬이
   // 패에 실제로 있으면 hardMissing 이 비어 정상 순위로 돌아온다.
-  hardShort:0,wispGap:0};}).map(item=>Object.assign(item,{hardShort:(item.quote.solve&&item.quote.solve.hardMissing||[]).length,wispGap:Math.max(0,num(item.quote.wisp&&item.quote.wisp.cost)-num(item.quote.wisp&&item.quote.wisp.before))})).filter(item=>num(model.effective.counts[item.unit.id])<=0&&!vetoedIds(model).has(String(item.unit.id))&&!(milestoneSpec.key==='firstFinal'&&FIRST_FINAL_USER_BANNED.has(String(item.unit.id)))&&item.quote.prerequisite.allowed&&!item.quote.blocked.some(reason=>/조합 근거 부족|레시피 순환/.test(reason)))
+  hardShort:0,wispGap:0};}).map(item=>Object.assign(item,{hardShort:(item.quote.solve&&item.quote.solve.hardMissing||[]).length,wispGap:Math.max(0,num(item.quote.wisp&&item.quote.wisp.cost)-num(item.quote.wisp&&item.quote.wisp.before))})).filter(item=>num(model.effective.counts[item.unit.id])<=0&&!vetoedIds(model).has(String(item.unit.id))&&!(milestoneSpec.key==='firstFinal'&&FIRST_FINAL_USER_BANNED.has(String(item.unit.id)))&&!(milestoneSpec.key==='firstFinal'&&firstFinalStoryTooSlow(item.unit))&&item.quote.prerequisite.allowed&&!item.quote.blocked.some(reason=>/조합 근거 부족|레시피 순환/.test(reason)))
   // v21.3(사용자: "희귀랑 전설or히든은 제일 빠르게 만들 수 있는 걸로 나오고
   // 그 뒤에는 패를 보고 가면 좋아"): 첫 픽(firstRare·firstFinal)의 1순위
   // 근거는 속도다 — 지금 제작 가능 > 부족 선위 적은 순 > 싼 순, 같은
