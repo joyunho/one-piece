@@ -1,9 +1,9 @@
 'use strict';
-// v23.8.0 — 데스크톱 셸 preload.  렌더러에는 이 화이트리스트 API 만 보인다.
+// v23.9.0 — 데스크톱 셸 preload.  렌더러에는 이 화이트리스트 API 만 보인다.
 const {contextBridge, ipcRenderer} = require('electron');
 
 contextBridge.exposeInMainWorld('ORD_DESKTOP', {
-  version: '23.8.0',
+  version: '23.9.0',
   onDatas(callback) {
     if (typeof callback !== 'function') return;
     ipcRenderer.on('ord-local-datas', (_event, payload) => {
@@ -22,6 +22,20 @@ contextBridge.exposeInMainWorld('ORD_DESKTOP', {
   onHudState(callback) {
     if (typeof callback !== 'function') return;
     ipcRenderer.on('ord-hud-state', (_event, payload) => {
+      try { callback(payload); } catch (_) {}
+    });
+  },
+  // v23.9: HUD 호버-클릭 — 승인 버튼 위에서만 클릭을 받고, 클릭은 메인
+  // 창의 같은 버튼으로 중계된다.
+  setHudInteractive(on) {
+    try { ipcRenderer.send('ord-hud-interactive', on === true); } catch (_) {}
+  },
+  sendHudClick(payload) {
+    try { ipcRenderer.send('ord-hud-click', payload && typeof payload === 'object' ? payload : {}); } catch (_) {}
+  },
+  onHudClick(callback) {
+    if (typeof callback !== 'function') return;
+    ipcRenderer.on('ord-hud-click', (_event, payload) => {
       try { callback(payload); } catch (_) {}
     });
   },

@@ -1,5 +1,5 @@
 'use strict';
-// v23.8.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
+// v23.9.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
 //
 // 확장(크롬) 없이 코치를 독립 프로그램으로 돌린다.  브라우저 제약
 // (타이머 조임·MV3 정책·CORS)이 사라지므로 보험 장치 없이 단순하다:
@@ -164,7 +164,10 @@ function ensureHudWindow() {
     }
   });
   hudWin.setAlwaysOnTop(true, 'screen-saver');
-  hudWin.setIgnoreMouseEvents(true);
+  // v23.9(사용자: "클릭은 되는데 가려서 안 보이니까 힘들어"): forward 모드 —
+  // 클릭은 통과시키되 마우스 이동은 렌더러가 계속 받아, 승인 버튼 위에
+  // 커서가 있는 동안만 클릭을 켠다(ord-hud-interactive).
+  hudWin.setIgnoreMouseEvents(true, {forward: true});
   hudWin.loadFile(resolveUiFile('ord_hud_desktop.html'));
   hudWin.on('closed', () => { hudWin = null; hudOn = false; });
   return hudWin;
@@ -213,6 +216,18 @@ ipcMain.handle('ord-overlay-toggle', () => toggleOverlay());
 ipcMain.on('ord-hud-state', (_event, payload) => {
   if (hudOn && hudWin && !hudWin.isDestroyed()) {
     try { hudWin.webContents.send('ord-hud-state', payload); } catch (_) {}
+  }
+});
+// v23.9: HUD 렌더러가 승인 버튼 호버를 감지한 동안만 클릭을 받는다.
+// HUD에서 누른 버튼은 메인 창의 같은 버튼으로 중계된다(앱 이중 구동 금지).
+ipcMain.on('ord-hud-interactive', (_event, on) => {
+  if (hudWin && !hudWin.isDestroyed()) {
+    try { hudWin.setIgnoreMouseEvents(on !== true, {forward: true}); } catch (_) {}
+  }
+});
+ipcMain.on('ord-hud-click', (_event, payload) => {
+  if (win && !win.isDestroyed()) {
+    try { win.webContents.send('ord-hud-click', payload && typeof payload === 'object' ? payload : {}); } catch (_) {}
   }
 });
 ipcMain.handle('ord-save-runlog', async (event, name, text) => {

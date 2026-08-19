@@ -132,7 +132,9 @@ check('⑥ 오버레이 미니 패널 — 우상단 축소·게임 클릭 보존
   // 패널은 F9 로 이동(HUD 위치 잡기용).  앱 이중 구동 금지: HUD 는
   // 메인 창이 그린 조각을 받아 표시만 한다.
   assert(main.includes('transparent: true')&&main.includes('frame: false')&&main.includes('focusable: false'),'HUD 창 계약 없음');
-  assert(main.includes('setIgnoreMouseEvents(true)')&&main.includes('showInactive'),'클릭 통과·포커스 보존 없음');
+  // v23.9 재핀: 클릭 통과가 forward 모드(마우스 이동 전달)로 바뀌었다 —
+  // 승인 버튼 호버 시에만 클릭을 받는 구조(ord-hud-interactive).
+  assert(main.includes('setIgnoreMouseEvents(true, {forward: true})')&&main.includes('showInactive'),'클릭 통과(forward)·포커스 보존 없음');
   assert(main.includes("register('F8', toggleHud)")&&main.includes("register('F9', toggleOverlay)"),'F8/F9 배치 없음');
   assert(main.includes("ipcMain.on('ord-hud-state'"),'HUD 상태 중계 없음');
   assert(preload.includes('sendHudState')&&preload.includes('onHudState'),'preload HUD API 없음');

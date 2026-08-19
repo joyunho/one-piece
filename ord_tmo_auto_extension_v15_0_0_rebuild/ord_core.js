@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='23.8.0';
+const VERSION='23.9.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -90,7 +90,7 @@ const ABILITY_ALIASES={
 //  (마법방어 15%는 별도 모델 없음 — 마방깎은 유닛 능력 파싱만.)
 //  나스쥬로 이속 15%는 유지라 이감 117 목표 불변.
 // v22.12(웹 정본 확보 — 공식 누적 패치노트 dcinside ordc1 no=189308 +
-// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.8.0(맵 원본 war3map.j
+// 2.312 카탈로그 api.tmo.gg/posts/41824), v23.9.0(맵 원본 war3map.j
 // 9345-9438 IS==6 분기로 재검증 — 맵데이터_분석_20260811.txt):
 // 오로성 악몽 저주 수치 원문.
 //  · 나스쥬로: 적 이속 +15% · 아군 공속 -15% · 라인몬스터 체력 +1,500만
@@ -166,7 +166,10 @@ function navProfile(family,perk){
 // 시라호시 초월, 료쿠규 초월, 빅맘 등."  스택형 상위는 제작이 늦을수록
 // 쌓을 라운드가 줄어 손해다.  목록은 사용자 지정(정본 desc 에 스택
 // 표기가 없어 코드가 유일 원천) — 추가 발견 시 canonical ID 만 더한다.
-const STACK_RAMP_UPPER_IDS=new Set(['U80H','LB0H','Q40h']);
+// v23.9 추가(사용자 0819): 류마 상위(영원 [마딜]) — 정본 desc '성장형
+// 딜러라서 빨리 뽑아야 좋음'과 합치.  "더 있긴 한데 기억이 안 나네" —
+// 이름이 확인되는 대로 여기에 더한다.
+const STACK_RAMP_UPPER_IDS=new Set(['U80H','LB0H','Q40h','JC0h']);
 function isStackRampUpper(u){return !!(u&&STACK_RAMP_UPPER_IDS.has(String(canonicalUpperId(u.id))));}
 
 // v23.5(사용자 규칙 0818): "상위를 2개 이상 가면 특강을 한 명밖에 못 해주

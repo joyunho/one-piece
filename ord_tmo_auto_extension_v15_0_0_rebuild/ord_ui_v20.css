@@ -639,6 +639,13 @@ body{
 .v153-second-list,.v153-support-list{display:grid;gap:6px;margin-top:6px}
 .v153-second-list article{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;background:var(--panel-2);font-size:13px}
 .v153-second-list .presc{color:var(--accent)}
+/* v23.9: 간단 보기 — 처음 쓰는 사람 기본.  지금 할 일 하나에 집중,
+   국면 패널·참고 서랍은 전체 보기에서. */
+.v239-simple .v153-spec,.v239-simple .v211-refer{display:none !important}
+.v239-simple .v155-dashboard{display:block}
+.v239-simple .v155-action-zone{max-width:none}
+.v239-view-toggle{width:auto;padding:0 10px;font-size:11.5px;white-space:nowrap}
+.v239-view-toggle.on{border-color:var(--accent-dim);color:var(--accent)}
 /* v23.8: 스택형 상위 배지 + 첫 실행 가이드 */
 .v238-stack{display:inline-block;margin-left:5px;border:1px solid rgba(255,159,67,.55);border-radius:999px;padding:1px 7px;color:#FFC58A;font-size:10.5px;font-style:normal;font-weight:800;vertical-align:1px;white-space:nowrap}
 .v238-guide-open{margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:6px 10px;background:var(--panel-2);color:var(--sub);font-size:12px;cursor:pointer}
