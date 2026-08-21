@@ -1507,6 +1507,26 @@ class App{
         return`<div class="v151-action choice v237-upper-pick"><span class="v151-state">상위 준비 — 후보에서 확정</span><b class="v151-action-title">메인 상위를 선택하세요</b>${auto}<div class="v151-route-quick">${picks.map((row,index)=>{const ready=routeCandidateReady(row),stacky=C.isStackRampUpper&&C.isStackRampUpper(state&&state.db&&state.db.byId.get(String(row.id)));return`<div><span><b>${index+1}. ${C.esc(row.name)}</b>${stacky?'<i class="v238-stack">스택형</i>':''}<small>${C.esc(row.routeLabel||'')} · 선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</small></span><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${ready?'':'disabled aria-disabled="true"'}>${ready?'상위 확정':'파티 평가 중'}</button></div>`;}).join('')}</div><button class="v153-snipe-open" data-act="snipe-open">목록에 없는 상위 저격…</button>${engineStep}</div>`;
       }
     }
+    // v23.10(0821 패배 포렌식 — 사용자 메모 "2상위 제대로 추천 못함"):
+    // 메인 상위(빅맘)를 35라에 올린 뒤 2상위 목표가 화면 어디에도 서지
+    // 않았다 — 확정 콜아웃(v15.7)은 사용자가 이미 확정한 뒤에만 뜨고,
+    // 후보 목록은 참고 서랍 속(간단 보기에선 숨김)이었다.  그 사이 다음
+    // 제작 타깃은 보조 전설 사이를 표류했고(38~50라 10종), 선위 24가
+    // 전설로 새서 51라를 선위 6·최종 5기로 맞았다(62라 line 패배).
+    // 메인 상위가 이미 서 있고 2상위 미확정·미보유이면, 2상위 확정
+    // 카드를 지금 할 일에 세운다 — 엔진 최선은 아래 한 줄 유지.
+    const v2310Counts=state&&state.db&&C.progressionCounts?C.progressionCounts(state):null;
+    const v2310NavCap=C.navProfile(this.state.navFamily,this.state.navPerk).upperCap;
+    if(v2310Counts&&C.num(v2310Counts.upper)===1&&!this.state.secondUpperId&&(v2310NavCap==null||v2310NavCap>=2)&&this.actualRound()<=50){
+      const db=state&&state.db;
+      const mainUnit=plan.upper||(this.upperLock()&&db&&db.byId.get(this.upperLock().id))||(db&&db.uppers.find(u=>C.num(state.counts[u.id])>0))||null;
+      const options=mainUnit?this.v19SecondUpperCandidates(state,plan,mainUnit).slice(0,3):[];
+      if(options.length){
+        const urgent=this.actualRound()>=40;
+        const engineStep=status==='ACT_NOW'&&decision.action?`<div class="v237-engine-step"><small>그동안 할 일</small><b>${C.esc(decision.action.name)}</b><i>선위 ${C.num(decision.action.wispCost)}</i><button class="primary" data-act="mark-made" data-step="0" data-id="${C.esc(decision.action.id)}">제작함 · TMO 확인</button></div>`:'';
+        return`<div class="v151-action choice v2310-second-pick${urgent?' urgent':''}"><span class="v151-state">2상위 확정 필요${urgent?' · 마감 임박':''}</span><b class="v151-action-title">두 번째 상위를 지금 정하세요</b><p>메인 상위는 섰습니다. 2상위를 확정하지 않으면 선위가 보조 전설로 새고, 51라를 상위 1기로 맞게 됩니다. 확정하면 그 자리는 바뀌지 않고 계획이 그 재료·선위를 지킵니다.</p><div class="v151-route-quick">${options.map((row,index)=>{const cost=C.num(row.wispCost),gap=Math.max(0,cost-C.num(state&&state.wisp));return`<div><span><b>${index+1}. ${C.esc(displayNameOf(row.unit))}</b>${C.isStackRampUpper&&C.isStackRampUpper(row.unit)?'<i class="v238-stack">스택형</i>':''}<small>${row.feasible?'지금 제작 가능':`선위 ${cost}${gap>0?` (부족 ${gap})`:''}`}</small></span><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}">2상위 확정</button></div>`;}).join('')}</div><span class="v151-jump-note">전체 후보·희귀 겹침 비교는 전체 보기 → 최종 파티 탭에 있습니다.</span>${engineStep}</div>`;
+      }
+    }
     if(status==='ROUTE_CHOICE'){
       // v17.8: 두 실전 로그 모두 방향 선택을 10라운드 이상 미뤘다 —
       // 대기 중에는 제작·리롤이 잠긴다는 비용을 명시하고, 상위 2개

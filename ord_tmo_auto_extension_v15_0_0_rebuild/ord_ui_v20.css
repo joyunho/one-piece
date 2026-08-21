@@ -639,6 +639,9 @@ body{
 .v153-second-list,.v153-support-list{display:grid;gap:6px;margin-top:6px}
 .v153-second-list article{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;background:var(--panel-2);font-size:13px}
 .v153-second-list .presc{color:var(--accent)}
+/* v23.10: 2상위 확정 카드 (0821 패배 포렌식) */
+.v2310-second-pick{border-color:rgba(255,159,67,.45)}
+.v2310-second-pick.urgent{border-color:rgba(255,120,80,.7);box-shadow:0 0 14px rgba(255,120,80,.12)}
 /* v23.9: 간단 보기 — 처음 쓰는 사람 기본.  지금 할 일 하나에 집중,
    국면 패널·참고 서랍은 전체 보기에서. */
 .v239-simple .v153-spec,.v239-simple .v211-refer{display:none !important}
