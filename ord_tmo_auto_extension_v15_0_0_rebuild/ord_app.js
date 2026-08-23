@@ -1512,7 +1512,9 @@ class App{
       if(picks.length){
         const auto=decision.routeAuto&&decision.routeAuto.adopted?`<small class="v237-auto">확정 전 계산 기준: 1위 ${C.esc(decision.routeAuto.topUpperName||'')} 자동 채택 — 아래에서 확정하면 고정됩니다.</small>`:'';
         const engineStep=status==='ACT_NOW'&&decision.action?`<div class="v237-engine-step"><small>그동안 할 일</small><b>${C.esc(decision.action.name)}</b><i>선위 ${C.num(decision.action.wispCost)}</i><button class="primary" data-act="mark-made" data-step="0" data-id="${C.esc(decision.action.id)}">제작함 · TMO 확인</button></div>`:'';
-        return`<div class="v151-action choice v237-upper-pick"><span class="v151-state">상위 준비 — 후보에서 확정</span><b class="v151-action-title">메인 상위를 선택하세요</b>${auto}<div class="v151-route-quick">${picks.map((row,index)=>{const ready=routeCandidateReady(row),stacky=C.isStackRampUpper&&C.isStackRampUpper(state&&state.db&&state.db.byId.get(String(row.id)));return`<div><span><b>${index+1}. ${C.esc(row.name)}</b>${stacky?'<i class="v238-stack">스택형</i>':''}<small>${C.esc(row.routeLabel||'')} · 선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</small></span><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${ready?'':'disabled aria-disabled="true"'}>${ready?'상위 확정':'파티 평가 중'}</button></div>`;}).join('')}</div><button class="v153-snipe-open" data-act="snipe-open">목록에 없는 상위 저격…</button>${engineStep}</div>`;
+        // v24.1: 메인 후보에 단독 실측 판수(악몽 클리어 조합 등장 판수)
+        // 배지 — 표시 전용, 엔진 순위(체크포인트·제작 증명)는 그대로다.
+        return`<div class="v151-action choice v237-upper-pick"><span class="v151-state">상위 준비 — 후보에서 확정</span><b class="v151-action-title">메인 상위를 선택하세요</b>${auto}<div class="v151-route-quick">${picks.map((row,index)=>{const ready=routeCandidateReady(row),stacky=C.isStackRampUpper&&C.isStackRampUpper(state&&state.db&&state.db.byId.get(String(row.id)));const cg=C.clearStatsFor&&C.clearStatsFor(row.id);return`<div><span><b>${index+1}. ${C.esc(row.name)}</b>${stacky?'<i class="v238-stack">스택형</i>':''}${cg&&C.num(cg.games)>0?`<i class="v241-solo">실측 ${C.num(cg.games)}판</i>`:''}<small>${C.esc(row.routeLabel||'')} · 선위 ${C.num(row.wispCost)}${C.num(row.wispGap)>0?` (부족 ${C.num(row.wispGap)})`:''}</small></span><button class="primary" data-act="choose-direction" data-key="${C.esc(row.routeKey)}" data-id="${C.esc(row.id)}" ${ready?'':'disabled aria-disabled="true"'}>${ready?'상위 확정':'파티 평가 중'}</button></div>`;}).join('')}</div><button class="v153-snipe-open" data-act="snipe-open">목록에 없는 상위 저격…</button>${engineStep}</div>`;
       }
     }
     // v23.10(0821 패배 포렌식 — 사용자 메모 "2상위 제대로 추천 못함"):
@@ -1532,7 +1534,12 @@ class App{
       if(options.length){
         const urgent=this.actualRound()>=40;
         const engineStep=status==='ACT_NOW'&&decision.action?`<div class="v237-engine-step"><small>그동안 할 일</small><b>${C.esc(decision.action.name)}</b><i>선위 ${C.num(decision.action.wispCost)}</i><button class="primary" data-act="mark-made" data-step="0" data-id="${C.esc(decision.action.id)}">제작함 · TMO 확인</button></div>`:'';
-        return`<div class="v151-action choice v2310-second-pick${urgent?' urgent':''}"><span class="v151-state">2상위 확정 필요${urgent?' · 마감 임박':''}</span><b class="v151-action-title">두 번째 상위를 지금 정하세요</b><p>메인 상위는 섰습니다. 2상위를 확정하지 않으면 선위가 보조 전설로 새고, 51라를 상위 1기로 맞게 됩니다. 확정하면 그 자리는 바뀌지 않고 계획이 그 재료·선위를 지킵니다.</p><div class="v151-route-quick">${options.map((row,index)=>{const cost=C.num(row.wispCost),gap=Math.max(0,cost-C.num(state&&state.wisp));return`<div><span><b>${index+1}. ${C.esc(displayNameOf(row.unit))}</b>${C.isStackRampUpper&&C.isStackRampUpper(row.unit)?'<i class="v238-stack">스택형</i>':''}<small>${row.feasible?'지금 제작 가능':`선위 ${cost}${gap>0?` (부족 ${gap})`:''}`}</small></span><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}">2상위 확정</button></div>`;}).join('')}</div><span class="v151-jump-note">전체 후보·희귀 겹침 비교는 상단 분석 버튼 → 최종 파티에 있습니다.</span>${engineStep}</div>`;
+        // v24.1: 페어 실측 배지 — 이 메인과 이 2상위 조합이 악몽 클리어
+        // 62,052판에서 몇 판 검증됐는지.  0판 경고는 다른 후보에 기록이
+        // 있을 때만 단다(코퍼스 자체가 없으면 소음).
+        const hasAnyPair=options.some(row=>C.num(row.pairGames)>0);
+        const pairBadge=row=>{const g=C.num(row.pairGames);if(g>0)return`<i class="v241-pair">실측 ${g}판</i>`;return hasAnyPair?'<i class="v241-pair none">실측 0판</i>':'';};
+        return`<div class="v151-action choice v2310-second-pick${urgent?' urgent':''}"><span class="v151-state">2상위 확정 필요${urgent?' · 마감 임박':''}</span><b class="v151-action-title">두 번째 상위를 지금 정하세요</b><p>메인 상위는 섰습니다. 2상위를 확정하지 않으면 선위가 보조 전설로 새고, 51라를 상위 1기로 맞게 됩니다. 확정하면 그 자리는 바뀌지 않고 계획이 그 재료·선위를 지킵니다.</p><div class="v151-route-quick">${options.map((row,index)=>{const cost=C.num(row.wispCost),gap=Math.max(0,cost-C.num(state&&state.wisp));return`<div><span><b>${index+1}. ${C.esc(displayNameOf(row.unit))}</b>${C.isStackRampUpper&&C.isStackRampUpper(row.unit)?'<i class="v238-stack">스택형</i>':''}${pairBadge(row)}<small>${row.feasible?'지금 제작 가능':`선위 ${cost}${gap>0?` (부족 ${gap})`:''}`}</small></span><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}">2상위 확정</button></div>`;}).join('')}</div><span class="v151-jump-note">실측 = 이 메인과 함께 악몽을 깬 판수(시즌 2 전수) — 순서는 제작 가능·티어가 같을 때만 실측이 가릅니다. 전체 후보·희귀 겹침 비교는 상단 분석 버튼 → 최종 파티에 있습니다.</span>${engineStep}</div>`;
       }
     }
     if(status==='ROUTE_CHOICE'){
@@ -2037,13 +2044,20 @@ class App{
       let row=null;try{row=C.candidateRow(state,unit,ctx);}catch(_){row=null;}
       if(!row||!row.solve)continue;
       const tier=C.upperPowerTier?C.upperPowerTier(unit,state.db):{known:false,letter:'',rank:-1};
-      rows.push({unit,solve:row.solve,feasible:!!row.feasible,progress:C.num(row.progress),wispCost:C.num(row.solve.wispCost),tier});
+      // v24.1(사용자: "제대로 추천을 못하면 의미가 없잖아"): 이 페어가
+      // 악몽 클리어 62,052판에서 실제로 몇 판 검증됐는지 함께 든다.
+      const pairGames=C.pairClearGames?C.pairClearGames(mainUpper&&mainUpper.id,unit.id):0;
+      rows.push({unit,solve:row.solve,feasible:!!row.feasible,progress:C.num(row.progress),wispCost:C.num(row.solve.wispCost),tier,pairGames});
     }
     // v19.7.1(외부 감사 ④): 처방 추천 페어는 제작 가능·티어가 같을 때만
     // 앞선다 — 제한 가중치(후단 타이브레이크) 원칙은 플래너와 동일.
+    // v24.1: 그 뒤(동급 안)에서 실측 페어 버킷(30판+/기록/0판)이 선위보다
+    // 먼저 갈린다 — 검증된 조합이 미검증 조합에게 선위 몇 개 차이로
+    // 밀리지 않는다.  게이트가 아니라 동급 정렬이다(0판도 목록에 남는다).
     const prescribedKeys=new Set(this.v197PrescribedSecondIds().map(id=>String(C.canonicalUpperId(id))));
     const prescRank=row=>prescribedKeys.has(String(C.canonicalUpperId(row.unit.id)))?1:0;
-    rows.sort((a,b)=>Number(b.feasible)-Number(a.feasible)||C.num(b.tier.rank)-C.num(a.tier.rank)||prescRank(b)-prescRank(a)||a.wispCost-b.wispCost||C.num(b.progress)-C.num(a.progress)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko'));
+    const pairBucket=row=>C.pairClearBucket?C.pairClearBucket(row.pairGames):0;
+    rows.sort((a,b)=>Number(b.feasible)-Number(a.feasible)||C.num(b.tier.rank)-C.num(a.tier.rank)||prescRank(b)-prescRank(a)||pairBucket(b)-pairBucket(a)||a.wispCost-b.wispCost||C.num(b.progress)-C.num(a.progress)||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko'));
     return rows.slice(0,6);
   }
   v151BuildableLegendRows(state,plan){
@@ -3291,8 +3305,12 @@ class App{
         const shared=[...treeRares(row.unit.id)].filter(id=>mainRares.has(id));
         row.sharedRares=shared.map(id=>C.materialName(db,id));
         try{row.hardBlocked=(C.recipeSolve(db,row.unit.id,state.counts||{}).hardMissing||[]).map(item=>item.name).slice(0,2);}catch(_){row.hardBlocked=[];}
+        // v24.1: 이 페어의 악몽 클리어 실측 판수(시즌 2 전수 62,052판).
+        row.pairGames=C.pairClearGames?C.pairClearGames(upper.id,row.unit.id):0;
       }
-      secondBlock=rows.length?`<details class="v153-second"><summary>두 번째 상위 확정 · ${plannedSecond?`현재 계획 ${C.esc(displayNameOf(plannedSecond))}`:'계획에 두 번째 상위 없음'}</summary><div class="v153-second-list">${rows.map(row=>`<article><span><b>${C.esc(displayNameOf(row.unit))}</b>${C.isStackRampUpper&&C.isStackRampUpper(row.unit)?'<i class="v238-stack">스택형 · 조기 제작 이득</i>':''}<small>${C.esc(secondTier(row.unit))} · ${C.esc(row.label)}</small>${row.presc?`<small class="presc">처방 · ${C.esc(row.presc.why||'시너지 추천')}</small>`:''}<small class="${row.sharedRares&&row.sharedRares.length?'clash':'okv'}">${row.sharedRares&&row.sharedRares.length?`메인과 희귀 겹침 ${C.esc(row.sharedRares.slice(0,2).join('·'))}${row.sharedRares.length>2?` 외 ${row.sharedRares.length-2}`:''}`:'메인과 희귀 겹침 없음'}</small>${row.hardBlocked&&row.hardBlocked.length?`<small class="clash">선행 막힘 · ${C.esc(row.hardBlocked.join('·'))}</small>`:''}${playbookHtml(row.unit,{compact:true,maxPairs:3})}</span><span><button data-act="detail" data-id="${C.esc(row.unit.id)}">상세</button><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}" ${row.hardBlocked&&row.hardBlocked.length?`disabled aria-disabled="true" title="선행조건 필요: ${C.esc(row.hardBlocked.join('·'))}"`:''}>2상위 확정</button></span></article>`).join('')}</div><small>확정하면 그 자리를 다른 상위에게 넘기지 않습니다. 물딜도 확정하면 2상위로 갑니다(보드 5기 + 상위 2기 = 9환산).</small></details>`:'';
+      const v241HasAnyPair=rows.some(row=>C.num(row.pairGames)>0);
+      const v241PairBadge=row=>{const g=C.num(row.pairGames);if(g>0)return`<i class="v241-pair">실측 ${g}판</i>`;return v241HasAnyPair?'<i class="v241-pair none">실측 0판</i>':'';};
+      secondBlock=rows.length?`<details class="v153-second"><summary>두 번째 상위 확정 · ${plannedSecond?`현재 계획 ${C.esc(displayNameOf(plannedSecond))}`:'계획에 두 번째 상위 없음'}</summary><div class="v153-second-list">${rows.map(row=>`<article><span><b>${C.esc(displayNameOf(row.unit))}</b>${C.isStackRampUpper&&C.isStackRampUpper(row.unit)?'<i class="v238-stack">스택형 · 조기 제작 이득</i>':''}${v241PairBadge(row)}<small>${C.esc(secondTier(row.unit))} · ${C.esc(row.label)}</small>${row.presc?`<small class="presc">처방 · ${C.esc(row.presc.why||'시너지 추천')}</small>`:''}<small class="${row.sharedRares&&row.sharedRares.length?'clash':'okv'}">${row.sharedRares&&row.sharedRares.length?`메인과 희귀 겹침 ${C.esc(row.sharedRares.slice(0,2).join('·'))}${row.sharedRares.length>2?` 외 ${row.sharedRares.length-2}`:''}`:'메인과 희귀 겹침 없음'}</small>${row.hardBlocked&&row.hardBlocked.length?`<small class="clash">선행 막힘 · ${C.esc(row.hardBlocked.join('·'))}</small>`:''}${playbookHtml(row.unit,{compact:true,maxPairs:3})}</span><span><button data-act="detail" data-id="${C.esc(row.unit.id)}">상세</button><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}" ${row.hardBlocked&&row.hardBlocked.length?`disabled aria-disabled="true" title="선행조건 필요: ${C.esc(row.hardBlocked.join('·'))}"`:''}>2상위 확정</button></span></article>`).join('')}</div><small>확정하면 그 자리를 다른 상위에게 넘기지 않습니다. 물딜도 확정하면 2상위로 갑니다(보드 5기 + 상위 2기 = 9환산).</small></details>`:'';
     }
     // v23.5(사용자 규칙 0818): 특강은 판당 1기(특성공학만 2기).  2상위가
     // 화면에 서는 순간(확정 또는 계획) 특강 배분과 항법 선택 조언을 함께

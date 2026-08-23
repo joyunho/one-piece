@@ -162,6 +162,59 @@ for (const family of [...perFamily.keys()].sort()) {
   byFamily[family] = {games: bucket.games, roles};
 }
 
+// v24.1(사용자: "제대로 추천을 못하면 의미가 없잖아"): 악몽 상위 2기
+// 클리어 페어 코퍼스(data/nightmare_two_upper_*.json.gz, tmo /clear 전수)
+// 를 정본 id 페어 판수로 병합한다.  페어 코퍼스의 코드는 tmo 웹 코드라
+// 로컬 CODE_MAP 과 안 맞는다 — 이름+티어로 잇는다(세라핌 4기 포함,
+// 99.3% 커버).  용도 경계는 위 purpose 와 동일 + 랭킹에서는 오직
+// "동급(제작 가능·티어·처방 동일) 안의 타이브레이크"로만 쓴다.
+function buildPairs() {
+  const files = fs.readdirSync(path.join(ROOT, 'data')).filter((name) => /^nightmare_two_upper_\d{8}\.json(\.gz)?$/.test(name)).sort();
+  if (!files.length) return null;
+  const latest = path.join(ROOT, 'data', files[files.length - 1]);
+  const rawBytes = fs.readFileSync(latest);
+  const corpus = JSON.parse(latest.endsWith('.gz') ? zlib.gunzipSync(rawBytes).toString('utf8') : rawBytes.toString('utf8'));
+  const TIER_WORDS = ['세라핌', '영원', '불멸', '초월', '제한됨'];
+  const normName = (value) => String(value || '').split('(')[0].replace(/[^0-9A-Za-z가-힣\- ]/g, '').replace(/\s+/g, ' ').trim();
+  const tierOf = (unit) => TIER_WORDS.find((tier) => String(unit.groupName || '').includes(tier)) || '';
+  const pool = catalog.filter((unit) => C.isUpper(unit) || C.isSeraph(unit));
+  const byNameTier = new Map(), byName = new Map();
+  for (const unit of pool) {
+    const base = normName(unit.name);
+    if (!base) continue;
+    const keyTier = base + '|' + tierOf(unit);
+    if (!byNameTier.has(keyTier)) byNameTier.set(keyTier, []);
+    byNameTier.get(keyTier).push(unit);
+    if (!byName.has(base)) byName.set(base, []);
+    byName.get(base).push(unit);
+  }
+  const resolveUnit = (name, tier) => {
+    const base = normName(name);
+    if (!base) return '';
+    let list = byNameTier.get(base + '|' + String(tier || '')) || [];
+    if (!list.length) {
+      const candidates = byName.get(base) || [];
+      const canon = new Set(candidates.map((unit) => String(C.canonicalUpperId(unit.id))));
+      if (canon.size === 1) list = candidates;
+    }
+    return list.length ? String(C.canonicalUpperId(list[0].id)) : '';
+  };
+  const pairs = {};
+  let resolvedGames = 0, skippedGames = 0;
+  for (const row of corpus.pairRanking || []) {
+    const a = resolveUnit(row.names && row.names[0], row.tiers && row.tiers[0]);
+    const b = resolveUnit(row.names && row.names[1], row.tiers && row.tiers[1]);
+    if (!a || !b) { skippedGames += row.count || 0; continue; }
+    const key = [a, b].sort().join('|');
+    pairs[key] = (pairs[key] || 0) + (row.count || 0);
+    resolvedGames += row.count || 0;
+  }
+  const orderedPairs = {};
+  for (const key of Object.keys(pairs).sort()) orderedPairs[key] = pairs[key];
+  return {source: path.basename(latest), twoUpperGames: corpus.twoUpperCount || 0, resolvedGames, skippedGames, pairs: orderedPairs};
+}
+const pairStats = buildPairs();
+
 const digest = {
   version: 'clear-stats-v1',
   source: data.sources.join(' + '),
@@ -171,10 +224,14 @@ const digest = {
   skipped: {noUpper: skippedNoUpper, unresolved: skippedUnresolved},
   minGames: MIN_GAMES,
   byUpper,
-  byFamily
+  byFamily,
+  pairSource: pairStats ? pairStats.source : '',
+  pairGames: pairStats ? pairStats.resolvedGames : 0,
+  pairSkippedGames: pairStats ? pairStats.skippedGames : 0,
+  pairs: pairStats ? pairStats.pairs : {}
 };
 
 const body = 'window.ORD_CLEAR_STATS=' + JSON.stringify(digest) + ';\n';
 const outPath = path.join(EXT, 'ord_clear_stats.js');
 fs.writeFileSync(outPath, body);
-console.log(`ord_clear_stats.js 생성: 판 ${records.length} · 사용 ${usable} · 상위 ${Object.keys(byUpper).length}종 · ${(body.length / 1024).toFixed(1)}KB`);
+console.log(`ord_clear_stats.js 생성: 판 ${records.length} · 사용 ${usable} · 상위 ${Object.keys(byUpper).length}종 · 페어 ${Object.keys(digest.pairs).length}키/${digest.pairGames}판 · ${(body.length / 1024).toFixed(1)}KB`);
