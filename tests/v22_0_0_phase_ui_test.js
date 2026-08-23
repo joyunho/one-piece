@@ -80,16 +80,17 @@ test('③ 국면 패널 — ⑤ 게이지·전 국면 전체 표 폴드·③ 계
   assert(p3idle.includes('여기 뜹니다'),'③ 국면 대기 안내가 없다');
 });
 
-test('④ 참고 탭은 기본 접힘 서랍 — 클릭으로 열림',()=>{
-  const closed=stub(45).renderCoach({},plan(),{},{},{ready:true,key:'ok'});
-  assert(closed.includes('v22-closed'),'서랍이 기본 접힘이 아니다');
-  assert(!closed.includes('v22-drawer-close'),'접힘 상태에 접기 버튼이 있다');
-  const openApp=stub(45);openApp._v22DrawerOpen=true;
-  const open=openApp.renderCoach({},plan(),{},{},{ready:true,key:'ok'});
-  assert(!open.includes('v22-closed'),'열림 상태가 접힘 클래스를 유지한다');
-  assert(open.includes('v22-drawer-close'),'열림 상태에 접기 버튼이 없다');
-  assert(appSrc.includes("this._v22DrawerOpen=true")&&appSrc.includes("a==='v22-drawer-close'"),'서랍 열림/접기 배선 없음');
-  assert(css.includes('.v211-refer.v22-closed .v211-pane{display:none'),'접힘 CSS 없음');
+test('④ 참고 패널은 분석 화면으로 — 플레이 화면에서 서랍 은퇴(v24.0 재핀)',()=>{
+  // v22.0 의 "기본 접힘 서랍"은 v24.0 플레이/분석 2화면 분리로 대체됐다.
+  // 원 취지(판 중 화면에 참고 정보를 상시 노출하지 않는다)는 더 강하게
+  // 유지된다 — 아예 다른 화면이다.
+  const play=stub(45).renderCoach({},plan(),{},{},{ready:true,key:'ok'});
+  for(const gone of ['v211-refer','v22-drawer-close','data-region="reference"','data-region="upper-party"','data-region="clear-gaps"'])assert(!play.includes(gone),`플레이 화면에 남아 있다: ${gone}`);
+  const aux=stub(45);aux.renderV22PhasePanel=()=>'<i data-test="phase"></i>';
+  const analysis=aux.renderAuxiliaryPage('analysis',{},plan(),{ready:true,key:'ok'});
+  for(const region of ['clear-gaps','upper-party','craftable-legends','unused-rare'])assert(analysis.includes(`data-region="${region}"`),`분석 화면 ${region} 없음`);
+  assert(!appSrc.includes("a==='v22-drawer-close'")&&!appSrc.includes('_v22DrawerOpen'),'은퇴한 서랍 배선이 남아 있다');
+  assert(!css.includes('.v211-refer.v22-closed'),'은퇴한 서랍 CSS가 남아 있다');
 });
 
 test('⑤ 상단 스트립이 국면·마감을 들고, 카드 밑 중복 칩은 제거됐다',()=>{

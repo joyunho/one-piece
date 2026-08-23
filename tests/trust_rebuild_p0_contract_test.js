@@ -207,15 +207,17 @@ test('v15 trust UI exposes evidence boundaries and never paints advice as clear 
   assert(!gaps.includes('클리어 확률'));
   assert(!decision.includes('흔함 소비'));
   assert(coach.includes('renderV151NextAction(state,plan,health)'));
-  // v22.0(사용자 승인 목업): 스펙 자리는 국면 패널이 됐다 — 전체 스펙 표는
-  // 국면 패널 안의 접힌 폴드로 이동했다(renderV22PhasePanel → renderV153Spec).
-  // 지키는 계약은 그대로다: 스펙 표가 화면에서 사라지면 안 된다.
-  assert(coach.includes('renderV22PhasePanel(state,plan)'));
+  // v22.0: 스펙 자리는 국면 패널이 됐다(renderV22PhasePanel → renderV153Spec
+  // 폴드).  v24.0(플레이/분석 2화면): 국면 패널은 분석 화면으로 옮겨졌다 —
+  // 지키는 계약은 그대로다: 스펙 표가 프로그램에서 사라지면 안 된다.
+  const analysisPage=app.slice(app.indexOf('  renderV240Analysis(state'),app.indexOf('// A live TMO snapshot'));
+  assert(analysisPage.includes('renderV22PhasePanel(state,plan)'));
   assert(app.includes('renderV153Spec(state,plan)'),'전체 스펙 표 폴드가 사라짐');
   assert(!coach.includes('renderV15RareBoard('));
-  // v18.4(사용자 목업): 상시 판단 영역 6개 → v21.1: 참고 탭 컨테이너
-  // (reference)가 추가돼 7개.  세 참고 패널 자체는 탭 안에 그대로 있다.
-  assert.strictEqual((coach.match(/data-region=/g)||[]).length,7);
+  // v18.4 6개 → v21.1 7개 → v24.0: 플레이 화면 리터럴은 2개(next-action ·
+  // next-preview), 참고 4영역은 분석 화면에 있다.
+  assert.strictEqual((coach.match(/data-region=/g)||[]).length,2);
+  assert.strictEqual((analysisPage.match(/data-region=/g)||[]).length,4);
   // v20.2: 지켜야 하는 계약은 특정 16진값이 아니라 **근거 경계**다 —
   // 코치가 계산한 값과 TMO가 관측한 값이 화면에서 같아 보이면 안 된다.
   // 신작 시트(v20.1)로 팔레트가 바뀌면서 토큰 이름·색이 옮겨졌고,

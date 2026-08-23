@@ -40,14 +40,14 @@ check('live coach exposes one status strip and four decision regions',()=>{
   const plan={v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:false}};
   const html=app.renderCoach({},plan,{}, {},{ready:true,key:'ok'});
   const regions=[...html.matchAll(/data-region="([^"]+)"/g)].map(match=>match[1]);
-  // v18.4(사용자 목업): 상시 노출이 4개에서 6개로 늘었다.  v17.24 는 화면을
-  // 4칸으로 줄여 잡동사니를 없앴는데, 그때 한 칸에 뭉쳐 있던 "희귀 판단"이
-  // 실제로는 두 가지(만들 수 있는 전설급 / 안 쓰는 희귀)라 목업대로 갈랐고,
-  // "다음에 뭘 하지"를 1번 카드 안에서 빼내 2번 패널로 세웠다.
-  // v19.6(사용자 루미너스 UI): 스펙이 첫 행 오른쪽으로 — 순서 갱신.
-  assert.deepStrictEqual(regions,['game-status','next-action','next-preview','clear-gaps','reference','craftable-legends','upper-party','unused-rare']); // v21.1 참고 탭 컨테이너 포함
-  assert.strictEqual(new Set(regions).size,8); // v21.1 reference 포함
-  for(const key of ['status','next','candidate','spec','rare','upper','unused'])assert.strictEqual((html.match(new RegExp(`data-test="${key}"`,'g'))||[]).length,1,key);
+  // v24.0(사용자: "구조 자체가 문제인것같은데"): 플레이/분석 2화면 분리 —
+  // 판 중 화면은 상태 한 줄 + 지금 할 일(+레일)뿐이다.  국면 패널과 참고
+  // 3패널(최종 파티·희귀→전설·남는 희귀)은 분석 화면으로 옮겨졌다
+  // (v24_0_0_two_screen_test 가 분석 쪽 구성을 계약한다).
+  assert.deepStrictEqual(regions,['game-status','next-action','next-preview']);
+  assert.strictEqual(new Set(regions).size,3);
+  for(const key of ['status','next','candidate'])assert.strictEqual((html.match(new RegExp(`data-test="${key}"`,'g'))||[]).length,1,key);
+  for(const key of ['spec','rare','upper','unused'])assert(!html.includes(`data-test="${key}"`),`분석으로 옮겨진 패널이 플레이 화면에 있다: ${key}`);
   for(const removed of ['ord-tabs','v15-rare-board','coach-details','v15-outcome-dock'])assert(!html.includes(removed),removed);
   assert(html.includes('v153-screen'));
 });
@@ -60,8 +60,8 @@ check('route and post-Legend states keep the compact five-region shell visible',
   for(const name of ['Status','NextCandidate','Spec','RareLedger','UpperParty'])app[`renderV153${name}`]=()=>name==='Status'?'<section data-region="game-status"></section>':'<i></i>';
   const route=app.renderCoach({}, {v15Decision:{state:'ROUTE_CHOICE'},postLegendDecision:{awaiting:false}}, {}, {}, {ready:true,key:'ok'});
   const postLegend=app.renderCoach({}, {v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:true}}, {}, {}, {ready:true,key:'ok'});
-  assert.strictEqual((route.match(/data-region=/g)||[]).length,8); // v21.1
-  assert.strictEqual((postLegend.match(/data-region=/g)||[]).length,8); // v21.1
+  assert.strictEqual((route.match(/data-region=/g)||[]).length,3); // v24.0 플레이 3영역
+  assert.strictEqual((postLegend.match(/data-region=/g)||[]).length,3); // v24.0
 });
 
 check('Rare focus shows the pre-upper safe reroll and at most three craftable Legends',()=>{
@@ -194,10 +194,13 @@ check('upper choice consumes only v15 route candidates, caps them at six and hid
 
 check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   const coachSource=between('  renderCoach(state,plan,phase,clock,health){','  renderCoachDetails(state,plan,open=false){');
-  // v22.0(사용자 승인 목업): 스펙 자리는 국면 패널(renderV22PhasePanel)이
-  // 됐다 — 전체 스펙 표(renderV153Spec)는 그 패널의 접힌 폴드에서 계속
-  // 호출된다.  단일 화면 위계 계약 자체는 그대로다.
-  for(const method of ['renderV153Status','renderV151NextAction','renderV153Preview','renderV22PhasePanel','renderV153CraftableLegends','renderV153UpperParty'])assert(coachSource.includes(method),method);
+  // v24.0(플레이/분석 2화면): 플레이 화면은 상태·지금 할 일·레일·스토리
+  // 스텝퍼만 부른다.  국면 패널·참고 3패널 호출은 분석 화면
+  // (renderV240Analysis)으로 옮겨졌다.
+  for(const method of ['renderV153Status','renderV151NextAction','renderV153Preview','v221StoryBlock'])assert(coachSource.includes(method),method);
+  for(const method of ['renderV22PhasePanel','renderV153CraftableLegends','renderV153UpperParty'])assert(!coachSource.includes(method),`분석으로 옮겨진 호출이 플레이에 남음: ${method}`);
+  const analysisSource=between('  renderV240Analysis(state,plan,health){','  // A live TMO snapshot');
+  for(const method of ['renderV22PhasePanel','renderV153UpperParty','renderV153CraftableLegends','renderV153UnusedRare'])assert(analysisSource.includes(method),`분석 화면 호출 누락: ${method}`);
   assert(source.includes('renderV153Spec(state,plan)'),'전체 스펙 표 폴드 호출이 사라짐');
   // v17.28: 희귀 장부의 제작 목록은 보유 희귀를 실제로 쓰는 조합만 싣는
   // 계산으로 바뀌었다.  옛 계산은 희귀 소모를 요구하지 않아 "희귀 직접
@@ -207,15 +210,16 @@ check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   assert(source.includes('data-opt="virtualSpecialId"'),'152 selector must stay reachable from collapsed settings');
   assert(!coachSource.includes('renderActions('));
   assert(!coachSource.includes('renderSquadPlan('));
-  // v18.4: 상시 판단 영역 6개 → v21.1: 참고 탭 컨테이너(reference) 추가로 7개.
-  assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,7);
+  // v18.4 상시 6영역 → v21.1 7개 → v24.0 플레이 2개(next-action ·
+  // next-preview 리터럴, game-status 는 renderV153Status 안).
+  assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,2);
   // v20.2: 레이아웃 계약을 실제 로드되는 신작 시트(ord_ui_v20.css) 기준으로
   // 갱신한다.  구 12열 그리드(.v153-grid)는 v20.1.0 신작 UI에서 3칼럼
   // 지휘 콘솔(.v155-dashboard)로 교체됐다 — 은퇴한 시트를 읽던 계약이
   // 통과하는 바람에 실사용 화면의 스타일 유실을 못 잡았다(v20.2 실측).
-  for(const selector of ['.v153-screen{','.v155-dashboard{','.v153-status{','.v153-panel{','.v211-refer{','.v153-unused{'])assert(css.includes(selector),selector);
-  // v21.1: 3칼럼 상시 5패널 → 2열 + 참고 탭('필요한 UI만 남기고').
-  assert(css.includes('"action status"')&&css.includes('"action refer"'),'2열 콘솔 그리드 계약 없음');
+  for(const selector of ['.v153-screen{','.v155-dashboard{','.v153-status{','.v153-panel{','.v240-analysis{','.v153-unused{'])assert(css.includes(selector),selector);
+  // v24.0: 2열 그리드 은퇴 — 플레이 단일 칼럼 + 분석 세로 펼침.
+  assert(css.includes('.v240-play{')&&!css.includes('"action refer"'),'2화면 레이아웃 계약 없음');
 });
 
 console.log(`\n${checks}/${checks} v15 live-coach UI contract checks passed.`);

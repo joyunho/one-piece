@@ -26,15 +26,15 @@ const C=context.ORDCore,units=context.ORD_TMO_UNITS;
 const tests=[];
 const test=(name,fn)=>tests.push([name,fn]);
 
-test('① 간단 보기 — 토글·기본값·화면 클래스·유지',()=>{
+test('① 간단 보기는 v24.0 2화면 분리로 대체 — 잔재 완전 제거(재핀)',()=>{
+  // v23.9 간단 보기의 취지(신규 사용자는 지금 할 일 하나에 집중)는 v24.0
+  // 에서 플레이 화면 자체가 됐다 — 토글·simpleMode 상태·CSS 는 남으면
+  // 두 진실이 되므로 부재를 계약한다.  대체 배선(분석 버튼)은
+  // v24_0_0_two_screen_test 가 계약한다.
   const app=read('ord_app.js');
-  assert(app.includes("if(a==='toggle-simple-view')"),'토글 핸들러 부재');
-  assert(app.includes('v239-view-toggle'),'상단 토글 버튼 부재');
-  assert(app.includes("simpleMode:null,"),'DEFAULTS simpleMode 부재');
-  assert(app.includes('this.state.simpleMode=!(this.state.recentMainUppers||[]).length'),'신규 사용자 기본 간단 규칙 부재(기존 사용자는 전체 유지)');
-  assert(app.includes('simpleMode:this.state.simpleMode,gorosei'),'새 게임 리셋에서 보기 모드 유지 부재');
-  assert(app.includes("v239-simple':''}\">${this.renderV153Status"),'화면 클래스 배선 부재');
-  for(const file of ['ord_ui_v20.css','ord_cockpit_v15.css'])assert(read(file).includes('.v239-simple .v153-spec,.v239-simple .v211-refer{display:none !important}'),`${file} 간단 보기 규칙 부재`);
+  for(const gone of ["if(a==='toggle-simple-view')",'v239-view-toggle','simpleMode:null,','simpleMode:this.state.simpleMode'])assert(!app.includes(gone),`간단 보기 잔재: ${gone}`);
+  assert(app.includes('data-act="tab" data-tab="analysis"'),'대체 화면(분석) 배선 부재');
+  for(const file of ['ord_ui_v20.css','ord_cockpit_v15.css'])assert(!read(file).includes('.v239-simple'),`${file} 간단 보기 CSS 잔재`);
 });
 
 test('② 스택형 류마 추가',()=>{

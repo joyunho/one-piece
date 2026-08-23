@@ -182,34 +182,26 @@ body{
   .v153-screen{display:flex;flex-direction:column;height:calc(100dvh - 26px);min-height:0}
   .v155-dashboard{flex:1 1 auto}
 }
-/* v21.1(사용자: "필요한 UI만 남기고 — 정보가 너무 중구난방"): 상시 5패널
-   3열을 2열로 줄인다.  주인공은 지금 할 일 하나, 오른쪽 위는 부족 게이지,
-   나머지(최종 파티·희귀→전설·남는 희귀)는 오른쪽 아래 탭 한 자리에서
-   갈아 끼운다 — 항상 다 보이는 것이 아니라 필요할 때 꺼내 본다. */
-.v155-dashboard{
-  display:grid;
-  grid-template-columns:minmax(520px,5fr) minmax(0,4.2fr);
-  grid-template-rows:minmax(0,auto) minmax(0,1fr);
-  grid-template-areas:
-    "action status"
-    "action refer";
-  gap:11px;
-  min-height:0;
-}
-.v155-action-zone{grid-area:action}
-.v153-spec{grid-area:status;min-height:0;overflow-y:auto;scrollbar-width:thin}
-.v211-refer{grid-area:refer;display:flex;flex-direction:column;min-height:0}
-.v211-tabs{display:flex;gap:6px;margin-bottom:9px}
-.v211-tabs button{flex:1 1 0;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 4px;background:var(--panel-2);color:var(--sub);font-size:13.5px;font-weight:600}
-.v211-tabs button.on{border-color:var(--accent);background:rgba(224,92,126,.12);color:var(--fg)}
-.v211-pane{display:none;min-height:0;overflow-y:auto;scrollbar-width:thin}
-.v211-pane.on{display:block;flex:1 1 auto}
-/* 탭 안으로 들어간 옛 패널은 자기 테두리를 접는다 — 패널 속 패널 방지. */
-.v211-pane>.v153-panel{border:0;padding:0;background:transparent}
-.v211-pane>.v153-panel::before{display:none}
-/* 남는 희귀는 하단 띠 시절의 가로 배치를 버리고 탭 안에서는 보통 블록. */
-.v211-pane .v155-rare-strip{flex-direction:column;align-items:stretch;padding:0}
-.v211-pane .v155-rare-strip>header{margin-bottom:8px}
+/* v24.0(사용자: "구조 자체가 문제인것같은데"): 플레이/분석 2화면 분리.
+   v21.1 2열 그리드와 참고 서랍(v211)은 은퇴 — 판 중 화면(.v240-play)은
+   지금 할 일 단일 칼럼이고, 국면·최종 파티·희귀 원장은 분석 화면
+   (.v240-analysis)이 서랍 없이 세로로 편다. */
+.v155-dashboard{display:flex;flex-direction:column;gap:11px;min-height:0}
+.v240-play{max-width:1160px;margin:0 auto;width:100%}
+.v240-play .v155-action-zone{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
+.v240-play .v155-action-layout{flex:1 1 auto;min-height:0}
+.v153-spec{min-height:0;overflow-y:auto;scrollbar-width:thin}
+.v240-analysis{display:flex;flex-direction:column;gap:11px;max-width:1160px;margin:0 auto;width:100%}
+.v240-analysis .v155-rare-strip{flex-direction:column;align-items:stretch}
+.v240-analysis .v155-rare-strip>header{margin-bottom:8px}
+.v240-analysis .v153-spec{overflow:visible}
+.v240-tool-links{display:flex;flex-wrap:wrap;gap:8px}
+.v240-tool-links .v238-guide-open{margin-top:0}
+.v240-analysis-btn{width:auto;padding:0 10px;font-size:11.5px;white-space:nowrap;font-weight:800;letter-spacing:.04em;border-color:var(--accent);color:var(--accent)}
+.v240-analysis-btn.on{background:rgba(224,92,126,.14);color:var(--fg)}
+/* 플레이 화면 액션 존 하단의 스토리 스텝퍼(v221) — 게임 중 유일한 손
+   입력이라 분석으로 보내지 않고 카드 밑에 남긴다. */
+.v240-play .v221-story{margin-top:10px}
 
 /* ── 패널 해부: 좌측 마커 바 + 조용한 헤더 ────────────── */
 .v153-panel{
@@ -648,13 +640,8 @@ body{
 /* v23.10: 2상위 확정 카드 (0821 패배 포렌식) */
 .v2310-second-pick{border-color:rgba(255,159,67,.45)}
 .v2310-second-pick.urgent{border-color:rgba(255,120,80,.7);box-shadow:0 0 14px rgba(255,120,80,.12)}
-/* v23.9: 간단 보기 — 처음 쓰는 사람 기본.  지금 할 일 하나에 집중,
-   국면 패널·참고 서랍은 전체 보기에서. */
-.v239-simple .v153-spec,.v239-simple .v211-refer{display:none !important}
-.v239-simple .v155-dashboard{display:block}
-.v239-simple .v155-action-zone{max-width:none}
-.v239-view-toggle{width:auto;padding:0 10px;font-size:11.5px;white-space:nowrap}
-.v239-view-toggle.on{border-color:var(--accent-dim);color:var(--accent)}
+/* v23.9 간단 보기(v239)는 v24.0 2화면 분리로 은퇴 — 플레이 화면 자체가
+   "지금 할 일 하나"다. */
 /* v23.8: 스택형 상위 배지 + 첫 실행 가이드 */
 .v238-stack{display:inline-block;margin-left:5px;border:1px solid rgba(255,159,67,.55);border-radius:999px;padding:1px 7px;color:#FFC58A;font-size:10.5px;font-style:normal;font-weight:800;vertical-align:1px;white-space:nowrap}
 .v238-guide-open{margin-top:8px;border:1px solid var(--line);border-radius:9px;padding:6px 10px;background:var(--panel-2);color:var(--sub);font-size:12px;cursor:pointer}
@@ -775,14 +762,14 @@ body{
    사용자: "f8 f9 기능이 너무 별로야 정보가 중구난방으로 정리되어있고
    글씨도 작아".  400px 창에 본창 격자를 우겨넣던 방식을 버리고 위→아래
    고정 순서 한 열로 다시 편성한다: 상태줄(라운드·국면·마감·선위·리롤)
-   → 지금 할 일 → 국면 패널.  v21.1 참고 서랍(v211-refer)은 v22.0 이후
-   탭 껍데기만 남아 보였다 — 통째로 숨긴다(v155-rare-strip 은 그 안에
-   산다).  국면 패널(.v153-spec)은 이제 숨기지 않는다 — 스토리 스텝퍼
-   (v221)가 게임 중 유일한 손 입력이라 미니 패널에 있어야 한다.  대신
-   긴 블록(전체 스펙 표·게이지·희귀 사용 계획)만 국면 패널에서 접는다.
+   → 지금 할 일 → 국면 패널.  v24.0: 참고 패널들은 분석 화면으로 갔고
+   플레이 화면이 이미 "지금 할 일 하나"라 미니 패널과 거의 같다 —
+   분석 화면을 F9 로 볼 때만 아래 숨김 목록이 참고 패널을 접는다.
+   스토리 스텝퍼(v221)는 게임 중 유일한 손 입력이라 플레이 화면 액션 존
+   하단에 산다.  국면 패널(.v153-spec)은 숨기지 않는다 — 대신 긴 블록
+   (전체 스펙 표·게이지·희귀 사용 계획)만 국면 패널에서 접는다.
    글씨는 본창(16.5px)과 같은 축: 기본 16px · 카드 제목 22px. */
 body.ord-overlay-mode .v155-decision-rail,
-body.ord-overlay-mode .v211-refer,
 body.ord-overlay-mode .v153-craft,
 body.ord-overlay-mode .v153-upper,
 body.ord-overlay-mode .v155-rare-strip,
@@ -850,16 +837,6 @@ body.ord-overlay-mode .command-line{display:flex}
 }
 
 /* ── 반응형 ──────────────────────────────────────────── */
-@media (max-width:1450px){
-  /* v21.1: 좁은 창도 같은 두 기둥 — 참고 정보는 탭이 이미 접고 있다. */
-  .v155-dashboard{
-    grid-template-columns:minmax(400px,1fr) minmax(0,1fr);
-    grid-template-rows:minmax(0,auto) minmax(0,1fr);
-    grid-template-areas:
-      "action status"
-      "action refer";
-  }
-}
 @media (max-width:1100px){
   .v155-dashboard{display:flex;flex-direction:column}
   .v153-panel{overflow:visible}
@@ -1065,8 +1042,7 @@ body.ord-overlay-mode .command-line{display:flex}
 .v22-bar i.bad{background:var(--bad)}
 .v22-spec-fold>summary{cursor:pointer;font-size:11.5px;color:var(--muted);margin-top:6px}
 .v22-rail-rest{font-size:12px;color:var(--muted);border:1px dashed var(--line);border-radius:8px;padding:10px 12px}
-.v211-refer.v22-closed .v211-pane{display:none!important}
-.v211-refer.v22-closed{align-self:start}
+/* v24.0: v22 서랍 접힘 규칙(.v22-closed)은 서랍 은퇴로 함께 제거됐다. */
 .v22-drawer-close{margin-left:auto;border:1px solid var(--line);border-radius:6px;background:var(--panel-2);color:var(--muted);font-size:11px;padding:2px 9px;cursor:pointer}
 
 /* v22.1(0809 포렌식): 확정 상위 재료 명시 + 스토리 진행 스텝퍼.

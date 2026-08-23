@@ -2628,11 +2628,13 @@ body.ord-overlay-mode .v151-action-foot small{display:none;}
 /* v23.10: 2상위 확정 카드 (0821 패배 포렌식) */
 .v2310-second-pick{border-color:rgba(255,159,67,.45)}
 .v2310-second-pick.urgent{border-color:rgba(255,120,80,.7);box-shadow:0 0 14px rgba(255,120,80,.12)}
-/* v23.9: 간단 보기 — 처음 쓰는 사람 기본 */
-.v239-simple .v153-spec,.v239-simple .v211-refer{display:none !important}
-.v239-simple .v155-dashboard{display:block}
-.v239-view-toggle{width:auto;padding:0 10px;font-size:11.5px;white-space:nowrap}
-.v239-view-toggle.on{border-color:rgba(224,92,126,.6);color:#E05C7E}
+/* v24.0: 플레이/분석 2화면 분리 — v23.9 간단 보기(v239)는 은퇴.
+   분석 화면 세로 배치 + 상단 분석 버튼(신작 시트 ord_ui_v20.css 정본 미러). */
+.v240-analysis{display:flex;flex-direction:column;gap:11px;max-width:1160px;margin:0 auto;width:100%}
+.v240-play{max-width:1160px;margin:0 auto;width:100%}
+.v240-tool-links{display:flex;flex-wrap:wrap;gap:8px}
+.v240-analysis-btn{width:auto;padding:0 10px;font-size:11.5px;white-space:nowrap;font-weight:800;border-color:rgba(224,92,126,.6);color:#E05C7E}
+.v240-analysis-btn.on{background:rgba(224,92,126,.14);color:#F2E7EA}
 /* v23.8: 스택형 상위 배지 + 첫 실행 가이드 */
 .v238-stack{display:inline-block;margin-left:5px;border:1px solid rgba(255,159,67,.55);border-radius:999px;padding:1px 7px;color:#FFC58A;font-size:10.5px;font-style:normal;font-weight:800;vertical-align:1px;white-space:nowrap}
 .v238-guide-open{margin-top:8px;border:1px solid #2C4666;border-radius:9px;padding:6px 10px;background:#0B1B30;color:#9DB2CB;font-size:12px;cursor:pointer}

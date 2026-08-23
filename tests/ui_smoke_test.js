@@ -46,14 +46,11 @@ catch(error){
   try{
     const context=await browser.newContext({viewport:{width:1920,height:1080}}),page=await context.newPage();
     await page.route('http*://**',route=>route.abort());
-    // v18.4: 6패널 개편 — 희귀 장부가 "만들 수 있는 전설급"(3번)과 "필요없는
-// 희귀"(6번)로 나뉘고, "할 일 미리보기"(2번)가 새로 들어왔다.
-// v19.6(사용자 루미너스 UI): 2번(다음 판단)이 1번 패널 안의 레일이 되고,
-// 스펙이 첫 행 오른쪽으로 — 영역 순서 갱신.
-// v21.1: 참고 3패널(희귀→전설·최종 파티·남는 희귀)은 reference 탭 안으로
-// 들어갔다 — 상시 5패널이 '정보 중구난방'의 원인이었다.  세 지역은 DOM에
-// 남고(탭 전환) reference 가 그 컨테이너다.
-const REGIONS=['game-status','next-action','next-preview','clear-gaps','reference','craftable-legends','upper-party','unused-rare'];
+    // v24.0(사용자: "구조 자체가 문제인것같은데"): 플레이/분석 2화면 분리 —
+// 판 중 화면(coach)은 상태·지금 할 일·레일 3영역뿐이고, 국면·최종 파티·
+// 희귀→전설·남는 희귀는 분석 화면(analysis 탭)이 세로로 편다.
+const REGIONS=['game-status','next-action','next-preview'];
+const ANALYSIS_REGIONS=['clear-gaps','upper-party','craftable-legends','unused-rare'];
     for(const cfg of [{name:'desktop',width:1920,height:1080},{name:'laptop',width:1440,height:900},{name:'mobile',width:430,height:900}]){
       await page.setViewportSize({width:cfg.width,height:cfg.height});
       await page.goto('file://'+path.resolve(__dirname,'ui_fixture.html'),{waitUntil:'domcontentloaded'});
@@ -83,13 +80,9 @@ const REGIONS=['game-status','next-action','next-preview','clear-gaps','referenc
       assert.strictEqual(metrics.version,RELEASE_VERSION);
       assert.strictEqual(metrics.health.ready,true,`${cfg.name} fixture health blocked`);
       assert.deepStrictEqual(metrics.regions,REGIONS,`${cfg.name} region set/order changed`);
-      // v18.4: 상시 노출이 4패널에서 6패널로 바뀌었다(지금 할 일 / 미리보기 /
-      // 제작 가능 전설급 / 현재 스펙 / 최종 파티 / 필요없는 희귀).
-      // v19.6(사용자 루미너스 UI): "다음 판단"이 1번 패널 안의 레일로 합쳐져
-      // .v153-panel 은 5장 — 판단 영역 자체는 여전히 6개(REGIONS 로 검사).
-      // v21.1: 참고 탭 컨테이너(v211-refer)가 패널로 서고, 그 안의 세 옛 패널도
-      // .v153-panel 클래스를 유지한다(스타일은 접힘) — 총 6장.
-      assert.strictEqual(metrics.panelCount,6,`${cfg.name} expected six panel shells (v21.1)`);
+      // v24.0: 플레이 화면의 패널 껍데기는 액션 존 하나뿐이다 — 나머지는
+      // 분석 화면에 있다(아래 별도 검사).
+      assert.strictEqual(metrics.panelCount,1,`${cfg.name} expected a single play panel shell (v24.0)`);
       assert(metrics.gapCards<=4,`${cfg.name} clear gaps exceeded the four-card cap`);
       assert(metrics.hasAction||metrics.hasRecovery,`${cfg.name} replay of the recorded stall must show an action or recovery ladder (state=${metrics.decisionState})`);
       assert.strictEqual(metrics.legacyTabs,0,`${cfg.name} legacy tab bar returned`);
@@ -139,12 +132,15 @@ const REGIONS=['game-status','next-action','next-preview','clear-gaps','referenc
     }
 
     // v19.1(사용자 요청): "내 파티에 확정 이런거 있으면 좋을듯? 내가 버튼
-    // 누르면 자꾸 사라지니까 짜증나네" — 5번 패널의 파티 확정 버튼이 실제로
-    // 상태를 뒤집는지 왕복으로 확인한다.
-    // v22.0(사용자 승인 목업): 참고 패널은 기본 접힘 서랍이 됐다 — 파티
-    // 검사는 서랍(최종 파티 탭)을 열고 진행한다.
-    await page.locator('[data-act="v211-tab"][data-tab="party"]').click();
+    // 누르면 자꾸 사라지니까 짜증나네" — 파티 확정 버튼이 실제로 상태를
+    // 뒤집는지 왕복으로 확인한다.
+    // v24.0: 최종 파티는 분석 화면에 있다 — 상단 분석 버튼으로 전환 후
+    // 검사한다(분석 화면 4영역 구성도 여기서 함께 계약).
+    await page.locator('[data-act="tab"][data-tab="analysis"]').click();
     await page.waitForSelector('[data-region="upper-party"] .v153-party-lock');
+    const analysisRegions=await page.evaluate(()=>[...document.querySelectorAll('[data-region]')].map(node=>node.dataset.region));
+    assert.deepStrictEqual(analysisRegions,ANALYSIS_REGIONS,'analysis region set/order changed');
+    console.log('PASS  분석 화면 4영역 세로 펼침 확인');
     const lockBefore=await page.evaluate(()=>document.querySelector('[data-region="upper-party"] .v153-party-lock').className);
     assert(/\boff\b/.test(lockBefore),`파티 확정이 미확정 상태로 시작하지 않음: ${lockBefore}`);
     assert.strictEqual(await page.locator('[data-region="upper-party"] [data-act="confirm-party"]').count(),1,'파티 확정 버튼이 없음');

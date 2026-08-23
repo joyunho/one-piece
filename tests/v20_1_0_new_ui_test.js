@@ -34,10 +34,10 @@ check('① 로드 교체 — 페이지·픽스처·매뉴얼이 신작 시트를
 
 check('② 신작 시트 계약 — 콘솔 기하·노을 팔레트·골드 위계',()=>{
   assert(sheet.includes('Operator Console'),'신작 마커 없음');
-  // 3칼럼 지휘 콘솔: 좌 명령 칼럼 / 중 스펙·제작 / 우 파티 / 하단 희귀.
-  // v21.1(사용자: '필요한 UI만 남기고'): 3열 상시 5패널 → 2열 + 참고 탭.
-  assert(sheet.includes('"action status"')&&sheet.includes('"action refer"'),'2열 기하 없음');
-  assert(sheet.includes('.v211-tabs')&&sheet.includes('.v211-pane'),'참고 탭 스타일 없음');
+  // 3칼럼 지휘 콘솔 → v21.1 2열+참고 탭 → v24.0 플레이/분석 2화면:
+  // 플레이는 단일 칼럼(지금 할 일), 분석은 세로 펼침이다.
+  assert(sheet.includes('.v240-play{')&&sheet.includes('.v240-analysis{'),'2화면 기하 없음');
+  assert(!sheet.includes('.v211-tabs{')&&!sheet.includes('"action refer"'),'은퇴한 참고 탭·2열 기하가 남아 있다');
   // 노을 콘솔: 웜 차콜 + 로즈 상호작용("색감도 다르게").
   assert(sheet.includes('--accent:#e05c7e'),'로즈 강조색 없음');
   assert(sheet.includes('--bg:#131015'),'웜 차콜 배경 없음');

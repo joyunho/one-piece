@@ -26,7 +26,7 @@ const DEFAULTS={
   directionStatus:'open',directionKey:'',directionUpperId:'',directionHoldFingerprint:'',releasedUpperHint:null,
   postLegendRoute:'',postLegendObservedCount:0,postLegendBaseline:{},
   currentRound:1,roundStartedAt:0,roundPrepSeconds:10,roundNormalSeconds:35,roundBossSeconds:60,roundAutoGeneration:0,roundAutoSourceEpoch:0,manualCounts:{},pendingCounts:{},pendingAt:{},pendingTransaction:null,connectionDiagnostic:null,detailId:'',message:'',
-  locks:[],upperDetection:{candidateId:'',streak:0,lastSnapshotKey:'',lastSeenAt:0},watchStability:{context:'',stableIds:[],pendingIds:[],pendingStreak:0,lastObservationKey:''},rerollsUsed:0,pendingReroll:null,awaitingNewGameFingerprint:'',navFamily:'none',navPerk:'',onboardingSeen:false,simpleMode:null,
+  locks:[],upperDetection:{candidateId:'',streak:0,lastSnapshotKey:'',lastSeenAt:0},watchStability:{context:'',stableIds:[],pendingIds:[],pendingStreak:0,lastObservationKey:''},rerollsUsed:0,pendingReroll:null,awaitingNewGameFingerprint:'',navFamily:'none',navPerk:'',onboardingSeen:false,
   transcendUsed:0,seraphUsed:0,changedUsed:0,
   // v22.1(0809 "스토리가 35라 전에 13까지 밀려야하는데 안밀려서 죽었어"):
   // TMO 데이터에 스토리 단계가 없어 수동 스텝퍼로 받는다.
@@ -45,7 +45,10 @@ const DEFAULTS={
   unitSearch:'',storyQuery:'',storyTier:'',storyBasis:'',storyLeague:'rare',newGameArmedAt:0
 };
 
-const REACHABLE_TABS=new Set(['coach','runlog','deck','data','story']);
+// v24.0(사용자: "구조 자체가 문제인것같은데"): 플레이/분석 2화면 분리 —
+// coach = 판 중 화면(상태 한 줄 + 지금 할 일), analysis = 판 사이 화면
+// (국면 근거·최종 파티·희귀 원장·도구).  나머지는 분석의 하위 페이지.
+const REACHABLE_TABS=new Set(['coach','analysis','runlog','deck','data','story']);
 const REMOVED_SETTING_KEYS=['firstRareRewardClaimed','moneyRareReward','storyRareRewards','highGambleDone','highGambleRares','stunConditions','allowWarped','recommendWarped'];
 const RUN_LOG_ACTIONS=new Set(['post-legend-route','purpose','super-kuma','mark-made','reroll-confirmed','cancel-reroll','unit-adjust','clear-unit-override','preview-direction','choose-direction','hold-direction','select-upper','confirm-upper','party-preview','lock-legend','lock-rare','remove-lock','reset-route','round-reset','round-step','round-pause','round-start','reroll-step','new-game','dismiss-transaction','accept-snapshot','counter-step','clear-overrides','confirm-second-upper','release-second-upper','confirm-party','release-party','restore-released-upper','snipe-upper','story-stage-step','veto-action','unveto-action','story-rush-toggle']);
 const RUN_LOG_SETTING_KEYS=new Set(['mode','magicRoute','gorosei','story10Reward','currentRound','roundPrepSeconds','roundNormalSeconds','roundBossSeconds','wispOverride','virtualSpecialId','transcendUsed','seraphUsed','changedUsed']);
@@ -919,7 +922,7 @@ class App{
   }
   act(a,b){
     const id=b.dataset.id||'';
-    if(a==='run-log-open'){this._focusAfterRender='.v151-aux-bar [data-act="tab"][data-tab="coach"]';this.state.tab='runlog';this._runLogSelectedId=this.runLog&&this.runLog.currentRun&&this.runLog.currentRun.runId||'';this._runLogSelectedRun=this.runLog&&this.runLog.currentRun||null;this.refreshRunLogHistory(false);this.persist();this.render();return;}
+    if(a==='run-log-open'){this._focusAfterRender='.v151-aux-bar [data-act="tab"]';this.state.tab='runlog';this._runLogSelectedId=this.runLog&&this.runLog.currentRun&&this.runLog.currentRun.runId||'';this._runLogSelectedRun=this.runLog&&this.runLog.currentRun||null;this.refreshRunLogHistory(false);this.persist();this.render();return;}
     if(a==='run-log-export'){this.downloadRunLog(b.dataset.runId||this._runLogSelectedId||'');return;}
     if(a==='run-log-filter'){this._runLogFilter=b.dataset.value||'all';this.render();return;}
     if(a==='run-log-select'){this.selectRunLog(b.dataset.runId||'');return;}
@@ -931,15 +934,13 @@ class App{
     if(a==='run-log-clear'){const now=Date.now();if(now-C.num(this._runLogDeleteArmedAt)>3500){this._runLogDeleteArmedAt=now;this.toast('진행 기록 전체 삭제를 한 번 더 누르면 되돌릴 수 없습니다.');return;}this._runLogDeleteArmedAt=0;this.clearRunLogs();return;}
     if(a==='post-legend-route'&&this.state.pendingTransaction){this.toast('TMO 제작 반영 확인 후 다음 경로를 선택할 수 있습니다.');return;}
     if(this.state.pendingTransaction&&['purpose','select-upper','preview-direction','choose-direction','hold-direction','confirm-upper','restore-released-upper','snipe-upper','lock-legend','lock-rare','remove-lock','reset-route','counter-step'].includes(a))this.rollbackTransaction();
-    // v21.1: 참고 패널(최종 파티·희귀→전설·남는 희귀) 탭 — 상시 5패널이
-    // "정보 중구난방"의 원인이라 한 자리에서 갈아 끼운다.
-    if(a==='v211-tab'){const tab=String(b.dataset.tab||'');if(['craft','party','rare'].includes(tab)){this._v211Tab=tab;this._v22DrawerOpen=true;this.render();}return;}
-    if(a==='v22-drawer-close'){this._v22DrawerOpen=false;this.render();return;}
+    // v24.0: v21.1 참고 서랍(v211-tab/v22-drawer-close)은 은퇴 — 세 참고
+    // 패널은 분석 화면(renderV240Analysis)이 세로로 편다.
     if(a==='story-stage-step'){this.state.storyStage=Math.max(0,Math.min(15,C.num(this.state.storyStage)+C.num(b.dataset.delta)));this.persist();this.render();return;}
     if(a==='veto-action'){const id=String(b.dataset.id||'');if(!id)return;if(!(this.state.vetoIds||[]).includes(id))this.state.vetoIds=[...(this.state.vetoIds||[]),id].slice(-20);this._stickyActionId='';this.v202ReleaseCraftLock();this._v15CacheKey='';this._squadCacheKey='';this.persist();this.toast('이번 판에서 이 추천을 넘어갑니다 — 카드 아래 목록에서 되돌릴 수 있습니다.');this.render();return;}
     if(a==='story-rush-toggle'){this.state.storyRushAbandoned=this.state.storyRushAbandoned!==true;this._v15CacheKey='';this._squadCacheKey='';this.persist();this.toast(this.state.storyRushAbandoned?'스토리 밀기 포기 — 스토리 랭킹을 무시하고 최저 선위만 추천합니다.':'스토리 가속 복원 — S급 프리미엄(희귀 2·전설 5 상한)을 다시 적용합니다.');this.render();return;}
     if(a==='unveto-action'){const id=String(b.dataset.id||'');this.state.vetoIds=(this.state.vetoIds||[]).filter(x=>x!==id);this._v15CacheKey='';this._squadCacheKey='';this.persist();this.render();return;}
-    if(a==='tab'){const tab=String(b.dataset.tab||'');if(!REACHABLE_TABS.has(tab))return;const previousTab=this.state.tab;this._focusAfterRender=tab==='coach'?(previousTab==='runlog'?'[data-act="run-log-open"]':`[data-act="tab"][data-tab="${previousTab}"]`):'.v151-aux-bar [data-act="tab"][data-tab="coach"]';this.state.tab=tab;if(tab==='runlog'){this._runLogSelectedId=this._runLogSelectedId||this.runLog&&this.runLog.currentRun&&this.runLog.currentRun.runId||'';this._runLogSelectedRun=this._runLogSelectedRun||this.runLog&&this.runLog.currentRun||null;this.refreshRunLogHistory(false);}this.persist();this.render();return;}
+    if(a==='tab'){const tab=String(b.dataset.tab||'');if(!REACHABLE_TABS.has(tab))return;const previousTab=this.state.tab;this._focusAfterRender=tab==='coach'?(previousTab==='runlog'?'[data-act="run-log-open"]':`[data-act="tab"][data-tab="${previousTab}"]`):'.v151-aux-bar [data-act="tab"]';this.state.tab=tab;if(tab==='runlog'){this._runLogSelectedId=this._runLogSelectedId||this.runLog&&this.runLog.currentRun&&this.runLog.currentRun.runId||'';this._runLogSelectedRun=this._runLogSelectedRun||this.runLog&&this.runLog.currentRun||null;this.refreshRunLogHistory(false);}this.persist();this.render();return;}
     if(a==='purpose'){this.state.purpose=b.dataset.value||'';this.persist();this.render();return;}
     if(a==='post-legend-route'){
       const route=['legend','upper'].includes(b.dataset.value)?b.dataset.value:'';if(!route)return;
@@ -954,16 +955,10 @@ class App{
     // v23.8(사용자: "배포도 생각중이라 처음 보는 사람도 쉽게"): 첫 실행 가이드.
     if(a==='show-onboarding'){this._onboardingOpen=true;this.render();return;}
     if(a==='dismiss-onboarding'){
+      // v24.0: v23.9 간단 보기(simpleMode)는 은퇴 — 플레이 화면 자체가
+      // "지금 할 일 하나"가 됐다.  나머지는 분석 화면에 있다.
       this._onboardingOpen=false;this.state.onboardingSeen=true;
-      // v23.9(사용자: "처음 사용하는 사람이 쉽게 … 직관적으로"): 판 기록이
-      // 없는 진짜 신규 사용자는 간단 보기로 시작한다(기존 사용자는 전체 유지).
-      if(this.state.simpleMode==null)this.state.simpleMode=!(this.state.recentMainUppers||[]).length;
       this.persist();this.render();return;
-    }
-    if(a==='toggle-simple-view'){
-      this.state.simpleMode=this.state.simpleMode!==true;this.persist();this.render();
-      this.toast(this.state.simpleMode?'간단 보기 — 지금 할 일 하나에 집중합니다. 2상위 확정·파티 계획 등은 전체 보기에 있습니다.':'전체 보기 — 모든 패널을 표시합니다.');
-      return;
     }
     if(a==='cancel-reroll'){if(this.state.pendingReroll){this.state.pendingReroll=null;this._v15CacheKey='';this.recordAuditAction({actor:'user',action:'cancel-reroll'});this.persist();this.toast('리롤 대기를 해제했습니다. 현재 패 기준으로 다시 판단합니다.');this.render();}return;}
     if(a==='party-preview'){this._partyPreviewId=id;this.render();return;}
@@ -1154,7 +1149,7 @@ class App{
     if(a==='clear-overrides'){if(this.state.pendingTransaction)this.rollbackTransaction();this.state.manualCounts={};this.state.pendingCounts={};this.state.pendingAt={};this.state.pendingTransaction=null;this.state.wispOverride='';this.releaseDirectionHold();this._squadCacheKey='';this.persist();this.render();return;}
     if(a==='clear-data'){localStorage.removeItem(STORE);localStorage.removeItem(LEGACY_STORE);localStorage.removeItem(OLDER_STORE);Object.assign(this.state,DEFAULTS,{snapshot:this.state.snapshot,liveAt:this.state.liveAt,manualCounts:{},pendingCounts:{},pendingAt:{},pendingTransaction:null,locks:[],upperDetection:emptyUpperDetection(),watchStability:normalizeWatchStability(null)});this._squadCacheKey='';this.render();return;}
   }
-  resetGame(){this.beginNewRunLog();const keep={tab:'coach',onboardingSeen:this.state.onboardingSeen===true,simpleMode:this.state.simpleMode,gorosei:this.state.gorosei,superKumaOwned:this.state.superKumaOwned,roundPrepSeconds:this.state.roundPrepSeconds,roundNormalSeconds:this.state.roundNormalSeconds,roundBossSeconds:this.state.roundBossSeconds,roundAutoGeneration:this.state.roundAutoGeneration,roundAutoSourceEpoch:this.state.roundAutoSourceEpoch,snapshot:this.state.snapshot,liveAt:this.state.liveAt,awaitingNewGameFingerprint:fingerprint(this.state.snapshot)};Object.assign(this.state,DEFAULTS,keep,{manualCounts:{},pendingCounts:{},pendingAt:{},pendingTransaction:null,pendingReroll:null,locks:[],vetoIds:[],storyRushAbandoned:false,upperDetection:emptyUpperDetection(),watchStability:normalizeWatchStability(null)});this._squadCacheKey='';this._v15CacheKey='';this._terminalCandidate=null;this.clearVerdictCache();this.persist();this.toast('이전 게임 진행 기록을 보관하고 새 게임을 준비합니다. TMO 패가 실제로 바뀌면 추천과 새 기록을 시작합니다.');}
+  resetGame(){this.beginNewRunLog();const keep={tab:'coach',onboardingSeen:this.state.onboardingSeen===true,gorosei:this.state.gorosei,superKumaOwned:this.state.superKumaOwned,roundPrepSeconds:this.state.roundPrepSeconds,roundNormalSeconds:this.state.roundNormalSeconds,roundBossSeconds:this.state.roundBossSeconds,roundAutoGeneration:this.state.roundAutoGeneration,roundAutoSourceEpoch:this.state.roundAutoSourceEpoch,snapshot:this.state.snapshot,liveAt:this.state.liveAt,awaitingNewGameFingerprint:fingerprint(this.state.snapshot)};Object.assign(this.state,DEFAULTS,keep,{manualCounts:{},pendingCounts:{},pendingAt:{},pendingTransaction:null,pendingReroll:null,locks:[],vetoIds:[],storyRushAbandoned:false,upperDetection:emptyUpperDetection(),watchStability:normalizeWatchStability(null)});this._squadCacheKey='';this._v15CacheKey='';this._terminalCandidate=null;this.clearVerdictCache();this.persist();this.toast('이전 게임 진행 기록을 보관하고 새 게임을 준비합니다. TMO 패가 실제로 바뀌면 추천과 새 기록을 시작합니다.');}
   elapsedToRoundStart(round){let s=C.num(this.state.roundPrepSeconds)||10;for(let r=1;r<round;r++)s+=([10,20,30,40,50,55,60,65,70,75].includes(r)?C.num(this.state.roundBossSeconds)||60:C.num(this.state.roundNormalSeconds)||35);return s;}
   // v19.7.1(외부 감사 ②): 상위 제작 후 패가 더 안 바뀌면 스냅샷이 오지 않아
   // (같은 패 = 하트비트만) 2차 확인이 영원히 안 왔고, 8초 뒤 1차 감지가
@@ -1213,13 +1208,26 @@ class App{
     const focusSelector=this._focusAfterRender;this._focusAfterRender='';if(focusSelector&&this.root.querySelector){const target=this.root.querySelector(focusSelector);if(target&&typeof target.focus==='function'){try{target.focus({preventScroll:true});}catch(_){target.focus();}}}
   }
   renderAuxiliaryPage(tab,state,plan,health){
+    // v24.0: 분석이 보조 페이지들의 허브가 된다 — 분석에서 플레이로,
+    // 나머지 페이지에서는 분석으로 돌아간다(플레이 ↔ 분석 → 하위).
     const pages={
+      analysis:{className:'v240-analysis-page',title:'분석',note:'판 사이에 보는 화면 — 국면 근거 · 최종 파티 · 희귀 원장 · 기록.',back:{tab:'coach',label:'← 플레이로 돌아가기'},content:()=>this.renderV240Analysis(state,plan,health)},
       runlog:{className:'v151-runlog-page',title:'판단 기록',note:'저장은 녹화 JSON 버튼을 사용하세요.',content:()=>this.renderRunLog(state,plan,health)},
       deck:{className:'v151-deck-page',title:'수동 패 보정',note:'TMO가 놓친 유닛만 추가하거나 삭제하세요.',content:()=>this.renderDeck(state,plan)},
       data:{className:'v151-data-page',title:'연결 진단',note:'수집 상태와 최신 스캔 거부 사유를 확인합니다.',content:()=>this.renderData(state,plan,health)},
       story:{className:'v151-story-page',title:'스토리',note:'등급·근거별 유닛 정보를 확인합니다.',content:()=>this.renderStoryCatalog(state)}
-    },page=pages[tab]||pages.deck;
-    return`<div class="v151-screen v151-aux-page ${page.className}"><div class="ord-panel v151-aux-bar"><button class="primary" type="button" data-act="tab" data-tab="coach">← 코치로 돌아가기</button><span><b>${C.esc(page.title)}</b><small>${C.esc(page.note)}</small></span></div>${page.content()}</div>`;
+    },page=pages[tab]||pages.deck,back=page.back||{tab:'analysis',label:'← 분석으로 돌아가기'};
+    return`<div class="v151-screen v151-aux-page ${page.className}"><div class="ord-panel v151-aux-bar"><button class="primary" type="button" data-act="tab" data-tab="${back.tab}">${back.label}</button><span><b>${C.esc(page.title)}</b><small>${C.esc(page.note)}</small></span></div>${page.content()}</div>`;
+  }
+  // v24.0(사용자: "구조 자체가 문제인것같은데" → 플레이/분석 2화면 분리):
+  // 판 중에 안 보는 정보는 판 중 화면에서 아예 뺀다.  여기가 그 수납처 —
+  // 서랍·탭 없이 위에서 아래로 국면 근거 → 최종 파티(2상위 확정 포함) →
+  // 희귀→전설 → 남는 희귀 → 기록·자료·도구.  판 사이에 위에서 아래로
+  // 한 번 훑는 화면이라 접을 이유가 없다.
+  renderV240Analysis(state,plan,health){
+    const v22ph=this.v22Phase(plan);
+    const tools=`<div class="v153-tool-actions v240-tool-links"><button data-act="run-log-open">판단 기록</button><button data-act="run-result-open">게임 결과 입력</button><button type="button" data-act="tab" data-tab="story">스토리 자료</button><button type="button" data-act="tab" data-tab="deck">수동 패 보정</button><button type="button" data-act="tab" data-tab="data">연결 진단</button><button class="v238-guide-open" data-act="show-onboarding">처음 시작 가이드</button></div>`;
+    return`<div class="v240-analysis"><section class="v153-panel v153-spec" data-region="clear-gaps"><header><small>${this.v153Icon('shield')}</small><div><h2>국면 ${C.esc(v22ph.num)} ${C.esc(v22ph.label)}</h2><p>${C.esc(v22ph.question)}</p></div></header>${this.renderV22PhasePanel(state,plan)}</section><section class="v153-panel v153-upper" data-region="upper-party"><header><small>${this.v153Icon('party')}</small><div><h2>최종 파티</h2><p>9환산 계획 · 2상위 확정</p></div></header>${this.renderV153UpperParty(state,plan)}</section><section class="v153-panel v153-craft" data-region="craftable-legends"><header><small>${this.v153Icon('recipe')}</small><div><h2>희귀 → 전설</h2><p>보유 희귀 진행도</p></div></header>${this.renderV153CraftableLegends(state,plan)}</section><section class="v153-panel v153-unused v155-rare-strip" data-region="unused-rare"><header><small>${this.v153Icon('reroll')}</small><div><h2>남는 희귀</h2><p>리롤 후보</p></div></header><div class="v155-rare-body">${this.renderV153UnusedRare(state,plan)}</div></section><section class="v153-panel v240-tools"><header><small>${this.v153Icon('gear')}</small><div><h2>기록 · 자료 · 도구</h2><p>판 사이 점검</p></div></header>${tools}</section></div>`;
   }
   // A live TMO snapshot rebuilds the whole screen; without this, every
   // rebuild snapped the page and each scrolled panel back to the top —
@@ -1524,7 +1532,7 @@ class App{
       if(options.length){
         const urgent=this.actualRound()>=40;
         const engineStep=status==='ACT_NOW'&&decision.action?`<div class="v237-engine-step"><small>그동안 할 일</small><b>${C.esc(decision.action.name)}</b><i>선위 ${C.num(decision.action.wispCost)}</i><button class="primary" data-act="mark-made" data-step="0" data-id="${C.esc(decision.action.id)}">제작함 · TMO 확인</button></div>`:'';
-        return`<div class="v151-action choice v2310-second-pick${urgent?' urgent':''}"><span class="v151-state">2상위 확정 필요${urgent?' · 마감 임박':''}</span><b class="v151-action-title">두 번째 상위를 지금 정하세요</b><p>메인 상위는 섰습니다. 2상위를 확정하지 않으면 선위가 보조 전설로 새고, 51라를 상위 1기로 맞게 됩니다. 확정하면 그 자리는 바뀌지 않고 계획이 그 재료·선위를 지킵니다.</p><div class="v151-route-quick">${options.map((row,index)=>{const cost=C.num(row.wispCost),gap=Math.max(0,cost-C.num(state&&state.wisp));return`<div><span><b>${index+1}. ${C.esc(displayNameOf(row.unit))}</b>${C.isStackRampUpper&&C.isStackRampUpper(row.unit)?'<i class="v238-stack">스택형</i>':''}<small>${row.feasible?'지금 제작 가능':`선위 ${cost}${gap>0?` (부족 ${gap})`:''}`}</small></span><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}">2상위 확정</button></div>`;}).join('')}</div><span class="v151-jump-note">전체 후보·희귀 겹침 비교는 전체 보기 → 최종 파티 탭에 있습니다.</span>${engineStep}</div>`;
+        return`<div class="v151-action choice v2310-second-pick${urgent?' urgent':''}"><span class="v151-state">2상위 확정 필요${urgent?' · 마감 임박':''}</span><b class="v151-action-title">두 번째 상위를 지금 정하세요</b><p>메인 상위는 섰습니다. 2상위를 확정하지 않으면 선위가 보조 전설로 새고, 51라를 상위 1기로 맞게 됩니다. 확정하면 그 자리는 바뀌지 않고 계획이 그 재료·선위를 지킵니다.</p><div class="v151-route-quick">${options.map((row,index)=>{const cost=C.num(row.wispCost),gap=Math.max(0,cost-C.num(state&&state.wisp));return`<div><span><b>${index+1}. ${C.esc(displayNameOf(row.unit))}</b>${C.isStackRampUpper&&C.isStackRampUpper(row.unit)?'<i class="v238-stack">스택형</i>':''}<small>${row.feasible?'지금 제작 가능':`선위 ${cost}${gap>0?` (부족 ${gap})`:''}`}</small></span><button class="primary" data-act="confirm-second-upper" data-id="${C.esc(row.unit.id)}">2상위 확정</button></div>`;}).join('')}</div><span class="v151-jump-note">전체 후보·희귀 겹침 비교는 상단 분석 버튼 → 최종 파티에 있습니다.</span>${engineStep}</div>`;
       }
     }
     if(status==='ROUTE_CHOICE'){
@@ -2832,7 +2840,7 @@ class App{
       const dues=[ph.due?{round:C.num(ph.due.round),label:ph.due.label}:null,boss?{round:C.num(boss.round),label:`${C.num(boss.round)}라 ${boss.boss}`}:null].filter(due=>due&&due.round>=roundNow).sort((a,b)=>a.round-b.round);
       const due=dues[0]||null,left=due?due.round-roundNow:0;
       return`<span class="v22-phase" title="${C.esc(ph.question)}">${C.esc(ph.num)} ${C.esc(ph.label)}</span>${due?`<span class="v22-due ${left<=2?'hot':''}">${C.esc(due.label)}${left>0?`까지 ${left}라`:' — 지금'}</span>`:''}`;
-    })()}<div class="v153-mode" role="group" aria-label="빌드 방향">${modeButtons}</div><span class="v153-pill violet${pillStale?' stale':''}">${this.v153Icon('spiral')}<small>선위</small><b>${C.num(state&&state.wisp)}</b>${pillStale?`<em class="pill-age" data-pill-age>${C.num(health.ageSec)}초 전</em>`:''}</span><span class="v153-pill coral${pillStale?' stale':''}">${this.v153Icon('reroll')}<small>희귀 리롤</small><b>${rerollLeft}/${this.rerollLimit()}</b></span></div><div class="v153-main-tools"><button class="v153-iconbtn v239-view-toggle${this.state.simpleMode===true?' on':''}" data-act="toggle-simple-view" title="간단 보기 ↔ 전체 보기">${this.state.simpleMode===true?'전체 보기':'간단 보기'}</button><button class="v153-sync ${health.ready?'ok':'warn'}" data-act="connection" title="TMO 동기화 · 다시 읽기"><i class="v153-sync-dot"></i><span class="sync-pill ${C.esc(health.key||'ok')}" data-sync-age>${C.esc(health.label||'연결 대기')} · ${C.esc(age)}</span></button><button class="v153-iconbtn new-game" data-act="new-game" title="새 게임">${this.v153Icon('reroll')}</button><details class="v153-tools"><summary title="설정·도구">${this.v153Icon('gear')}</summary><div class="v153-tools-pop">${this.renderV153Settings(state)}<div class="v153-tool-actions"><button data-act="run-log-open">기록 보기</button><button data-act="run-log-export">JSON 저장</button><button data-act="run-result-open">게임 결과</button><button type="button" data-act="tab" data-tab="deck">수동 패 보정</button><button type="button" data-act="tab" data-tab="data">연결 진단</button><button type="button" data-act="tab" data-tab="story">스토리 자료</button></div></div></details></div></section>${(()=>{
+    })()}<div class="v153-mode" role="group" aria-label="빌드 방향">${modeButtons}</div><span class="v153-pill violet${pillStale?' stale':''}">${this.v153Icon('spiral')}<small>선위</small><b>${C.num(state&&state.wisp)}</b>${pillStale?`<em class="pill-age" data-pill-age>${C.num(health.ageSec)}초 전</em>`:''}</span><span class="v153-pill coral${pillStale?' stale':''}">${this.v153Icon('reroll')}<small>희귀 리롤</small><b>${rerollLeft}/${this.rerollLimit()}</b></span></div><div class="v153-main-tools"><button class="v153-iconbtn v240-analysis-btn${this.state.tab==='analysis'?' on':''}" data-act="tab" data-tab="analysis" title="분석 화면 — 국면 근거 · 최종 파티 · 희귀 원장 · 기록">분석</button><button class="v153-sync ${health.ready?'ok':'warn'}" data-act="connection" title="TMO 동기화 · 다시 읽기"><i class="v153-sync-dot"></i><span class="sync-pill ${C.esc(health.key||'ok')}" data-sync-age>${C.esc(health.label||'연결 대기')} · ${C.esc(age)}</span></button><button class="v153-iconbtn new-game" data-act="new-game" title="새 게임">${this.v153Icon('reroll')}</button><details class="v153-tools"><summary title="설정·도구">${this.v153Icon('gear')}</summary><div class="v153-tools-pop">${this.renderV153Settings(state)}<div class="v153-tool-actions"><button data-act="run-log-open">기록 보기</button><button data-act="run-log-export">JSON 저장</button><button data-act="run-result-open">게임 결과</button><button type="button" data-act="tab" data-tab="deck">수동 패 보정</button><button type="button" data-act="tab" data-tab="data">연결 진단</button><button type="button" data-act="tab" data-tab="story">스토리 자료</button></div></div></details></div></section>${(()=>{
       const midJoin=this.v1912MidJoinBanner();
       if(midJoin)return midJoin;
       const freeze=this.v199GameEndFreezeSec();
@@ -3236,7 +3244,7 @@ class App{
     // 읽혔다(65라 전멸 판).  환산 수는 슬롯 이야기일 뿐이므로, 필수 역할이
     // 비어 있으면 헤더와 본문에서 그 사실이 환산 수보다 먼저 읽히게 한다.
     const rolesOpenHtml=requirements.length?`<small class="v232-party-roles-open">환산과 별개로 필수 역할 미완: ${requirements.map(row=>`${C.esc(row.label||row.key)} 부족 ${C.num(row.gap)}`).join(' · ')} — 아직 클리어 스펙이 아닙니다.</small>`:'';
-    const partyBoard=`<div class="v153-party"><header>${this.v153Icon('party')}<b>9환산 계획</b><strong class="${openRequirements.length?'gap':''}">${secured} / 9 확보${openRequirements.length?` · 역할 미완 ${openRequirements.length}건`:''}</strong></header>${partyLockHtml}<div class="v153-party-chips">${chips}${placeholders}</div>${rolesOpenHtml}<small>${emptySlots?`남은 자리 ${emptySlots}`:'9자리 계획 완료'}${squadLineup.length>displayLineup.length?` · 외 ${squadLineup.length-displayLineup.length}기는 전체 보기`:''}</small></div>`;
+    const partyBoard=`<div class="v153-party"><header>${this.v153Icon('party')}<b>9환산 계획</b><strong class="${openRequirements.length?'gap':''}">${secured} / 9 확보${openRequirements.length?` · 역할 미완 ${openRequirements.length}건`:''}</strong></header>${partyLockHtml}<div class="v153-party-chips">${chips}${placeholders}</div>${rolesOpenHtml}<small>${emptySlots?`남은 자리 ${emptySlots}`:'9자리 계획 완료'}${squadLineup.length>displayLineup.length?` · 외 ${squadLineup.length-displayLineup.length}기는 전체 파티 보기`:''}</small></div>`;
     // v19(사용자 요청): 두 번째 상위 확정.
     //
     // "상위는 만드는데 시간이 걸려서 만들다가 바뀌면 곤란해지는경우가 있어."
@@ -3321,7 +3329,7 @@ class App{
     const steps=[
       ['1','연결','TMO.GG 데스크톱 앱(또는 크롬 확장 + 조합도우미 탭)을 켜 두면 끝 — 게임에서 유닛이 잡히는 순간 코치가 자동으로 시작합니다. 따로 누를 것 없습니다.'],
       ['2','설정 30초','판을 시작할 때 설정에서 오로성 · 항법(희귀 리롤 횟수가 여기서 정해집니다) · 152킬 특별함을 실제 게임과 맞춰 주세요.'],
-      ['3','플레이','화면에서 딱 하나만 따라가면 됩니다 — "지금 할 일" 카드. 왜 그 판단인지는 국면 패널이, 최종 계획은 "최종 파티" 탭이 설명합니다. 추천대로 제작했으면 카드의 확인 버튼을 눌러 주세요.'],
+      ['3','플레이','판 중에는 이 화면 하나 — "지금 할 일" 카드만 따라가면 됩니다. 추천대로 제작했으면 카드의 확인 버튼을 눌러 주세요. 왜 그 판단인지·최종 파티 계획·희귀 원장은 상단 "분석" 버튼 화면에서 판 사이에 봅니다.'],
       ['4','인게임','F8 = 게임 위 HUD(평소엔 클릭이 게임으로 통과하고, 승인 버튼 위에서만 클릭됩니다) · F9 = 미니 패널(끌어서 위치 지정 — F8도 그 자리를 씁니다) · F10 = 다른 모니터로 이동. 판이 끝나면 결과(클리어/패배)를 입력해 주세요 — 코치가 판마다 배웁니다.']
     ];
     return`<div class="v238-onboard"><div class="v238-onboard-card"><header><b>ORD 악몽 코치 — 처음 시작 가이드</b><p>원피스 랜덤 디펜스 악몽 난이도 실전 판단 코치입니다. 네 가지만 알면 바로 씁니다.</p></header>${steps.map(([n,t,d])=>`<section><i>${n}</i><div><b>${C.esc(t)}</b><p>${C.esc(d)}</p></div></section>`).join('')}<footer><button class="primary" data-act="dismiss-onboarding">시작하기</button><small>설정 영역의 '처음 시작 가이드' 버튼으로 언제든 다시 열 수 있습니다.</small></footer></div></div>`;
@@ -3335,7 +3343,10 @@ class App{
     // v23.2(0816): 판단 잠금 고스트용 — 수신이 살아 있을 때의 카드를 캡처.
     const actionCardHtml=this.renderV151NextAction(state,plan,health);
     if(health&&health.ready)this._lastReadyActionCard={html:actionCardHtml,at:Date.now(),round:this.actualRound()};
-    return`<div class="v153-screen${this.state.simpleMode===true?' v239-simple':''}">${this.renderV153Status(state,clock,health)}<main class="v155-dashboard"><section class="v153-panel v153-next v155-action-zone" data-region="next-action"><header><small>${this.v153Icon('blade')}</small><div><h2>지금 할 일</h2><p>지금 실행할 한 가지</p></div></header><div class="v155-action-layout"><div class="v155-action-core">${actionCardHtml}</div><aside class="v155-decision-rail" data-region="next-preview"><header class="v155-subhead"><small>${this.v153Icon('branch')}</small><div><h3>다음 제작</h3><p>${v22ph.key==='p4'||v22ph.key==='p5'?'가변 후보 · 확정은 큰 카드 1개':v22ph.key==='p6'?'신세계 국면 — 후보 고정 없음(지금 할 일에 집중)':'마감 국면(40라~)에 열립니다'}</p></div></header>${v22ph.key==='p4'||v22ph.key==='p5'?this.renderV153Preview(state,plan):`<div class="v22-rail-rest">${C.esc(v22ph.num)} ${C.esc(v22ph.label)} 국면은 후보를 미리 고정하지 않습니다 — 지금 할 일 하나에 집중하세요. 필요하면 아래 서랍(희귀 → 전설)을 여세요.</div>`}</aside></div></section><section class="v153-panel v153-spec" data-region="clear-gaps"><header><small>${this.v153Icon('shield')}</small><div><h2>국면 ${C.esc(v22ph.num)} ${C.esc(v22ph.label)}</h2><p>${C.esc(v22ph.question)}</p></div></header>${this.renderV22PhasePanel(state,plan)}</section><section class="v153-panel v211-refer${this._v22DrawerOpen?'':' v22-closed'}" data-region="reference">${(()=>{const hasUpper=!!(plan.upper||this.upperLock());const tab=this._v211Tab||(hasUpper?"party":"craft");const tabs=[["craft","희귀 → 전설"],["party","최종 파티"],["rare","남는 희귀"]];return`<nav class="v211-tabs" role="tablist">${tabs.map(([key,label])=>`<button type="button" role="tab" aria-selected="${this._v22DrawerOpen&&tab===key}" class="${this._v22DrawerOpen&&tab===key?"on":""}" data-act="v211-tab" data-tab="${key}">▸ ${label}</button>`).join("")}${this._v22DrawerOpen?'<button type="button" class="v22-drawer-close" data-act="v22-drawer-close">접기 ×</button>':''}</nav><div class="v211-pane ${tab==="craft"?"on":""}"><section class="v153-panel v153-craft" data-region="craftable-legends"><header><small>${this.v153Icon('recipe')}</small><div><h2>희귀 → 전설</h2><p>보유 희귀 진행도</p></div></header>${this.renderV153CraftableLegends(state,plan)}</section></div><div class="v211-pane ${tab==="party"?"on":""}"><section class="v153-panel v153-upper" data-region="upper-party"><header><small>${this.v153Icon('party')}</small><div><h2>최종 파티</h2><p>9환산 계획</p></div></header>${this.renderV153UpperParty(state,plan)}</section></div><div class="v211-pane ${tab==="rare"?"on":""}"><section class="v153-panel v153-unused v155-rare-strip" data-region="unused-rare"><header><small>${this.v153Icon('reroll')}</small><div><h2>남는 희귀</h2><p>리롤 후보</p></div></header><div class="v155-rare-body">${this.renderV153UnusedRare(state,plan)}</div></section></div>`;})()}</section></main>${this.renderV238Onboarding()}</div>`;
+    // v24.0(사용자: "구조 자체가 문제인것같은데"): 판 중 화면 = 상태 한 줄
+    // + 지금 할 일 카드(+뜰 때만 결정 카드) — F8 HUD와 같은 내용.  국면
+    // 패널·참고 3패널은 분석 화면(renderV240Analysis)으로 옮겼다.
+    return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v155-dashboard v240-play"><section class="v153-panel v153-next v155-action-zone" data-region="next-action"><header><small>${this.v153Icon('blade')}</small><div><h2>지금 할 일</h2><p>지금 실행할 한 가지</p></div></header><div class="v155-action-layout"><div class="v155-action-core">${actionCardHtml}</div><aside class="v155-decision-rail" data-region="next-preview"><header class="v155-subhead"><small>${this.v153Icon('branch')}</small><div><h3>다음 제작</h3><p>${v22ph.key==='p4'||v22ph.key==='p5'?'가변 후보 · 확정은 큰 카드 1개':v22ph.key==='p6'?'신세계 국면 — 후보 고정 없음(지금 할 일에 집중)':'마감 국면(40라~)에 열립니다'}</p></div></header>${v22ph.key==='p4'||v22ph.key==='p5'?this.renderV153Preview(state,plan):`<div class="v22-rail-rest">${C.esc(v22ph.num)} ${C.esc(v22ph.label)} 국면은 후보를 미리 고정하지 않습니다 — 지금 할 일 하나에 집중하세요. 계획·원장은 상단 분석 버튼에 있습니다.</div>`}</aside></div>${this.v221StoryBlock()}</section></main>${this.renderV238Onboarding()}</div>`;
   }
   renderCoachDetails(state,plan,open=false){
     const squad=plan.squadPlan,extraActions=(plan.actions||[]).slice(2),watch=(plan.watch||[]).slice(0,6);if(!squad&&!extraActions.length&&!watch.length)return'';

@@ -40,9 +40,10 @@ test('② F8 — 고정 순서 + 확대 + 소음 정리',()=>{
   assert(hud.includes('.v216-freeze-note button{display:inline'),'동결 경고 버튼 평문화 없음');
 });
 
-test('③ F9 — 서랍 잔해 숨김 · 단일 열 · 확대 · 국면 패널 생존',()=>{
-  // v21.1 참고 서랍은 v22.0 이후 오버레이에서 탭 껍데기만 보였다.
-  assert(css.includes('body.ord-overlay-mode .v211-refer,'),'참고 서랍(v211-refer) 숨김 없음');
+test('③ F9 — 참고 패널 숨김 · 단일 열 · 확대 · 국면 패널 생존',()=>{
+  // v24.0: 참고 서랍(v211-refer)은 은퇴 — 분석 화면의 참고 패널들을
+  // F9 축소 모드에서 직접 접는다(플레이 화면은 이미 지금 할 일뿐이다).
+  assert(css.includes('body.ord-overlay-mode .v153-craft,'),'참고 패널(희귀→전설) 숨김 없음');
   assert(css.includes('body.ord-overlay-mode .v153-screen{display:block;height:auto;font-size:16px}'),'단일 열·기본 글씨 16px 없음');
   assert(css.includes('body.ord-overlay-mode .v151-action-title,body.ord-overlay-mode .v151-action-main b{font-size:22px}'),'카드 제목 22px 없음');
   // 국면 패널은 이제 숨기지 않는다 — 스토리 스텝퍼(v221)가 게임 중 유일한

@@ -15,13 +15,16 @@ const tests = [];
 let failed = 0;
 function test(name, fn) { tests.push([name, fn]); }
 
-test('renderCoach는 상태와 6개 핵심 판단 영역만 배치한다', () => {
+test('renderCoach는 상태와 플레이 판단 영역만 배치한다 (v24.0 재핀)', () => {
   const coach = slice('renderCoach(state,plan,phase,clock,health){', 'renderCoachDetails(state,plan,open=false){');
   const regions = [...coach.matchAll(/data-region="([^"]+)"/g)].map(m => m[1]);
-  // v18.4(사용자 목업): 6개 판단 영역. 아래 이름 순서가 곧 화면 순서다.
-  // v19.6(사용자 루미너스 UI): 2번(다음 판단)이 1번 안의 레일로 들어가고,
-  // 스펙이 첫 행 오른쪽으로 — action+rail | spec / craft | party / rare 순서.
-  assert.deepStrictEqual(regions, ['next-action', 'next-preview', 'clear-gaps', 'reference', 'craftable-legends', 'upper-party', 'unused-rare']); // v21.1 참고 탭
+  // v18.4 6개 → v21.1 7개 → v24.0(사용자: "구조 자체가 문제인것같은데"):
+  // 플레이/분석 2화면 분리 — 판 중 화면은 액션 존(레일 포함)뿐이고,
+  // 국면·참고 패널은 분석 화면(renderV240Analysis)이 세로로 편다.
+  assert.deepStrictEqual(regions, ['next-action', 'next-preview']);
+  const analysis = slice('renderV240Analysis(state,plan,health){', '// A live TMO snapshot');
+  const analysisRegions = [...analysis.matchAll(/data-region="([^"]+)"/g)].map(m => m[1]);
+  assert.deepStrictEqual(analysisRegions, ['clear-gaps', 'upper-party', 'craftable-legends', 'unused-rare']);
   assert(coach.includes('renderV153Status(state,clock,health)'));
   assert(!coach.includes('renderV151RunHeader'));
   assert(!coach.includes('renderV152RarePlan'));
@@ -117,7 +120,8 @@ test('대형 타이포와 반응형 12열 그리드를 사용한다', () => {
   assert(css.includes('.v153-panel>header h2'));
   assert(/\.v151-action-main b\{display:block;font-size:(2[5-9]|[3-9]\d)px/.test(css),'히어로 유닛명 대형 타이포 없음');
   assert(css.includes('.v151-action-title{font-size:24px'));
-  assert(css.includes('.v155-dashboard{')&&css.includes('grid-template-areas'),'대시보드 그리드 계약 없음');
+  // v24.0: 2열 그리드 은퇴 — 플레이 단일 칼럼(.v240-play) + 분석 세로 펼침.
+  assert(css.includes('.v155-dashboard{')&&css.includes('.v240-play{'),'대시보드 레이아웃 계약 없음');
   assert(css.includes('@media (max-width:700px)'),'모바일 반응형 티어 없음');
 });
 
