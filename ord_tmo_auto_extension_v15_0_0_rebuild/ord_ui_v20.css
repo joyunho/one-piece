@@ -639,6 +639,12 @@ body{
 .v153-second-list,.v153-support-list{display:grid;gap:6px;margin-top:6px}
 .v153-second-list article{display:flex;gap:8px;align-items:center;justify-content:space-between;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 9px;background:var(--panel-2);font-size:13px}
 .v153-second-list .presc{color:var(--accent)}
+/* v23.11: 카드 정보 계층 — '자세히' 접힘 */
+.v2311-more{margin-top:8px;border-top:1px dashed var(--line);padding-top:7px}
+.v2311-more>summary{cursor:pointer;color:var(--sub);font-size:12px;list-style:none}
+.v2311-more>summary::before{content:'▸ ';color:var(--muted)}
+.v2311-more[open]>summary::before{content:'▾ '}
+.v2311-more>summary::-webkit-details-marker{display:none}
 /* v23.10: 2상위 확정 카드 (0821 패배 포렌식) */
 .v2310-second-pick{border-color:rgba(255,159,67,.45)}
 .v2310-second-pick.urgent{border-color:rgba(255,120,80,.7);box-shadow:0 0 14px rgba(255,120,80,.12)}

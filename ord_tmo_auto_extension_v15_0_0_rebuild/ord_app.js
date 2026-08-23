@@ -1592,11 +1592,7 @@ class App{
       const action=decision&&(decision.action||decision.blockedAction),reg=action&&action.regression;
       if(!reg||!(reg.rows||[]).length)return'';
       return`<div class="v203-regress-warn"><b>${C.esc(reg.headline||'')}</b><small>${C.esc(reg.detail||'')}</small></div>`;
-    })()}<div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${decision.routeAuto&&decision.routeAuto.adopted?`<em class="v151-confidence lv-continue" title="엔진이 클리어 실측 순 1위 방향을 자동 채택했습니다. 방향판·상위 확정으로 언제든 바꿀 수 있습니다.">방향 자동 · ${C.esc(decision.routeAuto.label||'')}</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기',ROUTE_CHOICE:'상위 방향 확정 필요'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v224PctChip(state,unit)}${this.v151StoryTag(unit)}${this.v216BargesTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}</div>${deltas.length?`<div class="v151-deltas">${deltas.map(row=>{
-      // v18.4(목업): 인라인 알약 대신 "무엇이 얼마나 오르는가" 타일.
-      const ic=/스턴/.test(row.label)?'blade':/이감|둔화/.test(row.label)?'target':/방깎|방어/.test(row.label)?'snow':/보잡|보스/.test(row.label)?'skull':'gear';
-      return`<span>${this.v153Icon(ic)}<small>${C.esc(row.label)}</small><b>${fmt(row.before)}<i>→</i>${fmt(row.after)}</b></span>`;
-    }).join('')}${shown?`<span class="wisp">${this.v153Icon('spiral')}<small>선위</small><b>${cost}</b></span>`:''}</div>`:''}${decision.upperReserve?`<div class="v151-upper-guard"><i>🔒</i>확정 상위 <b>${C.esc(decision.upperReserve.name)}</b> 트리 재료 ${C.num(decision.upperReserve.reservedUnits)}개 잠금 · 선위 ${C.num(decision.upperReserve.wispCost)} 필요(부족 ${C.num(decision.upperReserve.wispShort)}) — 잠긴 재료를 빼고 추천 중${decision.upperReserve.storyRewardNeeded?' · 스토리 10 보상에서 레일리+해적선을 선택해야 열립니다':''}</div>`:''}${(()=>{
+    })()}<div class="v151-action-main">${unit&&unit.image?`<img src="${C.esc(unit.image)}" alt="">`:'<i>→</i>'}<div><span class="v151-state">${coach?`<em class="v151-confidence lv-${C.esc(coach.key)}">${C.esc(coach.level)}</em>`:''}${coachStep&&coachStep.affordable===false&&C.num(coachStep.wispShort)>0?`<em class="v151-confidence lv-short">선위 ${C.num(coachStep.wispShort)} 부족</em>`:''}${decision.continueOption?`<em class="v151-confidence lv-continue">진행 중이던 것도 유효</em>`:''}${decision.routeAuto&&decision.routeAuto.adopted?`<em class="v151-confidence lv-continue" title="엔진이 클리어 실측 순 1위 방향을 자동 채택했습니다. 방향판·상위 확정으로 언제든 바꿀 수 있습니다.">방향 자동 · ${C.esc(decision.routeAuto.label||'')}</em>`:''}${C.esc({ACT_NOW:'지금 실행',PREPARE:'재료 보호',HOLD:'소비 보류',REROLL_ONE:'안전 리롤',SYNC_BLOCKED:'확인 대기',ROUTE_CHOICE:'상위 방향 확정 필요'}[status]||'다음 판단')}</span><b class="v151-action-title">${C.esc(target)}${this.v224PctChip(state,unit)}${this.v151StoryTag(unit)}${this.v216BargesTag(unit)}</b><p>${C.esc(decision.reason||'현재 패에서 안전한 다음 행동을 기다립니다.')}</p></div>${shown?`<div class="v151-cost"><small>선위</small><b>${cost}</b><span>${status==='PREPARE'?'필요':`후 ${after}`}</span></div>`:''}</div>${decision.upperReserve?`<div class="v151-upper-guard"><i>🔒</i>확정 상위 <b>${C.esc(decision.upperReserve.name)}</b> 트리 재료 ${C.num(decision.upperReserve.reservedUnits)}개 잠금 · 선위 ${C.num(decision.upperReserve.wispCost)} 필요(부족 ${C.num(decision.upperReserve.wispShort)}) — 잠긴 재료를 빼고 추천 중${decision.upperReserve.storyRewardNeeded?' · 스토리 10 보상에서 레일리+해적선을 선택해야 열립니다':''}</div>`:''}${(()=>{
       // v19.9(개선 ①): 0731 판은 승인된 레베카·쵸파 카드를 여러 라운드
       // 건너뛰어 방깎 -29로 끝났다.  같은 승인 카드가 다음 라운드에도 실행되지
       // 않고 남아 있으면 마감 역산과 함께 경고한다(표시 전용 · 승인은 그대로).
@@ -1666,7 +1662,20 @@ class App{
       }
       if(!warns.length)return'';
       return`<div class="v158-consume-warn">${this.v153Icon('warn')}<span>이 제작은 열린 결손을 닫을 수 있는 희귀를 소모합니다 — <b>${C.esc(warns.slice(0,3).join(' · '))}</b>. 그 결손의 다른 마감 수단이 있는지 먼저 확인하세요.</span></div>`;
-    })()}${unit&&this.commandInfo(unit).hasVerified?this.renderCommandLine(unit):''}${this.renderV151Recovery(decision,status,state)}${this.v157SecondUpperCallout(state,decision)}${this.v157LongshotHint(state,status)}${this.v151ActionFacts(state,decision)}<div class="v151-action-foot"><small>${C.esc(stop)}</small><div>${shown?`<button data-act="detail" data-id="${C.esc(shown.id)}">재료</button>`:''}${shown&&shown.id&&!(decision.evidence&&decision.evidence.upperFirst)?`<button class="v222-veto" data-act="veto-action" data-id="${C.esc(shown.id)}" title="이번 판에서 이 유닛 추천을 제외합니다 — 새 게임에 초기화">아닌 것 같음 · 넘어가기</button>`:''}${button}</div></div>${(()=>{
+    })()}${(()=>{
+      // v23.11(사용자: "조잡하다 — 정보가 전혀 정리되어 있지 않아"): 카드
+      // 정보 계층 정리.  포렌식마다 쌓인 보조 블록(수치 변화 타일·명령어·
+      // 회복 목표·2상위 콜아웃·저격 힌트·근거)을 '자세히' 한 접힘으로
+      // 내린다 — 항상 보이는 것은 제목·이유·조합·경고·승인 버튼뿐.
+      // 보류(HOLD)·재료 보호(PREPARE) 카드는 사유 확인이 본론이므로 자동
+      // 으로 열려 있다.  블록 자체는 전부 그대로다(정보 삭제 아님 — 정리).
+      const more=`${deltas.length?`<div class="v151-deltas">${deltas.map(row=>{
+        const ic=/스턴/.test(row.label)?'blade':/이감|둔화/.test(row.label)?'target':/방깎|방어/.test(row.label)?'snow':/보잡|보스/.test(row.label)?'skull':'gear';
+        return`<span>${this.v153Icon(ic)}<small>${C.esc(row.label)}</small><b>${fmt(row.before)}<i>→</i>${fmt(row.after)}</b></span>`;
+      }).join('')}${shown?`<span class="wisp">${this.v153Icon('spiral')}<small>선위</small><b>${cost}</b></span>`:''}</div>`:''}${unit&&this.commandInfo(unit).hasVerified?this.renderCommandLine(unit):''}${this.renderV151Recovery(decision,status,state)}${this.v157SecondUpperCallout(state,decision)}${this.v157LongshotHint(state,status)}${this.v151ActionFacts(state,decision)}`;
+      if(!more.trim())return'';
+      return`<details class="v2311-more"${status==='HOLD'||status==='PREPARE'?' open':''}><summary>자세히 — 수치 변화 · 근거 · 회복 목표</summary>${more}</details>`;
+    })()}<div class="v151-action-foot"><small>${C.esc(stop)}</small><div>${shown?`<button data-act="detail" data-id="${C.esc(shown.id)}">재료</button>`:''}${shown&&shown.id&&!(decision.evidence&&decision.evidence.upperFirst)?`<button class="v222-veto" data-act="veto-action" data-id="${C.esc(shown.id)}" title="이번 판에서 이 유닛 추천을 제외합니다 — 새 게임에 초기화">아닌 것 같음 · 넘어가기</button>`:''}${button}</div></div>${(()=>{
       // v22.2(사용자: "아닌 것 같은건 넘어가기"): 넘어간 추천은 항상 보이고
       // 한 번에 되돌릴 수 있다 — 조용한 제외는 "왜 그 유닛이 안 나오지"의
       // 다음 혼란을 만든다.

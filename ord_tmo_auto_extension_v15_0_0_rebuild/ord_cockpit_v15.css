@@ -2619,6 +2619,12 @@ body.ord-overlay-mode .v151-action-foot small{display:none;}
 
 /* v19.16 — 클리어 조합 실측 표시 */
 .v1916-clear small{opacity:.75;}
+/* v23.11: 카드 정보 계층 — '자세히' 접힘 */
+.v2311-more{margin-top:8px;border-top:1px dashed #2C4666;padding-top:7px}
+.v2311-more>summary{cursor:pointer;color:#8FA6C4;font-size:12px;list-style:none}
+.v2311-more>summary::before{content:'▸ '}
+.v2311-more[open]>summary::before{content:'▾ '}
+.v2311-more>summary::-webkit-details-marker{display:none}
 /* v23.10: 2상위 확정 카드 (0821 패배 포렌식) */
 .v2310-second-pick{border-color:rgba(255,159,67,.45)}
 .v2310-second-pick.urgent{border-color:rgba(255,120,80,.7);box-shadow:0 0 14px rgba(255,120,80,.12)}
