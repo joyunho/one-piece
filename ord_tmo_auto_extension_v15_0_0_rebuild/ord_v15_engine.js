@@ -6,7 +6,7 @@ if(root)root.ORDV15Engine=api;
 })(typeof window!=='undefined'?window:globalThis,function(C,M,L,P,S){
 'use strict';
 
-const VERSION='24.1.0';
+const VERSION='24.2.0';
 const MAX_CANDIDATES=36;
 const BEAM_WIDTH=6;
 const HORIZON=2;
@@ -224,7 +224,15 @@ function combatRareCandidates(model,route,assessment,counts){
   const anyOpen=required.some(row=>num(row.gap)>0),slowOpen=required.some(row=>row.key==='slow'&&num(row.gap)>0);
   if(anyOpen){
     if(!slowOpen)return[];
-    return model.knowledge.db.rares.filter(unit=>!(!unit||pseudoUnit(unit))&&num(C.roleContribution(unit,route.mode).slow)>0);
+    // v24.2(사용자 0824: 152 특별함(크로커다일)을 고르자 이감 희귀
+    // 크로커다일이 최저가가 되어 "선위 4개 쓰고 먹으라"가 떴다 + v22.5
+    // 원문 "희귀함은 아무리 스토리 랭크가 높더라도 2개가 최대"): 이감
+    // 필러 희귀는 현재 패 기준 선택 위습 2개 이하일 때만 후보 우주에
+    // 들어온다 — 선위는 상위 재료다.  재료가 모여 2 이하로 내려오면
+    // 그때 다시 올라온다.  50라+ 화력 희귀 예외(신세계 잉여 소진)는
+    // 의도된 지출이라 상한을 씌우지 않는다.
+    const fillerAffordable=unit=>{try{return num(C.recipeSolve(model.knowledge.db,unit.id,counts||model.effective&&model.effective.counts||{}).wispCost)<=2;}catch(_){return true;}};
+    return model.knowledge.db.rares.filter(unit=>!(!unit||pseudoUnit(unit))&&num(C.roleContribution(unit,route.mode).slow)>0&&fillerAffordable(unit));
   }
   if(model.round.value<50)return[];
   const firepowerKeys=['single','end','singleEndExpected','attack','toki','subdamage','boss','frenzy','bossFrenzy','magicSupport'];
@@ -273,7 +281,7 @@ function metaUsage(unit){
   return META_STATS.byCode[id]||META_STATS.byCode[id.toLowerCase()]||META_STATS.byCode[id.toUpperCase()]||null;
 }
 function metaUsageRate(unit){const hit=metaUsage(unit);return hit?num(hit.rate):0;}
-// v24.1.0(사용자 규칙): "첫전설 레베카(히든), 킬러(히든) 추천 금지" —
+// v24.2.0(사용자 규칙): "첫전설 레베카(히든), 킬러(히든) 추천 금지" —
 // 0812·0816 실전 로그에서 매판 수동 veto 하던 두 유닛(T30h 레베카 깍18,
 // 540h 킬러 광보잡 깍12)을 첫 전설·히든 마일스톤 후보에서 상시 제외한다.
 // 금지는 첫 전설 슬롯 한정 — 추가 전설·역할 보강 국면에서는 종전대로
@@ -328,27 +336,13 @@ function completionDecision(model,units,milestone,guard){
   }
   if(!best)return{version:VERSION,state:'HOLD',authority:true,label:`${label} 후보 없음`,reason:'특수 선행재료가 없거나 조합 데이터를 확인할 수 없습니다.',action:null,alternatives:[],unknowns:[]};
 
-  // v21.4(사용자 구상 ①②): 첫 희귀는 7라 미션(흔한 선택위습) 때문에,
-  // 첫 전설은 20라 보스 대비 스토리 진행 때문에 스토리 속도가 값어치를
-  // 갖는다 — 스토리 S급이면 최저 선위 대비 첫 희귀 +2 · 첫 전설 +5까지
-  // 더 써도 된다.  그 밖에는 최저 선위 유지(구상 원문).  프리미엄은 지금
-  // 실제로 만들 수 있는 후보끼리만 비교한다 — 없는 선위를 상상해 프리미엄을
-  // 주지 않고, 뽑기·드랍 재료 미보유(hardShort) 후보도 대상이 아니다.
-  let storyPremium=null;
-  // v22.5(사용자: "희귀함은 아무리 스토리 랭크가 높더라도 3개 쓰는건
-  // 오바야 2개가 최대 전설도 마찬가지 5개가 최대야"): 상대 예산(+2/+5,
-  // v21.4)에 절대 상한을 씌운다 — 스토리 프리미엄 픽의 총 선위가 첫
-  // 희귀 2 · 첫 전설 5 를 넘으면 투자하지 않는다.  "스토리 빨리 밀기
-  // 포기" 버튼(storyRushAbandoned)이 켜지면 프리미엄 자체를 끄고
-  // 순수 최저 선위로만 간다.
-  {const premiumBudget=milestoneSpec.key==='firstRare'?2:milestoneSpec.key==='firstFinal'?5:0;
-  const premiumCeiling=premiumBudget;
-  if(premiumBudget>0&&!storyAbandoned&&best.quote.feasible&&best.hardShort<=0&&!/^S/.test(String(C.storyGrade(best.unit).tier||''))){
-    const cap=Math.min(num(best.quote.wisp.cost)+premiumBudget,premiumCeiling);
-    const sPick=quoted.filter(item=>item!==best&&item.hardShort<=0&&item.quote.feasible&&/^S/.test(String(C.storyGrade(item.unit).tier||''))&&num(item.quote.wisp.cost)<=cap)
-      .sort((a,b)=>b.story-a.story||a.quote.wisp.cost-b.quote.wisp.cost)[0];
-    if(sPick){storyPremium={tier:String(C.storyGrade(sPick.unit).tier),delta:Math.max(0,num(sPick.quote.wisp.cost)-num(best.quote.wisp.cost)),over:nameOf(best.unit)};best=sPick;}
-  }}
+  // v24.2(사용자 0824: "그냥 스토리고 뭐고 초반 희귀함 전설은 빨리
+  // 만들어지는데로"): v21.4/v22.5 스토리 프리미엄(첫 희귀 +2 · 첫 전설
+  // +5 선위 투자)은 은퇴 — 첫 픽은 순수 최저 선위다.  스토리 랭킹은
+  // 같은 속도(동률)의 마지막 타이브레이크로만 남고, 첫 전설의 리그 D
+  // 미만(E·F) 제외 필터(firstFinalStoryTooSlow, "전설은 스토리랭킹
+  // 적어도 D 이상")는 유지된다.
+  const storyPremium=null;
   const projected=!!(best.completionDetail&&best.completionDetail.isProjected),escapeNote=deadlineEscape?`${deadlineEscape.dueRound}라 마감 도달 — 완성도 1순위 ${deadlineEscape.passedName}(${deadlineEscape.passedCompletion}%)는 지금 제작 불가라 즉시 제작 가능한 후보로 전환했습니다(계속 기다리려면 그쪽 재료를 수동으로 모으세요). `:'',hardNote=best.hardShort>0?`주의 — 뽑기·드랍으로만 얻는 재료(${(best.quote.solve&&best.quote.solve.hardMissing||[]).map(entry=>String(entry.name||entry.id)).join('·')}) 미보유. 모든 후보가 같은 처지라 순서만 제시합니다. `:'',usageNote=best.usage>0?` — 실전 채용률 ${Math.round(best.usage*1000)/10}% (${num(META_STATS&&META_STATS.gameCount).toLocaleString('ko-KR')}판)`:'',guardNote=guard&&guard.taken>0?` 확정 상위 ${guard.lockName}의 트리 재료 ${guard.taken}개는 이 견적에서 제외했습니다 — 마일스톤 제작이 상위 재료를 먹지 않습니다.`:'',completionReason=`${escapeNote}${hardNote}${label} 후보 중 ${storyPremium?`스토리 ${storyPremium.tier}급 — 최저 선위(${storyPremium.over})보다 ${storyPremium.delta} 더 들지만 스토리가 빠릅니다${milestoneSpec.key==='firstRare'?' · 7라 미션 가속':' · 20라 보스 대비'}`:milestoneSpec.key!=='additionalFinal'?(storyAbandoned?'스토리 밀기 포기 — 스토리 랭킹 무시, 선택 위습이 가장 적은 후보입니다':'지금 패에서 부족한 재료와 선택 위습이 가장 적습니다'):'지금 패 기준 완성도·실전 가치가 가장 높습니다'}${usageNote}.${guardNote}`,row=makeRow(model,best.quote,null,completionReason),state=best.quote.feasible&&best.hardShort<=0?'ACT_NOW':'PREPARE';
   const candidate={id:best.unit.id,name:nameOf(best.unit),unit:best.unit,row,quote:best.quote,completion:best.completionDetail,wispCost:best.quote.wisp.cost,wispAfter:best.quote.wisp.after,result:'completion-rule',stopCondition:`선택 위습이 ${best.quote.wisp.cost}개보다 적거나 패가 바뀌면 만들지 말고 다시 동기화`};
   return{version:VERSION,state,authority:true,label:state==='ACT_NOW'?`${label} 제작`:`${label} 재료 준비`,reason:row.why.headline,action:state==='ACT_NOW'?candidate:null,blockedAction:state==='ACT_NOW'?null:candidate,rare:rareLedgerForQuote(model,best.quote,state,label),alternatives:quoted.filter(item=>item.unit.id!==best.unit.id).slice(0,2).map(item=>({id:item.unit.id,name:nameOf(item.unit),wispCost:item.quote.wisp.cost,completion:item.completionDetail,reason:(()=>{const short=sum(item.quote&&item.quote.solve&&item.quote.solve.lowestMissing||{}),wispGap=Math.max(0,num(item.quote&&item.quote.wisp&&item.quote.wisp.cost)-num(item.quote&&item.quote.wisp&&item.quote.wisp.before));return short>0?`흔함 ${short}장 남음`:wispGap>0?`선택 위습 ${wispGap}개 부족`:'지금 제작 가능';})() })),unknowns:[],evidence:{ledger:'exact-sequential',completionRule:true,completionMilestone:milestoneSpec.key,completionBasis:projected?'observed-tmo-plus-recipe-counterfactual':'observed-tmo',rankingAuthority:'fastest-first-usage-tiebreak',metaUsageRate:best.usage,hardMaterialGated:best.hardShort>0,storyPremium:storyPremium?{tier:storyPremium.tier,extraWisp:storyPremium.delta}:null,storyRushAbandoned:storyAbandoned,lockedUpperGuard:guard&&guard.taken>0?{id:guard.lockId,name:guard.lockName,reservedUnits:guard.taken}:null,virtualSpecialProjected:projected,deadlineEscape:deadlineEscape?{dueRound:deadlineEscape.dueRound,passed:deadlineEscape.passedName}:null,futureDropsCredited:false,clearClaim:false}};

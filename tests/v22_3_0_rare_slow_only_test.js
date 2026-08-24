@@ -31,14 +31,25 @@ const rows=list=>({requirements:list});
 const openRow=key=>({key,label:key,required:true,waived:false,gap:10});
 const closedRow=key=>({key,label:key,required:true,waived:false,gap:0});
 
-test('① 이감이 열려 있으면 이감 기여 희귀만 후보에 오른다',()=>{
-  const picked=engine._test.combatRareCandidates(model(30),route,rows([openRow('slow'),openRow('stunFull')]),{});
+// v24.2(사용자 0824: 152 특별함을 고르자 크로커다일이 "선위 4개 쓰고
+// 먹으라"로 떴다): 필러 희귀는 현재 패 선위 2 이하일 때만 후보다.
+// 이 테스트의 재료-풍족 패는 모든 등급 재료 9장 — 이감 희귀 전원이
+// 선위 0으로 상한 안에 들어온다.
+const richCounts=(()=>{const counts={};for(const unit of db.units||[...db.byId.values()])if(['common','uncommon','special'].includes(C.tierKey(unit)))counts[unit.id]=9;return counts;})();
+
+test('① 이감이 열려 있으면 이감 기여 희귀만 후보에 오른다 (재료 풍족 패)',()=>{
+  const picked=engine._test.combatRareCandidates(model(30),route,rows([openRow('slow'),openRow('stunFull')]),richCounts);
   assert(picked.length>0,'이감 마감용 희귀가 아예 없다');
   for(const unit of picked){
     assert(C.num(C.roleContribution(unit,'physical').slow)>0,`이감 기여 없는 희귀가 올라옴: ${unit.name}`);
   }
   const names=picked.map(unit=>String(unit.name||''));
   assert(names.some(name=>/페로나|크로커다일/.test(name)),'대표 이감 희귀(페로나·크로커다일)가 빠짐');
+});
+
+test('①-v24.2 필러 선위 상한: 빈 패(전원 2선위 초과)에서는 이감 희귀도 0명',()=>{
+  const picked=engine._test.combatRareCandidates(model(30),route,rows([openRow('slow'),openRow('stunFull')]),{});
+  assert.strictEqual(picked.length,0,`선위 2 초과 희귀가 후보에 남음: ${picked.map(u=>u.name).join(',')}`);
 });
 
 test('① 이감이 닫혀 있으면 다른 결손이 열려 있어도 희귀는 0명 — 스턴·방깎 목적 희귀 승격 금지',()=>{

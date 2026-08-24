@@ -27,20 +27,20 @@ const C=context.ORDCore,engine=context.ORDV15Engine,App=context.ORDApp.App;
 const cat=context.ORD_TMO_UNITS;
 const mk=(counts,wisp,extra)=>({catalog:cat,snapshot:{source:'v225',counts:Object.assign({[C.WISP_ID]:wisp},counts),wispCountFound:true,wispCount:wisp,currentAbilities:{}},settings:Object.assign({currentRound:2,mode:'physical',magicRoute:'auto',manualCounts:{}},extra||{}),locks:[]});
 
-test('① 절대 상한 배선: 프리미엄 픽 총 선위 상한이 예산과 같은 절대값이다 (소스 계약)',()=>{
-  assert(engineSrc.includes('premiumCeiling=premiumBudget'),'절대 천장이 없다');
-  assert(engineSrc.includes('Math.min(num(best.quote.wisp.cost)+premiumBudget,premiumCeiling)'),'천장이 cap 에 걸려 있지 않다');
+test('① 절대 상한(희귀 2)의 계승: 프리미엄은 은퇴, 상한은 필러 후보 우주로 (v24.2 재핀)',()=>{
+  // v22.5 원문 "희귀함은 아무리 스토리 랭크가 높더라도 2개가 최대"는
+  // v24.2 에서 더 넓게 산다 — 프리미엄 자체가 은퇴했고(첫 픽 순수 최저
+  // 선위), 이감 필러 희귀는 현재 패 선위 2 초과면 후보 우주에서 빠진다.
+  assert(!engineSrc.includes('premiumCeiling'),'은퇴한 프리미엄 천장이 남아 있다');
+  assert(engineSrc.includes('fillerAffordable'),'필러 선위 상한(2) 배선 소실');
+  assert(/wispCost\)<=2/.test(engineSrc),'상한 값 2 소실');
 });
 
-test('① 상한 거동: 빈 패 첫 희귀 프리미엄은 총 2선위 안 — v21.4 실측 유지',()=>{
-  // v21.4 실측: 빈 패 첫 희귀 최저가 0(샹크스류) → S급 거프(2선위) 스왑.
-  // 절대 상한 2 는 이 케이스를 그대로 통과시킨다(총 2 ≤ 2).
+test('① 상한 거동: 빈 패 첫 희귀는 프리미엄 없이 최저 선위 (v24.2 재핀)',()=>{
   const decision=engine.decide(mk({},12));
-  const premium=decision.evidence&&decision.evidence.storyPremium;
-  if(premium){
-    const pick=decision.action||decision.blockedAction;
-    assert(C.num(pick.wispCost)<=2,`첫 희귀 프리미엄 픽이 2선위를 넘음: ${pick.name} ${pick.wispCost}`);
-  }
+  assert(!(decision.evidence&&decision.evidence.storyPremium),'은퇴한 프리미엄이 발동');
+  const pick=decision.action||decision.blockedAction;
+  for(const alt of decision.alternatives||[])assert(C.num(alt.wispCost)>=C.num(pick.wispCost),`최저 선위 아님: ${pick.name}(${pick.wispCost}) > ${alt.name}(${alt.wispCost})`);
 });
 
 test('② 스토리 밀기 포기: 프리미엄·스토리 타이브레이크가 꺼지고 최저 선위 유지',()=>{
