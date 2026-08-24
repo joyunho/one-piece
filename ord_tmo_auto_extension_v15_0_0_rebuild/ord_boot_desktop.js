@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v24.3.0 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
+  // v24.3.1 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
   // 직결 합성 경로를 그대로 옮기되 크롬 API 가 전혀 없다:
   //  · /datas 는 Electron 메인 프로세스가 1초마다 밀어준다(ORD_DESKTOP.onDatas).
   //  · 자동 라운드 세대는 localStorage 에 영속(판 중간 새로고침 보호).
@@ -86,7 +86,7 @@
     // 테스트 관측용 — 합성 경로를 headless 로 구동할 수 있게 노출한다.
     window.__ORD_DESKTOP_BRIDGE = {handleUnits, local};
 
-    // v19.14.1: F8 오버레이 = 우상단 미니 패널.  메인 프로세스가 창을
+    // v19.14.1: F6 오버레이 = 우상단 미니 패널.  메인 프로세스가 창을
     // 줄이고, 여기서는 컴팩트 표시 클래스만 켠다(지금 할 일·결손 중심).
     if (bridge && typeof bridge.onOverlayMode === 'function') {
       bridge.onOverlayMode(on => {

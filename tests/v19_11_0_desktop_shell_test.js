@@ -128,14 +128,17 @@ check('⑥ 오버레이 미니 패널 — 우상단 축소·게임 클릭 보존
   assert(main.includes('ord-overlay-bounds.json')&&main.includes('loadOverlayBounds')&&main.includes('saveOverlayBounds'),'오버레이 위치 기억 없음');
   assert(main.includes('const width = 400'),'축소 기본 크기 아님');
   assert(css.includes('body.ord-overlay-mode .command-line{display:flex}'),'조합 명령어 줄은 오버레이에서도 보여야 함');
-  // v19.15.0: 인게임 HUD — 투명·클릭 통과·포커스 불가 창, F8.  미니
-  // 패널은 F9 로 이동(HUD 위치 잡기용).  앱 이중 구동 금지: HUD 는
-  // 메인 창이 그린 조각을 받아 표시만 한다.
+  // v19.15.0: 인게임 HUD — 투명·클릭 통과·포커스 불가 창.  미니 패널은
+  // HUD 위치 잡기용.  앱 이중 구동 금지: HUD 는 메인 창이 그린 조각을
+  // 받아 표시만 한다.  v24.3.1 재핀(사용자: "f8 9 기능 f56으로 바꿔"):
+  // 단축키 F8/F9 → F5/F6 (F10 모니터 이동은 유지).
   assert(main.includes('transparent: true')&&main.includes('frame: false')&&main.includes('focusable: false'),'HUD 창 계약 없음');
   // v23.9 재핀: 클릭 통과가 forward 모드(마우스 이동 전달)로 바뀌었다 —
   // 승인 버튼 호버 시에만 클릭을 받는 구조(ord-hud-interactive).
   assert(main.includes('setIgnoreMouseEvents(true, {forward: true})')&&main.includes('showInactive'),'클릭 통과(forward)·포커스 보존 없음');
-  assert(main.includes("register('F8', toggleHud)")&&main.includes("register('F9', toggleOverlay)"),'F8/F9 배치 없음');
+  assert(main.includes("register('F5', toggleHud)")&&main.includes("register('F6', toggleOverlay)"),'F5/F6 배치 없음');
+  assert(!main.includes("register('F8'")&&!main.includes("register('F9'"),'옛 F8/F9 등록이 남아 있다');
+  assert(main.includes("register('F10', moveOverlayToNextDisplay)"),'F10 모니터 이동 소실');
   assert(main.includes("ipcMain.on('ord-hud-state'"),'HUD 상태 중계 없음');
   assert(preload.includes('sendHudState')&&preload.includes('onHudState'),'preload HUD API 없음');
   // v23.8 재핀(사용자: "너무 느려 갱신이"): 1.5초 고정 주기 → 스냅샷

@@ -3403,7 +3403,7 @@ class App{
       ['1','연결','TMO.GG 데스크톱 앱(또는 크롬 확장 + 조합도우미 탭)을 켜 두면 끝 — 게임에서 유닛이 잡히는 순간 코치가 자동으로 시작합니다. 따로 누를 것 없습니다.'],
       ['2','설정 30초','판을 시작할 때 설정에서 오로성 · 항법(희귀 리롤 횟수가 여기서 정해집니다) · 152킬 특별함을 실제 게임과 맞춰 주세요.'],
       ['3','플레이','판 중에는 이 화면 하나 — "지금 할 일" 카드만 따라가면 됩니다. 추천대로 제작했으면 카드의 확인 버튼을 눌러 주세요. 왜 그 판단인지·최종 파티 계획·희귀 원장은 상단 "분석" 버튼 화면에서 판 사이에 봅니다.'],
-      ['4','인게임','F8 = 게임 위 HUD(평소엔 클릭이 게임으로 통과하고, 승인 버튼 위에서만 클릭됩니다) · F9 = 미니 패널(끌어서 위치 지정 — F8도 그 자리를 씁니다) · F10 = 다른 모니터로 이동. 판이 끝나면 결과(클리어/패배)를 입력해 주세요 — 코치가 판마다 배웁니다.']
+      ['4','인게임','F5 = 게임 위 HUD(평소엔 클릭이 게임으로 통과하고, 승인 버튼 위에서만 클릭됩니다) · F6 = 미니 패널(끌어서 위치 지정 — F5도 그 자리를 씁니다) · F10 = 다른 모니터로 이동. 판이 끝나면 결과(클리어/패배)를 입력해 주세요 — 코치가 판마다 배웁니다.']
     ];
     return`<div class="v238-onboard"><div class="v238-onboard-card"><header><b>ORD 악몽 코치 — 처음 시작 가이드</b><p>원피스 랜덤 디펜스 악몽 난이도 실전 판단 코치입니다. 네 가지만 알면 바로 씁니다.</p></header>${steps.map(([n,t,d])=>`<section><i>${n}</i><div><b>${C.esc(t)}</b><p>${C.esc(d)}</p></div></section>`).join('')}<footer><button class="primary" data-act="dismiss-onboarding">시작하기</button><small>설정 영역의 '처음 시작 가이드' 버튼으로 언제든 다시 열 수 있습니다.</small></footer></div></div>`;
   }
@@ -3417,7 +3417,7 @@ class App{
     const actionCardHtml=this.renderV151NextAction(state,plan,health);
     if(health&&health.ready)this._lastReadyActionCard={html:actionCardHtml,at:Date.now(),round:this.actualRound()};
     // v24.0(사용자: "구조 자체가 문제인것같은데"): 판 중 화면 = 상태 한 줄
-    // + 지금 할 일 카드(+뜰 때만 결정 카드) — F8 HUD와 같은 내용.  국면
+    // + 지금 할 일 카드(+뜰 때만 결정 카드) — F5 HUD와 같은 내용.  국면
     // 패널·참고 3패널은 분석 화면(renderV240Analysis)으로 옮겼다.
     return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v155-dashboard v240-play"><section class="v153-panel v153-next v155-action-zone" data-region="next-action"><header><small>${this.v153Icon('blade')}</small><div><h2>지금 할 일</h2><p>지금 실행할 한 가지</p></div></header><div class="v155-action-layout"><div class="v155-action-core">${actionCardHtml}</div><aside class="v155-decision-rail" data-region="next-preview"><header class="v155-subhead"><small>${this.v153Icon('branch')}</small><div><h3>다음 제작</h3><p>${v22ph.key==='p4'||v22ph.key==='p5'?'가변 후보 · 확정은 큰 카드 1개':v22ph.key==='p6'?'신세계 국면 — 후보 고정 없음(지금 할 일에 집중)':'마감 국면(40라~)에 열립니다'}</p></div></header>${v22ph.key==='p4'||v22ph.key==='p5'?this.renderV153Preview(state,plan):`<div class="v22-rail-rest">${C.esc(v22ph.num)} ${C.esc(v22ph.label)} 국면은 후보를 미리 고정하지 않습니다 — 지금 할 일 하나에 집중하세요. 계획·원장은 상단 분석 버튼에 있습니다.</div>`}</aside></div>${this.v243LineGuard(state,plan)}${this.v243RerollSweep(plan)}</section></main>${this.renderV238Onboarding()}</div>`;
   }

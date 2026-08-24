@@ -53,8 +53,8 @@ test('② F10 — HUD·미니 패널 다음 모니터 이동',()=>{
   assert(move.includes('OVERLAY_BOUNDS_FILE()'),'이동 자리가 bounds 파일에 저장되지 않는다');
   assert(move.includes('hudWin.setBounds(target)'),'HUD 창이 함께 이동하지 않는다');
   assert(move.includes('win.setBounds(target)'),'미니 패널이 함께 이동하지 않는다');
-  // 기존 F8/F9 계약은 그대로 (v19_11 핀과 동일 자구).
-  assert(main.includes("register('F8', toggleHud)")&&main.includes("register('F9', toggleOverlay)"),'F8/F9 등록이 깨졌다');
+  // v24.3.1 재핀(사용자: "f8 9 기능 f56으로 바꿔"): F5/F6 등록 (v19_11 핀과 동일 자구).
+  assert(main.includes("register('F5', toggleHud)")&&main.includes("register('F6', toggleOverlay)"),'F5/F6 등록이 깨졌다');
   const readme=fs.readFileSync(path.join(REPO,'desktop/README.md'),'utf8');
   assert(readme.includes('F10'),'README 에 F10 안내가 없다');
 });

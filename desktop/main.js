@@ -1,12 +1,12 @@
 'use strict';
-// v24.3.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
+// v24.3.1 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
 //
 // 확장(크롬) 없이 코치를 독립 프로그램으로 돌린다.  브라우저 제약
 // (타이머 조임·MV3 정책·CORS)이 사라지므로 보험 장치 없이 단순하다:
 //  · 메인 프로세스가 TMO 데스크톱의 /datas 를 1초마다 읽어 렌더러로
 //    민다(렌더러는 fetch 를 하지 않는다 — 네트워크는 이 파일 한 곳).
-//  · F8 = 인게임 HUD — 투명·클릭 통과 창에 코치 칩·카드만 게임 위에
-//    뜬다(입력은 전부 게임으로).  F9 = 미니 패널(조작·HUD 위치 잡기).
+//  · F5 = 인게임 HUD — 투명·클릭 통과 창에 코치 칩·카드만 게임 위에
+//    뜬다(입력은 전부 게임으로).  F6 = 미니 패널(조작·HUD 위치 잡기).
 //  · ordlog 자동 저장 — 렌더러가 요청하면 문서 폴더에 기록한다.
 //
 // 보안 계약(테스트 고정):
@@ -106,9 +106,9 @@ function toggleOverlay() {
 }
 
 // v22.10(사용자: "f8 f9 누르면 나오는 화면을 어떤 모니터에 띄울지 알려줬으면
-// 해"): F10 = HUD·미니 패널을 다음 모니터로 보낸다.  F9 패널을 끌어 놓는
+// 해"): F10 = HUD·미니 패널을 다음 모니터로 보낸다.  F6 패널을 끌어 놓는
 // 방법도 여전히 유효하지만, 멀티 모니터에선 단축키 한 번이 빠르다.  옮긴
-// 자리는 기존 bounds 파일에 저장되므로 F8 HUD 도 같은 자리를 쓰고 재실행
+// 자리는 기존 bounds 파일에 저장되므로 F5 HUD 도 같은 자리를 쓰고 재실행
 // 에도 유지된다.  창이 하나도 안 떠 있으면 다음에 열릴 자리만 바꾼다.
 function currentOverlayBounds() {
   if (overlayOn && win && !win.isDestroyed()) return win.getBounds();
@@ -133,7 +133,7 @@ function moveOverlayToNextDisplay() {
 // v19.15.0("게임 내에서 녹아들 수 없나"): 인게임 HUD — 창테두리 없는
 // 완전 투명 창에 코치 칩·카드만 그린다.  클릭은 전부 게임으로 통과
 // (setIgnoreMouseEvents)하고 포커스도 못 가져가(focusable:false) 게임
-// 입력을 전혀 뺏지 않는다.  위치·크기는 미니 패널(F9)에서 잡은 자리를
+// 입력을 전혀 뺏지 않는다.  위치·크기는 미니 패널(F6)에서 잡은 자리를
 // 그대로 쓴다 — HUD 자신은 클릭 통과라 끌 수 없기 때문.
 function resolveUiFile(name) {
   const bundled = path.join(__dirname, 'ui', name);
@@ -145,7 +145,7 @@ function ensureHudWindow() {
   const area = screen.getDisplayMatching(win && !win.isDestroyed() ? win.getBounds() : {x: 0, y: 0, width: 800, height: 600}).workArea;
   // v23.7(사용자: "화면을 너무 가린다"): 기본 자리가 우상단 최상부라 게임
   // 자체 우상단 정보(시즌 패널·유닛 카운트 체인·점수표)를 정통으로 덮었다.
-  // 기본은 그 아래(y+210)·조금 좁게(348) 잡는다.  F9 패널을 끌어 놓은
+  // 기본은 그 아래(y+210)·조금 좁게(348) 잡는다.  F6 패널을 끌어 놓은
   // 자리(remembered)가 있으면 언제나 그 자리가 우선.
   const bounds = remembered || {x: area.x + area.width - 360, y: area.y + 210, width: 348, height: Math.min(560, area.height - 234)};
   hudWin = new BrowserWindow({
@@ -247,10 +247,10 @@ ipcMain.handle('ord-save-runlog', async (event, name, text) => {
 app.whenReady().then(() => {
   createWindow();
   startPolling();
-  // F8 = 인게임 HUD(투명·클릭 통과 — 게임에 녹아듦), F9 = 미니 패널
-  // (조작·위치 잡기용).  HUD 위치를 옮기려면 F9 패널을 끌어 놓으면 된다.
-  globalShortcut.register('F8', toggleHud);
-  globalShortcut.register('F9', toggleOverlay);
+  // F5 = 인게임 HUD(투명·클릭 통과 — 게임에 녹아듦), F6 = 미니 패널
+  // (조작·위치 잡기용).  HUD 위치를 옮기려면 F6 패널을 끌어 놓으면 된다.
+  globalShortcut.register('F5', toggleHud);
+  globalShortcut.register('F6', toggleOverlay);
   // F10 = HUD·미니 패널을 다음 모니터로 (자리 기억 공유).
   globalShortcut.register('F10', moveOverlayToNextDisplay);
   // 지난 실행에서 HUD 를 켠 채였다면 자동 복원.
