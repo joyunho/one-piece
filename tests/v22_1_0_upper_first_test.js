@@ -72,7 +72,9 @@ test('③ 25라 확정 게이트 제거 — 리롤 게이트는 유지',()=>{
   assert(!appSrc.includes("'25라부터 확정'"),'확정 버튼 25라 문구가 남아 있다');
   // v23.6 재핀: 리롤 게이트는 항법 의존이 됐다 — 기본 항법 25라 유지,
   // 적극 리롤 항법(리스크헷지·카지노)+상위 확정만 18라 개방(사용자 지시).
-  assert(appSrc.includes('rerollGateRound=navReroll.aggressiveReroll&&this.upperLock()?18:25'),'항법 의존 리롤 게이트가 사라졌다(기본 25라는 이 식 안에 산다)');
+  // v24.3(사용자: "첫 상위를 정했으면 … 리롤 … 정한 다음에"): 상위 확정
+  // 시 즉시 개방, 미확정만 25라 게이트.
+  assert(appSrc.includes('rerollGateRound=this.upperLock()?0:25'),'확정 즉시 리롤 게이트가 사라졌다(미확정 25라는 이 식 안에 산다)');
   assert(engineSrc.includes('라운드 수입으로 모으면 됩니다'),'확정 상위 위습 카운트다운 문구가 없다');
   assert(!engineSrc.includes('다른 제작과 희귀 리롤을 잠급니다'),'실동작과 다른 옛 보호 문구가 남아 있다');
 });
@@ -92,23 +94,15 @@ test('④ 확정 상위 재료 목록 — 킨에몬이 이름으로 보인다',(
   assert.strictEqual(obj.v221UpperMaterialsBlock(state),'','상위 미확정에 재료 블록이 뜬다');
 });
 
-test('④ 스토리 스텝퍼 — 13@35 마감선(사용자 실측)과 페이스 경고',()=>{
-  const obj=Object.create(App.prototype);
-  obj.state={storyStage:9};
-  obj.upperLock=()=>({id:'LB0H'});
-  obj.actualRound=()=>33;
-  const behind=obj.v221StoryBlock();
-  assert(behind.includes('v221-story')&&behind.includes('behind'),'35라 임박 경고가 없다');
-  assert(behind.includes('13단계'),'13단계 마감선 표기가 없다');
-  obj.actualRound=()=>36;
-  obj.upperLock=()=>null;
-  const late=obj.v221StoryBlock();
-  assert(late.includes('late')&&late.includes('마감선 지남'),'마감선 초과 표시가 없다');
-  assert(late.includes('상위'),'상위 부재 연결 안내가 없다');
-  obj.actualRound=()=>7;
-  assert.strictEqual(obj.v221StoryBlock(),'','스토리 구간 밖에서 스텝퍼가 뜬다');
-  assert(appSrc.includes("a==='story-stage-step'")&&appSrc.includes('storyStage:0'),'스텝퍼 배선·기본값 누락');
-  for(const sel of ['.v221-upper-mats{','.v221-story{','.v221-story-row button{','.v221-story.late{'])assert(css.includes(sel),`CSS 누락: ${sel}`);
+test('④ 스토리 스텝퍼는 v24.3 은퇴 — 입력 실측 0회, 잔재 없음 (재핀)',()=>{
+  // v22.1 의 13@35 마감선은 수동 스텝퍼 입력에 의존했는데, 실측(0823
+  // 로그 포함) 어느 판에서도 입력이 없었다 — 사용자 0824: "스토리 단계
+  // 그거 필요없어".  스텝퍼 배선 부재를 계약한다(상위 재료 블록 v221
+  // UpperMaterials 는 그대로 산다 — 위 ③ 검사).
+  assert(!appSrc.includes('v221StoryBlock(){'),'은퇴한 스텝퍼 메서드가 남아 있다');
+  assert(!appSrc.includes("if(a==='story-stage-step'){this.state.storyStage"),'은퇴한 스텝퍼 핸들러가 남아 있다');
+  assert(appSrc.includes('storyStage:0'),'휴면 상태 키(storyStage)까지 지워짐 — 저장 호환 깨짐');
+  for(const sel of ['.v221-upper-mats{'])assert(css.includes(sel),`CSS 누락: ${sel}`);
 });
 
 let passed=0;

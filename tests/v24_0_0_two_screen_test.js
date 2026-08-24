@@ -52,10 +52,9 @@ test('① 플레이 화면 — 상태 한 줄 + 지금 할 일뿐, 참고·국�
   const regions=[...html.matchAll(/data-region="([^"]+)"/g)].map(match=>match[1]);
   assert.deepStrictEqual(regions,['game-status','next-action','next-preview'],'플레이 화면 영역이 3개가 아니다');
   for(const gone of ['data-region="clear-gaps"','data-region="reference"','data-region="upper-party"','data-region="craftable-legends"','data-region="unused-rare"','v211-refer','v211-tabs','v239-simple'])assert(!html.includes(gone),`플레이 화면에 남아 있다: ${gone}`);
-  // 스토리 스텝퍼(v221)는 게임 중 유일한 손 입력 — 액션 존 하단에 남는다.
-  assert(html.includes('v221-story')&&html.includes('data-act="story-stage-step"'),'플레이 화면에 스토리 스텝퍼가 없다');
-  // 8라 미만·50라 초과에는 스텝퍼도 접힌다(v221 원 계약 유지).
-  assert(!stub(5).renderCoach({},plan(),{},{},{ready:true,key:'ok'}).includes('v221-story'),'5라에 스토리 스텝퍼가 떠 있다');
+  // v24.3 재핀: 스토리 스텝퍼(v221)는 은퇴 — 액션 존 하단은 리롤 정리·
+  // 라인 방어 스트립 자리다(상위 미확정 스텁에선 둘 다 빈 문자열).
+  assert(!html.includes('v221-story'),'은퇴한 스토리 스텝퍼가 플레이 화면에 남아 있다');
 });
 
 test('② 분석 화면 — 4영역 세로 펼침 + 기록·자료·도구, 서랍 없음',()=>{

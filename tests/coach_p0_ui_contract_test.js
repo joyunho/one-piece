@@ -197,7 +197,9 @@ check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   // v24.0(플레이/분석 2화면): 플레이 화면은 상태·지금 할 일·레일·스토리
   // 스텝퍼만 부른다.  국면 패널·참고 3패널 호출은 분석 화면
   // (renderV240Analysis)으로 옮겨졌다.
-  for(const method of ['renderV153Status','renderV151NextAction','renderV153Preview','v221StoryBlock'])assert(coachSource.includes(method),method);
+  // v24.3: 스토리 스텝퍼(v221StoryBlock) 은퇴 — 하단 스트립은 리롤 정리·
+  // 라인 방어(v243)가 잇는다.
+  for(const method of ['renderV153Status','renderV151NextAction','renderV153Preview','v243RerollSweep','v243LineGuard'])assert(coachSource.includes(method),method);
   for(const method of ['renderV22PhasePanel','renderV153CraftableLegends','renderV153UpperParty'])assert(!coachSource.includes(method),`분석으로 옮겨진 호출이 플레이에 남음: ${method}`);
   const analysisSource=between('  renderV240Analysis(state,plan,health){','  // A live TMO snapshot');
   for(const method of ['renderV22PhasePanel','renderV153UpperParty','renderV153CraftableLegends','renderV153UnusedRare'])assert(analysisSource.includes(method),`분석 화면 호출 누락: ${method}`);

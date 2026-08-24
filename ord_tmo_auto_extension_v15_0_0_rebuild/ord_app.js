@@ -936,7 +936,7 @@ class App{
     if(this.state.pendingTransaction&&['purpose','select-upper','preview-direction','choose-direction','hold-direction','confirm-upper','restore-released-upper','snipe-upper','lock-legend','lock-rare','remove-lock','reset-route','counter-step'].includes(a))this.rollbackTransaction();
     // v24.0: v21.1 참고 서랍(v211-tab/v22-drawer-close)은 은퇴 — 세 참고
     // 패널은 분석 화면(renderV240Analysis)이 세로로 편다.
-    if(a==='story-stage-step'){this.state.storyStage=Math.max(0,Math.min(15,C.num(this.state.storyStage)+C.num(b.dataset.delta)));this.persist();this.render();return;}
+    // v24.3: story-stage-step(스토리 스텝퍼)은 은퇴 — storyStage 상태는 휴면.
     if(a==='veto-action'){const id=String(b.dataset.id||'');if(!id)return;if(!(this.state.vetoIds||[]).includes(id))this.state.vetoIds=[...(this.state.vetoIds||[]),id].slice(-20);this._stickyActionId='';this.v202ReleaseCraftLock();this._v15CacheKey='';this._squadCacheKey='';this.persist();this.toast('이번 판에서 이 추천을 넘어갑니다 — 카드 아래 목록에서 되돌릴 수 있습니다.');this.render();return;}
     if(a==='story-rush-toggle'){this.state.storyRushAbandoned=this.state.storyRushAbandoned!==true;this._v15CacheKey='';this._squadCacheKey='';this.persist();this.toast(this.state.storyRushAbandoned?'스토리 밀기 포기 — 스토리 랭킹을 완전히 무시하고 최저 선위만 추천합니다.':'스토리 가속 복원 — 같은 속도(동률)일 때만 스토리 빠른 쪽을 고릅니다. 선위 추가 투자는 없습니다(v24.2).');this.render();return;}
     if(a==='unveto-action'){const id=String(b.dataset.id||'');this.state.vetoIds=(this.state.vetoIds||[]).filter(x=>x!==id);this._v15CacheKey='';this._squadCacheKey='';this.persist();this.render();return;}
@@ -1412,19 +1412,54 @@ class App{
     const wispShort=Math.max(0,mats.wispCost-mats.wispHave);
     return`<div class="v221-upper-mats"><small>확정 상위 <b>${C.esc(mats.upperName)}</b>에 들어가는 재료 — 아래 희귀·특별은 다른 데 쓰면 상위가 멀어집니다</small><div>${mats.use.map(item=>chip(item,'use')).join('')}${mats.specialUse.map(item=>chip(item,'use')).join('')}${mats.build.map(item=>chip(item,'build')).join('')}${mats.hard.map(item=>chip(item,'hard')).join('')}${!mats.use.length&&!mats.specialUse.length&&!mats.build.length&&!mats.hard.length?'<em class="none">희귀 소모 없음 — 흔함·위습만으로 완성</em>':''}</div><span class="v221-upper-wisp ${wispShort>0?'short':'ok'}">${wispShort>0?`선택위습 ${wispShort}개 부족 (보유 ${mats.wispHave}/필요 ${mats.wispCost}) — 모으면 됩니다`:`선택위습 충분 (보유 ${mats.wispHave}/필요 ${mats.wispCost}) — 지금 올릴 수 있는지 카드를 확인하세요`}</span></div>`;
   }
-  v221StoryBlock(){
-    // v22.1(사용자: "스토리가 35라 전에 13까지 밀려야하는데 안밀려서
-    // 죽었어" · 0809): TMO 데이터에 스토리 단계가 없어 수동 스텝퍼로
-    // 받는다.  마감선 — 30라 스토리 10(보상 시점) · 35라 스토리 13(사용자
-    // 실측).  상위가 스토리 담당이므로 뒤처지면 상위 완성부터 다그친다.
-    const roundNow=this.actualRound(),stage=Math.max(0,C.num(this.state.storyStage));
-    if(roundNow<8||roundNow>50)return'';
-    const marks=[{round:30,stage:10,label:'30라 · 스토리 10 (보상)'},{round:35,stage:13,label:'35라 · 스토리 13 (실측 최소선)'}];
-    const next=marks.find(mark=>roundNow<=mark.round)||marks[marks.length-1];
-    const behind=stage<next.stage&&roundNow>=next.round-3;
-    const late=stage<next.stage&&roundNow>=next.round;
-    const upperMissing=!this.upperLock();
-    return`<div class="v221-story ${late?'late':behind?'behind':''}"><small>스토리 진행 — 상위가 담당 · ${C.esc(next.label)}</small><div class="v221-story-row"><button data-act="story-stage-step" data-delta="-1" aria-label="스토리 단계 내리기">−</button><b>${stage}단계</b><button data-act="story-stage-step" data-delta="1" aria-label="스토리 단계 올리기">＋</button><span>${late?`마감선 지남 — ${next.stage}단계까지 ${next.stage-stage} 남음${upperMissing?' · 스토리 담당(상위)이 아직 없습니다':''}`:behind?`${next.round}라까지 ${next.stage}단계 — ${next.stage-stage} 남음, 서둘러야 합니다`:stage>=next.stage?'페이스 정상':`${next.round}라까지 ${next.stage}단계 목표`}</span></div></div>`;
+  // v24.3(사용자 0823: "스토리 단계 그거 필요없어 어차피 겜 하다보면 올릴
+  // 여유도 없음"): v22.1 스토리 스텝퍼(v221StoryBlock)는 은퇴 — 실측
+  // (0823 로그 포함) 어느 판에서도 story-stage-step 입력이 없었고, 입력
+  // 없는 스텝퍼는 "마감선 지남" 오경고만 만들었다.  storyStage 상태는
+  // 휴면으로 남는다(엔진 미사용).
+  //
+  // v24.3(사용자 0823: "첫 상위를 정했으면 … 리롤을 돌릴만한 게 어떤 게
+  // 있는지 … 정한 다음에 상위를 만들고"): 상위 확정 후 리롤 원장이 잡은
+  // 계획 밖 희귀를 액션 존 하단 스트립으로 상시 노출한다 — 제작(ACT_NOW)
+  // 중에도 보인다.  리롤은 게임에서 제작과 병행 가능한 행동이다.
+  v243RerollSweep(plan){
+    const decision=plan&&plan.v15Decision||{};
+    if(!this.upperLock())return'';
+    const left=Math.max(0,this.rerollLimit()-C.num(this.state.rerollsUsed));
+    if(left<=0)return'';
+    const rows=((decision.rare||{}).reroll||[]).filter(row=>C.num(row.reroll)>0);
+    if(!rows.length)return'';
+    return`<div class="v243-reroll-sweep"><small>리롤 정리 · 잔여 ${left}회</small><b>${rows.map(row=>`${C.esc(row.name)}${C.num(row.reroll)>1?` ×${C.num(row.reroll)}`:''}`).join(' · ')}</b><span>확정 계획 어디에도 안 쓰입니다 — 게임에서 지금 돌리세요. 리롤 확인 카드가 뜨면 눌러 주세요.</span></div>`;
+  }
+  // v24.3(사용자 0823: "30라운드가 넘었으면 라인을 막기 위해 전설을 하나 더
+  // 만들어주고 그다음 다시 상위를 완성"): 상위 재료·선위 대기(보호/준비)
+  // 로 코치가 침묵하는 30라+ 구간에, 지금 바로 만들 수 있는 최저 선위
+  // D+ 전설을 라인 방어로 안내한다.  표시 전용 — 상위 트리·선위와
+  // 겹치는지는 승인 카드(엔진)가 최종 판단한다.
+  v243LineGuard(state,plan){
+    const decision=plan&&plan.v15Decision||{};
+    if(this.actualRound()<30||!this.upperLock())return'';
+    if(!/재료 보호|재료 준비/.test(String(decision.label||'')))return'';
+    const key=`${this._v15CacheKey||''}|${decision.label||''}|${this.actualRound()}`;
+    if(key===this._v243GuardKey)return this._v243GuardHtml||'';
+    this._v243GuardKey=key;this._v243GuardHtml='';
+    const db=state&&state.db;if(!db)return'';
+    const mode=plan&&plan.mode||this.state.mode||'';
+    const cands=[];
+    for(const unit of db.legendish||[]){
+      if(C.num(state.counts[unit.id])>0)continue;
+      const fam=C.familyOf(unit);if(fam!=='neutral'&&mode&&fam!==mode)continue;
+      const lg=C.storyLeagueGrade(unit,C.storyGrade(unit));
+      if(lg&&lg.leagueRanked&&/^[EF]$/.test(String(lg.leagueTier)))continue;
+      let solve=null;try{solve=C.recipeSolve(db,unit.id,state.counts||{});}catch(_){continue;}
+      if(!solve||(solve.hardMissing||[]).length)continue;
+      if(C.num(solve.wispCost)>C.num(state.wisp))continue;
+      cands.push({unit,cost:C.num(solve.wispCost)});
+    }
+    cands.sort((a,b)=>a.cost-b.cost||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko'));
+    const pick=cands[0];if(!pick)return'';
+    this._v243GuardHtml=`<div class="v243-line-guard"><small>30라+ 라인 방어</small><b>${C.esc(displayNameOf(pick.unit))}</b><span>상위 재료·선위를 기다리는 동안 라인이 밀리면 이 전설을 먼저 — 지금 선위 ${pick.cost}로 제작 가능. 상위 트리와 겹치는지는 승인 카드가 최종 확인합니다.</span></div>`;
+    return this._v243GuardHtml;
   }
   renderV22PhasePanel(state,plan){
     // v22.0 국면 패널 — 명세서의 그 국면 목표만.  전체 스펙 표는 어느
@@ -1444,17 +1479,17 @@ class App{
       return`<div class="v22-gauges">${open.map(bar).join('')}${closed.map(bar).join('')}</div>`;
     };
     if(ph.key==='p1')return`${goal(milestone!=='firstRare','7라 전 희귀 1 → 흔한 선택위습 보상')}${goal(false,this.state.storyRushAbandoned?'스토리 포기됨 — 최저 선위 전용':'빨리 만들어지는 순 — 같은 속도면 스토리 빠른 쪽(선위 추가 투자 없음)')}${this.v225StoryRushButton()}<p class="v22-note">다음 국면(첫 전설)은 희귀 완성 즉시 자동 전환됩니다.</p>${fullSpec}`;
-    if(ph.key==='p2')return`${goal(milestone!=='firstRare'&&milestone!=='firstFinal','20라 보스 전 전설급 1')}${milestone==='firstRare'?goal(false,'첫 희귀가 아직입니다 — 이것부터'):''}${goal(false,this.state.storyRushAbandoned?'스토리 포기됨 — 최저 선위 전용':'빨리 만들어지는 순(스토리 D 미만 제외) — 같은 속도면 스토리 빠른 쪽')}${this.v225StoryRushButton()}${this.v221UpperMaterialsBlock(state)}${this.v221StoryBlock()}${fullSpec}`;
+    if(ph.key==='p2')return`${goal(milestone!=='firstRare'&&milestone!=='firstFinal','20라 보스 전 전설급 1')}${milestone==='firstRare'?goal(false,'첫 희귀가 아직입니다 — 이것부터'):''}${goal(false,this.state.storyRushAbandoned?'스토리 포기됨 — 최저 선위 전용':'빨리 만들어지는 순(스토리 D 미만 제외) — 같은 속도면 스토리 빠른 쪽')}${this.v225StoryRushButton()}${this.v221UpperMaterialsBlock(state)}${fullSpec}`;
     if(ph.key==='p3'){
       const auto=decision.routeAuto&&decision.routeAuto.adopted?`<p class="v22-note">방향 자동 채택: <b>${C.esc(decision.routeAuto.label||'')}</b> — 상위 확정·저격으로 언제든 바꿀 수 있습니다.</p>`:'<p class="v22-note">방향은 클리어 실측 순으로 자동 채택됩니다 — 8라 스토리·고급 도박 희귀 유입 후가 정확합니다.</p>';
-      return`${this.v221UpperMaterialsBlock(state)}${this.v215PlanBlock(state,plan)||'<p class="v22-note">상위가 정해지면 보유 희귀별 사용 계획(전량 소비·잉여 리롤)이 여기 뜹니다.</p>'}${auto}${this.v221StoryBlock()}${fullSpec}`;
+      return`${this.v221UpperMaterialsBlock(state)}${this.v215PlanBlock(state,plan)||'<p class="v22-note">상위가 정해지면 보유 희귀별 사용 계획(전량 소비·잉여 리롤)이 여기 뜹니다.</p>'}${auto}${fullSpec}`;
     }
     if(ph.key==='p4'){
       const upperChosen=!!(plan.upper||this.upperLock());
       const db=state&&state.db,legendOwned=!!(db&&Object.entries(state.counts||{}).some(([id,count])=>C.num(count)>0&&(unit=>unit&&C.isLegendish(unit))(db.byId.get(id))));
-      return`${goal(upperChosen,'상위 1 확보 — 스토리 담당')}${goal(legendOwned,'전설급 1 확보 — 라인 방어')}${goal(false,'바제스 미션(30~40라) — 보라 배지 유닛 확인')}${this.v221UpperMaterialsBlock(state)}${this.v221StoryBlock()}${gauges()}${fullSpec}`;
+      return`${goal(upperChosen,'상위 1 확보 — 스토리 담당')}${goal(legendOwned,'전설급 1 확보 — 라인 방어')}${goal(false,'바제스 미션(30~40라) — 보라 배지 유닛 확인')}${this.v221UpperMaterialsBlock(state)}${gauges()}${fullSpec}`;
     }
-    if(ph.key==='p5')return`${this.v221UpperMaterialsBlock(state)}${this.v221StoryBlock()}${gauges()}${fullSpec}`;
+    if(ph.key==='p5')return`${this.v221UpperMaterialsBlock(state)}${gauges()}${fullSpec}`;
     const singleEnd=String(this.state.magicRoute||'')==='singleEnd';
     return`${goal(false,singleEnd?'단끝 덱 — 유닛 추가 제작 자제, 컨트롤이 클리어를 좌우':'흔함 위습을 끌어모아 전설급 또는 스펙 희귀로 환원')}<p class="v22-note">명세 ⑥ — 55·60·65라 보스만 통과하면 종결입니다.</p>${gauges()}${fullSpec}`;
   }
@@ -1649,11 +1684,26 @@ class App{
       // v19.9.2(사용자 요청): 제작 카드와 같은 "조합 · A + B" 형식 — 능력치
       // 주석 없이 이름만, 보유 충족 여부는 색으로.
       const direct=(solve.direct||[]).slice(0,6).map(item=>{const need=Math.max(1,C.num(item.count));return`<em class="${C.num(item.owned)>=need?'ok':'gap'}">${C.esc(recipeNameOf(C.materialName(state.db,item.id)))}${need>1?`×${need}`:''}</em>`;}).join('<i class="v159-plus">+</i>');
+      // v24.3(사용자 0823: "에이스 왜곡도 에이스+마젤란 이런 게 아니라 에이스
+      // 전설부터 만드는 법을 알려주고 그다음에 왜곡 만드는 법을 알려줘야지"):
+      // 왜곡 대상은 원형 전설 미보유 시 1단계(원형 전설 조합) → 2단계
+      // (왜곡 합성)로 나눠 보여준다.  원형을 이미 보유하면 평소 한 줄.
+      const warpedStages=(()=>{
+        const target=shown&&shown.id&&state&&state.db?state.db.byId.get(String(shown.id)):null;
+        if(!target||!C.isWarped(target))return'';
+        const base=(target.stuffs||[]).map(item=>state.db.byId.get(String(item.id))).find(mat=>mat&&C.isLegendish(mat));
+        if(!base||C.num(state.counts[base.id])>0)return'';
+        let baseSolve=null;try{baseSolve=C.recipeSolve(state.db,base.id,state.counts||{});}catch(_){return'';}
+        const stage1=(baseSolve&&baseSolve.direct||[]).slice(0,6).map(item=>{const need=Math.max(1,C.num(item.count));return`<em class="${C.num(item.owned)>=need?'ok':'gap'}">${C.esc(recipeNameOf(C.materialName(state.db,item.id)))}${need>1?`×${need}`:''}</em>`;}).join('<i class="v159-plus">+</i>');
+        if(!stage1)return'';
+        const stage2=(target.stuffs||[]).slice(0,6).map(item=>{const need=Math.max(1,C.num(item.count)),ownedCount=C.num(state.counts[String(item.id)]);return`<em class="${ownedCount>=need?'ok':'gap'}">${C.esc(recipeNameOf(C.materialName(state.db,String(item.id))))}${need>1?`×${need}`:''}</em>`;}).join('<i class="v159-plus">+</i>');
+        return`<div class="v159-action-recipe v243-stage"><small>1단계 · 원형 ${C.esc(recipeNameOf(displayNameOf(base)))} 먼저</small>${stage1}</div><div class="v159-action-recipe v243-stage"><small>2단계 · 왜곡 합성</small>${stage2}</div>`;
+      })();
       const lowestEntries=Object.entries(solve.lowestMissing||{}).map(([mid,count])=>({id:mid,name:C.materialName(state.db,mid),count:C.num(count)})).filter(item=>item.count>0).sort((a,b)=>b.count-a.count);
       const lowest=lowestEntries.slice(0,8).map(item=>`<em class="common-chip"><i style="background:${C.COMMON_COLORS[item.name]||'#64748b'}"></i>${C.esc(item.name)} ×${item.count}</em>`).join('');
       const wispCost=shown&&shown.quote&&shown.quote.wisp?C.num(shown.quote.wisp.cost):C.num(solve.wispCost);
-      if(!direct&&!lowest)return'';
-      return`<div class="v151-mats">${direct?`<div class="v159-action-recipe"><small>조합</small>${direct}</div>`:''}${lowest?`<div class="commons"><small>부족 흔함 ${lowestEntries.length}종 = 선택위습 ${wispCost}</small>${lowest}${lowestEntries.length>8?`<em>외 ${lowestEntries.length-8}종</em>`:''}</div>`:`<div class="commons"><small>부족 흔함</small><em class="ok">${wispCost>0?`흔함 전량 보유 — 선택위습 ${wispCost}만 필요`:'흔함 전량 보유 — 선택위습도 필요 없음'}</em></div>`}</div>`;
+      if(!direct&&!lowest&&!warpedStages)return'';
+      return`<div class="v151-mats">${warpedStages||(direct?`<div class="v159-action-recipe"><small>조합</small>${direct}</div>`:'')}${lowest?`<div class="commons"><small>부족 흔함 ${lowestEntries.length}종 = 선택위습 ${wispCost}</small>${lowest}${lowestEntries.length>8?`<em>외 ${lowestEntries.length-8}종</em>`:''}</div>`:`<div class="commons"><small>부족 흔함</small><em class="ok">${wispCost>0?`흔함 전량 보유 — 선택위습 ${wispCost}만 필요`:'흔함 전량 보유 — 선택위습도 필요 없음'}</em></div>`}</div>`;
     })()}${(()=>{
       // v19.8(포렌식 ④): 0731 판 r19 — 센고쿠 승인이 유일한 광보잡 희귀
       // (아카이누)를 재료로 소진했고 경고가 없어서 광보잡 2가 영영 안
@@ -2497,7 +2547,12 @@ class App{
     // 원장을 연다 — 목적지 없는 여분을 굴리는 기대값이 양수다.
     // 기본 항법(2~3회·목재 2)은 종전 25라 유지.
     const navReroll=C.navProfile(this.state.navFamily,this.state.navPerk);
-    const rerollGateRound=navReroll.aggressiveReroll&&this.upperLock()?18:25;
+    // v24.3(사용자 0823: "첫 상위를 정했으면 내가 가지고 있는 희귀함 중에서
+    // 리롤을 돌릴만한 게 어떤 게 있는지 … 정한 다음에 상위를 만들고" —
+    // 실측: 확정 24라 · 리롤 판정 40라 · 리롤 사용 0회): 상위가 확정되면
+    // 항법 무관 즉시 리롤 원장을 연다.  미확정일 때만 25라 게이트(사용처
+    // 판정 불안정 보호).  v23.6 적극 18라 게이트는 이 규칙에 흡수됐다.
+    const rerollGateRound=this.upperLock()?0:25;
     let rerollCapacity=this.actualRound()>=rerollGateRound?Math.max(0,this.rerollLimit()-C.num(this.state.rerollsUsed)):0;
     // v23.8(사용자: "리롤 추천을 너무 못하는 것 같아"): '희귀→전설 즉시
     // 제작 가능'(craftable)만 있는 목적지는 보호 근거가 약하다 — 그 전설이
@@ -3364,7 +3419,7 @@ class App{
     // v24.0(사용자: "구조 자체가 문제인것같은데"): 판 중 화면 = 상태 한 줄
     // + 지금 할 일 카드(+뜰 때만 결정 카드) — F8 HUD와 같은 내용.  국면
     // 패널·참고 3패널은 분석 화면(renderV240Analysis)으로 옮겼다.
-    return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v155-dashboard v240-play"><section class="v153-panel v153-next v155-action-zone" data-region="next-action"><header><small>${this.v153Icon('blade')}</small><div><h2>지금 할 일</h2><p>지금 실행할 한 가지</p></div></header><div class="v155-action-layout"><div class="v155-action-core">${actionCardHtml}</div><aside class="v155-decision-rail" data-region="next-preview"><header class="v155-subhead"><small>${this.v153Icon('branch')}</small><div><h3>다음 제작</h3><p>${v22ph.key==='p4'||v22ph.key==='p5'?'가변 후보 · 확정은 큰 카드 1개':v22ph.key==='p6'?'신세계 국면 — 후보 고정 없음(지금 할 일에 집중)':'마감 국면(40라~)에 열립니다'}</p></div></header>${v22ph.key==='p4'||v22ph.key==='p5'?this.renderV153Preview(state,plan):`<div class="v22-rail-rest">${C.esc(v22ph.num)} ${C.esc(v22ph.label)} 국면은 후보를 미리 고정하지 않습니다 — 지금 할 일 하나에 집중하세요. 계획·원장은 상단 분석 버튼에 있습니다.</div>`}</aside></div>${this.v221StoryBlock()}</section></main>${this.renderV238Onboarding()}</div>`;
+    return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v155-dashboard v240-play"><section class="v153-panel v153-next v155-action-zone" data-region="next-action"><header><small>${this.v153Icon('blade')}</small><div><h2>지금 할 일</h2><p>지금 실행할 한 가지</p></div></header><div class="v155-action-layout"><div class="v155-action-core">${actionCardHtml}</div><aside class="v155-decision-rail" data-region="next-preview"><header class="v155-subhead"><small>${this.v153Icon('branch')}</small><div><h3>다음 제작</h3><p>${v22ph.key==='p4'||v22ph.key==='p5'?'가변 후보 · 확정은 큰 카드 1개':v22ph.key==='p6'?'신세계 국면 — 후보 고정 없음(지금 할 일에 집중)':'마감 국면(40라~)에 열립니다'}</p></div></header>${v22ph.key==='p4'||v22ph.key==='p5'?this.renderV153Preview(state,plan):`<div class="v22-rail-rest">${C.esc(v22ph.num)} ${C.esc(v22ph.label)} 국면은 후보를 미리 고정하지 않습니다 — 지금 할 일 하나에 집중하세요. 계획·원장은 상단 분석 버튼에 있습니다.</div>`}</aside></div>${this.v243LineGuard(state,plan)}${this.v243RerollSweep(plan)}</section></main>${this.renderV238Onboarding()}</div>`;
   }
   renderCoachDetails(state,plan,open=false){
     const squad=plan.squadPlan,extraActions=(plan.actions||[]).slice(2),watch=(plan.watch||[]).slice(0,6);if(!squad&&!extraActions.length&&!watch.length)return'';

@@ -40,7 +40,9 @@ test('① aggressiveReroll — 리스크헷지·카지노만 참',()=>{
 
 test('②③④ 앱 배선 — 원장 18라 개방·막판 소진 독촉·힌트 강조 (소스 계약)',()=>{
   const app=read('ord_app.js');
-  assert(app.includes('rerollGateRound=navReroll.aggressiveReroll&&this.upperLock()?18:25'),'원장 개방 라운드 로직 부재(적극 18라/기본 25라)');
+  // v24.3 재핀: 적극 18라 게이트는 "확정 즉시 개방"에 흡수됐다 — 적극
+  // 항법의 몫은 weakDestOnly(계획 밖 사용처 리롤 허용)로 계속 산다.
+  assert(app.includes('rerollGateRound=this.upperLock()?0:25'),'원장 개방 로직 부재(확정 즉시/미확정 25라)');
   assert(app.includes('this.actualRound()>=rerollGateRound'),'원장 개방이 gateRound 를 안 쓴다');
   assert(app.includes('라 전 리롤 잠금 · 사용처 재계산')&&app.includes('${rerollGateRound}라 전 리롤 잠금'),'잠금 사유 문구가 개방 라운드를 안 따라간다');
   assert(app.includes('막판 소진 권장 — 아끼지 마세요'),'막판 소진 독촉 문구 부재');

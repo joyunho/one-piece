@@ -61,7 +61,8 @@ test('단계 4(23~30라): 상위 확정은 라운드 무관(v22.1) + 리롤 게�
   // v23.6 재핀(사용자 지시 "리스크헷지 기준으로 리롤 추천 더 적극적으로"):
   // 리롤 게이트는 고정 25라가 아니라 항법 의존 — 기본 25라 유지, 적극
   // 리롤 항법(리스크헷지·카지노) + 상위 확정이면 18라 개방.
-  assert(appSource.includes('rerollGateRound=navReroll.aggressiveReroll&&this.upperLock()?18:25'), '항법 의존 리롤 게이트(기본 25라·적극 18라)가 사라짐');
+  // v24.3 재핀: 확정 시 즉시 개방 · 미확정 25라 게이트.
+  assert(appSource.includes('rerollGateRound=this.upperLock()?0:25'), '리롤 게이트(확정 즉시·미확정 25라)가 사라짐');
   assert(appSource.includes('${rerollGateRound}라 전 리롤 잠금'), '리롤 잠금 사유가 게이트 라운드를 안 따라간다');
   assert(/2\s*-\s*C\.num\(this\.state\.rerollsUsed\)|rerollBudget/.test(appSource + engineSource), '리롤 2회 예산이 사라짐');
   // v23.0 재핀: 소진 안내가 항법 의존 상한으로 보간된다(`리롤 ${rerollLimit}회`).
