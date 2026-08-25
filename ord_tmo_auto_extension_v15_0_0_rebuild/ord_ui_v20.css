@@ -190,6 +190,8 @@ body{
 .v240-play{max-width:1160px;margin:0 auto;width:100%}
 .v240-play .v155-action-zone{flex:1 1 auto;min-height:0;display:flex;flex-direction:column}
 .v240-play .v155-action-layout{flex:1 1 auto;min-height:0}
+/* v25.0: 보드가 길어도 문서 스크롤 0 계약 유지 — 코어가 내부 스크롤. */
+.v240-play .v155-action-core{overflow-y:auto;min-height:0;scrollbar-width:thin}
 .v153-spec{min-height:0;overflow-y:auto;scrollbar-width:thin}
 .v240-analysis{display:flex;flex-direction:column;gap:11px;max-width:1160px;margin:0 auto;width:100%}
 .v240-analysis .v155-rare-strip{flex-direction:column;align-items:stretch}
@@ -199,6 +201,35 @@ body{
 .v240-tool-links .v238-guide-open{margin-top:0}
 .v240-analysis-btn{width:auto;padding:0 10px;font-size:11.5px;white-space:nowrap;font-weight:800;letter-spacing:.04em;border-color:var(--accent);color:var(--accent)}
 .v240-analysis-btn.on{background:rgba(224,92,126,.14);color:var(--fg)}
+/* v25.0(사용자: "프로그램이 조합을 짜주는 건 불가능 … 내가 갈 수 있는
+   유닛들을 보여주는 방식으로"): 갈 수 있는 유닛 보드 — 선택형 코치.
+   처방 카드는 접힌 '코치 계산 의견'으로 강등. */
+.v25-board{margin-bottom:10px}
+.v25-board-head{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;margin-bottom:8px}
+.v25-board-head b{font-size:18px}
+.v25-board-head small{color:var(--sub)}
+.v25-pressure{display:flex;flex-wrap:wrap;gap:4px 8px;align-items:baseline;border:1px solid rgba(255,159,67,.4);border-radius:var(--radius-sm);padding:6px 10px;margin-bottom:8px;font-size:12px;background:var(--panel-2)}
+.v25-pressure small{flex:1 1 100%;color:#FFC58A;font-weight:800}
+.v25-pressure em{font-style:normal;color:var(--fg)}
+.v25-group{margin-bottom:8px}
+.v25-group>small{display:block;color:var(--muted);margin-bottom:4px}
+.v25-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 10px;margin-bottom:4px;background:var(--panel-2);color:var(--fg);cursor:pointer;font:inherit}
+.v25-row.ok{border-left:3px solid var(--gold)}
+.v25-row .v25-name b{font-size:14.5px}
+.v25-row>small{margin-left:auto;white-space:nowrap}
+.v25-row>small.ok{color:#8FE0BC}
+.v25-row>small.gap{color:var(--sub)}
+.v25-row>small.hard{color:#FFAD93}
+.v25-warns{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:4px 8px}
+.v25-clash{font-style:normal;font-size:11.5px;color:#FFC58A}
+.v25-clash.hard{color:#FFAD93;font-weight:700}
+.v25-badge{display:inline-block;margin-left:5px;border:1px solid var(--line-strong);border-radius:999px;padding:1px 7px;font-size:10.5px;font-style:normal;font-weight:800;color:var(--sub);vertical-align:1px;white-space:nowrap}
+.v25-badge.lock{border-color:var(--gold);color:var(--gold)}
+.v25-coach-opinion{margin-top:10px}
+.v25-coach-opinion>summary{cursor:pointer;color:var(--sub);font-size:13px;list-style:none}
+.v25-coach-opinion>summary::before{content:'▸ '}
+.v25-coach-opinion[open]>summary::before{content:'▾ '}
+.v25-coach-opinion>summary::-webkit-details-marker{display:none}
 /* v24.3: 스토리 스텝퍼(v221)는 은퇴(입력 실측 0회) — 액션 존 하단은
    리롤 정리·라인 방어 스트립이 쓴다. */
 .v243-reroll-sweep,.v243-line-guard{margin-top:10px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius-sm);padding:8px 12px;background:var(--panel-2);font-size:13px}

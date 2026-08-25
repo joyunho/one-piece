@@ -1461,6 +1461,128 @@ class App{
     this._v243GuardHtml=`<div class="v243-line-guard"><small>30라+ 라인 방어</small><b>${C.esc(displayNameOf(pick.unit))}</b><span>상위 재료·선위를 기다리는 동안 라인이 밀리면 이 전설을 먼저 — 지금 선위 ${pick.cost}로 제작 가능. 상위 트리와 겹치는지는 승인 카드가 최종 확인합니다.</span></div>`;
     return this._v243GuardHtml;
   }
+  // v25.0(사용자: "완벽히 상황을 보고 프로그램이 조합을 짜주는 건 불가능
+  // 이라고 결론을 내렸어.  한쪽 패가 과소비 되는 걸 방지한 상태에서 내가
+  // 갈 수 있는 유닛들을 보여주는 방식으로 해보자"): 철학 전환 — 코치는
+  // 결정자가 아니라 원장이다.  갈 수 있는 유닛(상위·전설)을 도달 거리순
+  // 으로 펼치고, 같은 재료를 원하는 후보들(경합)·확정 상위 몫 침범을
+  // 표시한다.  정렬은 처방이 아니라 도달 거리일 뿐, 선택은 사용자가 한다.
+  v25GoBoardData(state,plan){
+    if(!state||!state.db)return null;
+    const db=state.db,counts=state.counts||{},wisp=C.num(state.wisp);
+    // 적대 검증 ①: 스냅샷 지문만으로는 부족하다 — counts 는 수동 패 보정·
+    // 초월 쿠마 토글·152 특별함 설정으로도 바뀐다.  보드가 실제로 소비하는
+    // counts 자체를 키로 쓴다(렌더당 1회, 소량 문자열).
+    // 적대 검증 ③: 필터 계통은 사용자가 명시한 것만 쓴다 — plan.mode 는
+    // 엔진 잠정 라인이라 자동('')이 절대 안 되고, 자동 의도(전 계열
+    // 보기)가 죽는다.
+    const mode=this.state.mode||'';
+    const key=[Object.keys(counts).sort().map(id=>`${id}:${counts[id]}`).join(','),mode,(this.state.locks||[]).map(lock=>`${lock.stage}:${lock.id}`).join(','),C.num(this.state.transcendUsed),C.num(this.state.seraphUsed),String(this.state.secondUpperId||''),wisp].join('|');
+    if(key===this._v25BoardKey&&this._v25BoardData)return this._v25BoardData;
+    const lock=this.upperLock(),lockCanon=lock?String(C.canonicalUpperId(lock.id)):'';
+    const lockUnit=lock?(db.byId.get(lock.id)||db.uppers.find(u=>String(C.canonicalUpperId(u.id))===lockCanon)||null):null;
+    const lockOwned=lockUnit?C.num(counts[lockUnit.id])>0:false;
+    let lockSolve=null;
+    if(lockUnit&&!lockOwned){try{lockSolve=C.recipeSolve(db,lockUnit.id,counts);}catch(_){lockSolve=null;}}
+    const KEY_TIERS=['rare','special','uncommon'];
+    const eatsOf=solve=>{
+      const eats=[];
+      for(const [id,need] of Object.entries(solve&&solve.consumed||{})){
+        const mat=db.byId.get(String(id));if(!mat)continue;
+        const tier=C.tierKey(mat);if(!KEY_TIERS.includes(tier))continue;
+        eats.push({id:String(id),name:displayNameOf(mat),tier,need:C.num(need)});
+      }
+      return eats;
+    };
+    // 적대 검증 ②: 침범은 id 겹침이 아니라 수량으로 판정한다 — 상위 몫 +
+    // 후보 몫이 보유를 넘을 때만 진짜 침범이다(id→need 맵 유지).
+    const lockEats=new Map(lockSolve?eatsOf(lockSolve).map(item=>[item.id,item.need]):[]);
+    const usedTranscend=(lockUnit&&C.isTranscend(lockUnit))||C.num(this.state.transcendUsed)>0;
+    const usedSeraph=(lockUnit&&C.isSeraph(lockUnit))||C.num(this.state.seraphUsed)>0;
+    const mkRow=(unit,group)=>{
+      let solve=null;try{solve=C.recipeSolve(db,unit.id,counts);}catch(_){return null;}
+      if(!solve)return null;
+      const cost=C.num(solve.wispCost),gap=Math.max(0,cost-wisp),hard=(solve.hardMissing||[]).map(item=>String(item.name||item.id)).slice(0,2);
+      const clearStats=C.clearStatsFor?C.clearStatsFor(unit.id):null;
+      return{unit,group,cost,gap,hard,feasible:!hard.length&&gap<=0,eats:eatsOf(solve),
+        soloGames:clearStats?C.num(clearStats.games):0,
+        pairGames:group!=='lock'&&C.isUpper(unit)&&lockUnit&&C.pairClearGames?C.pairClearGames(lockUnit.id,unit.id):0};
+    };
+    const upperRows=[];
+    if(lockUnit&&!lockOwned){const row=mkRow(lockUnit,'lock');if(row)upperRows.push(row);}
+    // 적대 검증 ④: 이미 제작한 상위(정본 기준 어느 변형이든 보유)는
+    // "갈 수 있는" 후보가 아니다 — 전설 그룹의 보유 스킵과 동일 원칙.
+    const ownedCanon=new Set(db.uppers.filter(unit=>C.num(counts[unit.id])>0).map(unit=>String(C.canonicalUpperId(unit.id))));
+    const bestByCanon=new Map();
+    for(const unit of db.uppers){
+      const canon=String(C.canonicalUpperId(unit.id));
+      if(canon===lockCanon||ownedCanon.has(canon))continue;
+      const family=C.familyOf(unit);if(family!=='neutral'&&mode&&family!==mode)continue;
+      if(C.isTranscend(unit)&&usedTranscend)continue;
+      if(C.isSeraph(unit)&&usedSeraph)continue;
+      const row=mkRow(unit,lockUnit?'second':'upper');if(!row)continue;
+      const prev=bestByCanon.get(canon);
+      if(!prev||row.cost<prev.cost)bestByCanon.set(canon,row);
+    }
+    const pairBucket=row=>C.pairClearBucket?C.pairClearBucket(row.pairGames):0;
+    const sortRows=(a,b)=>Number(b.feasible)-Number(a.feasible)||a.gap-b.gap||pairBucket(b)-pairBucket(a)||a.cost-b.cost||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko');
+    const upperPool=[...bestByCanon.values()].sort(sortRows);
+    const UPPER_CAP=6,LEGEND_CAP=8;
+    upperRows.push(...upperPool.slice(0,UPPER_CAP));
+    const legendRows=[];
+    for(const unit of db.legendish||[]){
+      if(C.num(counts[unit.id])>0)continue;
+      const family=C.familyOf(unit);if(family!=='neutral'&&mode&&family!==mode)continue;
+      // 사용자 규칙(v24.2): 전설은 스토리 리그 D 이상만.
+      const league=C.storyLeagueGrade(unit,C.storyGrade(unit));
+      if(league&&league.leagueRanked&&/^[EF]$/.test(String(league.leagueTier)))continue;
+      const row=mkRow(unit,'legend');if(row)legendRows.push(row);
+    }
+    legendRows.sort(sortRows);
+    const shown=[...upperRows,...legendRows.slice(0,LEGEND_CAP)];
+    // 경합 지도 — 표시된 후보들이 같은 보유 재료를 얼마나 겹쳐 원하는가.
+    // 전부 만들 수는 없으니 과대집계지만, "이걸 먹으면 저쪽이 막힌다"를
+    // 보이는 게 목적이다(게이트 아님).
+    const demand=new Map();
+    for(const row of shown)for(const eat of row.eats){
+      const entry=demand.get(eat.id)||{id:eat.id,name:eat.name,tier:eat.tier,total:0,rows:[]};
+      entry.total+=eat.need;entry.rows.push(displayNameOf(row.unit));demand.set(eat.id,entry);
+    }
+    for(const entry of demand.values()){entry.owned=C.num(counts[entry.id]);entry.contended=entry.rows.length>=2&&entry.total>entry.owned;}
+    for(const row of shown){
+      const mine=displayNameOf(row.unit);
+      row.clashes=row.eats.filter(eat=>{const entry=demand.get(eat.id);return entry&&entry.contended;}).map(eat=>({name:eat.name,others:[...new Set(demand.get(eat.id).rows.filter(name=>name!==mine))].slice(0,3)}));
+      row.invadesUpper=row.group!=='lock'&&lockEats.size?row.eats.filter(eat=>lockEats.has(eat.id)&&C.num(lockEats.get(eat.id))+eat.need>C.num(counts[eat.id])).map(eat=>eat.name):[];
+      row.wispInvades=!!(lockSolve&&row.group!=='lock'&&row.cost>0&&wisp-row.cost<C.num(lockSolve.wispCost));
+    }
+    const pressure=[...demand.values()].filter(entry=>entry.contended).sort((a,b)=>(b.total-b.owned)-(a.total-a.owned)||b.rows.length-a.rows.length).slice(0,4);
+    const data={rows:shown,upperCount:upperRows.length,legendCount:Math.min(legendRows.length,LEGEND_CAP),legendMore:Math.max(0,legendRows.length-LEGEND_CAP),upperMore:Math.max(0,upperPool.length-UPPER_CAP),pressure,lockName:lockUnit?displayNameOf(lockUnit):'',lockWisp:lockSolve?C.num(lockSolve.wispCost):0,wisp};
+    this._v25BoardKey=key;this._v25BoardData=data;
+    return data;
+  }
+  renderV25GoBoard(state,plan){
+    const data=this.v25GoBoardData(state,plan);
+    if(!data||!data.rows.length)return'';
+    const statusOf=row=>row.feasible?'지금 가능':row.hard.length?`막힘 · ${row.hard.join('·')}`:row.gap>0?`선위 ${row.gap} 부족 (필요 ${row.cost})`:`선위 ${row.cost}`;
+    const rowHtml=row=>{
+      const badges=[
+        row.group==='lock'?'<i class="v25-badge lock">확정 상위</i>':'',
+        C.isStackRampUpper&&C.isStackRampUpper(row.unit)?'<i class="v238-stack">스택형</i>':'',
+        row.pairGames>0?`<i class="v241-pair">실측 ${row.pairGames}판</i>`:row.group!=='legend'&&row.soloGames>0?`<i class="v241-solo">실측 ${row.soloGames}판</i>`:'',
+        C.isWarped(row.unit)?'<i class="v25-badge">왜곡 · 2단계</i>':''
+      ].join('');
+      const warns=[
+        ...row.clashes.slice(0,3).map(clash=>`<em class="v25-clash">경합 ${C.esc(clash.name)} ↔ ${C.esc(clash.others.join('·'))}</em>`),
+        row.clashes.length>3?`<em class="v25-clash">경합 외 ${row.clashes.length-3}종</em>`:'',
+        row.invadesUpper.length?`<em class="v25-clash hard">⚠ 확정 상위 재료 침범 · ${C.esc(row.invadesUpper.slice(0,2).join('·'))}</em>`:'',
+        row.wispInvades?`<em class="v25-clash hard">⚠ 상위 몫 선위 잠식 (상위까지 ${data.lockWisp} 필요)</em>`:''
+      ].filter(Boolean).join('');
+      return`<button class="v25-row${row.feasible?' ok':''}" data-act="detail" data-id="${C.esc(row.unit.id)}"><span class="v25-name"><b>${C.esc(displayNameOf(row.unit))}</b>${badges}</span><small class="${row.feasible?'ok':row.hard.length?'hard':'gap'}">${C.esc(statusOf(row))}</small>${warns?`<span class="v25-warns">${warns}</span>`:''}</button>`;
+    };
+    const uppers=data.rows.filter(row=>row.group!=='legend'),legends=data.rows.filter(row=>row.group==='legend');
+    const pressureHtml=data.pressure.length?`<div class="v25-pressure"><small>패 경합 — 한쪽에 몰아쓰면 다른 길이 막힙니다</small>${data.pressure.map(entry=>`<em>${C.esc(entry.name)} <b>${entry.rows.length}곳</b>/보유 ${entry.owned}</em>`).join('')}</div>`:'';
+    return`<div class="v25-board"><div class="v25-board-head"><b>갈 수 있는 유닛</b><small>도달 거리순 · 선택은 직접 — 코치는 경합만 지킵니다${data.lockName?` · 확정 상위 ${C.esc(data.lockName)} 몫 보호`:''}</small></div>${pressureHtml}<div class="v25-group"><small>상위 ${uppers.length}${data.upperMore?` · 외 ${data.upperMore}`:''}</small>${uppers.map(rowHtml).join('')}</div><div class="v25-group"><small>전설·히든 ${legends.length}${data.legendMore?` · 외 ${data.legendMore}`:''} (스토리 D 이상)</small>${legends.map(rowHtml).join('')}</div></div>`;
+  }
   renderV22PhasePanel(state,plan){
     // v22.0 국면 패널 — 명세서의 그 국면 목표만.  전체 스펙 표는 어느
     // 국면에서든 접힌 폴드로 접근 가능(정보를 지우는 게 아니라 미룬다).
@@ -1629,7 +1751,7 @@ class App{
       const hoard=roundNow>=40&&gaps.length&&status==='ACT_NOW'&&shown&&C.num(state.wisp)>=C.num(shown.wispCost)?{have:C.num(state.wisp),cost:C.num(shown.wispCost)}:null;
       return{roundNow,idle,critical:idle>=5||roundNow>=38&&idle>=2,frozen,hoard};
     })();
-    return`<div class="v151-action ${C.esc(status.toLowerCase())}${v216.critical?' v216-urgent':''}" data-state="${C.esc(status)}">${status==='HOLD'?'<div class="v1915-hold-banner">이 카드는 지금 만들라는 추천이 아닙니다 — 필수 역할을 지키기 위해 <b>보류</b>된 후보입니다. 사유와 회복 목표를 먼저 확인하세요.</div>':''}${(()=>{
+    return`<div class="v151-action ${C.esc(status.toLowerCase())}${['ACT_NOW','PREPARE','HOLD'].includes(status)&&!v216.critical?' v25-opinion':''}${v216.critical?' v216-urgent':''}" data-state="${C.esc(status)}">${status==='HOLD'?'<div class="v1915-hold-banner">이 카드는 지금 만들라는 추천이 아닙니다 — 필수 역할을 지키기 위해 <b>보류</b>된 후보입니다. 사유와 회복 목표를 먼저 확인하세요.</div>':''}${(()=>{
       // v20.2: 제작 진행 중 잠금이 걸려 있으면 그 사실을 카드에 명시한다 —
       // "왜 안 바뀌지"도 "왜 바뀌지"만큼 혼란스럽다.  엔진의 이번 1순위가
       // 다르면 그것도 같이 말해 사용자가 스스로 바꿀 수 있게 한다.
@@ -3402,7 +3524,7 @@ class App{
     const steps=[
       ['1','연결','TMO.GG 데스크톱 앱(또는 크롬 확장 + 조합도우미 탭)을 켜 두면 끝 — 게임에서 유닛이 잡히는 순간 코치가 자동으로 시작합니다. 따로 누를 것 없습니다.'],
       ['2','설정 30초','판을 시작할 때 설정에서 오로성 · 항법(희귀 리롤 횟수가 여기서 정해집니다) · 152킬 특별함을 실제 게임과 맞춰 주세요.'],
-      ['3','플레이','판 중에는 이 화면 하나 — "지금 할 일" 카드만 따라가면 됩니다. 추천대로 제작했으면 카드의 확인 버튼을 눌러 주세요. 왜 그 판단인지·최종 파티 계획·희귀 원장은 상단 "분석" 버튼 화면에서 판 사이에 봅니다.'],
+      ['3','플레이','판 중 화면은 "갈 수 있는 유닛" 보드입니다 — 코치가 조합을 정해주지 않습니다. 도달 거리순 후보와 패 경합(같은 재료를 원하는 다른 길) 경고를 보고 직접 고르세요. 코치 계산 의견은 보드 아래 접힘에, 최종 파티·희귀 원장은 상단 "분석" 화면에 있습니다.'],
       ['4','인게임','F5 = 게임 위 HUD(평소엔 클릭이 게임으로 통과하고, 승인 버튼 위에서만 클릭됩니다) · F6 = 미니 패널(끌어서 위치 지정 — F5도 그 자리를 씁니다) · F10 = 다른 모니터로 이동. 판이 끝나면 결과(클리어/패배)를 입력해 주세요 — 코치가 판마다 배웁니다.']
     ];
     return`<div class="v238-onboard"><div class="v238-onboard-card"><header><b>ORD 악몽 코치 — 처음 시작 가이드</b><p>원피스 랜덤 디펜스 악몽 난이도 실전 판단 코치입니다. 네 가지만 알면 바로 씁니다.</p></header>${steps.map(([n,t,d])=>`<section><i>${n}</i><div><b>${C.esc(t)}</b><p>${C.esc(d)}</p></div></section>`).join('')}<footer><button class="primary" data-act="dismiss-onboarding">시작하기</button><small>설정 영역의 '처음 시작 가이드' 버튼으로 언제든 다시 열 수 있습니다.</small></footer></div></div>`;
@@ -3417,9 +3539,16 @@ class App{
     const actionCardHtml=this.renderV151NextAction(state,plan,health);
     if(health&&health.ready)this._lastReadyActionCard={html:actionCardHtml,at:Date.now(),round:this.actualRound()};
     // v24.0(사용자: "구조 자체가 문제인것같은데"): 판 중 화면 = 상태 한 줄
-    // + 지금 할 일 카드(+뜰 때만 결정 카드) — F5 HUD와 같은 내용.  국면
-    // 패널·참고 3패널은 분석 화면(renderV240Analysis)으로 옮겼다.
-    return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v155-dashboard v240-play"><section class="v153-panel v153-next v155-action-zone" data-region="next-action"><header><small>${this.v153Icon('blade')}</small><div><h2>지금 할 일</h2><p>지금 실행할 한 가지</p></div></header><div class="v155-action-layout"><div class="v155-action-core">${actionCardHtml}</div><aside class="v155-decision-rail" data-region="next-preview"><header class="v155-subhead"><small>${this.v153Icon('branch')}</small><div><h3>다음 제작</h3><p>${v22ph.key==='p4'||v22ph.key==='p5'?'가변 후보 · 확정은 큰 카드 1개':v22ph.key==='p6'?'신세계 국면 — 후보 고정 없음(지금 할 일에 집중)':'마감 국면(40라~)에 열립니다'}</p></div></header>${v22ph.key==='p4'||v22ph.key==='p5'?this.renderV153Preview(state,plan):`<div class="v22-rail-rest">${C.esc(v22ph.num)} ${C.esc(v22ph.label)} 국면은 후보를 미리 고정하지 않습니다 — 지금 할 일 하나에 집중하세요. 계획·원장은 상단 분석 버튼에 있습니다.</div>`}</aside></div>${this.v243LineGuard(state,plan)}${this.v243RerollSweep(plan)}</section></main>${this.renderV238Onboarding()}</div>`;
+    // + 액션 존 — 국면 패널·참고 3패널은 분석 화면(renderV240Analysis).
+    // v25.0(사용자: "프로그램이 조합을 짜주는 건 불가능 … 내가 갈 수 있는
+    // 유닛들을 보여주는 방식으로"): 갈 수 있는 유닛 보드가 주인공이 되고,
+    // 처방 카드(ACT_NOW/PREPARE/HOLD)는 접힌 '코치 계산 의견'으로 강등
+    // 된다.  결정·확인 카드(상위 선택·2상위·리롤 확인·판단 잠금·위급)는
+    // 사용자 선택지/원장 정합이라 그대로 위에 선다.
+    const boardHtml=this.renderV25GoBoard(state,plan);
+    const demoted=!!boardHtml&&actionCardHtml.includes('v25-opinion');
+    const coreHtml=demoted?`${boardHtml}<details class="v25-coach-opinion"><summary>코치 계산 의견 — 참고용 다음 한 수</summary>${actionCardHtml}</details>`:`${actionCardHtml}${boardHtml}`;
+    return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v155-dashboard v240-play"><section class="v153-panel v153-next v155-action-zone" data-region="next-action"><header><small>${this.v153Icon('blade')}</small><div><h2>갈 수 있는 유닛</h2><p>선택은 직접 — 코치는 패 경합을 지킵니다</p></div></header><div class="v155-action-layout"><div class="v155-action-core">${coreHtml}</div><aside class="v155-decision-rail" data-region="next-preview"><header class="v155-subhead"><small>${this.v153Icon('branch')}</small><div><h3>다음 제작</h3><p>${v22ph.key==='p4'||v22ph.key==='p5'?'가변 후보 · 확정은 큰 카드 1개':v22ph.key==='p6'?'신세계 국면 — 후보 고정 없음(지금 할 일에 집중)':'마감 국면(40라~)에 열립니다'}</p></div></header>${v22ph.key==='p4'||v22ph.key==='p5'?this.renderV153Preview(state,plan):`<div class="v22-rail-rest">${C.esc(v22ph.num)} ${C.esc(v22ph.label)} 국면은 후보를 미리 고정하지 않습니다 — 지금 할 일 하나에 집중하세요. 계획·원장은 상단 분석 버튼에 있습니다.</div>`}</aside></div>${this.v243LineGuard(state,plan)}${this.v243RerollSweep(plan)}</section></main>${this.renderV238Onboarding()}</div>`;
   }
   renderCoachDetails(state,plan,open=false){
     const squad=plan.squadPlan,extraActions=(plan.actions||[]).slice(2),watch=(plan.watch||[]).slice(0,6);if(!squad&&!extraActions.length&&!watch.length)return'';
