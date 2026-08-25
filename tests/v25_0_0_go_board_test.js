@@ -103,8 +103,10 @@ test('④ 강등 — 처방 카드는 접힌 코치 의견, 결정 카드는 그
   const primary=stub(false);
   assert(!primary.includes('v25-coach-opinion'),'결정 카드가 강등됐다');
   assert(primary.indexOf('data-test="card"')<primary.indexOf('data-test="board"'),'결정 카드가 보드보다 뒤에 있다');
-  // 소스 계약: 강등 마커는 처방 3상태 + 위급 제외.
-  assert(appSrc.includes("['ACT_NOW','PREPARE','HOLD'].includes(status)&&!v216.critical?' v25-opinion'"),'강등 마커 조건 소실');
+  // 소스 계약: 강등 마커는 처방 3상태 전부 — v216 방치 격상 포함(38라+
+  // 강등/복귀 진동 방지, 적대 검증 2차).
+  assert(appSrc.includes("['ACT_NOW','PREPARE','HOLD'].includes(status)?' v25-opinion'"),'강등 마커 조건 소실');
+  assert(!appSrc.includes("includes(status)&&!v216.critical?' v25-opinion'"),'v216 예외가 되살아남(진동 회귀)');
 });
 
 test('⑤ 문구·CSS — 철학 전환 배선',()=>{
@@ -153,6 +155,49 @@ test('⑥ 적대 검증 4건 고정 — 캐시·자동 계통·보유 상위·�
       assert(eat,'침범 재료를 행 소비에서 못 찾음');
       assert(C.num(lockNeed.get(eat.id))+eat.need>C.num(richState.counts[eat.id]),`수량상 무해한 재료가 침범으로 경고됨: ${name}`);
     }
+  }
+});
+
+test('⑦ 적대 검증 2차 고정 — 고스트 비강등·스크롤 보존·HUD 보드·원장 게이트·경합 상위2',()=>{
+  // 고스트: '판단 잠금' 카드가 내장한 마지막 유효 카드의 마커에 강등이
+  // 걸리면 안 된다 — 루트 class 정규식 판정.
+  assert(appSrc.includes('/^<div class="v151-action [^"]*\\bv25-opinion\\b/'),'루트 마커 판정 소실(부분 문자열 회귀)');
+  const ghostStub=(()=>{
+    const app=mkApp();
+    app.state.currentRound=45;app.observedDeficits=()=>({clearRows:[]});
+    app.renderV151NextAction=()=>'<div class="v151-action blocked"><i data-test="card"></i><div class="v151-action act_now v25-opinion">ghost</div></div>';
+    app.renderV153Status=()=>'<section data-region="game-status"></section>';
+    app.renderV153Preview=()=>'<i></i>';
+    app.renderV25GoBoard=()=>'<i data-test="board"></i>';
+    app.actualRound=()=>45;
+    return app.renderCoach(richState,{mode:'magic',v15Decision:{state:'SYNC_BLOCKED'},postLegendDecision:{awaiting:false}},{},{},{ready:false,key:'stale'});
+  })();
+  assert(!ghostStub.includes('v25-coach-opinion'),'고스트 마커 때문에 판단 잠금 카드가 접힘으로 강등됨');
+  // 스크롤 보존: 새 내부 스크롤 면이 보존 목록에 있다.
+  assert(appSrc.includes("'.v151-scroll,.v155-action-core,"),'.v155-action-core 스크롤 보존 누락');
+  // HUD: 비강등 카드 우선, 없으면 보드.
+  const boot=fs.readFileSync(path.join(ROOT,'ord_boot_desktop.js'),'utf8');
+  assert(boot.includes('.v151-action:not(.v25-opinion)')&&boot.includes('.v25-board'),'HUD 보드 전달 배선 소실');
+  assert(read('ord_hud_desktop.html').includes('#ord-hud-root .v25-row'),'HUD 보드 다이어트 CSS 소실');
+  // 원장 게이트: 세라핌 소진 시 세라핌 유닛 부재 · 50라 전 변화됨 부재 ·
+  // 상위 2기 보유 시 3번째 상위 그룹 없음.
+  const gApp=mkApp();gApp.state.seraphUsed=1;
+  const gData=gApp.v25GoBoardData(richState,{mode:'magic'});
+  assert(!gData.rows.some(row=>C.isSeraph(row.unit)),'세라핌 소진인데 세라핌이 보드에 있다');
+  assert(!gData.rows.some(row=>C.isChanged(row.unit)),'50라 전인데 변화됨이 보드에 있다');
+  const twoUppers=units.filter(u=>C.isUpper(u)&&C.familyOf(u)!=='physical').slice(0,2);
+  const withTwo={};for(const [id,n] of Object.entries(richCounts))withTwo[id]=n;
+  for(const u of twoUppers)withTwo[u.id]=1;
+  const twoState=C.normalizeState(units,{counts:withTwo,currentAbilities:{}},{manualCounts:{}});
+  const tApp=mkApp();
+  const tData=tApp.v25GoBoardData(twoState,{mode:'magic'});
+  assert(!tData.rows.some(row=>row.group==='upper'||row.group==='second'),'상위 2기 보유인데 세 번째 상위 후보가 보드에 있다');
+  // 경합 상위2 완화: 표시된 경합은 전부 상위 2개 수요 합 > 보유.
+  const cData=mkApp().v25GoBoardData(richState,{mode:'magic'});
+  for(const entry of cData.pressure){
+    const needs=[];for(const row of cData.rows)for(const eat of row.eats)if(eat.id===entry.id)needs.push(eat.need);
+    needs.sort((a,b)=>b-a);
+    assert(needs[0]+(needs[1]||0)>entry.owned,`상위2 완화 위반: ${entry.name}`);
   }
 });
 

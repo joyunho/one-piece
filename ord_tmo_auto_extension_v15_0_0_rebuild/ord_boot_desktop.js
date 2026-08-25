@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v25.0.0 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
+  // v25.0.1 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
   // 직결 합성 경로를 그대로 옮기되 크롬 API 가 전혀 없다:
   //  · /datas 는 Electron 메인 프로세스가 1초마다 밀어준다(ORD_DESKTOP.onDatas).
   //  · 자동 라운드 세대는 localStorage 에 영속(판 중간 새로고침 보호).
@@ -138,7 +138,11 @@
       const pushHud = () => {
         try {
           const hud = document.querySelector('.v153-hud');
-          const action = document.querySelector('[data-region="next-action"] .v151-action');
+          // v25.0(선택형 전환): 결정·확인 카드(비강등 .v151-action)가 있으면
+          // 그것을, 없으면 갈 수 있는 유닛 보드를 HUD 로 보낸다 — 강등된
+          // 처방 카드(v25-opinion)를 게임 위 주 지시처럼 보여주지 않는다.
+          const action = document.querySelector('[data-region="next-action"] .v151-action:not(.v25-opinion)')
+            || document.querySelector('[data-region="next-action"] .v25-board');
           const hudHtml = hud ? hud.outerHTML : '';
           const actionHtml = action ? action.outerHTML : '';
           const sig = hudHtml + '' + actionHtml;

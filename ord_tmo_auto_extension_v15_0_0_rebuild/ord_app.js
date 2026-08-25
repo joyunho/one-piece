@@ -1232,7 +1232,7 @@ class App{
   // A live TMO snapshot rebuilds the whole screen; without this, every
   // rebuild snapped the page and each scrolled panel back to the top —
   // the reported up-and-down jumping while the clock/hand refreshed.
-  scrollableSelector(){return'.v151-scroll,.v151-action,.v151-prep-list,.v151-build-list,.v151-spec-grid,.v151-spec-body,.v151-forecast-list,.v151-upper-candidates,.v151-gorosei,.v151-gorosei-values,.v151-runlog-page,.detail-modal';}
+  scrollableSelector(){return'.v151-scroll,.v155-action-core,.v151-action,.v151-prep-list,.v151-build-list,.v151-spec-grid,.v151-spec-body,.v151-forecast-list,.v151-upper-candidates,.v151-gorosei,.v151-gorosei-values,.v151-runlog-page,.detail-modal';}
   captureScrollPositions(){
     try{
       const doc=typeof document!=='undefined'&&(document.scrollingElement||document.documentElement);
@@ -1477,7 +1477,8 @@ class App{
     // 엔진 잠정 라인이라 자동('')이 절대 안 되고, 자동 의도(전 계열
     // 보기)가 죽는다.
     const mode=this.state.mode||'';
-    const key=[Object.keys(counts).sort().map(id=>`${id}:${counts[id]}`).join(','),mode,(this.state.locks||[]).map(lock=>`${lock.stage}:${lock.id}`).join(','),C.num(this.state.transcendUsed),C.num(this.state.seraphUsed),String(this.state.secondUpperId||''),wisp].join('|');
+    const roundNow=this.actualRound();
+    const key=[Object.keys(counts).sort().map(id=>`${id}:${counts[id]}`).join(','),mode,(this.state.locks||[]).map(lock=>`${lock.stage}:${lock.id}`).join(','),C.num(this.state.transcendUsed),C.num(this.state.seraphUsed),C.num(this.state.changedUsed),String(this.state.secondUpperId||''),wisp,roundNow>=50?'r50':'r0',this.state.superKumaOwned===false?'nok':'k',String(this.state.story10Reward||'')].join('|');
     if(key===this._v25BoardKey&&this._v25BoardData)return this._v25BoardData;
     const lock=this.upperLock(),lockCanon=lock?String(C.canonicalUpperId(lock.id)):'';
     const lockUnit=lock?(db.byId.get(lock.id)||db.uppers.find(u=>String(C.canonicalUpperId(u.id))===lockCanon)||null):null;
@@ -1497,8 +1498,20 @@ class App{
     // 적대 검증 ②: 침범은 id 겹침이 아니라 수량으로 판정한다 — 상위 몫 +
     // 후보 몫이 보유를 넘을 때만 진짜 침범이다(id→need 맵 유지).
     const lockEats=new Map(lockSolve?eatsOf(lockSolve).map(item=>[item.id,item.need]):[]);
-    const usedTranscend=(lockUnit&&C.isTranscend(lockUnit))||C.num(this.state.transcendUsed)>0;
-    const usedSeraph=(lockUnit&&C.isSeraph(lockUnit))||C.num(this.state.seraphUsed)>0;
+    // 적대 검증(2차): 승인 원장(ord_v15_ledger 42-51행)이 막는 조건을
+    // 보드도 미러한다 — 보드가 원장 금지 유닛을 "갈 수 있다"고 보여주면
+    // 유저가 그쪽으로 재료를 모으다 승인 단계에서야 거부당한다.
+    const usedOf=pred=>{let total=0;for(const unit of db.units||[])if(pred(unit))total+=Math.floor(C.num(counts[unit.id]));return total;};
+    const usedTranscend=(lockUnit&&C.isTranscend(lockUnit))||C.num(this.state.transcendUsed)>0||usedOf(C.isTranscend)>0;
+    const usedSeraph=(lockUnit&&C.isSeraph(lockUnit))||C.num(this.state.seraphUsed)>0||usedOf(C.isSeraph)>0;
+    const usedChanged=Math.max(usedOf(C.isChanged),C.num(this.state.changedUsed));
+    const transcendClosed=this.state.superKumaOwned===false||['rayleigh','chest'].includes(String(this.state.story10Reward||''));
+    const ledgerBlocked=unit=>{
+      if(C.isTranscend(unit)&&(usedTranscend||transcendClosed))return true;
+      if(C.isSeraph(unit)&&usedSeraph)return true;
+      if(C.isChanged(unit)&&(roundNow<50||usedChanged>=2))return true;
+      return false;
+    };
     const mkRow=(unit,group)=>{
       let solve=null;try{solve=C.recipeSolve(db,unit.id,counts);}catch(_){return null;}
       if(!solve)return null;
@@ -1514,12 +1527,13 @@ class App{
     // "갈 수 있는" 후보가 아니다 — 전설 그룹의 보유 스킵과 동일 원칙.
     const ownedCanon=new Set(db.uppers.filter(unit=>C.num(counts[unit.id])>0).map(unit=>String(C.canonicalUpperId(unit.id))));
     const bestByCanon=new Map();
-    for(const unit of db.uppers){
+    // 원장 불변식(v19.9.9): 서로 다른 상위 2기 보유면 세 번째 상위 후보는
+    // 아예 펴지 않는다.
+    if(ownedCanon.size<2)for(const unit of db.uppers){
       const canon=String(C.canonicalUpperId(unit.id));
       if(canon===lockCanon||ownedCanon.has(canon))continue;
       const family=C.familyOf(unit);if(family!=='neutral'&&mode&&family!==mode)continue;
-      if(C.isTranscend(unit)&&usedTranscend)continue;
-      if(C.isSeraph(unit)&&usedSeraph)continue;
+      if(ledgerBlocked(unit))continue;
       const row=mkRow(unit,lockUnit?'second':'upper');if(!row)continue;
       const prev=bestByCanon.get(canon);
       if(!prev||row.cost<prev.cost)bestByCanon.set(canon,row);
@@ -1533,6 +1547,7 @@ class App{
     for(const unit of db.legendish||[]){
       if(C.num(counts[unit.id])>0)continue;
       const family=C.familyOf(unit);if(family!=='neutral'&&mode&&family!==mode)continue;
+      if(ledgerBlocked(unit))continue;
       // 사용자 규칙(v24.2): 전설은 스토리 리그 D 이상만.
       const league=C.storyLeagueGrade(unit,C.storyGrade(unit));
       if(league&&league.leagueRanked&&/^[EF]$/.test(String(league.leagueTier)))continue;
@@ -1545,10 +1560,17 @@ class App{
     // 보이는 게 목적이다(게이트 아님).
     const demand=new Map();
     for(const row of shown)for(const eat of row.eats){
-      const entry=demand.get(eat.id)||{id:eat.id,name:eat.name,tier:eat.tier,total:0,rows:[]};
-      entry.total+=eat.need;entry.rows.push(displayNameOf(row.unit));demand.set(eat.id,entry);
+      const entry=demand.get(eat.id)||{id:eat.id,name:eat.name,tier:eat.tier,total:0,rows:[],needs:[]};
+      entry.total+=eat.need;entry.rows.push(displayNameOf(row.unit));entry.needs.push(eat.need);demand.set(eat.id,entry);
     }
-    for(const entry of demand.values()){entry.owned=C.num(counts[entry.id]);entry.contended=entry.rows.length>=2&&entry.total>entry.owned;}
+    // 적대 검증(2차) 과발화 완화: 후보 전체 수요 합산은 과대집계다(전부
+    // 만들 수는 없다).  "어떤 두 길이라도 동시에 못 가는가"(상위 2개
+    // 수요 합 > 보유)일 때만 경합으로 판정한다.
+    for(const entry of demand.values()){
+      entry.owned=C.num(counts[entry.id]);
+      const top=[...entry.needs].sort((a,b)=>b-a);
+      entry.contended=entry.rows.length>=2&&top[0]+(top[1]||0)>entry.owned;
+    }
     for(const row of shown){
       const mine=displayNameOf(row.unit);
       row.clashes=row.eats.filter(eat=>{const entry=demand.get(eat.id);return entry&&entry.contended;}).map(eat=>({name:eat.name,others:[...new Set(demand.get(eat.id).rows.filter(name=>name!==mine))].slice(0,3)}));
@@ -1568,7 +1590,7 @@ class App{
       const badges=[
         row.group==='lock'?'<i class="v25-badge lock">확정 상위</i>':'',
         C.isStackRampUpper&&C.isStackRampUpper(row.unit)?'<i class="v238-stack">스택형</i>':'',
-        row.pairGames>0?`<i class="v241-pair">실측 ${row.pairGames}판</i>`:row.group!=='legend'&&row.soloGames>0?`<i class="v241-solo">실측 ${row.soloGames}판</i>`:'',
+        row.pairGames>0?`<i class="v241-pair" title="확정 메인과 함께 악몽을 깬 판수">동반 실측 ${row.pairGames}판</i>`:row.group!=='legend'&&row.soloGames>0?`<i class="v241-solo" title="악몽 클리어 조합 등장 판수(단독)">실측 ${row.soloGames}판</i>`:'',
         C.isWarped(row.unit)?'<i class="v25-badge">왜곡 · 2단계</i>':''
       ].join('');
       const warns=[
@@ -1751,7 +1773,7 @@ class App{
       const hoard=roundNow>=40&&gaps.length&&status==='ACT_NOW'&&shown&&C.num(state.wisp)>=C.num(shown.wispCost)?{have:C.num(state.wisp),cost:C.num(shown.wispCost)}:null;
       return{roundNow,idle,critical:idle>=5||roundNow>=38&&idle>=2,frozen,hoard};
     })();
-    return`<div class="v151-action ${C.esc(status.toLowerCase())}${['ACT_NOW','PREPARE','HOLD'].includes(status)&&!v216.critical?' v25-opinion':''}${v216.critical?' v216-urgent':''}" data-state="${C.esc(status)}">${status==='HOLD'?'<div class="v1915-hold-banner">이 카드는 지금 만들라는 추천이 아닙니다 — 필수 역할을 지키기 위해 <b>보류</b>된 후보입니다. 사유와 회복 목표를 먼저 확인하세요.</div>':''}${(()=>{
+    return`<div class="v151-action ${C.esc(status.toLowerCase())}${['ACT_NOW','PREPARE','HOLD'].includes(status)?' v25-opinion':''}${v216.critical?' v216-urgent':''}" data-state="${C.esc(status)}">${status==='HOLD'?'<div class="v1915-hold-banner">이 카드는 지금 만들라는 추천이 아닙니다 — 필수 역할을 지키기 위해 <b>보류</b>된 후보입니다. 사유와 회복 목표를 먼저 확인하세요.</div>':''}${(()=>{
       // v20.2: 제작 진행 중 잠금이 걸려 있으면 그 사실을 카드에 명시한다 —
       // "왜 안 바뀌지"도 "왜 바뀌지"만큼 혼란스럽다.  엔진의 이번 1순위가
       // 다르면 그것도 같이 말해 사용자가 스스로 바꿀 수 있게 한다.
@@ -3543,10 +3565,13 @@ class App{
     // v25.0(사용자: "프로그램이 조합을 짜주는 건 불가능 … 내가 갈 수 있는
     // 유닛들을 보여주는 방식으로"): 갈 수 있는 유닛 보드가 주인공이 되고,
     // 처방 카드(ACT_NOW/PREPARE/HOLD)는 접힌 '코치 계산 의견'으로 강등
-    // 된다.  결정·확인 카드(상위 선택·2상위·리롤 확인·판단 잠금·위급)는
-    // 사용자 선택지/원장 정합이라 그대로 위에 선다.
+    // 된다 — v216 방치 격상 포함(처방 실행 독촉은 선택형 철학과 모순,
+    // 38라+ 강등/복귀 진동의 원인이었다).  결정·확인 카드(상위 선택·
+    // 2상위·리롤 확인·판단 잠금)는 사용자 선택지/원장 정합이라 위에 선다.
     const boardHtml=this.renderV25GoBoard(state,plan);
-    const demoted=!!boardHtml&&actionCardHtml.includes('v25-opinion');
+    // 적대 검증(2차): 부분 문자열 검사는 '판단 잠금' 카드가 내장한 고스트
+    // (마지막 유효 카드)의 마커에도 걸렸다 — 루트 카드의 class 만 본다.
+    const demoted=!!boardHtml&&/^<div class="v151-action [^"]*\bv25-opinion\b/.test(actionCardHtml);
     const coreHtml=demoted?`${boardHtml}<details class="v25-coach-opinion"><summary>코치 계산 의견 — 참고용 다음 한 수</summary>${actionCardHtml}</details>`:`${actionCardHtml}${boardHtml}`;
     return`<div class="v153-screen">${this.renderV153Status(state,clock,health)}<main class="v155-dashboard v240-play"><section class="v153-panel v153-next v155-action-zone" data-region="next-action"><header><small>${this.v153Icon('blade')}</small><div><h2>갈 수 있는 유닛</h2><p>선택은 직접 — 코치는 패 경합을 지킵니다</p></div></header><div class="v155-action-layout"><div class="v155-action-core">${coreHtml}</div><aside class="v155-decision-rail" data-region="next-preview"><header class="v155-subhead"><small>${this.v153Icon('branch')}</small><div><h3>다음 제작</h3><p>${v22ph.key==='p4'||v22ph.key==='p5'?'가변 후보 · 확정은 큰 카드 1개':v22ph.key==='p6'?'신세계 국면 — 후보 고정 없음(지금 할 일에 집중)':'마감 국면(40라~)에 열립니다'}</p></div></header>${v22ph.key==='p4'||v22ph.key==='p5'?this.renderV153Preview(state,plan):`<div class="v22-rail-rest">${C.esc(v22ph.num)} ${C.esc(v22ph.label)} 국면은 후보를 미리 고정하지 않습니다 — 지금 할 일 하나에 집중하세요. 계획·원장은 상단 분석 버튼에 있습니다.</div>`}</aside></div>${this.v243LineGuard(state,plan)}${this.v243RerollSweep(plan)}</section></main>${this.renderV238Onboarding()}</div>`;
   }
