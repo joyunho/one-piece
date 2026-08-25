@@ -213,14 +213,25 @@ body{
 .v25-pressure em{font-style:normal;color:var(--fg)}
 .v25-group{margin-bottom:8px}
 .v25-group>small{display:block;color:var(--muted);margin-bottom:4px}
-.v25-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 10px;margin-bottom:4px;background:var(--panel-2);color:var(--fg);cursor:pointer;font:inherit}
+/* v25.1(사용자: "가시성이 별론데? 이미지가 필요할 것 같아"): 행을
+   그리드(초상 | 이름·배지 | 상태)로 재편.  적대 검증 반영 두 가지 —
+   ① 초상을 2행 span 하지 않는다: 경고줄 없는 행에서 빈 암시적 2행이
+   초상 높이를 나눠 가져 이름·상태가 중심보다 위로 들뜬다.  초상은
+   1행에만 두고, 경고줄은 있을 때만 2행을 만든다.
+   ② 셀렉터는 button.v25-row — 공용 프리미티브 .v153-screen button
+   (0,1,1)이 .v25-row(0,1,0)의 패딩을 이겨 좌측 인셋이 사문화된다. */
+button.v25-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-items:center;gap:3px 10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--radius-sm);padding:6px 10px 6px 6px;margin-bottom:5px;background:var(--panel-2);color:var(--fg);cursor:pointer;font:inherit}
+.v25-row .v25-face{width:46px;height:46px;border-radius:9px;object-fit:cover;border:1px solid var(--line-strong);background:rgba(0,0,0,.35)}
+.v25-row i.v25-ph{display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:800;font-size:19px;color:var(--sub)}
 .v25-row.ok{border-left:3px solid var(--gold)}
-.v25-row .v25-name b{font-size:14.5px}
-.v25-row>small{margin-left:auto;white-space:nowrap}
+.v25-row.ok .v25-face{border-color:var(--gold)}
+.v25-row .v25-name{grid-column:2;min-width:0}
+.v25-row .v25-name b{font-size:15.5px}
+.v25-row>small{grid-column:3;grid-row:1;justify-self:end;white-space:nowrap}
 .v25-row>small.ok{color:#8FE0BC}
 .v25-row>small.gap{color:var(--sub)}
 .v25-row>small.hard{color:#FFAD93}
-.v25-warns{flex:1 1 100%;display:flex;flex-wrap:wrap;gap:4px 8px}
+.v25-warns{grid-column:2/span 2;grid-row:2;display:flex;flex-wrap:wrap;gap:4px 8px}
 .v25-clash{font-style:normal;font-size:11.5px;color:#FFC58A}
 .v25-clash.hard{color:#FFAD93;font-weight:700}
 .v25-badge{display:inline-block;margin-left:5px;border:1px solid var(--line-strong);border-radius:999px;padding:1px 7px;font-size:10.5px;font-style:normal;font-weight:800;color:var(--sub);vertical-align:1px;white-space:nowrap}

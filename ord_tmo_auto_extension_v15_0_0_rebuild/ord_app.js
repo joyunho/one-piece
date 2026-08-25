@@ -1599,7 +1599,12 @@ class App{
         row.invadesUpper.length?`<em class="v25-clash hard">⚠ 확정 상위 재료 침범 · ${C.esc(row.invadesUpper.slice(0,2).join('·'))}</em>`:'',
         row.wispInvades?`<em class="v25-clash hard">⚠ 상위 몫 선위 잠식 (상위까지 ${data.lockWisp} 필요)</em>`:''
       ].filter(Boolean).join('');
-      return`<button class="v25-row${row.feasible?' ok':''}" data-act="detail" data-id="${C.esc(row.unit.id)}"><span class="v25-name"><b>${C.esc(displayNameOf(row.unit))}</b>${badges}</span><small class="${row.feasible?'ok':row.hard.length?'hard':'gap'}">${C.esc(statusOf(row))}</small>${warns?`<span class="v25-warns">${warns}</span>`:''}</button>`;
+      // v25.1(사용자: "가시성이 별론데? 이미지가 필요할 것 같아"): 행마다
+      // 유닛 초상을 붙인다 — 카탈로그 image(tmo 미디어)가 없으면 이름
+      // 첫 글자 판으로 대체해 줄맞춤을 지킨다.
+      const unitName=displayNameOf(row.unit);
+      const face=row.unit.image?`<img class="v25-face" src="${C.esc(row.unit.image)}" alt="" loading="lazy">`:`<i class="v25-face v25-ph">${C.esc(unitName.charAt(0))}</i>`;
+      return`<button class="v25-row${row.feasible?' ok':''}" data-act="detail" data-id="${C.esc(row.unit.id)}">${face}<span class="v25-name"><b>${C.esc(unitName)}</b>${badges}</span><small class="${row.feasible?'ok':row.hard.length?'hard':'gap'}">${C.esc(statusOf(row))}</small>${warns?`<span class="v25-warns">${warns}</span>`:''}</button>`;
     };
     const uppers=data.rows.filter(row=>row.group!=='legend'),legends=data.rows.filter(row=>row.group==='legend');
     const pressureHtml=data.pressure.length?`<div class="v25-pressure"><small>패 경합 — 한쪽에 몰아쓰면 다른 길이 막힙니다</small>${data.pressure.map(entry=>`<em>${C.esc(entry.name)} <b>${entry.rows.length}곳</b>/보유 ${entry.owned}</em>`).join('')}</div>`:'';
