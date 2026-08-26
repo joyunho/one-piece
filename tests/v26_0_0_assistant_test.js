@@ -64,6 +64,8 @@ test('① 제작 가능 전설급 — 하드 결손 없음·보유 제외·원�
   // 이유를 모르겠어"): 목록은 내 희귀·특별·안흔을 실제로 소비하거나
   // 지금 바로 가능한 것만 — 빈손(게임 전)이면 비어 있어야 한다.
   for(const row of data.rows)assert(row.eats.length>0||row.ready,`재료 소비 없는 선위-전액 경로가 목록에: ${row.unit.name}`);
+  // v26.2(사용자: "선위가 10개 이하 드는 것만 나오게해줘"): 선위 소요 상한.
+  for(const row of data.rows)assert(row.cost<=10,`선위 10 초과 조합이 목록에: ${row.unit.name} (${row.cost})`);
   const emptyState=C.normalizeState(units,{counts:{},currentAbilities:{}},{manualCounts:{}});
   const eApp=mkApp();
   const eData=eApp.v26CraftData(emptyState);
@@ -147,13 +149,20 @@ test('④ 상위 실측 조합 — 동반 전설 top8 + 2상위 파트너 페어
   for(let i=1;i<pairGames.length;i++)assert(pairGames[i-1]>=pairGames[i],'페어 판수 정렬 위반');
 });
 
-test('⑤ 현재 파티 스펙 — 실보유 기준 게이지',()=>{
+test('⑤ 현재 파티 스펙 — 실보유 게이지 + 전체 스펙 표 상시(v26.2)',()=>{
   const app=mkApp();
   app.observedDeficits=()=>({requirements:[{key:'slow',label:'이동속도 감소',current:40,target:100,gap:60,required:true},{key:'stun',label:'스턴',current:1,target:0.7,gap:0,required:true}],clearRows:[{key:'slow',label:'이동속도 감소',current:40,target:100,gap:60,required:true}],source:'TMO 실제 완성 유닛'});
+  app.renderV153Spec=()=>'<i data-test="fullspec"></i>';
   const html=app.renderV26Spec(richState,{});
   assert(html.includes('v22-gauge')&&html.includes('이동속도 감소'),'스펙 게이지 부재');
   assert(html.includes('TMO 실제 완성 유닛'),'실보유 출처 표기 부재');
   assert(html.indexOf('이동속도 감소')<html.indexOf('스턴'),'결손 우선 정렬 위반');
+  // v26.2(사용자: "스펙 나오는게 좀 아쉽네"): 전체 스펙 표가 블록에 상시.
+  assert(html.includes('v26-spec-full')&&html.includes('data-test="fullspec"'),'전체 스펙 표 상시 마운트 부재');
+  // 결손 판독 전에도 표는 뜬다(대기 문구 대신).
+  app.observedDeficits=()=>({requirements:[],clearRows:[]});
+  const idle=app.renderV26Spec(richState,{});
+  assert(idle.includes('data-test="fullspec"'),'판독 전 전체 표 부재');
 });
 
 test('⑥ 화면·HUD — 보조 보드 단독 마운트, 처방 표면 은퇴',()=>{
@@ -187,6 +196,8 @@ test('⑥ 화면·HUD — 보조 보드 단독 마운트, 처방 표면 은퇴',
   // 스펙 게이지 done 숨김·열린 4개 상한), F6 오버레이 스펙 예외,
   // waiting 잠금 수동 해제 승계, 배너 버튼 primary(HUD 중계 도달).
   assert(hud.includes('#ord-hud-root .v26-b2')&&hud.includes('.v22-gauge.done{display:none !important')&&hud.includes('.v22-gauges>.v22-gauge:nth-of-type(n+5){display:none !important'),'HUD 스펙·콤보 다이어트 소실(560px 넘침 회귀)');
+  assert(hud.includes('#ord-hud-root .v26-spec-full'),'HUD 전체 스펙 표 숨김 소실(560px 넘침 회귀)');
+  assert(read('ord_ui_v20.css').includes('body.ord-overlay-mode .v26-spec-full{display:none!important'),'F6 전체 스펙 표 숨김 소실');
   const css=read('ord_ui_v20.css');
   assert(css.includes('body.ord-overlay-mode .v26-spec .v22-gauges{display:grid!important'),'F6 미니 패널 스펙 예외 소실');
   // v26.1 한눈 레이아웃: 보드 2단(전설급 | 조합+스펙) + 카드 그리드.

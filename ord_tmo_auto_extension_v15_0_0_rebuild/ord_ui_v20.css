@@ -296,6 +296,7 @@ button.v26-partner i{grid-column:2/span 2;font-style:normal;font-size:10.5px;fon
 .v26-pairs{display:flex;flex-wrap:wrap;gap:5px}
 button.v26-pair-row{width:auto;display:inline-flex;align-items:baseline;gap:7px;padding:4px 10px}
 .v26-spec-head{display:block;color:var(--sub);margin-bottom:6px}
+.v26-spec-full{margin-top:8px}
 /* v24.3: 스토리 스텝퍼(v221)는 은퇴(입력 실측 0회) — 액션 존 하단은
    리롤 정리·라인 방어 스트립이 쓴다. */
 .v243-reroll-sweep,.v243-line-guard{margin-top:10px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius-sm);padding:8px 12px;background:var(--panel-2);font-size:13px}
@@ -912,6 +913,7 @@ body.ord-overlay-mode .v153-next-candidates{display:none!important}
    통째로 사라지지 않게 예외.  높이는 충족(done) 게이지 숨김으로 지킨다. */
 body.ord-overlay-mode .v26-spec .v22-gauges{display:grid!important}
 body.ord-overlay-mode .v26-spec .v22-gauge.done{display:none!important}
+body.ord-overlay-mode .v26-spec-full{display:none!important}
 body.ord-overlay-mode .v221-story-row b{font-size:20px}
 body.ord-overlay-mode .v221-story-row button{min-width:44px;min-height:40px;font-size:20px}
 /* 한글 조합 명령어는 게임 중 필수 — 오버레이에서도 절대 숨기지 않는다. */

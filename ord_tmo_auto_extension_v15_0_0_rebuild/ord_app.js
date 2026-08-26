@@ -1496,6 +1496,9 @@ class App{
       // 소음이다.  "지금 가진 희귀함으로"의 원뜻대로, 내 희귀·특별·안흔을
       // 실제로 소비하거나 지금 바로 만들 수 있는 것만 싣는다.
       if(!eats.length&&gap>0)continue;
+      // v26.2(사용자: "선위가 10개 이하 드는 것만 나오게해줘"): 선위 소요
+      // 상한 — 10 넘게 드는 조합은 목록에서 뺀다.
+      if(cost>10)continue;
       rows.push({unit,cost,gap,ready:gap<=0,eats,role:C.roleProfile(unit),family,
         league:C.storyLeagueGrade(unit,C.storyGrade(unit)),
         roles:C.summarizeRoles({role:C.roleProfile(unit)},family==='magic'?'magic':'physical')});
@@ -1628,13 +1631,18 @@ class App{
     const requirements=(deficit.requirements||[]).filter(row=>row.required!==false&&!row.waived);
     const prog=state&&state.db&&C.progressionCounts?C.progressionCounts(state):null;
     const head=`<small class="v26-spec-head">${this.state.mode?`${modeLabel(this.state.mode)} 목표 기준`:'계통 미선택 — 상단에서 물딜/마딜을 고르면 목표가 잡힙니다'}${prog?` · 전설급 환산 ${C.num(prog.squad)}/9`:''}${deficit.source?` · ${C.esc(deficit.source)}`:''}</small>`;
-    if(!requirements.length)return`<div class="v26-spec">${head}<p class="v22-note">스펙 판독 대기 — TMO 동기화를 확인하세요.</p></div>`;
+    // v26.2(사용자: "스펙 나오는게 좀 아쉽네"): 결손 게이지만으로는 내
+    // 파티가 실제로 얼마인지 안 보인다 — 분석 폴드에만 있던 전체 스펙
+    // 표(역할별 현재/목표·초과·생존/화력 묶음)를 블록에 상시 편다.
+    // HUD·F6 미니 패널에서는 게이지만 남기고 표는 숨긴다(높이 상한).
+    const full=`<div class="v26-spec-full">${this.renderV153Spec(state,plan)}</div>`;
+    if(!requirements.length)return`<div class="v26-spec">${head}${full}</div>`;
     const bar=row=>{
       const target=Math.max(C.num(row.target),0.0001),current=Math.max(0,C.num(row.current)),pct=Math.max(4,Math.min(100,Math.round(current/target*100))),miss=C.num(row.gap)>0;
       return`<div class="v22-gauge${miss?'':' done'}"><label><span>${C.esc(row.key==='control'?'제어력':row.label)}</span><b class="${miss?'miss':''}">${fmt(current)} / ${fmt(row.target)}</b></label><div class="v22-bar"><i class="${miss?(pct>=70?'warn':'bad'):'ok'}" style="width:${pct}%"></i></div></div>`;
     };
     const open=requirements.filter(row=>C.num(row.gap)>0),closed=requirements.filter(row=>C.num(row.gap)<=0);
-    return`<div class="v26-spec">${head}<div class="v22-gauges">${open.map(bar).join('')}${closed.map(bar).join('')}</div></div>`;
+    return`<div class="v26-spec">${head}<div class="v22-gauges">${open.map(bar).join('')}${closed.map(bar).join('')}</div>${full}</div>`;
   }
   renderV26Assistant(state,plan,health){
     // 수신 정직성: 끊겨도 보드는 마지막 패 기준으로 남기고, 사실을 배너로.
@@ -1644,7 +1652,7 @@ class App{
     // 전부 primary — HUD 호버 중계(button.primary[data-act])가 닿아야 한다.
     const waiting=stale&&health&&health.key==='waiting';
     const staleHtml=stale?`<div class="v26-stale"><b>${waiting?'새 게임 패 확인 중':'TMO 수신 대기'}</b><span>${waiting?'이전 판 패가 그대로 보입니다 — 새 패가 잡히면 자동 해제됩니다.':'아래는 마지막으로 읽은 패 기준입니다.'}</span><button class="primary" data-act="connection">TMO 다시 읽기</button>${waiting?'<button class="primary" data-act="accept-snapshot">현재 보이는 패로 계속</button>':''}${this.state.pendingReroll?'<button class="primary" data-act="cancel-reroll">리롤 대기 해제</button>':''}</div>`:'';
-    return`<div class="v26-board">${staleHtml}<section class="v26-block v26-b1"><header><b>만들 수 있는 전설급</b><small>지금 보유 재료 기준 · 행을 누르면 겹치는 패 영향</small></header>${this.renderV26Craft(state)}</section><section class="v26-block v26-b2"><header><b>상위 실측 조합</b><small>악몽 클리어 코퍼스 — 표시 전용, 결정은 직접</small></header>${this.renderV26Combos(state)}</section><section class="v26-block v26-b3"><header><b>현재 파티 스펙</b><small>실보유 완성 유닛 기준</small></header>${this.renderV26Spec(state,plan)}</section></div>`;
+    return`<div class="v26-board">${staleHtml}<section class="v26-block v26-b1"><header><b>만들 수 있는 전설급</b><small>지금 보유 재료 기준 · 선위 10 이하 · 행을 누르면 겹치는 패 영향</small></header>${this.renderV26Craft(state)}</section><section class="v26-block v26-b2"><header><b>상위 실측 조합</b><small>악몽 클리어 코퍼스 — 표시 전용, 결정은 직접</small></header>${this.renderV26Combos(state)}</section><section class="v26-block v26-b3"><header><b>현재 파티 스펙</b><small>실보유 완성 유닛 기준</small></header>${this.renderV26Spec(state,plan)}</section></div>`;
   }
   renderV22PhasePanel(state,plan){
     // v22.0 국면 패널 — 명세서의 그 국면 목표만.  전체 스펙 표는 어느
