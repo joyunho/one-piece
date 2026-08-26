@@ -60,6 +60,14 @@ test('① 제작 가능 전설급 — 하드 결손 없음·보유 제외·원�
     if(a.ready!==b.ready){assert(a.ready,'지금 가능이 뒤로 밀림');continue;}
     assert(a.gap<=b.gap,'선위 부족 정렬 위반');
   }
+  // v26.1(사용자: "게임을 키지도 않았는데 만들 수 있는 전설급이 뜨는
+  // 이유를 모르겠어"): 목록은 내 희귀·특별·안흔을 실제로 소비하거나
+  // 지금 바로 가능한 것만 — 빈손(게임 전)이면 비어 있어야 한다.
+  for(const row of data.rows)assert(row.eats.length>0||row.ready,`재료 소비 없는 선위-전액 경로가 목록에: ${row.unit.name}`);
+  const emptyState=C.normalizeState(units,{counts:{},currentAbilities:{}},{manualCounts:{}});
+  const eApp=mkApp();
+  const eData=eApp.v26CraftData(emptyState);
+  assert.strictEqual((eData&&eData.rows||[]).length,0,'빈손(게임 전)인데 전설급 목록이 뜬다');
   // 원장 게이트: 세라핌 소진 시 세라핌 부재.
   const gApp=mkApp();gApp.state.seraphUsed=1;
   const gData=gApp.v26CraftData(richState);
@@ -181,6 +189,10 @@ test('⑥ 화면·HUD — 보조 보드 단독 마운트, 처방 표면 은퇴',
   assert(hud.includes('#ord-hud-root .v26-b2')&&hud.includes('.v22-gauge.done{display:none !important')&&hud.includes('.v22-gauges>.v22-gauge:nth-of-type(n+5){display:none !important'),'HUD 스펙·콤보 다이어트 소실(560px 넘침 회귀)');
   const css=read('ord_ui_v20.css');
   assert(css.includes('body.ord-overlay-mode .v26-spec .v22-gauges{display:grid!important'),'F6 미니 패널 스펙 예외 소실');
+  // v26.1 한눈 레이아웃: 보드 2단(전설급 | 조합+스펙) + 카드 그리드.
+  assert(css.includes('.v26-board{display:grid')&&css.includes('.v26-b1{grid-column:1;grid-row:1/span 2'),'보드 2단 배치 소실');
+  assert(css.includes('.v26-block .v25-group{display:grid;grid-template-columns:repeat(auto-fill'),'카드 그리드 소실');
+  assert(css.includes('@media (max-width:1040px){.v26-board{display:flex'),'좁은 화면 세로 폴백 소실');
   assert(appSrc.includes('data-act="accept-snapshot">현재 보이는 패로 계속'),'waiting 잠금 수동 해제 버튼 소실');
   assert(appSrc.includes('class="primary" data-act="cancel-reroll"'),'리롤 대기 해제 버튼 primary 소실(HUD 중계 불가 회귀)');
   assert(appSrc.includes("'v26-pick','v26-filter']"),'보조 보드 조작 감사 기록 등재 소실');

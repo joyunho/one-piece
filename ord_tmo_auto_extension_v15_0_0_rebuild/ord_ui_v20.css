@@ -242,12 +242,27 @@ button.v25-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-
 .v25-coach-opinion[open]>summary::before{content:'▾ '}
 .v25-coach-opinion>summary::-webkit-details-marker{display:none}
 /* v26.0(사용자: "프로그램은 보조 용도로만"): 보조 보드 — 행 프리미티브
-   (.v25-row/.v25-face/.v25-group)는 그대로 재사용한다. */
-.v26-board{display:flex;flex-direction:column;gap:12px}
+   (.v25-row/.v25-face/.v25-group)는 그대로 재사용한다.
+   v26.1(사용자: "한눈에 모든 정보를 알 수 있게"): 2단 배치 — 왼쪽
+   전설급 목록(카드 그리드), 오른쪽 실측 조합 + 파티 스펙.  좁은 화면은
+   세로 폴백. */
+.v26-board{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:12px 16px;align-items:start}
+.v26-b1{grid-column:1;grid-row:1/span 2}
+.v26-b2{grid-column:2;grid-row:1}
+.v26-b3{grid-column:2;grid-row:2}
+@media (max-width:1040px){.v26-board{display:flex;flex-direction:column}}
 .v26-block>header{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:7px}
 .v26-block>header b{font-size:17px}
 .v26-block>header small{color:var(--sub)}
-.v26-stale{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;border:1px solid rgba(255,159,67,.5);border-radius:var(--radius-sm);padding:8px 12px;background:var(--panel-2)}
+/* 카드 그리드 — 행을 가로로 채워 한눈에.  임팩트 패널은 전폭. */
+.v26-block .v25-group{display:grid;grid-template-columns:repeat(auto-fill,minmax(305px,1fr));gap:6px;margin-bottom:8px}
+.v26-block .v25-group>small{grid-column:1/-1;margin-bottom:0}
+.v26-impact{grid-column:1/-1}
+button.v26-row{grid-template-columns:40px minmax(0,1fr) auto;gap:2px 8px;padding:5px 8px 5px 5px;margin-bottom:0}
+.v26-row .v25-face{width:40px;height:40px}
+.v26-row .v25-name b{font-size:14px}
+.v26-row>small{font-size:12px}
+.v26-stale{grid-column:1/-1;display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;border:1px solid rgba(255,159,67,.5);border-radius:var(--radius-sm);padding:8px 12px;background:var(--panel-2)}
 .v26-stale b{color:#FFC58A}
 .v26-stale span{color:var(--sub);font-size:12.5px}
 .v26-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}

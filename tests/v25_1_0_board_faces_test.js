@@ -65,7 +65,7 @@ test('② 그리드 — 초상 | 이름·배지 | 상태 레이아웃 (양 시�
     const css=read(file);
     assert(css.includes('button.v25-row{display:grid'),`${file} 행 그리드(button 승격) 소실`);
     assert(css.includes('.v25-row .v25-face{width:46px'),`${file} 초상 스타일 소실`);
-    assert(!css.includes('grid-row:1/span 2'),`${file} 초상 2행 span 부활(경고 없는 행 텍스트 들뜸 회귀)`);
+    assert(!css.includes('.v25-face{grid-row:1/span 2'),`${file} 초상 2행 span 부활(경고 없는 행 텍스트 들뜸 회귀)`);
     assert(css.includes('i.v25-ph'),`${file} 대체 판 스타일 소실`);
     assert(css.includes('.v25-warns{grid-column:2/span 2'),`${file} 경고 줄 그리드 배치 소실`);
   }

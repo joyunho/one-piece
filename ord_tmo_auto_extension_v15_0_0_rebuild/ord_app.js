@@ -1488,8 +1488,15 @@ class App{
       // 사실 목록 — 지금 재료로 조합이 닫히는 전설급만.  선위(선택 위습)만
       // 부족한 것은 라운드 수입으로 곧 닿으므로 '선위 부족' 그룹으로 남긴다.
       if(!solve||(solve.hardMissing||[]).length)continue;
+      const eats=eatsOf(solve);
       const cost=C.num(solve.wispCost),gap=Math.max(0,cost-wisp),family=C.familyOf(unit);
-      rows.push({unit,cost,gap,ready:gap<=0,eats:eatsOf(solve),role:C.roleProfile(unit),family,
+      // v26.1(사용자: "게임을 키지도 않았는데 만들 수 있는 전설급이 뜨는
+      // 이유를 모르겠어"): 선택 위습은 부족한 흔함을 사면 되므로 빈손에도
+      // 하드 결손이 없다 — 흔함부터 전부 새로 사는 경로는 목록이 아니라
+      // 소음이다.  "지금 가진 희귀함으로"의 원뜻대로, 내 희귀·특별·안흔을
+      // 실제로 소비하거나 지금 바로 만들 수 있는 것만 싣는다.
+      if(!eats.length&&gap>0)continue;
+      rows.push({unit,cost,gap,ready:gap<=0,eats,role:C.roleProfile(unit),family,
         league:C.storyLeagueGrade(unit,C.storyGrade(unit)),
         roles:C.summarizeRoles({role:C.roleProfile(unit)},family==='magic'?'magic':'physical')});
     }
@@ -1571,8 +1578,8 @@ class App{
     };
     const ready=rows.filter(row=>row.ready),waiting=rows.filter(row=>!row.ready);
     const WAIT_CAP=12;
-    if(!rows.length)return`<div class="v26-chips">${chips}</div><p class="v22-note">${active?`${C.esc(active[1])} 역할로 지금 만들 수 있는 전설급이 없습니다 — 다른 필터를 보세요.`:'지금 보유 재료로 조합이 닫히는 전설급이 없습니다. 희귀가 들어오면 여기부터 채워집니다.'}</p>`;
-    return`<div class="v26-chips">${chips}</div>${ready.length?`<div class="v25-group v26-ready"><small>지금 가능 ${ready.length}</small>${ready.map(rowHtml).join('')}</div>`:''}${waiting.length?`<div class="v25-group v26-wait"><small>선위 부족 ${waiting.length}${waiting.length>WAIT_CAP?` · 외 ${waiting.length-WAIT_CAP}`:''} — 재료는 이미 충분</small>${waiting.slice(0,WAIT_CAP).map(rowHtml).join('')}</div>`:''}`;
+    if(!rows.length)return`<div class="v26-chips">${chips}</div><p class="v22-note">${active?`${C.esc(active[1])} 역할로 지금 만들 수 있는 전설급이 없습니다 — 다른 필터를 보세요.`:'지금 가진 희귀·재료로 닿는 전설급이 없습니다 — 게임에서 희귀가 잡히면 여기부터 채워집니다.'}</p>`;
+    return`<div class="v26-chips">${chips}</div>${ready.length?`<div class="v25-group v26-ready"><small>지금 가능 ${ready.length}</small>${ready.map(rowHtml).join('')}</div>`:''}${waiting.length?`<div class="v25-group v26-wait"><small>선위만 부족 ${waiting.length}${waiting.length>WAIT_CAP?` · 외 ${waiting.length-WAIT_CAP}`:''} — 내 재료 소비 기준</small>${waiting.slice(0,WAIT_CAP).map(rowHtml).join('')}</div>`:''}`;
   }
   // ② 상위 실측 조합 — 상위를 고르면 클리어 코퍼스에서 함께 쓰인 동반
   // 전설(top8 등장률)과 2상위 파트너(페어 판수)를 보여준다.
