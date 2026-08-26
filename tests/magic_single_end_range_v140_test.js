@@ -93,13 +93,15 @@ check('unverified finish credit can open only the theoretical band',()=>{
 
 check('four half-credit supports remain below the required operating value',()=>{
   // v23.0 재핀: 2312 카탈로그 단일 갱신 — 레이쥬 0.5→0.8, 류마 0.5→0.7,
-  // 도플라 0.5→0.6 (카쿠 0.5 유지).  합 2.6 은 여전히 필요선 3 미만이라
-  // '부분 신용 4기로는 부족' 계약은 그대로다.
+  // 도플라 0.5→0.6 (카쿠 0.5 유지).
+  // v27.0 재핀: 도플라(변화) 단일 0.6→0.5 (2.314 재검증 — 공식 도우미·감자
+  // 합치).  합 2.5 는 여전히 필요선 3 미만 — '부분 신용 4기로는 부족'
+  // 계약은 그대로다.
   const lineup=[unit('330h'),unit('440h'),unit('S50h'),unit('KC0h')];
   const result=C.evaluateMagicSingleEnd(lineup);
   assert.deepStrictEqual(
     [result.status,result.expected,result.largest,result.stable,result.maximum,result.verifiedUnits],
-    ['insufficient',2.6,.8,1.8,2.6,4]
+    ['insufficient',2.5,.8,1.7,2.5,4]
   );
   const route=planner._test.routeEvaluationFor(lineup,{rows:[]},'magic','singleEnd');
   assert.strictEqual(route.confirmable,false);

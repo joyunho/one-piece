@@ -1702,7 +1702,11 @@ class App{
     const db=state&&state.db;if(!db)return'';
     const statsOf=id=>C.clearStatsFor?C.clearStatsFor(id):null;
     const byCanon=new Map();
-    for(const unit of [...(db.uppers||[]),...((db.units||[]).filter(u=>C.isSeraph(u)))]){
+    // v27.0(사용자: "상위에 s 스네이크 이런녀석들은 왜있냐"): 세라핌은
+    // 상위가 아니라 전설급 소환(판당 1회) — 기준 상위 선택지·검색·2상위
+    // 페어 축에서 뺀다.  동반 전설 top8 에는 실측대로 계속 나온다(전설급
+    // 동반 자리가 세라핌의 올바른 자리).
+    for(const unit of db.uppers||[]){
       const canon=String(C.canonicalUpperId(unit.id));
       if(!byCanon.has(canon))byCanon.set(canon,unit);
     }

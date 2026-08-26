@@ -90,6 +90,49 @@ const patch2312={
   // 지웠어도 값은 M70h 에 보존된다.
   'M70h':{desc:'변신 유닛(물고기물고기 열매 F): 인간폼 ↔ 용폼 — 이감60·중첩방깎30·공증-75 는 두 폼 공유(2.312R 맵 A0Q1).'}
 };
+// v27.0(사용자 0826g: "싹다 유닛들 다시 확인해줘 2.314버전으로") — 공식 누적
+// 패치노트(dcinside ordc1 no=189308 · 2.314 전문, 2.313 은 결번)와 2.312R 맵
+// 원문 재검증으로 확정한 손패치.  게시 카탈로그(41824)는 2.312 에서 멈췄고
+// 2.314 는 조합식 변경이 없어 베이스 카탈로그(id·stuffs·codes)는 유지한다.
+const patch2314={
+  // 미나토(신비) — 2.314: 섬광연무 툴팁 정정 — 마법데미지 3% 증폭이 아니라
+  // 마법방어력 3 감소.  역할 축이 마뎀증 → 마방깎으로 옮겨 간다.
+  'unit_1761062663657_987':{abilities:{'마법데미지 증폭':0,'마법방어력 감소':3},renameFrom:/마뎀증3/,renameTo:'마방깎3',desc:'2.314: 섬광연무 실적용 정정 — 마법데미지 3% 증폭이 아니라 마법방어력 3 감소.'},
+  // (변화)베이비5 — 카탈로그 잔존 광보잡 플래그 정리.  2.310 공식 원문:
+  // "보스, 광폭화 대상 추가데미지 기능 삭제 · 범위 아머브레이크 1 기능
+  // 추가".  roleProfile ID 교정(ord_core)이 이미 무효화하지만, 라이브
+  // 병합·원본 표시 표면에 옛 플래그가 남지 않게 카탈로그 층에서도 지운다.
+  'N70h':{abilities:{'보스 잡기':false,'광폭화':false,'공격속도 증가':false},desc:'2.314 재확인(2.312R 맵 원문): 과열 — 공증 2만2500 + 공격시 285범위 2만2500 마뎀 · 가속(대상 아군 공속 150% 12초, 타 가속과 중복 불가, 쿨 50초) / 무기무기 Lv2 — 공격시 10%, 450범위 10만 마뎀 + 단일 7만 추가 + 범위 아머브레이크 1(최대 75중첩).  광보잡 아님.'},
+  // (변화)도플라밍고 — 오버히트: 라인몹 현재체력 20% 폭발 → 25% 마법(2.310
+  // 공식) · 단일 인분 0.6 → 0.5 (공식 도우미 125 · 감자 도우미 합치 표기).
+  'S50h':{abilities:{'단일':0.5},renameFrom:/단일0\.6/,renameTo:'단일0.5',desc:'2.312R 맵 원문: 오버히트 — 공격시 10% 단일 20만 마뎀 + 라인몹 현재체력 25% 추가 마뎀(2.310 폭발→마법 전환) / 하늘귀신(공중이동) / 실실열매(공격시 10%, 400범위 10만 마뎀).'},
+  // (변화)캐럿 — 일렉트리컬 루나: 타당 폭뎀증 1% 램프, 최대 25%(2.312R 맵
+  // 원문).  카탈로그의 1 은 스택 단위 표기 — 발동 50%라 램프 도달이 빨라
+  // 파티 폭뎀증 축은 도달 상한 25 로 세운다.
+  'J70h':{abilities:{'폭발형 데미지 증폭':25},renameFrom:/폭뎀증1/,renameTo:'폭뎀증 램프25',desc:'2.312R 맵 원문: 일렉트리컬 루나 — 공격시 50%, 425범위 10만 폭발형 + 해당 범위 폭뎀증 1%씩 최대 25%까지 램프 / 고속 전격 — 공격시 50% 단일 35만 물리 + 0.45초 스턴 / 달빛걸음·달의사자(공중이동).'},
+  // (변화)카쿠 — 람각::선 원문 명시(끝딜 0.5 산입 근거).
+  'KC0h':{desc:'2.312R 맵 원문: 람각::선 — 자신 공속 33% + 공격시 15%, 500범위 30만 마뎀 + 라인몹 단일 전체체력 5% 추가 폭발형(끝딜 0.5 산입) / 월보(1500범위 순간이동, 쿨 5초).'},
+  // (왜곡)페로나 — 홀로홀로 Lv2: 자기 라인존 폭뎀증 10%(2.312R 맵 원문 —
+  // 카탈로그 불리언 표기를 실수치로 승격).
+  '840h':{abilities:{'폭발형 데미지 증폭':10},desc:'2.312R 맵 원문: 홀로홀로 Lv2 — 915범위 이감 45% + 자기 라인존 폭뎀증 10% + 공중이동 / 네거티브 홀로우 — 기본 공격시 라인몹 삭제(비라인 단일 120만 폭발) / 카미카제 랩 — 마나 100, 500범위 225만 폭발 + 1.5초 스턴.'},
+  // ── 이하 2.314 공식 패치노트 반영(역할 수치 무변 — desc 기록) ──
+  'E30h':{desc:'2.314: 육식 체 — 20% 확률 20만 물뎀 → 15만5000 마뎀 · 지건 10만 → 12만5000 마뎀 (마법 전환).'},
+  'unit_1752901441310_3608':{desc:'2.314: 발굽 로제오 발동확률 10% → 15%.'},
+  'B30h':{desc:'2.314: 기선제압 — 단일 175% 추가 물리 → 단일 50% 추가 고정데미지.'},
+  'X30h':{desc:'2.314: 뇌영 실범위 600 → 800 정상화(툴팁 일치) — 유효 스턴 인분 0.05 유지.'},
+  '790H':{desc:'2.314: 아이스에이지 175만 → 225만 + 시전시간 0.5초 · 특성강화 성능 변경.'},
+  'OC0H':{desc:'2.314: 콤비네이션 어택 분신 공격력 11만 → 10만 (재너프).'},
+  'C40h':{desc:'2.314: 갤럭시 임펙트 — 1200만 + 전퍼 10% → 12% 물뎀 · 시전시간 0.65초 추가.'},
+  '760h':{desc:'2.314: 라이브::신시대 실범위 900 → 800 (툴팁 정정).'},
+  'C50h':{desc:'2.314: 패왕색의 패기 발동조건 범위 950 → 900 (툴팁 정정).'},
+  'KB0H':{desc:'2.314: 조합 재료(루치·스네이크맨 초월)의 레벨·스탯 계승.'},
+  'KB0H_':{desc:'2.314: 조합 재료(루치·스네이크맨 초월)의 레벨·스탯 계승.'},
+  '480h':{desc:'2.314: 인술::분신 확률 저적용 버그 수정 — 실확률 정상화(상향).'},
+  '040h':{desc:'2.314: 블링크 사거리 2000 으로 증가.'},
+  'S10h':{desc:'2.314: 블링크 사거리 1500 으로 증가.'},
+  'L20h':{desc:'2.314: 블링크 사거리 1500 으로 증가.'},
+  'C20h':{desc:'2.314: 블링크 사거리 1500 으로 증가.'}
+};
 for(const unit of Array.isArray(global.ORD_TMO_UNITS)?global.ORD_TMO_UNITS:[]){
   const p2312=patch2312[unit.id];
   if(!p2312)continue;
@@ -101,7 +144,7 @@ if(Array.isArray(global.ORD_TMO_UNITS)){const ids=new Set(global.ORD_TMO_UNITS.m
 // v23.0: 2312 카탈로그가 이 유닛들을 직접 실으면서 추가 대신 병합이 됐다 —
 // 실측 조인 코드(P50h 등)는 카탈로그가 비워 오면 여기서 보강한다.
 const existing=byId.get(row.id);existing.codes=Array.isArray(existing.codes)?existing.codes:[];for(const code of row.codes||[])if(!existing.codes.includes(code))existing.codes.push(code);}
-for(const unit of global.ORD_TMO_UNITS){const patch=liveIdentity[unit.id];if(patch)Object.assign(unit,patch);const abilityPatch=abilityPatches[unit.id];if(abilityPatch){unit.abilities=Object.assign({},unit.abilities||{},abilityPatch.abilities);if(abilityPatch.renameFrom&&abilityPatch.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(abilityPatch.renameFrom,abilityPatch.renameTo);}const p2310=patch2310[unit.id];if(p2310){if(p2310.abilities)unit.abilities=Object.assign({},unit.abilities||{},p2310.abilities);if(p2310.renameFrom&&p2310.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(p2310.renameFrom,p2310.renameTo);if(p2310.desc)unit.desc=(String(unit.desc||'').trim()?String(unit.desc)+'\n':'')+p2310.desc;}const extraCodes=codeAliases[unit.id];if(extraCodes){unit.codes=Array.isArray(unit.codes)?unit.codes:[];for(const code of extraCodes)if(!unit.codes.includes(code))unit.codes.push(code);}}}
+for(const unit of global.ORD_TMO_UNITS){const patch=liveIdentity[unit.id];if(patch)Object.assign(unit,patch);const abilityPatch=abilityPatches[unit.id];if(abilityPatch){unit.abilities=Object.assign({},unit.abilities||{},abilityPatch.abilities);if(abilityPatch.renameFrom&&abilityPatch.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(abilityPatch.renameFrom,abilityPatch.renameTo);}const p2310=patch2310[unit.id];if(p2310){if(p2310.abilities)unit.abilities=Object.assign({},unit.abilities||{},p2310.abilities);if(p2310.renameFrom&&p2310.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(p2310.renameFrom,p2310.renameTo);if(p2310.desc)unit.desc=(String(unit.desc||'').trim()?String(unit.desc)+'\n':'')+p2310.desc;}const p2314=patch2314[unit.id];if(p2314){if(p2314.abilities)unit.abilities=Object.assign({},unit.abilities||{},p2314.abilities);if(p2314.renameFrom&&p2314.renameFrom.test(String(unit.name||'')))unit.name=String(unit.name).replace(p2314.renameFrom,p2314.renameTo);if(p2314.desc)unit.desc=(String(unit.desc||'').trim()?String(unit.desc)+'\n':'')+p2314.desc;}const extraCodes=codeAliases[unit.id];if(extraCodes){unit.codes=Array.isArray(unit.codes)?unit.codes:[];for(const code of extraCodes)if(!unit.codes.includes(code))unit.codes.push(code);}}}
 const synergy=global.ORD_SYNERGY_MEMO;if(synergy&&synergy.byUnitId){synergy.byUnitId['unit_1767886180546_6011']=31;synergy.byUnitId.KB0H_=34;}
 function patchMemo(memo){
   for(const entry of memo&&memo.entries||[])for(const support of entry.supports||[]){const ids=support.unitIds||[],name=String(support.name||'');
@@ -113,6 +156,10 @@ function patchMemo(memo){
     if(ids.includes('240h')||/^시노부$/.test(name))support.specs='끝딜, 보잡';
     if(ids.includes('S20h')||/^조로$/.test(name))support.specs='끝딜, 처형';
     if(ids.includes('V30h')||/^코알라$/.test(name)){support.type='왜곡됨/공용 유틸';support.specs='보조딜, 마젠3.25';}
+    // v27.0(사용자: "이제 베이비 5는 광보잡이 아니고"): 2.305 시대 메모가
+    // (변화)베이비5 를 '보잡, 광보잡'으로 실었다 — 2.310 공식 리뉴얼(광보잡
+    // 삭제 · 암브 1 추가 · 가속 버프)로 교정.  reinforce 머리말도 함께.
+    if(ids.includes('N70h')||/^베이비 5$/.test(name)){support.specs='암브(범위1·75중첩), 단일 공속버프150, 유틸';if(support.reinforce)support.reinforce=String(support.reinforce).replace(/^보잡, 광보잡/,'암브, 공속버프');}
   }
 }
 patchMemo(global.ORD_UPPER_MEMO);patchMemo(global.ORD_SYNERGY_MEMO);
