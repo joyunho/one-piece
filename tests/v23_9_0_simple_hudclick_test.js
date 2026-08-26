@@ -53,7 +53,10 @@ test('③ HUD 호버-클릭 — forward 통과 + 호버 활성 + 메인 창 중�
   assert(hudjs.includes('elementFromPoint')&&hudjs.includes('setInteractive'),'호버 감지 부재');
   assert(hudjs.includes('sendHudClick'),'클릭 전송 부재');
   const boot=read('ord_boot_desktop.js');
-  assert(boot.includes('HUD_CLICK_OK')&&boot.includes("'mark-made': 1"),'중계 화이트리스트 부재');
+  // v26.0(보조 모드) 재핀: 승인 카드 은퇴로 mark-made 중계도 은퇴 —
+  // 수신 복구(connection)·중간 합류 수용·리롤 대기 해제만 중계한다.
+  assert(boot.includes('HUD_CLICK_OK')&&boot.includes("'connection': 1"),'중계 화이트리스트 부재');
+  assert(!boot.includes("'mark-made': 1"),'은퇴한 승인 중계(mark-made)가 되살아남');
   assert(boot.includes('CSS.escape'),'중계 셀렉터 이스케이프 부재');
   const hudHtml=read('ord_hud_desktop.html');
   assert(hudHtml.includes(':has(button.primary[data-act])'),'승인 버튼 컨테이너 되살림 부재');

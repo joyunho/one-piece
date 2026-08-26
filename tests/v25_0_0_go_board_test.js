@@ -1,204 +1,46 @@
 'use strict';
 
-// v25.0.0 계약 — 선택형 코치 전환 (사용자 방향 전환, 0824).
+// v25.0.0 계약 — 승계판 (v26.0 보조 모드 전환, 사용자 0826).
 //
-// 사용자: "완벽히 상황을 보고 프로그램이 조합을 짜주는건 불가능이라고
-// 결론을 내렸어.  한쪽 패가 과소비 되는걸 방지한 상태에서 내가 갈 수
-// 있는 유닛들을 보여주는 방식으로 해보자"
-//
-// ① 갈 수 있는 유닛 보드: 상위(정본 중복 제거·배타 티어 게이트)와
-//    전설·히든(스토리 리그 D 이상, 미보유만)을 도달 거리순으로 편다.
-//    정렬은 처방이 아니라 도달 거리다 — 선택은 사용자.
-// ② 패 경합(과소비 방지): 같은 보유 재료(희귀·특별·안흔)를 원하는
-//    후보들을 행마다 표시하고, 최상단에 경합 재료 지도를 편다.
-// ③ 확정 상위 보호: 확정 상위 트리 재료·선위 몫을 침범하는 행에 경고.
-// ④ 강등: 처방 카드(ACT_NOW/PREPARE/HOLD, 위급 제외)는 접힌 '코치
-//    계산 의견'으로 — 결정·확인 카드(선택지·원장 정합)는 그대로 위.
+// 원계약(v25.0): "갈 수 있는 유닛" 보드 + 처방 카드 강등.  v26.0 에서
+// 사용자가 "지금까지 만든 프로그램은 모두 잊어 … 보조 용도로만" 으로
+// 전면 전환하며 v25 보드는 은퇴하고 보조 보드(v26)가 승계했다.
+// 이 파일은 은퇴가 완결됐고(부활 금지) 승계 표면이 존재함을 지킨다.
+// 원장 게이트 미러·경합 계산 등 살아있는 불변식은 v26_0_0_assistant_test
+// 가 계약한다.
 
-const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
+const assert=require('assert'),fs=require('fs'),path=require('path');
 const ROOT=path.join(__dirname,'..','ord_tmo_auto_extension_v15_0_0_rebuild');
 const read=file=>fs.readFileSync(path.join(ROOT,file),'utf8');
 const appSrc=read('ord_app.js');
 
-const context={console};context.window=context;vm.createContext(context);
-context.localStorage={getItem:()=>null,setItem:()=>{},removeItem:()=>{}};
-for(const file of ['ord_units_data.js','ord_upper_memo.js','ord_synergy_memo.js','ord_upper_playbook.js','ord_data_patch.js','ord_story_nonupper_data.js','ord_story_upper_data.js','ord_upper_combat_data.js','ord_upper_skill_digest.js','ord_upper_skill_dps.js','ord_meta_stats.js','ord_clear_stats.js','ord_core.js','ord_squad_planner.js','ord_v15_model.js','ord_v15_ledger.js','ord_v15_policy.js','ord_v15_engine.js','ord_app.js']){
-  vm.runInContext(read(file),context,{filename:file});
-}
-const C=context.ORDCore,App=context.ORDApp.App,units=context.ORD_TMO_UNITS;
-const richCounts=(()=>{const counts={};for(const u of units)if(['common','uncommon','special'].includes(C.tierKey(u)))counts[u.id]=2;counts[C.WISP_ID]=8;return counts;})();
-const richState=C.normalizeState(units,{counts:richCounts,currentAbilities:{}},{manualCounts:{}});
-const mkApp=()=>{
-  const app=Object.create(App.prototype);
-  app.state={mode:'magic',magicRoute:'auto',locks:[],rerollsUsed:0,navFamily:'none',navPerk:'',transcendUsed:0,seraphUsed:0,snapshot:null,secondUpperId:''};
-  app.upperLock=()=>null;
-  return app;
-};
-
 const tests=[];
 const test=(name,fn)=>tests.push([name,fn]);
 
-test('① 보드 — 상위·전설 D+ 도달 거리순, 미보유만, 정본 중복 없음',()=>{
-  const app=mkApp();
-  const data=app.v25GoBoardData(richState,{mode:'magic'});
-  assert(data&&data.rows.length>=8,'보드가 비었다');
-  const uppers=data.rows.filter(row=>row.group!=='legend'),legends=data.rows.filter(row=>row.group==='legend');
-  assert(uppers.length>=3&&legends.length>=3,'그룹 구성이 비었다');
-  // 정본 중복 없음.
-  const canons=uppers.map(row=>String(C.canonicalUpperId(row.unit.id)));
-  assert.strictEqual(new Set(canons).size,canons.length,'상위 정본 중복');
-  // 전설 그룹: 리그 E·F 없음(사용자 규칙 D 이상) · 보유 유닛 없음.
-  for(const row of legends){
-    const league=C.storyLeagueGrade(row.unit,C.storyGrade(row.unit));
-    assert(!(league&&league.leagueRanked&&/^[EF]$/.test(String(league.leagueTier))),`E·F 전설이 보드에 있다: ${row.unit.name}`);
-    assert(C.num(richState.counts[row.unit.id])<=0,`보유 전설이 보드에 있다: ${row.unit.name}`);
-  }
-  // 도달 거리 사전식: feasible 우선 → gap → (동버킷) cost.
-  for(let i=1;i<legends.length;i++){
-    const a=legends[i-1],b=legends[i];
-    if(a.feasible!==b.feasible){assert(a.feasible,'도달 가능이 뒤로 밀림');continue;}
-    assert(a.gap<=b.gap||a.gap===b.gap,'gap 정렬 위반');
-  }
+test('① v25 보드 은퇴 완결 — 렌더러·강등 기계 부활 금지',()=>{
+  for(const gone of ['v25GoBoardData(state,plan){','renderV25GoBoard(state,plan){','<details class="v25-coach-opinion"','v25-opinion\\\\b'])
+    assert(!appSrc.includes(gone),`은퇴한 v25 표면이 되살아남: ${gone}`);
+  // 강등 마커 정규식(루트 class 판정)도 강등 기계와 함께 은퇴했다.
+  assert(!appSrc.includes('/^<div class="v151-action [^"]*\\bv25-opinion\\b/'),'강등 판정 정규식 잔재');
 });
 
-test('② 패 경합 — 같은 재료를 원하는 후보 표시 + 경합 지도 자기 일관성',()=>{
-  const app=mkApp();
-  const data=app.v25GoBoardData(richState,{mode:'magic'});
-  assert(data.pressure.length>=1,'풍족 패 전수 후보에서 경합이 0 — 계산 회귀');
-  for(const entry of data.pressure){
-    const wanters=data.rows.filter(row=>row.eats.some(eat=>eat.id===entry.id));
-    assert(wanters.length>=2,`경합 재료 ${entry.name}를 원하는 후보가 2 미만`);
-    assert(entry.total>entry.owned,'수요가 보유 이하인데 경합 표시');
-  }
-  const html=app.renderV25GoBoard(richState,{mode:'magic'});
-  assert(html.includes('경합')&&html.includes('갈 수 있는 유닛'),'경합·보드 렌더 부재');
-  assert(html.includes('한쪽에 몰아쓰면 다른 길이 막힙니다'),'과소비 안내 문구 부재');
-});
-
-test('③ 확정 상위 보호 — 트리 재료 침범 행 경고',()=>{
-  const app=mkApp();
-  app.upperLock=()=>({id:'V80H'});
-  const data=app.v25GoBoardData(richState,{mode:'magic'});
-  assert(data.lockName,'확정 상위 표기 부재');
-  assert(data.rows.some(row=>row.invadesUpper.length>0),'상위 재료 침범 플래그가 하나도 없다(풍족 패)');
-  const html=app.renderV25GoBoard(richState,{mode:'magic'});
-  assert(html.includes('확정 상위 재료 침범'),'침범 경고 렌더 부재');
-});
-
-test('④ 강등 — 처방 카드는 접힌 코치 의견, 결정 카드는 그대로 위',()=>{
-  const stub=marker=>{
-    const app=mkApp();
-    app.state.currentRound=45;
-    app.observedDeficits=()=>({clearRows:[]});
-    app.renderV151NextAction=()=>marker?'<div class="v151-action act_now v25-opinion"><i data-test="card"></i></div>':'<div class="v151-action choice"><i data-test="card"></i></div>';
-    app.renderV153Status=()=>'<section data-region="game-status"></section>';
-    app.renderV153Preview=()=>'<i></i>';
-    app.renderV25GoBoard=()=>'<i data-test="board"></i>';
-    app.actualRound=()=>45;
-    return app.renderCoach(richState,{mode:'magic',v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:false}},{},{},{ready:true,key:'ok'});
-  };
-  const demoted=stub(true);
-  assert(demoted.includes('<details class="v25-coach-opinion"'),'처방 카드가 접힘으로 강등되지 않음');
-  assert(demoted.indexOf('data-test="board"')<demoted.indexOf('data-test="card"'),'보드가 처방 카드보다 뒤에 있다');
-  const primary=stub(false);
-  assert(!primary.includes('v25-coach-opinion'),'결정 카드가 강등됐다');
-  assert(primary.indexOf('data-test="card"')<primary.indexOf('data-test="board"'),'결정 카드가 보드보다 뒤에 있다');
-  // 소스 계약: 강등 마커는 처방 3상태 전부 — v216 방치 격상 포함(38라+
-  // 강등/복귀 진동 방지, 적대 검증 2차).
-  assert(appSrc.includes("['ACT_NOW','PREPARE','HOLD'].includes(status)?' v25-opinion'"),'강등 마커 조건 소실');
-  assert(!appSrc.includes("includes(status)&&!v216.critical?' v25-opinion'"),'v216 예외가 되살아남(진동 회귀)');
-});
-
-test('⑤ 문구·CSS — 철학 전환 배선',()=>{
-  assert(appSrc.includes('갈 수 있는 유닛')&&appSrc.includes('코치 계산 의견'),'보드·의견 문구 부재');
-  assert(appSrc.includes('코치가 조합을 정해주지 않습니다'),'온보딩 새 철학 문구 부재');
-  assert(fs.readFileSync(path.join(__dirname,'..','README.txt'),'utf8').includes('갈 수 있는 유닛'),'README 갱신 부재');
+test('② 살아있는 계승 — 철학 문구·스크롤 보존·행 프리미티브',()=>{
+  // 철학(v25 → v26 연속): 코치는 조합을 정하지 않는다.
+  assert(appSrc.includes('코치가 조합을 정해주지 않습니다'),'철학 문구 소실');
+  // 보드 스크롤 면 보존(적대 검증 확정 규약).
+  assert(appSrc.includes("'.v151-scroll,.v155-action-core,"),'.v155-action-core 스크롤 보존 누락');
+  // 행 프리미티브(.v25-row/.v25-face)는 v26 보조 보드가 재사용한다.
   for(const file of ['ord_ui_v20.css','ord_cockpit_v15.css']){
     const css=read(file);
-    assert(css.includes('.v25-row{')&&css.includes('.v25-coach-opinion'),`${file} 보드 스타일 부재`);
+    assert(css.includes('button.v25-row{display:grid')&&css.includes('.v25-row .v25-face{'),`${file} 행 프리미티브 소실`);
   }
 });
 
-test('⑥ 적대 검증 4건 고정 — 캐시·자동 계통·보유 상위·침범 수량',()=>{
-  // ①(high) 캐시: counts 가 바뀌면(수동 패 보정 등) 보드가 재계산된다.
-  const app=mkApp();
-  const before=app.v25GoBoardData(richState,{mode:'magic'});
-  const bumped={};for(const [id,n] of Object.entries(richCounts))bumped[id]=n;
-  const someLegend=units.find(u=>C.isLegendish(u)&&C.familyOf(u)!=='physical');
-  bumped[someLegend.id]=1;
-  const bumpedState=C.normalizeState(units,{counts:bumped,currentAbilities:{}},{manualCounts:{}});
-  const after=app.v25GoBoardData(bumpedState,{mode:'magic'});
-  assert.notStrictEqual(before,after,'counts 변경에도 캐시가 낡은 보드를 반환(스테일)');
-  assert(!after.rows.some(row=>row.unit.id===someLegend.id),'보유 처리된 전설이 재계산 보드에 남음');
-  // ③ 자동 계통: state.mode='' 이면 plan.mode 가 physical 로 굳어도 양 계열이 보인다.
-  const autoApp=mkApp();autoApp.state.mode='';
-  const autoData=autoApp.v25GoBoardData(richState,{mode:'physical'});
-  const fams=new Set(autoData.rows.map(row=>C.familyOf(row.unit)).filter(f=>f==='physical'||f==='magic'));
-  assert(fams.has('physical')&&fams.has('magic'),'자동 모드에서 한 계열이 숨겨짐(plan.mode 필터 회귀)');
-  // ④ 보유 상위: counts>0 상위(정본)는 후보에서 빠진다.
-  const ownedUpper=units.find(u=>C.isUpper(u)&&C.familyOf(u)!=='physical');
-  const withOwned={};for(const [id,n] of Object.entries(richCounts))withOwned[id]=n;
-  withOwned[ownedUpper.id]=1;
-  const ownedState=C.normalizeState(units,{counts:withOwned,currentAbilities:{}},{manualCounts:{}});
-  const ownedApp=mkApp();
-  const ownedData=ownedApp.v25GoBoardData(ownedState,{mode:'magic'});
-  const ownedCanon=String(C.canonicalUpperId(ownedUpper.id));
-  assert(!ownedData.rows.some(row=>row.group!=='legend'&&String(C.canonicalUpperId(row.unit.id))===ownedCanon),'보유 상위가 갈 수 있는 후보로 표시됨');
-  // ② 침범 수량: 표시된 침범은 전부 상위 몫+후보 몫 > 보유 를 만족한다.
-  const lockApp=mkApp();lockApp.upperLock=()=>({id:'V80H'});
-  const lockData=lockApp.v25GoBoardData(richState,{mode:'magic'});
-  const lockSolve=C.recipeSolve(richState.db,'V80H',richState.counts);
-  const lockNeed=new Map(Object.entries(lockSolve.consumed||{}).map(([id,n])=>[String(id),C.num(n)]));
-  for(const row of lockData.rows){
-    for(const name of row.invadesUpper){
-      const eat=row.eats.find(item=>item.name===name);
-      assert(eat,'침범 재료를 행 소비에서 못 찾음');
-      assert(C.num(lockNeed.get(eat.id))+eat.need>C.num(richState.counts[eat.id]),`수량상 무해한 재료가 침범으로 경고됨: ${name}`);
-    }
-  }
-});
-
-test('⑦ 적대 검증 2차 고정 — 고스트 비강등·스크롤 보존·HUD 보드·원장 게이트·경합 상위2',()=>{
-  // 고스트: '판단 잠금' 카드가 내장한 마지막 유효 카드의 마커에 강등이
-  // 걸리면 안 된다 — 루트 class 정규식 판정.
-  assert(appSrc.includes('/^<div class="v151-action [^"]*\\bv25-opinion\\b/'),'루트 마커 판정 소실(부분 문자열 회귀)');
-  const ghostStub=(()=>{
-    const app=mkApp();
-    app.state.currentRound=45;app.observedDeficits=()=>({clearRows:[]});
-    app.renderV151NextAction=()=>'<div class="v151-action blocked"><i data-test="card"></i><div class="v151-action act_now v25-opinion">ghost</div></div>';
-    app.renderV153Status=()=>'<section data-region="game-status"></section>';
-    app.renderV153Preview=()=>'<i></i>';
-    app.renderV25GoBoard=()=>'<i data-test="board"></i>';
-    app.actualRound=()=>45;
-    return app.renderCoach(richState,{mode:'magic',v15Decision:{state:'SYNC_BLOCKED'},postLegendDecision:{awaiting:false}},{},{},{ready:false,key:'stale'});
-  })();
-  assert(!ghostStub.includes('v25-coach-opinion'),'고스트 마커 때문에 판단 잠금 카드가 접힘으로 강등됨');
-  // 스크롤 보존: 새 내부 스크롤 면이 보존 목록에 있다.
-  assert(appSrc.includes("'.v151-scroll,.v155-action-core,"),'.v155-action-core 스크롤 보존 누락');
-  // HUD: 비강등 카드 우선, 없으면 보드.
+test('③ 승계 표면 — v26 보조 보드가 화면·HUD 를 이었다',()=>{
+  for(const alive of ['v26CraftData(state){','renderV26Assistant(state,plan,health){','renderV26Craft(state){'])
+    assert(appSrc.includes(alive),`승계 표면 소실: ${alive}`);
   const boot=fs.readFileSync(path.join(ROOT,'ord_boot_desktop.js'),'utf8');
-  assert(boot.includes('.v151-action:not(.v25-opinion)')&&boot.includes('.v25-board'),'HUD 보드 전달 배선 소실');
-  assert(read('ord_hud_desktop.html').includes('#ord-hud-root .v25-row'),'HUD 보드 다이어트 CSS 소실');
-  // 원장 게이트: 세라핌 소진 시 세라핌 유닛 부재 · 50라 전 변화됨 부재 ·
-  // 상위 2기 보유 시 3번째 상위 그룹 없음.
-  const gApp=mkApp();gApp.state.seraphUsed=1;
-  const gData=gApp.v25GoBoardData(richState,{mode:'magic'});
-  assert(!gData.rows.some(row=>C.isSeraph(row.unit)),'세라핌 소진인데 세라핌이 보드에 있다');
-  assert(!gData.rows.some(row=>C.isChanged(row.unit)),'50라 전인데 변화됨이 보드에 있다');
-  const twoUppers=units.filter(u=>C.isUpper(u)&&C.familyOf(u)!=='physical').slice(0,2);
-  const withTwo={};for(const [id,n] of Object.entries(richCounts))withTwo[id]=n;
-  for(const u of twoUppers)withTwo[u.id]=1;
-  const twoState=C.normalizeState(units,{counts:withTwo,currentAbilities:{}},{manualCounts:{}});
-  const tApp=mkApp();
-  const tData=tApp.v25GoBoardData(twoState,{mode:'magic'});
-  assert(!tData.rows.some(row=>row.group==='upper'||row.group==='second'),'상위 2기 보유인데 세 번째 상위 후보가 보드에 있다');
-  // 경합 상위2 완화: 표시된 경합은 전부 상위 2개 수요 합 > 보유.
-  const cData=mkApp().v25GoBoardData(richState,{mode:'magic'});
-  for(const entry of cData.pressure){
-    const needs=[];for(const row of cData.rows)for(const eat of row.eats)if(eat.id===entry.id)needs.push(eat.need);
-    needs.sort((a,b)=>b-a);
-    assert(needs[0]+(needs[1]||0)>entry.owned,`상위2 완화 위반: ${entry.name}`);
-  }
+  assert(boot.includes('[data-region="next-action"] .v26-board'),'HUD 승계 배선 소실');
 });
 
 let passed=0;

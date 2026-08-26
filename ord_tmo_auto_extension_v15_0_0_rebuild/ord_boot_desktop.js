@@ -1,7 +1,7 @@
 (function () {
   'use strict';
 
-  // v25.1.0 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
+  // v26.0.0 — 데스크톱 셸 부트.  확장 브리지(ord_boot_extension)의 로컬
   // 직결 합성 경로를 그대로 옮기되 크롬 API 가 전혀 없다:
   //  · /datas 는 Electron 메인 프로세스가 1초마다 밀어준다(ORD_DESKTOP.onDatas).
   //  · 자동 라운드 세대는 localStorage 에 영속(판 중간 새로고침 보호).
@@ -138,11 +138,9 @@
       const pushHud = () => {
         try {
           const hud = document.querySelector('.v153-hud');
-          // v25.0(선택형 전환): 결정·확인 카드(비강등 .v151-action)가 있으면
-          // 그것을, 없으면 갈 수 있는 유닛 보드를 HUD 로 보낸다 — 강등된
-          // 처방 카드(v25-opinion)를 게임 위 주 지시처럼 보여주지 않는다.
-          const action = document.querySelector('[data-region="next-action"] .v151-action:not(.v25-opinion)')
-            || document.querySelector('[data-region="next-action"] .v25-board');
+          // v26.0(보조 모드): 처방·확인 카드는 은퇴 — HUD 는 항상 보조
+          // 보드(만들 수 있는 전설급 + 현재 스펙)를 받는다.
+          const action = document.querySelector('[data-region="next-action"] .v26-board');
           const hudHtml = hud ? hud.outerHTML : '';
           const actionHtml = action ? action.outerHTML : '';
           const sig = hudHtml + '' + actionHtml;
@@ -159,9 +157,9 @@
     // HUD에서 누른 승인 버튼을 메인 창의 같은 버튼으로 중계한다.  중계
     // 허용 목록 — 제작 확인·리롤 확인·재읽기·패 수용·리롤 대기 해제만.
     if (bridge && typeof bridge.onHudClick === 'function') {
-      // v23.10: 2상위 확정 카드(0821 포렌식)가 HUD에도 뜬다 — 확정도
-      // 게임 위에서 바로 누를 수 있게 허용(해제 버튼은 본창에만).
-      var HUD_CLICK_OK = {'mark-made': 1, 'reroll-confirmed': 1, 'connection': 1, 'accept-snapshot': 1, 'cancel-reroll': 1, 'confirm-second-upper': 1};
+      // v26.0(보조 모드): 승인 카드가 은퇴해 중계할 확인 버튼도 준다 —
+      // 수신 복구(TMO 다시 읽기)·중간 합류 수용·리롤 대기 해제만 남긴다.
+      var HUD_CLICK_OK = {'connection': 1, 'accept-snapshot': 1, 'cancel-reroll': 1};
       bridge.onHudClick(function (payload) {
         try {
           var act = payload && String(payload.act || '');

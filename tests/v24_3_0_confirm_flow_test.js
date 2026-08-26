@@ -31,38 +31,25 @@ const richState=C.normalizeState(units,{counts:richCounts,currentAbilities:{}},{
 const tests=[];
 const test=(name,fn)=>tests.push([name,fn]);
 
-test('① 리롤 게이트 — 확정 즉시 개방(미확정 25라) + 정리 스트립',()=>{
+test('① 리롤 게이트 — 확정 즉시 개방(미확정 25라) · 정리 스트립은 v26 은퇴',()=>{
+  // 엔진 게이트(0823 포렌식의 본체)는 그대로 지킨다.
   assert(appSrc.includes('rerollGateRound=this.upperLock()?0:25'),'확정 즉시 게이트 부재');
-  const app=Object.create(App.prototype);
-  app.state={rerollsUsed:0,navFamily:'none',navPerk:''};
-  app.rerollLimit=()=>2;
-  app.upperLock=()=>({id:'V80H'});
-  const plan={v15Decision:{rare:{reroll:[{name:'모몬가',reroll:1}]}}};
-  const html=app.v243RerollSweep(plan);
-  assert(html.includes('리롤 정리')&&html.includes('모몬가')&&html.includes('잔여 2회'),'리롤 정리 스트립 부재');
-  app.upperLock=()=>null;
-  assert.strictEqual(app.v243RerollSweep(plan),'','상위 미확정에 리롤 정리가 뜬다');
-  app.upperLock=()=>({id:'V80H'});
-  assert.strictEqual(app.v243RerollSweep({v15Decision:{rare:{reroll:[]}}}),'','계획 밖 희귀가 없는데 스트립이 뜬다');
+  // v26.0(보조 모드): 리롤 정리 스트립은 처방 표면이라 은퇴 — 되살아나지
+  // 않는지만 지킨다(리롤 잔여는 상태 스트립 필이 계속 보여준다).
+  assert(!appSrc.includes('v243RerollSweep(plan){'),'은퇴한 리롤 정리 스트립이 되살아남');
 });
 
-test('② 30라+ 라인 방어 — 상위 재료 대기 구간에 최저 선위 D+ 전설 안내',()=>{
+test('② 30라+ 라인 방어 — v26 보조 보드(제작 가능 전설 상시 목록)로 승계',()=>{
+  // v24.3 원계약: 상위 재료 대기 구간에 지금 만들 수 있는 전설 안내.
+  // v26.0: 보조 보드 블록 ①이 어느 라운드든 제작 가능 전설급을 상시
+  // 목록으로 보여준다 — 전용 스트립은 은퇴.
+  assert(!appSrc.includes('v243LineGuard(state,plan){'),'은퇴한 라인 방어 스트립이 되살아남');
   const app=Object.create(App.prototype);
-  app.state={mode:'',navFamily:'none',navPerk:''};
+  app.state={mode:'',navFamily:'none',navPerk:'',transcendUsed:0,seraphUsed:0,changedUsed:0,superKumaOwned:true,story10Reward:''};
   app.upperLock=()=>({id:'V80H'});
   app.actualRound=()=>32;
-  const plan={mode:'',v15Decision:{label:'확정 상위 재료 보호'}};
-  const html=app.v243LineGuard(richState,plan);
-  assert(html.includes('라인 방어'),'라인 방어 안내 부재');
-  assert(html.includes('승인 카드가 최종 확인'),'권위 경계 문구 부재');
-  // 안내된 전설은 리그 E·F 가 아니다(이름으로 역검증).
-  const named=units.filter(u=>C.isLegendish(u)&&html.includes(C.esc(C.displayNameOf(u))));
-  assert(named.length>=1,'안내 전설을 역해석 못 함');
-  for(const u of named){const lg=C.storyLeagueGrade(u,C.storyGrade(u));assert(!(lg&&lg.leagueRanked&&/^[EF]$/.test(String(lg.leagueTier))),`E·F 전설이 라인 방어로 안내됨: ${u.name}`);}
-  app.actualRound=()=>20;app._v243GuardKey='';
-  assert.strictEqual(app.v243LineGuard(richState,plan),'','30라 전에 라인 방어가 뜬다');
-  app.actualRound=()=>32;app._v243GuardKey='';
-  assert.strictEqual(app.v243LineGuard(richState,{mode:'',v15Decision:{label:'지금 제작'}}),'','제작 가능 구간에 라인 방어가 뜬다');
+  const data=app.v26CraftData(richState);
+  assert(data&&data.rows.some(row=>row.ready),'32라 풍족 패에서 지금 제작 가능 전설이 0 — 라인 방어 승계 실패');
 });
 
 test('③ 왜곡 단계 표시 — 1단계 원형 전설 → 2단계 왜곡 합성 (배선+데이터 불변식)',()=>{
@@ -81,7 +68,7 @@ test('③ 왜곡 단계 표시 — 1단계 원형 전설 → 2단계 왜곡 합�
 test('④ 스토리 스텝퍼 은퇴 — 플레이 화면·핸들러 잔재 없음',()=>{
   assert(!appSrc.includes('v221StoryBlock(){'),'스텝퍼 메서드 잔재');
   assert(!appSrc.includes('data-act="story-stage-step"'),'스텝퍼 버튼 잔재');
-  assert(appSrc.includes('v243LineGuard(state,plan)')&&appSrc.includes('v243RerollSweep(plan)'),'대체 스트립 배선 부재');
+  // v26.0: v24.3 대체 스트립도 은퇴 — 스텝퍼 부재 핀만 남긴다.
 });
 
 let passed=0;

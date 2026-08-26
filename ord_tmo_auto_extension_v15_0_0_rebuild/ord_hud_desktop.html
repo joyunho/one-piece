@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="ord-helper" content="v25.1.0-desktop-hud"><title>ORD HUD</title><link rel="stylesheet" href="ord_app.css"><link rel="stylesheet" href="ord_ui_v20.css"><style>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="ord-helper" content="v26.0.0-desktop-hud"><title>ORD HUD</title><link rel="stylesheet" href="ord_app.css"><link rel="stylesheet" href="ord_ui_v20.css"><style>
 /* 인게임 HUD — 창이 아니라 게임 위에 뜬 글자·칩처럼 보여야 한다.
    배경은 완전 투명, 콘텐츠 블록만 반투명 판.  클릭은 전부 게임으로
    통과하므로(메인 프로세스 setIgnoreMouseEvents) 상호작용 없음.
@@ -74,18 +74,31 @@ html,body{background:transparent !important;margin:0;padding:0;overflow:hidden;}
    클릭은 메인 창의 같은 버튼으로 중계(ord_hud_desktop.js). */
 #ord-hud-root .v151-action-foot:has(button.primary[data-act]),#ord-hud-root .v151-inline-actions:has(button.primary[data-act]){display:flex !important;gap:6px;align-items:center;margin-top:7px;}
 #ord-hud-root .v151-action-foot small{font-size:10.5px;opacity:.65;}
-#ord-hud-root .v151-action button.primary[data-act]{display:inline-flex !important;pointer-events:auto;align-items:center;justify-content:center;padding:7px 12px;font-size:13px;font-weight:800;cursor:pointer;}
+#ord-hud-root .v151-action button.primary[data-act],#ord-hud-root .v26-stale button.primary[data-act]{display:inline-flex !important;pointer-events:auto;align-items:center;justify-content:center;padding:7px 12px;font-size:13px;font-weight:800;cursor:pointer;}
 #ord-hud-root .v151-action-foot button:not(.primary){display:none !important;}
 /* v23.11: 카드의 '자세히' 접힘은 HUD에서 통째로 소음 — 숨긴다. */
 #ord-hud-root .v2311-more{display:none !important;}
-/* v25.1.0: 결정 카드가 없을 때 HUD 는 갈 수 있는 유닛 보드를 받는다.
-   v25.1(적대 검증): 창은 560px 고정·스크롤 불가라 초상 행이 커진 만큼
-   다이어트를 조인다 — 그룹당 3행, 연성 경합 줄은 숨기고 ⚠(침범·잠식)
-   경고만 유지.  행 표시는 위 전역 버튼 숨김(1,1,1)을 동특이성 후순위
-   !important 로 이긴다(v25.0.x 는 이 규칙에 먹혀 행이 아예 안 그려졌다). */
-#ord-hud-root .v25-board{border:0;padding:10px 12px;}
-#ord-hud-root .v25-board-head b{font-size:18px;}
-#ord-hud-root .v25-board-head small{font-size:12px;}
+/* v26.0(보조 모드): HUD 는 항상 보조 보드를 받는다.  창은 560px 고정·
+   스크롤 불가 — 게임 위 다이어트: 필터 칩·실측 조합·겹침 패널·선위
+   부족 그룹·역할 줄은 숨기고, "지금 가능" 행(그룹당 3행)과 파티 스펙
+   게이지만 남긴다.  행 표시는 위 전역 버튼 숨김(1,1,1)을 동특이성
+   후순위 !important 로 이긴다(v25.0.x 는 이 규칙에 먹혀 행이 아예 안
+   그려졌다). */
+#ord-hud-root .v26-board{display:flex;flex-direction:column;gap:6px;}
+#ord-hud-root .v26-block>header{margin-bottom:4px;}
+#ord-hud-root .v26-block>header b{font-size:15px;}
+#ord-hud-root .v26-block>header small{display:none;}
+/* 적대 검증(v26): 실측 조합 블록은 본문만 숨기면 죽은 헤더가 남는다 —
+   블록 통째(v26-b2).  스펙 게이지는 상한이 없으면 560px 고정창을 86~
+   167px 넘친다 — 충족(done) 숨김 + 열린 결손 4개까지. */
+#ord-hud-root .v26-chips,#ord-hud-root .v26-b2,#ord-hud-root .v26-impact,#ord-hud-root .v26-wait,#ord-hud-root .v26-roles{display:none !important;}
+#ord-hud-root .v26-stale{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:12.5px;}
+#ord-hud-root .v26-stale b{color:#FFC58A;}
+#ord-hud-root .v26-spec-head{font-size:11px;opacity:.85;}
+#ord-hud-root .v22-gauge label{font-size:11.5px;}
+#ord-hud-root .v22-gauges{display:block;}
+#ord-hud-root .v22-gauge.done{display:none !important;}
+#ord-hud-root .v22-gauges>.v22-gauge:nth-of-type(n+5){display:none !important;}
 #ord-hud-root button.v25-row{display:grid !important;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:2px 8px;width:100%;text-align:left;border:1px solid rgba(122,140,170,.35);border-radius:8px;padding:4px 8px 4px 4px;margin-bottom:3px;background:transparent;color:inherit;font:inherit;font-size:14px;}
 #ord-hud-root .v25-row .v25-face{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid rgba(122,140,170,.4);}
 #ord-hud-root .v25-row i.v25-ph{display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:800;font-size:15px;}
@@ -98,8 +111,8 @@ html,body{background:transparent !important;margin:0;padding:0;overflow:hidden;}
 #ord-hud-root .v25-pressure{display:flex;flex-wrap:wrap;gap:3px 7px;border:1px solid rgba(255,159,67,.4);border-radius:8px;padding:5px 8px;margin-bottom:6px;font-size:12px;}
 #ord-hud-root .v25-pressure small{flex:1 1 100%;color:#FFC58A;font-weight:800;}
 #ord-hud-root .v25-pressure em{font-style:normal;}
-body.hud-hot #ord-hud-root .v151-action button.primary[data-act]{outline:2px solid rgba(255,214,120,.75);}
-/* v25.1.0(사용자: "오버레이 창이 반투명해도 ㄱㅊ을듯?"): 콘텐츠 판을
+body.hud-hot #ord-hud-root .v151-action button.primary[data-act],body.hud-hot #ord-hud-root .v26-stale button.primary[data-act]{outline:2px solid rgba(255,214,120,.75);}
+/* v26.0.0(사용자: "오버레이 창이 반투명해도 ㄱㅊ을듯?"): 콘텐츠 판을
    반투명(.62)으로 낮춰 뒤의 게임이 비쳐 보이게 한다.  가독은 글자
    그림자로 지키고, 승인 버튼 호버(클릭 가능 순간)에는 판이 다시
    진해져(.92) 조작 대비를 확보한다. */

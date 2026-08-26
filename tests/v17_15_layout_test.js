@@ -21,7 +21,8 @@ test('renderCoach는 상태와 플레이 판단 영역만 배치한다 (v24.0 �
   // v18.4 6개 → v21.1 7개 → v24.0(사용자: "구조 자체가 문제인것같은데"):
   // 플레이/분석 2화면 분리 — 판 중 화면은 액션 존(레일 포함)뿐이고,
   // 국면·참고 패널은 분석 화면(renderV240Analysis)이 세로로 편다.
-  assert.deepStrictEqual(regions, ['next-action', 'next-preview']);
+  // v26.0(보조 모드): 다음 제작 레일 은퇴 — 액션 존 하나뿐이다.
+  assert.deepStrictEqual(regions, ['next-action']);
   const analysis = slice('renderV240Analysis(state,plan,health){', '// A live TMO snapshot');
   const analysisRegions = [...analysis.matchAll(/data-region="([^"]+)"/g)].map(m => m[1]);
   assert.deepStrictEqual(analysisRegions, ['clear-gaps', 'upper-party', 'craftable-legends', 'unused-rare']);
@@ -33,8 +34,12 @@ test('renderCoach는 상태와 플레이 판단 영역만 배치한다 (v24.0 �
 test('다음 행동은 확정 카드 하나와 후속 후보 최대 2개만 보인다', () => {
   const coach = slice('renderCoach(state,plan,phase,clock,health){', 'renderCoachDetails(state,plan,open=false){');
   const candidate = slice('renderV153Preview(state,plan){', 'renderV153CraftableLegends(state,plan){');
-  assert(coach.includes('renderV151NextAction(state,plan,health)'));
-  assert(coach.includes('renderV153Preview(state,plan)'));
+  // v26.0(보조 모드): 처방 카드·다음 제작 큐는 화면에서 은퇴 — 플레이
+  // 화면은 보조 보드만 부른다.  큐 상한·문구 계약은 은퇴 코드가 남아
+  // 있는 동안 그대로 지킨다(참조 테스트 유지 규약).
+  assert(!coach.includes('renderV151NextAction(state,plan,health)'), '은퇴한 처방 카드가 플레이 화면에 돌아옴');
+  assert(!coach.includes('renderV153Preview(state,plan)'), '은퇴한 다음 제작 레일이 플레이 화면에 돌아옴');
+  assert(coach.includes('renderV26Assistant(state,plan,health)'), '보조 보드 마운트 소실');
   // v18.4: 후속 후보 수집이 v153NextCandidateRows 로 빠졌다(1번 카드와 2번
   // 패널이 같은 목록을 보게 하려고). 상한 계약은 그 헬퍼에서 지킨다.
   const candidateRows = slice('v153NextCandidateRows(plan){', 'renderV153NextCandidate(state,plan){');

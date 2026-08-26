@@ -241,6 +241,46 @@ button.v25-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-
 .v25-coach-opinion>summary::before{content:'▸ '}
 .v25-coach-opinion[open]>summary::before{content:'▾ '}
 .v25-coach-opinion>summary::-webkit-details-marker{display:none}
+/* v26.0(사용자: "프로그램은 보조 용도로만"): 보조 보드 — 행 프리미티브
+   (.v25-row/.v25-face/.v25-group)는 그대로 재사용한다. */
+.v26-board{display:flex;flex-direction:column;gap:12px}
+.v26-block>header{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:7px}
+.v26-block>header b{font-size:17px}
+.v26-block>header small{color:var(--sub)}
+.v26-stale{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px;border:1px solid rgba(255,159,67,.5);border-radius:var(--radius-sm);padding:8px 12px;background:var(--panel-2)}
+.v26-stale b{color:#FFC58A}
+.v26-stale span{color:var(--sub);font-size:12.5px}
+.v26-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+button.v26-chip{width:auto;display:inline-flex;align-items:baseline;gap:5px;padding:4px 11px;border-radius:999px;font-size:12.5px;font-weight:800;color:var(--sub)}
+button.v26-chip i{font-style:normal;font-weight:700;font-size:11px;opacity:.75}
+button.v26-chip.on{border-color:var(--gold);color:var(--gold)}
+.v26-fam{display:inline-block;margin-left:6px;border-radius:999px;border:1px solid var(--line-strong);padding:1px 7px;font-size:10.5px;font-style:normal;font-weight:800;vertical-align:1px;white-space:nowrap;color:var(--sub)}
+.v26-fam.magic{border-color:rgba(140,160,255,.55);color:#AEBBFF}
+.v26-fam.physical{border-color:rgba(255,150,120,.55);color:#FFB49A}
+.v26-roles{color:var(--muted);font-size:11.5px}
+.v25-row.picked{border-color:var(--gold);box-shadow:0 0 10px rgba(217,164,65,.15)}
+.v26-impact{border:1px solid var(--gold);border-radius:var(--radius-sm);padding:8px 12px;margin:-2px 0 8px;background:var(--panel-2)}
+.v26-impact>small{display:block;color:var(--sub);margin-bottom:5px}
+.v26-impact-row{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 9px;margin-bottom:3px}
+.v26-impact-row b{font-size:12.5px}
+.v26-impact-row.invade{color:#FFAD93;font-weight:700;font-size:12.5px}
+.v26-none{font-style:normal;font-size:12px;color:#8FE0BC}
+.v26-impact-note{display:block;color:var(--muted);font-size:11px;margin-top:3px}
+.v26-combos{display:flex;flex-direction:column;gap:7px}
+.v26-combo-pick{display:flex;align-items:center;gap:8px}
+.v26-combo-pick span{color:var(--sub);font-size:12.5px;white-space:nowrap}
+.v26-combo-pick select{flex:1 1 auto;min-width:0}
+.v26-combo-head{display:block;color:var(--sub)}
+.v26-partners{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:5px}
+button.v26-partner{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:2px 8px;text-align:left;padding:5px 8px 5px 5px}
+button.v26-partner .v25-face{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid var(--line-strong)}
+button.v26-partner em{font-style:normal;font-weight:800;color:var(--gold)}
+button.v26-partner i{grid-column:2/span 2;font-style:normal;font-size:10.5px;font-weight:800}
+.v26-have{color:#8FE0BC}
+.v26-can{color:var(--gold)}
+.v26-pairs{display:flex;flex-wrap:wrap;gap:5px}
+button.v26-pair-row{width:auto;display:inline-flex;align-items:baseline;gap:7px;padding:4px 10px}
+.v26-spec-head{display:block;color:var(--sub);margin-bottom:6px}
 /* v24.3: 스토리 스텝퍼(v221)는 은퇴(입력 실측 0회) — 액션 존 하단은
    리롤 정리·라인 방어 스트립이 쓴다. */
 .v243-reroll-sweep,.v243-line-guard{margin-top:10px;display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 10px;border:1px solid var(--line);border-left:3px solid var(--accent);border-radius:var(--radius-sm);padding:8px 12px;background:var(--panel-2);font-size:13px}
@@ -852,6 +892,11 @@ body.ord-overlay-mode .v22-gauges,
 body.ord-overlay-mode .v215-rare-plan,
 body.ord-overlay-mode .v151-action-facts,
 body.ord-overlay-mode .v153-next-candidates{display:none!important}
+/* v26(적대 검증): 위 규칙은 국면 패널 다이어트였는데 보조 보드 스펙
+   블록이 같은 .v22-gauges 를 재사용한다 — F6 미니 패널에서 파티 스펙이
+   통째로 사라지지 않게 예외.  높이는 충족(done) 게이지 숨김으로 지킨다. */
+body.ord-overlay-mode .v26-spec .v22-gauges{display:grid!important}
+body.ord-overlay-mode .v26-spec .v22-gauge.done{display:none!important}
 body.ord-overlay-mode .v221-story-row b{font-size:20px}
 body.ord-overlay-mode .v221-story-row button{min-width:44px;min-height:40px;font-size:20px}
 /* 한글 조합 명령어는 게임 중 필수 — 오버레이에서도 절대 숨기지 않는다. */

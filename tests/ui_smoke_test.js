@@ -49,7 +49,8 @@ catch(error){
     // v24.0(사용자: "구조 자체가 문제인것같은데"): 플레이/분석 2화면 분리 —
 // 판 중 화면(coach)은 상태·지금 할 일·레일 3영역뿐이고, 국면·최종 파티·
 // 희귀→전설·남는 희귀는 분석 화면(analysis 탭)이 세로로 편다.
-const REGIONS=['game-status','next-action','next-preview'];
+// v26.0(보조 모드): 다음 제작 레일 은퇴 — 플레이 화면은 상태 + 보조 보드.
+const REGIONS=['game-status','next-action'];
 const ANALYSIS_REGIONS=['clear-gaps','upper-party','craftable-legends','unused-rare'];
     for(const cfg of [{name:'desktop',width:1920,height:1080},{name:'laptop',width:1440,height:900},{name:'mobile',width:430,height:900}]){
       await page.setViewportSize({width:cfg.width,height:cfg.height});
@@ -101,10 +102,14 @@ const ANALYSIS_REGIONS=['clear-gaps','upper-party','craftable-legends','unused-r
 
     await page.setViewportSize({width:1600,height:1000});
     await page.goto('file://'+path.resolve(__dirname,'ui_fixture.html'),{waitUntil:'domcontentloaded'});
-    await page.waitForSelector('[data-region="next-action"] [data-act="detail"]');
+    // v26.0(보조 모드): 보드 행 클릭 = 겹침 영향(v26-pick) → 영향 패널의
+    // '유닛 상세'로 모달 진입 — 왕복을 새 흐름으로 계약한다.
+    await page.waitForSelector('[data-region="next-action"] [data-act="v26-pick"]');
     // v23.8 재핀: 첫 실행 가이드 오버레이 닫기.
     await page.evaluate(()=>{const b=document.querySelector('[data-act="dismiss-onboarding"]');if(b)b.click();});
-    await page.locator('[data-region="next-action"] [data-act="detail"]').first().click();
+    await page.locator('[data-region="next-action"] [data-act="v26-pick"]').first().click();
+    await page.waitForSelector('.v26-impact');
+    await page.locator('.v26-impact [data-act="detail"]').first().click();
     await page.waitForSelector('.detail-modal');
     const detail=await page.evaluate(()=>({title:(document.querySelector('.detail-modal h2')||{}).textContent||''}));
     assert(detail.title.length>0,'detail modal has no title');
@@ -116,12 +121,16 @@ const ANALYSIS_REGIONS=['clear-gaps','upper-party','craftable-legends','unused-r
     // 들어가야 봐지는거 말고" — 1번 패널(지금 할 일)에 클릭 없이 채팅
     // 명령어가 보여야 한다.  어떤 유닛이 추천될지는 픽스처마다 달라지므로,
     // "검증된 명령어가 있으면 반드시 보이고 없으면 안 보인다"는 대응만 잰다.
+    // v26.0 재핀: 처방 카드 은퇴 — 명령어 줄은 보드에서 찍은 유닛의 겹침
+    // 영향 패널에 노출된다(검증된 명령만, 없으면 숨김 — 원 계약 유지).
     const cmdCheck=await page.evaluate(()=>{
-      const app=window.TEST_APP,plan=app.plan().plan,decision=plan.v15Decision||{},
-        shown=decision.action||decision.blockedAction||decision.coachAction||null,unit=shown&&shown.unit||null,
+      const app=window.TEST_APP,
+        picked=document.querySelector('[data-region="next-action"] .v26-row.picked'),
+        unitId=picked?picked.dataset.id:'',
+        unit=unitId?app.plan().state.db.byId.get(unitId):null,
         verified=unit?app.commandInfo(unit).hasVerified:false,
-        hasCommandLine=!!document.querySelector('[data-region="next-action"] .command-line');
-      return{unitId:unit&&unit.id||'',verified,hasCommandLine};
+        hasCommandLine=!!document.querySelector('[data-region="next-action"] .v26-impact .command-line');
+      return{unitId:unitId||'',verified,hasCommandLine};
     });
     if(cmdCheck.unitId){
       assert.strictEqual(cmdCheck.hasCommandLine,cmdCheck.verified,

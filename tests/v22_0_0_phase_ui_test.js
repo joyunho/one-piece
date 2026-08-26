@@ -54,12 +54,15 @@ test('① 국면 판정 — 명세서 여섯 구간 + 마일스톤 우선',()=>{
   assert.strictEqual(at(31,'firstFinal'),'p4');
 });
 
-test('② 다음 제작 레일은 마감 국면(④⑤)에만 열린다',()=>{
-  const early=stub(24).renderCoach({},plan(),{},{},{ready:true,key:'ok'});
-  assert(!early.includes('data-test="candidate"'),'③ 국면에 후보 레일이 열려 있다');
-  assert(early.includes('v22-rail-rest'),'레일 휴면 안내가 없다');
-  const late=stub(45).renderCoach({},plan(),{},{},{ready:true,key:'ok'});
-  assert(late.includes('data-test="candidate"'),'⑤ 국면에 후보 레일이 닫혀 있다');
+test('② 다음 제작 레일 — v26.0 보조 모드에서 완전 은퇴(어느 국면에도 없음)',()=>{
+  // v22.0 원계약: 레일은 마감 국면(④⑤)에만 열린다.  v26.0(사용자 0826
+  // "프로그램은 보조 용도로만"): 미리 고정하는 제작 큐 자체가 처방이라
+  // 은퇴 — 어느 국면에도 레일·휴면 안내가 없어야 한다.
+  for(const round of [24,45]){
+    const html=stub(round).renderCoach({},plan(),{},{},{ready:true,key:'ok'});
+    assert(!html.includes('data-test="candidate"'),`${round}라에 은퇴한 후보 레일이 열려 있다`);
+    assert(!html.includes('v22-rail-rest'),`${round}라에 은퇴한 레일 휴면 안내가 있다`);
+  }
 });
 
 test('③ 국면 패널 — ⑤ 게이지·전 국면 전체 표 폴드·③ 계획 공유',()=>{

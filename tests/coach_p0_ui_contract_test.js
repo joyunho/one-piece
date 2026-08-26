@@ -31,23 +31,16 @@ check('live coach exposes one status strip and four decision regions',()=>{
   // observedDeficits 를 읽으므로 스텁을 준다.
   app.state.currentRound=45;
   app.observedDeficits=()=>({clearRows:[]});
-  app.renderV151NextAction=()=>'<i data-test="next"></i>';
   app.renderV153Status=()=>'<section data-region="game-status"><i data-test="status"></i></section>';
-  app.renderV153Preview=()=>'<i data-test="candidate"></i>';
-  app.renderV153Spec=()=>'<i data-test="spec"></i>';
-  app.renderV153CraftableLegends=()=>'<i data-test="rare"></i>';app.renderV153UnusedRare=()=>'<i data-test="unused"></i>';
-  app.renderV153UpperParty=()=>'<i data-test="upper"></i>';
   const plan={v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:false}};
   const html=app.renderCoach({},plan,{}, {},{ready:true,key:'ok'});
   const regions=[...html.matchAll(/data-region="([^"]+)"/g)].map(match=>match[1]);
-  // v24.0(사용자: "구조 자체가 문제인것같은데"): 플레이/분석 2화면 분리 —
-  // 판 중 화면은 상태 한 줄 + 지금 할 일(+레일)뿐이다.  국면 패널과 참고
-  // 3패널(최종 파티·희귀→전설·남는 희귀)은 분석 화면으로 옮겨졌다
-  // (v24_0_0_two_screen_test 가 분석 쪽 구성을 계약한다).
-  assert.deepStrictEqual(regions,['game-status','next-action','next-preview']);
-  assert.strictEqual(new Set(regions).size,3);
-  for(const key of ['status','next','candidate'])assert.strictEqual((html.match(new RegExp(`data-test="${key}"`,'g'))||[]).length,1,key);
-  for(const key of ['spec','rare','upper','unused'])assert(!html.includes(`data-test="${key}"`),`분석으로 옮겨진 패널이 플레이 화면에 있다: ${key}`);
+  // v26.0(사용자 0826: "프로그램은 보조 용도로만"): 판 중 화면 = 상태
+  // 한 줄 + 보조 보드.  처방 카드·다음 제작 레일은 은퇴했다.
+  assert.deepStrictEqual(regions,['game-status','next-action']);
+  assert.strictEqual((html.match(/data-test="status"/g)||[]).length,1,'status');
+  assert(html.includes('v26-board'),'보조 보드 부재');
+  for(const key of ['spec','rare','upper','unused','candidate','next'])assert(!html.includes(`data-test="${key}"`),`은퇴/분석 패널이 플레이 화면에 있다: ${key}`);
   for(const removed of ['ord-tabs','v15-rare-board','coach-details','v15-outcome-dock'])assert(!html.includes(removed),removed);
   assert(html.includes('v153-screen'));
 });
@@ -60,8 +53,8 @@ check('route and post-Legend states keep the compact five-region shell visible',
   for(const name of ['Status','NextCandidate','Spec','RareLedger','UpperParty'])app[`renderV153${name}`]=()=>name==='Status'?'<section data-region="game-status"></section>':'<i></i>';
   const route=app.renderCoach({}, {v15Decision:{state:'ROUTE_CHOICE'},postLegendDecision:{awaiting:false}}, {}, {}, {ready:true,key:'ok'});
   const postLegend=app.renderCoach({}, {v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:true}}, {}, {}, {ready:true,key:'ok'});
-  assert.strictEqual((route.match(/data-region=/g)||[]).length,3); // v24.0 플레이 3영역
-  assert.strictEqual((postLegend.match(/data-region=/g)||[]).length,3); // v24.0
+  assert.strictEqual((route.match(/data-region=/g)||[]).length,2); // v26.0 플레이 2영역
+  assert.strictEqual((postLegend.match(/data-region=/g)||[]).length,2); // v26.0
 });
 
 check('Rare focus shows the pre-upper safe reroll and at most three craftable Legends',()=>{
@@ -199,8 +192,9 @@ check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   // (renderV240Analysis)으로 옮겨졌다.
   // v24.3: 스토리 스텝퍼(v221StoryBlock) 은퇴 — 하단 스트립은 리롤 정리·
   // 라인 방어(v243)가 잇는다.
-  for(const method of ['renderV153Status','renderV151NextAction','renderV153Preview','v243RerollSweep','v243LineGuard'])assert(coachSource.includes(method),method);
-  for(const method of ['renderV22PhasePanel','renderV153CraftableLegends','renderV153UpperParty'])assert(!coachSource.includes(method),`분석으로 옮겨진 호출이 플레이에 남음: ${method}`);
+  // v26.0(보조 모드): 플레이 화면은 상태 한 줄 + 보조 보드 호출뿐이다.
+  for(const method of ['renderV153Status','renderV26Assistant'])assert(coachSource.includes(method),method);
+  for(const method of ['renderV151NextAction','renderV153Preview','v243RerollSweep','v243LineGuard','renderV25GoBoard','renderV22PhasePanel','renderV153CraftableLegends','renderV153UpperParty'])assert(!coachSource.includes(method),`은퇴/분석 호출이 플레이에 남음: ${method}`);
   const analysisSource=between('  renderV240Analysis(state,plan,health){','  // A live TMO snapshot');
   for(const method of ['renderV22PhasePanel','renderV153UpperParty','renderV153CraftableLegends','renderV153UnusedRare'])assert(analysisSource.includes(method),`분석 화면 호출 누락: ${method}`);
   assert(source.includes('renderV153Spec(state,plan)'),'전체 스펙 표 폴드 호출이 사라짐');
@@ -212,9 +206,9 @@ check('v15 source and CSS keep the compact single-screen hierarchy',()=>{
   assert(source.includes('data-opt="virtualSpecialId"'),'152 selector must stay reachable from collapsed settings');
   assert(!coachSource.includes('renderActions('));
   assert(!coachSource.includes('renderSquadPlan('));
-  // v18.4 상시 6영역 → v21.1 7개 → v24.0 플레이 2개(next-action ·
-  // next-preview 리터럴, game-status 는 renderV153Status 안).
-  assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,2);
+  // v18.4 상시 6영역 → v21.1 7개 → v24.0 2개 → v26.0 플레이 1개
+  // (next-action 리터럴, game-status 는 renderV153Status 안).
+  assert.strictEqual((coachSource.match(/data-region=/g)||[]).length,1);
   // v20.2: 레이아웃 계약을 실제 로드되는 신작 시트(ord_ui_v20.css) 기준으로
   // 갱신한다.  구 12열 그리드(.v153-grid)는 v20.1.0 신작 UI에서 3칼럼
   // 지휘 콘솔(.v155-dashboard)로 교체됐다 — 은퇴한 시트를 읽던 계약이

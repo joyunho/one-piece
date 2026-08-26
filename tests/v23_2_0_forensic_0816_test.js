@@ -106,7 +106,10 @@ test('④ 다음 제작 캡션 — 58라(⑥ 신세계)에 마감 국면 개방 
     return obj;
   })();
   const html=stubApp.renderCoach({},{v15Decision:{state:'ACT_NOW'},postLegendDecision:{awaiting:false}},{},{},{ready:true,key:'ok'});
-  assert(html.includes('신세계 국면 — 후보 고정 없음'),'⑥ 국면 인지 캡션이 없다');
+  // v26.0(보조 모드) 재핀: 다음 제작 레일이 통째로 은퇴 — 국면 캡션도
+  // 함께 사라졌다.  원계약(⑥ 국면에 개방 예고 오문구 금지)은 레일
+  // 부재로 자동 충족되며, 레일이 몰래 돌아오지 않는지만 지킨다.
+  assert(!html.includes('data-test="candidate"'),'은퇴한 다음 제작 레일이 58라 화면에 있다');
   assert(!html.includes('마감 국면(40라~)에 열립니다'),'⑥ 국면에 마감 국면 개방 예고 문구가 남아 있다');
 });
 

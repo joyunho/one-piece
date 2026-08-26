@@ -43,8 +43,12 @@ const tests=[];
 const test=(name,fn)=>tests.push([name,fn]);
 
 test('① 초상 — 보드 모든 행에 유닛 이미지(또는 첫 글자 판)',()=>{
+  // v26.0 승계: v25 보드 은퇴 — 초상 계약은 보조 보드 블록 ①(제작 가능
+  // 전설급 행)이 그대로 잇는다(행 프리미티브 .v25-row/.v25-face 재사용).
   const app=mkApp();
-  const html=app.renderV25GoBoard(richState,{mode:'magic'});
+  app.actualRound=()=>20;
+  app.state.transcendUsed=0;app.state.seraphUsed=0;app.state.changedUsed=0;app.state.superKumaOwned=true;app.state.story10Reward='';app.state.v26Filter='';app.state.v26PickId='';
+  const html=app.renderV26Craft(richState);
   const rows=(html.match(/class="v25-row/g)||[]).length;
   const faces=(html.match(/v25-face/g)||[]).length;
   assert(rows>=8,'보드 행이 부족하다');
@@ -53,7 +57,7 @@ test('① 초상 — 보드 모든 행에 유닛 이미지(또는 첫 글자 판
   // 카탈로그 image 가 있는 유닛은 img 로, 없는 유닛은 .v25-ph 로 —
   // 소스 계약(대체 판이 이름 첫 글자를 그린다).
   assert(appSrc.includes('loading="lazy"'),'초상 lazy 로딩 소실');
-  assert(appSrc.includes('v25-face v25-ph')&&appSrc.includes('unitName.charAt(0)'),'무이미지 대체 판 소실');
+  assert(appSrc.includes('v25-face v25-ph')&&appSrc.includes('name.charAt(0)'),'무이미지 대체 판 소실');
 });
 
 test('② 그리드 — 초상 | 이름·배지 | 상태 레이아웃 (양 시트)',()=>{

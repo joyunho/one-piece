@@ -2643,6 +2643,13 @@ button.v25-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-
 .v25-row i.v25-ph{display:flex;align-items:center;justify-content:center;font-style:normal;font-weight:800;font-size:19px;color:#9DB2CB}
 .v25-row>small{grid-column:3;grid-row:1;justify-self:end;white-space:nowrap}
 .v25-warns{grid-column:2/span 2;grid-row:2;display:flex;flex-wrap:wrap;gap:4px 8px}
+/* v26.0: 보조 보드 (신작 시트 정본 미러) */
+.v26-board{display:flex;flex-direction:column;gap:12px}
+.v26-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px}
+button.v26-chip.on{border-color:#d9a441;color:#d9a441}
+.v26-impact{border:1px solid #d9a441;border-radius:9px;padding:8px 12px;margin:-2px 0 8px;background:#0B1B30}
+.v26-partners{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:5px}
+.v26-spec-head,.v26-combo-head{display:block;color:#9DB2CB}
 .v25-pressure{display:flex;flex-wrap:wrap;gap:4px 8px;border:1px solid rgba(255,159,67,.4);border-radius:9px;padding:6px 10px;margin-bottom:8px;font-size:12px}
 .v25-clash{font-style:normal;font-size:11.5px;color:#FFC58A}
 .v25-coach-opinion>summary{cursor:pointer;color:#9DB2CB;font-size:13px}

@@ -59,7 +59,11 @@ test('② 이미 확정·항법 제한·50라 초과면 카드 없음',()=>{
 
 test('③ HUD 중계 화이트리스트에 confirm-second-upper',()=>{
   const boot=read('ord_boot_desktop.js');
-  assert(boot.includes("'confirm-second-upper': 1"),'HUD에서 2상위 확정 클릭이 중계되지 않는다');
+  // v26.0(보조 모드) 재핀: 확정 카드가 HUD 에 안 뜨므로 중계도 은퇴 —
+  // 2상위 확정 행위 자체는 분석 화면(v153-second)에 남아 있음을 지킨다.
+  assert(!boot.includes("'confirm-second-upper': 1"),'은퇴한 HUD 확정 중계가 되살아남');
+  const appSrc2=read('ord_app.js');
+  assert(appSrc2.includes('data-act="confirm-second-upper"'),'2상위 확정 버튼이 프로그램에서 사라짐(분석 화면 계약)');
 });
 
 let passed=0;

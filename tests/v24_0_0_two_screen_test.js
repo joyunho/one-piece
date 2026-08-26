@@ -50,7 +50,8 @@ const test=(name,fn)=>tests.push([name,fn]);
 test('① 플레이 화면 — 상태 한 줄 + 지금 할 일뿐, 참고·국면은 없다',()=>{
   const html=stub(45).renderCoach({},plan(),{},{},{ready:true,key:'ok'});
   const regions=[...html.matchAll(/data-region="([^"]+)"/g)].map(match=>match[1]);
-  assert.deepStrictEqual(regions,['game-status','next-action','next-preview'],'플레이 화면 영역이 3개가 아니다');
+  // v26.0(보조 모드): 다음 제작 레일 은퇴 — 플레이 화면은 2영역이다.
+  assert.deepStrictEqual(regions,['game-status','next-action'],'플레이 화면 영역이 2개가 아니다');
   for(const gone of ['data-region="clear-gaps"','data-region="reference"','data-region="upper-party"','data-region="craftable-legends"','data-region="unused-rare"','v211-refer','v211-tabs','v239-simple'])assert(!html.includes(gone),`플레이 화면에 남아 있다: ${gone}`);
   // v24.3 재핀: 스토리 스텝퍼(v221)는 은퇴 — 액션 존 하단은 리롤 정리·
   // 라인 방어 스트립 자리다(상위 미확정 스텁에선 둘 다 빈 문자열).

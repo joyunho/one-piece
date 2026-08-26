@@ -206,7 +206,11 @@ test('v15 trust UI exposes evidence boundaries and never paints advice as clear 
   assert(!decision.includes('클리어 확률'));
   assert(!gaps.includes('클리어 확률'));
   assert(!decision.includes('흔함 소비'));
-  assert(coach.includes('renderV151NextAction(state,plan,health)'));
+  // v26.0(보조 모드): 처방 카드는 화면에서 은퇴 — 플레이 화면은 보조
+  // 보드를 부른다.  카드 소스의 근거 경계 계약(위)은 은퇴 코드가 남아
+  // 있는 동안 그대로 지킨다.
+  assert(!coach.includes('renderV151NextAction(state,plan,health)'),'은퇴한 처방 카드가 플레이 화면에 돌아옴');
+  assert(coach.includes('renderV26Assistant(state,plan,health)'),'보조 보드 마운트 소실');
   // v22.0: 스펙 자리는 국면 패널이 됐다(renderV22PhasePanel → renderV153Spec
   // 폴드).  v24.0(플레이/분석 2화면): 국면 패널은 분석 화면으로 옮겨졌다 —
   // 지키는 계약은 그대로다: 스펙 표가 프로그램에서 사라지면 안 된다.
@@ -214,9 +218,9 @@ test('v15 trust UI exposes evidence boundaries and never paints advice as clear 
   assert(analysisPage.includes('renderV22PhasePanel(state,plan)'));
   assert(app.includes('renderV153Spec(state,plan)'),'전체 스펙 표 폴드가 사라짐');
   assert(!coach.includes('renderV15RareBoard('));
-  // v18.4 6개 → v21.1 7개 → v24.0: 플레이 화면 리터럴은 2개(next-action ·
-  // next-preview), 참고 4영역은 분석 화면에 있다.
-  assert.strictEqual((coach.match(/data-region=/g)||[]).length,2);
+  // v18.4 6개 → v21.1 7개 → v24.0 2개 → v26.0: 플레이 화면 리터럴은
+  // next-action 1개, 참고 4영역은 분석 화면에 있다.
+  assert.strictEqual((coach.match(/data-region=/g)||[]).length,1);
   assert.strictEqual((analysisPage.match(/data-region=/g)||[]).length,4);
   // v20.2: 지켜야 하는 계약은 특정 16진값이 아니라 **근거 경계**다 —
   // 코치가 계산한 값과 TMO가 관측한 값이 화면에서 같아 보이면 안 된다.
