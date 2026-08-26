@@ -78,7 +78,8 @@ check('② 상위 슬롯 규칙 — 코어 단일 함수를 플래너·엔진이
   assert.strictEqual(C.upperSlotLimit('dual',{}),2);
   assert.strictEqual(C.upperSlotLimit('physical',{}),1);
   assert.strictEqual(C.upperSlotLimit('physical',{secondUpperId:'490H'}),2,'물딜 2상위 확정이 슬롯을 안 연다');
-  assert.strictEqual(C.upperSlotLimit('singleEnd',{}),1);
+  // v26.5(사용자: "단일 끝딜 1상위 마딜 제한 풀어줘"): 단끝도 상위 2.
+  assert.strictEqual(C.upperSlotLimit('singleEnd',{}),2);
   assert(engine.includes('C.upperSlotLimit'),'실행 엔진이 공유 규칙을 안 쓴다');
   assert(planner.includes("C.upperSlotLimit?C.upperSlotLimit('physical'"),'플래너가 공유 규칙을 안 쓴다');
   assert(!engine.includes("maxUpper=route.key==='dual'?2:1;"),'엔진에 옛 하드코딩 잔존');

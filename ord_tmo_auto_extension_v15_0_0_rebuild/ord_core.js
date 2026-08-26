@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 
-const VERSION='26.4.0';
+const VERSION='26.5.0';
 const WISP_ID='810e';
 const SUPER_KUMA_ID='unit_1767884940750_9880';
 // v17.5: 스토리 10라운드 확정 보상 — 레일리(히든)+해적선 묶음을 다른
@@ -90,7 +90,7 @@ const ABILITY_ALIASES={
 //  (마법방어 15%는 별도 모델 없음 — 마방깎은 유닛 능력 파싱만.)
 //  나스쥬로 이속 15%는 유지라 이감 117 목표 불변.
 // v22.12(웹 정본 확보 — 공식 누적 패치노트 dcinside ordc1 no=189308 +
-// 2.312 카탈로그 api.tmo.gg/posts/41824), v26.4.0(맵 원본 war3map.j
+// 2.312 카탈로그 api.tmo.gg/posts/41824), v26.5.0(맵 원본 war3map.j
 // 9345-9438 IS==6 분기로 재검증 — 맵데이터_분석_20260811.txt):
 // 오로성 악몽 저주 수치 원문.
 //  · 나스쥬로: 적 이속 +15% · 아군 공속 -15% · 라인몬스터 체력 +1,500만
@@ -126,7 +126,10 @@ const GOROSEI={
 // 안 닫힘).  true 인 동안 자동 판정·후보 차선·플래너 기본이 단끝을 뽑지
 // 않는다.  명시 선택(magicRoute==='singleEnd')과 패왕의길·계엄령(2상위
 // 불가) 강제는 그대로 존중.  해제 = 이 값만 false 로.
-const MAGIC_SINGLE_END_SUSPENDED=true;
+// v26.5(사용자 0826: "단일 끝딜 1상위 마딜 제한 풀어줘 2상위도 되고 이제
+// 모두 다 되게"): 중단 해제 — 자동 판정·차선·플래너가 단끝을 다시 비교
+// 하고, 상위 슬롯도 upperSlotLimit 에서 2 로 열린다.
+const MAGIC_SINGLE_END_SUSPENDED=false;
 const NAVIGATION={
   none:{key:'none',name:'항법 미선택',perks:[]},
   union:{key:'union',name:'연합세력',perks:[['ilseok','일석이조'],['recall','긴급소집'],['trait','특성공학']]},
@@ -1814,7 +1817,9 @@ function upperSlotLimit(routeKey,settings){
   // v23.1(사용자 승인): 상위 상한은 항법에서 온다 — 패왕의길 1 · 계엄령 0.
   const navCap=navProfile(settings&&settings.navFamily,settings&&settings.navPerk).upperCap;
   let base=1;
-  if(routeKey==='dual')base=2;
+  // v26.5(사용자: "단일 끝딜 1상위 마딜 제한 풀어줘 2상위도 되고"):
+  // 단끝 경로도 상위 2기 허용 — 항법 상한(패왕의길 1·계엄령 0)만 남는다.
+  if(routeKey==='dual'||routeKey==='singleEnd')base=2;
   else if(routeKey==='physical'&&!!String(settings&&settings.secondUpperId||''))base=2;
   return navCap!=null?Math.min(base,navCap):base;
 }

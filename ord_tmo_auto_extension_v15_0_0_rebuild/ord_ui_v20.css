@@ -284,6 +284,24 @@ button.v26-chip.on{border-color:var(--gold);color:var(--gold)}
 .v26-reserve em.rare{border-color:rgba(224,92,126,.6);color:#F2A9BC;font-weight:800}
 .v26-combo-hidden{flex:1 1 100%;color:var(--muted);font-size:11.5px}
 .v26-can.dim{color:var(--sub)}
+/* v26.5: 페이지 넘김 · 선택 여파 시각 소거 · 상위 검색 · 추천 TOP3 */
+.v26-pager{display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px}
+.v26-pager button{width:auto;padding:5px 14px;font-weight:800}
+.v26-pager button[disabled]{opacity:.35;cursor:default}
+.v26-pager em{font-style:normal;color:var(--sub);font-size:12.5px}
+.v25-row.v26-dead{opacity:.38;border-style:dashed}
+.v25-row.v26-delay{opacity:.7}
+.v26-dead-tag{display:inline-block;margin-left:6px;font-style:normal;font-size:10.5px;font-weight:800;color:#FF9B84;border:1px solid rgba(255,120,80,.6);border-radius:999px;padding:1px 7px;vertical-align:1px;white-space:nowrap}
+.v26-delay-tag{display:inline-block;margin-left:6px;font-style:normal;font-size:10.5px;font-weight:800;color:#FFC58A;border:1px solid rgba(255,159,67,.5);border-radius:999px;padding:1px 7px;vertical-align:1px;white-space:nowrap}
+.v26-locks i{font-style:normal;font-weight:400;color:var(--sub)}
+.v26-combo-search{display:flex;flex-direction:column;gap:5px}
+.v26-combo-search input{width:100%}
+.v26-combo-found{display:flex;flex-wrap:wrap;gap:5px}
+.v26-combo-found button{width:auto;padding:4px 11px;font-size:12.5px}
+.v26-top3{display:flex;flex-direction:column;gap:5px}
+.v26-top3>small{color:var(--sub)}
+.v26-top3 .v26-partner{grid-template-columns:20px 34px minmax(0,1fr) auto}
+.v26-top3-rank{font-style:normal;font-weight:900;color:var(--gold);font-size:15px;text-align:center}
 .v25-row.picked{border-color:var(--gold);box-shadow:0 0 10px rgba(217,164,65,.15)}
 .v26-impact{border:1px solid var(--gold);border-radius:var(--radius-sm);padding:8px 12px;margin:-2px 0 8px;background:var(--panel-2)}
 .v26-impact>small{display:block;color:var(--sub);margin-bottom:5px}

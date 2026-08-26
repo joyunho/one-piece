@@ -34,7 +34,7 @@ const richCounts=(()=>{const counts={};for(const u of units)if(['common','uncomm
 const richState=C.normalizeState(units,{counts:richCounts,currentAbilities:{}},{manualCounts:{}});
 const mkApp=()=>{
   const app=Object.create(App.prototype);
-  app.state={mode:'magic',magicRoute:'auto',locks:[],currentRound:20,rerollsUsed:0,navFamily:'none',navPerk:'',transcendUsed:0,seraphUsed:0,changedUsed:0,snapshot:null,secondUpperId:'',v26Filter:'',v26PickId:'',v26ComboUpperId:'',pendingReroll:null};
+  app.state={mode:'magic',magicRoute:'auto',locks:[],currentRound:20,rerollsUsed:0,navFamily:'none',navPerk:'',transcendUsed:0,seraphUsed:0,changedUsed:0,snapshot:null,secondUpperId:'',v26Filter:'',v26PickId:'',v26ComboUpperId:'',v26Page:0,v26ComboSearch:'',superKumaOwned:true,story10Reward:'',pendingReroll:null};
   app.upperLock=()=>null;
   app.actualRound=()=>20;
   return app;
@@ -212,7 +212,8 @@ test('④ 상위 실측 조합 — 동반 전설 top8 + 2상위 파트너 페어
   const filterNone=app.state.v26Filter;app.state.v26Filter='';
   const craftHtml=app.renderV26Craft(richState);
   app.state.v26Filter=filterNone;
-  const shownRows=[...craft.rows.filter(r=>r.ready),...craft.rows.filter(r=>!r.ready).slice(0,12)];
+  // v26.5 재핀: 목록이 8행 페이지로 바뀌었다 — 표시 행 = 1페이지(필터 없음).
+  const shownRows=craft.rows.slice(0,8);
   const expectWarn=shownRows.filter(row=>row.eats.some(eat=>reserve.ids.has(eat.id))).length;
   assert.strictEqual((craftHtml.match(/v26-reserve-warn/g)||[]).length,expectWarn,'상위 몫 겹침 경고 수 불일치');
   // 숨김 정직성: 희소 패에서 못 가는 top8 파트너는 개수로 표기된다.
@@ -289,6 +290,80 @@ test('⑥ 화면·HUD — 보조 보드 단독 마운트, 처방 표면 은퇴',
   // 온보딩·README 철학 문구.
   assert(appSrc.includes('코치가 조합을 정해주지 않습니다'),'온보딩 철학 문구 부재');
   assert(fs.readFileSync(path.join(__dirname,'..','README.txt'),'utf8').includes('보조 보드'),'README 갱신 부재');
+});
+
+test('⑦ v26.5 — 계통 필터·페이지·배타 사유·선택 소거·상위 검색/추천·단끝 해제',()=>{
+  // 계통 필터(사용자: "물 마딜 선택했는데 물딜 마딜 섞어서"): 마딜이면
+  // 마딜+공용만, 자동('')이면 전 계열.
+  const mApp=mkApp();
+  const mData=mApp.v26CraftData(richState);
+  assert(!mData.rows.some(row=>row.family==='physical'),'마딜 선택인데 물딜 전설이 목록에 있다');
+  const aApp=mkApp();aApp.state.mode='';
+  const aData=aApp.v26CraftData(richState);
+  const fams=new Set(aData.rows.map(row=>row.family));
+  assert(fams.has('physical')&&fams.has('magic'),'자동 모드에서 한 계열이 숨겨짐');
+  // 페이지(사용자: "페이지를 넘길 수 있게"): 8행씩, 페이지 이동 시 내용 변경.
+  const html1=aApp.renderV26Craft(richState);
+  if(aData.rows.length>8){
+    assert.strictEqual((html1.match(/data-act="v26-pick"/g)||[]).length,8,'1페이지가 8행이 아니다');
+    assert(html1.includes('v26-pager')&&html1.includes('data-act="v26-page"'),'페이저 부재');
+    aApp.state.v26Page=1;
+    const html2=aApp.renderV26Craft(richState);
+    assert.notStrictEqual(html1,html2,'페이지를 넘겨도 내용이 같다');
+    aApp.state.v26Page=0;
+  }
+  // 배타 사유(사용자: "이걸 못감 이라고 해봤자 모르거든"): lock 에 사유가 있다.
+  for(const row of mData.rows.slice(0,20))for(const lock of row.locks||[]){
+    assert(lock&&typeof lock.cause==='string'&&/끊김|뺏겨|폭등/.test(lock.cause),`배타 사유 부재: ${lock&&lock.name}`);
+  }
+  // 선택 소거: 희소 패에서 하나 찍으면 사라지는 행이 흐림+⛔ 로 표기된다.
+  const scarce={};
+  const rares=units.filter(u=>C.tierKey(u)==='rare').slice(0,6);
+  for(const u of rares)scarce[u.id]=1;
+  let uc=0;for(const u of units){if(C.tierKey(u)==='uncommon'&&uc<8){scarce[u.id]=1;uc++;}}
+  let cm=0;for(const u of units){if(C.tierKey(u)==='common'&&cm<6){scarce[u.id]=1;cm++;}}
+  scarce[C.WISP_ID]=6;
+  const scarceState=C.normalizeState(units,{counts:scarce,currentAbilities:{}},{manualCounts:{}});
+  const sApp=mkApp();sApp.state.mode='';
+  const sData=sApp.v26CraftData(scarceState);
+  const sPick=sData.rows.find(row=>row.locks&&row.locks.length);
+  if(sPick){
+    sApp.state.v26PickId=String(sPick.unit.id);
+    const sImpact=sApp.v26PickImpact(scarceState,sData);
+    const sHtml=sApp.renderV26Craft(scarceState);
+    const deadShown=(sHtml.match(/v26-dead-tag/g)||[]).length;
+    const goneIds=new Set(sImpact.gone.map(item=>String(item.id)));
+    const page0=sData.rows.slice(0,8);
+    const expectDead=page0.filter(row=>goneIds.has(String(row.unit.id))&&String(row.unit.id)!==String(sPick.unit.id)).length;
+    assert.strictEqual(deadShown,expectDead,`소거 표기 수 불일치: 표시 ${deadShown} vs 재검산 ${expectDead}`);
+    assert(deadShown>0,'희소 패 선택인데 소거 표기가 0 — 시각 소거 회귀');
+  }
+  // 상위 검색(사용자: "상위 찾기가 쉽지 않아"): 입력 배선 + 결과 버튼.
+  const cApp=mkApp();
+  const combosIdle=cApp.renderV26Combos(richState);
+  assert(combosIdle.includes('data-live-opt="v26ComboSearch"'),'상위 검색 입력 부재');
+  assert(appSrc.includes(`e.target.matches('[data-live-opt="v26ComboSearch"]')`),'검색 엔터 배선 부재');
+  cApp.state.v26ComboSearch='아오';
+  const combosFound=cApp.renderV26Combos(richState);
+  assert((combosFound.match(/data-act="v26-combo-set"/g)||[]).length>=1,'검색 결과 버튼 부재');
+  // 상위 추천 TOP3(사용자: "지금패에서 한 3개정도만"): 최대 3, 전부
+  // 조합이 닫히고 계통 규칙을 지킨다.  확정 후에는 안 뜬다.
+  const picks=cApp.v26UpperPicks(richState);
+  assert(picks.length>=1&&picks.length<=3,'추천 상위가 1~3개가 아니다');
+  for(const pick of picks){
+    assert(C.isUpper(pick.unit),'상위가 아닌 추천');
+    const solve=C.recipeSolve(richState.db,pick.unit.id,richState.counts);
+    assert(!(solve.hardMissing||[]).length,'조합이 안 닫히는 상위 추천');
+    const fam=C.familyOf(pick.unit);
+    assert(fam==='neutral'||fam==='magic','마딜 선택인데 물딜 상위 추천');
+  }
+  assert(combosIdle.includes('지금 패 추천 TOP3'),'추천 TOP3 렌더 부재');
+  const lockedApp=mkApp();lockedApp.upperLock=()=>({id:'V80H'});
+  assert.strictEqual(lockedApp.v26UpperPicks(richState).length,0,'상위 확정 후에도 추천이 뜬다');
+  // 단끝 해제(사용자: "단일 끝딜 1상위 마딜 제한 풀어줘 2상위도 되고"):
+  // 요약 핀 — 세부는 v23_3_0(재핀)·v19_10_0 이 계약한다.
+  assert.strictEqual(C.MAGIC_SINGLE_END_SUSPENDED,false,'단끝 중단 플래그 회귀');
+  assert.strictEqual(C.upperSlotLimit('singleEnd',{}),2,'단끝 상위 2 슬롯 회귀');
 });
 
 let passed=0;

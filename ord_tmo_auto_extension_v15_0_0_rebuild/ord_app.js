@@ -46,7 +46,7 @@ const DEFAULTS={
   // v26.0(사용자 0826: "티모지지를 보고 내가 직접 … 프로그램은 보조 용도로만"):
   // 보조 보드 상태 — 역할 필터 칩 / 겹침 영향을 볼 전설 선택 / 실측 조합
   // 상위 선택.  새 게임에 리셋.
-  v26Filter:'',v26PickId:'',v26ComboUpperId:''
+  v26Filter:'',v26PickId:'',v26ComboUpperId:'',v26Page:0,v26ComboSearch:''
 };
 // v26.0 역할 필터(사용자: "끝딜을 누르면 만들 수 있는 끝딜캐만 나오고
 // 단일을 누르면 단일캐만") — 판정은 카탈로그 roleProfile 축 그대로.
@@ -885,7 +885,7 @@ class App{
     this.root.addEventListener('click',e=>{if(e.target.closest('.v23-ghost-card'))return;const b=e.target.closest('[data-act]');if(!b)return;if(b.classList.contains('modal-back')&&e.target!==b)return;const action=b.dataset.act;if(RUN_LOG_ACTIONS.has(action))this.recordAuditAction({actor:'user',action,targetId:String(b.dataset.id||''),value:String(b.dataset.value||''),key:String(b.dataset.key||''),delta:C.num(b.dataset.delta),stage:String(b.dataset.stage||'')});this.act(action,b);});
     this.root.addEventListener('change',e=>{const el=e.target;if(el.dataset.opt!==undefined)this.setOpt(el.dataset.opt,el.type==='checkbox'?el.checked:el.value);if(el.dataset.upg!==undefined){const key=el.dataset.upg;if(key==='upperLevel'){const before=this.state.upperResearchLevel,after=Math.max(1,Math.min(UPPER_RESEARCH_MAX,C.num(el.value)||1));this.state.upperResearchLevel=after;this.recordAuditAction({actor:'user',action:'manual-upgrade',key,before:C.num(before),after});}else{const before=!!(this.state.labResearch&&this.state.labResearch[key]),after=el.type==='checkbox'?!!el.checked:!!C.num(el.value);this.state.labResearch=Object.assign({},this.state.labResearch,{[key]:after,round:this.actualRound()});this.recordAuditAction({actor:'user',action:'lab-research',key,before,after});}this._squadCacheKey='';this._v15CacheKey='';this.persist();this.render();return;}if(el.dataset.count){if(this.state.pendingTransaction)this.rollbackTransaction();const before=C.num(this.normalized().counts[el.dataset.count]),after=Math.max(0,C.num(el.value));this.state.manualCounts[el.dataset.count]=after;delete this.state.pendingCounts[el.dataset.count];delete this.state.pendingAt[el.dataset.count];this.releaseDirectionHold();this._squadCacheKey='';this.recordAuditAction({actor:'user',action:'manual-count',targetId:String(el.dataset.count),before,after});this.persist();this.render();}});
     this.root.addEventListener('input',e=>{const el=e.target;if(el.dataset.liveOpt!==undefined)this.state[el.dataset.liveOpt]=el.value;if(el.dataset.runField!==undefined)this._runResultDraft[el.dataset.runField]=el.type==='checkbox'?el.checked:el.value;});
-    this.root.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.matches('[data-live-opt="unitSearch"]')||e.target.matches('[data-live-opt="snipeSearch"]'))){e.preventDefault();this.render();}});
+    this.root.addEventListener('keydown',e=>{if(e.key==='Enter'&&(e.target.matches('[data-live-opt="unitSearch"]')||e.target.matches('[data-live-opt="snipeSearch"]')||e.target.matches('[data-live-opt="v26ComboSearch"]'))){e.preventDefault();this.render();}});
     this.root.addEventListener('focusout',()=>setTimeout(()=>this.flushDeferredExternalRender(),0));
   }
   selectDamageMode(value){
@@ -970,8 +970,11 @@ class App{
     if(a==='close-detail'){this.state.detailId='';this.render();return;}
     // v26.0: 보조 보드 — 역할 필터 칩 / 겹침 영향 선택(토글).  선택은
     // 표시 전용이라 아무것도 소비하지 않는다.
-    if(a==='v26-filter'){this.state.v26Filter=String(b.dataset.value||'');this.persist();this.render();return;}
+    if(a==='v26-filter'){this.state.v26Filter=String(b.dataset.value||'');this.state.v26Page=0;this.persist();this.render();return;}
     if(a==='v26-pick'){this.state.v26PickId=this.state.v26PickId===id?'':id;this.persist();this.render();return;}
+    // v26.5: 목록 페이지 넘김 / 상위 검색 결과·추천 TOP3 에서 상위 지정.
+    if(a==='v26-page'){this.state.v26Page=Math.max(0,C.num(this.state.v26Page)+(b.dataset.value==='next'?1:-1));this.persist();this.render();return;}
+    if(a==='v26-combo-set'){this.state.v26ComboUpperId=id;this.state.v26ComboSearch='';this.persist();this.render();return;}
     // v23.8(사용자: "배포도 생각중이라 처음 보는 사람도 쉽게"): 첫 실행 가이드.
     if(a==='show-onboarding'){this._onboardingOpen=true;this.render();return;}
     if(a==='dismiss-onboarding'){
@@ -1455,7 +1458,10 @@ class App{
     if(!state||!state.db)return null;
     const db=state.db,counts=state.counts||{},wisp=C.num(state.wisp);
     const roundNow=this.actualRound();
-    const key=[Object.keys(counts).sort().map(id=>`${id}:${counts[id]}`).join(','),C.num(this.state.transcendUsed),C.num(this.state.seraphUsed),C.num(this.state.changedUsed),wisp,roundNow>=50?'r50':'r0',this.state.superKumaOwned===false?'nok':'k',String(this.state.story10Reward||'')].join('|');
+    // v26.5(사용자: "내가 물 마딜 선택했는데 물딜 마딜 섞어서 추천해주고"):
+    // 계통을 고르면 그 계통 + 공용만 싣는다(자동은 전 계열).
+    const mode=this.state.mode||'';
+    const key=[Object.keys(counts).sort().map(id=>`${id}:${counts[id]}`).join(','),mode,C.num(this.state.transcendUsed),C.num(this.state.seraphUsed),C.num(this.state.changedUsed),wisp,roundNow>=50?'r50':'r0',this.state.superKumaOwned===false?'nok':'k',String(this.state.story10Reward||'')].join('|');
     if(key===this._v26CraftKey&&this._v26CraftData)return this._v26CraftData;
     // 승인 원장(ord_v15_ledger ruleBlocks) 금지 조건 미러 — 목록이 "만들 수
     // 있다"고 한 유닛이 실제 게임 규칙에 막히면 안 된다(v25 적대 검증 규약).
@@ -1484,6 +1490,7 @@ class App{
     for(const unit of db.legendish||[]){
       if(C.num(counts[unit.id])>0)continue;
       if(ledgerBlocked(unit))continue;
+      const fam=C.familyOf(unit);if(fam!=='neutral'&&mode&&fam!==mode)continue;
       let solve=null;try{solve=C.recipeSolve(db,unit.id,counts);}catch(_){continue;}
       // 사실 목록 — 지금 재료로 조합이 닫히는 전설급만.  선위(선택 위습)만
       // 부족한 것은 라운드 수입으로 곧 닿으므로 '선위 부족' 그룹으로 남긴다.
@@ -1517,10 +1524,18 @@ class App{
       const after=Object.assign({},row.solve&&row.solve.stockAfter||{});
       after[String(row.unit.id)]=C.num(after[String(row.unit.id)])+1;
       const locks=[];
+      const mineEats=new Set(row.eats.map(eat=>eat.id));
       for(const other of scope){
         if(other===row)continue;
         let re=null;try{re=C.recipeSolve(db,other.unit.id,after);}catch(_){continue;}
-        if(re&&((re.hardMissing||[]).length||C.num(re.wispCost)>10))locks.push(displayNameOf(other.unit));
+        if(!re)continue;
+        const dead=(re.hardMissing||[]).length>0,over=C.num(re.wispCost)>10;
+        if(!dead&&!over)continue;
+        // v26.5(사용자: "이걸 못감 이라고 해봤자 모르거든"): 왜 못 가는지
+        // 사유를 같이 적는다 — 겹치는 재료 이름 또는 선위 폭등 수치.
+        const shared=[...new Set(other.eats.filter(eat=>mineEats.has(eat.id)).map(eat=>eat.name))];
+        const cause=dead?`${((re.hardMissing||[])[0]||{}).name||shared[0]||'선행 재료'} 끊김`:shared.length?`${shared.slice(0,2).join('·')} 뺏겨 선위 ${C.num(re.wispCost)}`:`선위 ${C.num(re.wispCost)}로 폭등`;
+        locks.push({name:displayNameOf(other.unit),cause});
       }
       row.locks=locks;
     }
@@ -1555,9 +1570,9 @@ class App{
       // 또는 재계산 선위가 상한 10 초과(보드 탈락)면 못 가는 것이다.
       if((re.hardMissing||[]).length||C.num(re.wispCost)>10){
         const shared=[...new Set(other.eats.filter(eat=>mine.has(eat.id)).map(eat=>eat.name))];
-        gone.push({name:displayNameOf(other.unit),shared:shared.slice(0,3)});
+        gone.push({id:String(other.unit.id),name:displayNameOf(other.unit),shared:shared.slice(0,3),cost:C.num(re.wispCost)});
       }else if(other.ready&&C.num(re.wispCost)>Math.max(0,wispAfter)){
-        delayed.push({name:displayNameOf(other.unit),extra:C.num(re.wispCost)-Math.max(0,wispAfter)});
+        delayed.push({id:String(other.unit.id),name:displayNameOf(other.unit),extra:C.num(re.wispCost)-Math.max(0,wispAfter)});
       }
     }
     // 확정 상위 트리 침범(있을 때만) — 상위 몫 + 선택 몫 > 보유 수량 판정.
@@ -1595,6 +1610,10 @@ class App{
     const rows=active?data.rows.filter(row=>active[2](row.role)):data.rows;
     const pickId=String(this.state.v26PickId||'');
     const impact=pickId?this.v26PickImpact(state,data):null;
+    // v26.5(사용자: "찍으면 못 가는 걸 확실하게"): 선택 여파를 목록에
+    // 직접 그린다 — 사라지는 행은 흐리게+⛔, 선위 밀리는 행은 표시.
+    const goneIds=new Map(impact?impact.gone.map(item=>[String(item.id),item]):[]);
+    const delayedIds=new Map(impact?impact.delayed.map(item=>[String(item.id),item]):[]);
     // v26.4: 기준 상위 몫(v26UpperReserve)과 겹치는 행에 ⚠ — "상위를
     // 정하면 쓰면 안 되는 희귀함"을 목록 쪽에서도 바로 보여준다.
     const reserve=this.v26UpperReserve(state);
@@ -1603,12 +1622,22 @@ class App{
       const face=row.unit.image?`<img class="v25-face" src="${C.esc(row.unit.image)}" alt="" loading="lazy">`:`<i class="v25-face v25-ph">${C.esc(name.charAt(0))}</i>`;
       const picked=pickId===String(row.unit.id);
       const famLabel=row.family==='magic'?'마딜':row.family==='physical'?'물딜':'공용';
-      return`<button class="v25-row v26-row${row.ready?' ok':''}${picked?' picked':''}" data-act="v26-pick" data-id="${C.esc(row.unit.id)}">${face}<span class="v25-name"><b>${C.esc(name)}</b><i class="v26-fam ${C.esc(row.family)}">${famLabel}</i>${this.v151StoryTag(row.unit)}${this.v216BargesTag(row.unit)}</span><small class="${row.ready?'ok':'gap'}">${row.ready?`지금 가능 · 선위 ${row.cost}`:`선위 ${row.gap} 부족 (필요 ${row.cost})`}</small><span class="v25-warns v26-roles">${C.esc(row.roles||'')}</span>${row.locks&&row.locks.length?`<span class="v25-warns v26-locks">이걸 가면 못 감: ${C.esc(row.locks.slice(0,3).join(' · '))}${row.locks.length>3?` 외 ${row.locks.length-3}`:''}</span>`:''}${(()=>{const overlap=reserve?[...new Set(row.eats.filter(eat=>reserve.ids.has(eat.id)).map(eat=>eat.name))]:[];return overlap.length?`<span class="v25-warns v26-reserve-warn">⚠ ${reserve.locked?'확정':'선택'} 상위 몫 겹침 · ${C.esc(overlap.slice(0,2).join('·'))}</span>`:'';})()}</button>${picked&&impact?this.renderV26Impact(impact):''}`;
+      const gone=!picked&&goneIds.get(String(row.unit.id)),delayed=!picked&&delayedIds.get(String(row.unit.id));
+      const pickedName=impact?displayNameOf(impact.row.unit).split(' (')[0]:'';
+      const lockLine=row.locks&&row.locks.length?`<span class="v25-warns v26-locks">이걸 가면 못 감: ${row.locks.slice(0,2).map(lock=>`${C.esc(String(lock.name).split(' (')[0])}<i>(${C.esc(lock.cause)})</i>`).join(' · ')}${row.locks.length>2?` 외 ${row.locks.length-2}`:''}</span>`:'';
+      return`<button class="v25-row v26-row${row.ready?' ok':''}${picked?' picked':''}${gone?' v26-dead':''}${delayed?' v26-delay':''}" data-act="v26-pick" data-id="${C.esc(row.unit.id)}">${face}<span class="v25-name"><b>${C.esc(name)}</b><i class="v26-fam ${C.esc(row.family)}">${famLabel}</i>${gone?`<i class="v26-dead-tag">⛔ ${C.esc(pickedName)} 가면 못 감</i>`:''}${delayed?`<i class="v26-delay-tag">⏳ 선위 ${C.num(delayed.extra)} 밀림</i>`:''}${this.v151StoryTag(row.unit)}${this.v216BargesTag(row.unit)}</span><small class="${row.ready?'ok':'gap'}">${row.ready?`지금 가능 · 선위 ${row.cost}`:`선위 ${row.gap} 부족 (필요 ${row.cost})`}</small><span class="v25-warns v26-roles">${C.esc(row.roles||'')}</span>${lockLine}${(()=>{const overlap=reserve?[...new Set(row.eats.filter(eat=>reserve.ids.has(eat.id)).map(eat=>eat.name))]:[];return overlap.length?`<span class="v25-warns v26-reserve-warn">⚠ ${reserve.locked?'확정':'선택'} 상위 몫 겹침 · ${C.esc(overlap.slice(0,2).join('·'))}</span>`:'';})()}</button>${picked&&impact?this.renderV26Impact(impact):''}`;
     };
-    const ready=rows.filter(row=>row.ready),waiting=rows.filter(row=>!row.ready);
-    const WAIT_CAP=12;
     if(!rows.length)return`<div class="v26-chips">${chips}</div><p class="v22-note">${active?`${C.esc(active[1])} 역할로 지금 만들 수 있는 전설급이 없습니다 — 다른 필터를 보세요.`:'지금 가진 희귀·재료로 닿는 전설급이 없습니다 — 게임에서 희귀가 잡히면 여기부터 채워집니다.'}</p>`;
-    return`<div class="v26-chips">${chips}</div>${ready.length?`<div class="v25-group v26-ready"><small>지금 가능 ${ready.length}</small>${ready.map(rowHtml).join('')}</div>`:''}${waiting.length?`<div class="v25-group v26-wait"><small>선위만 부족 ${waiting.length}${waiting.length>WAIT_CAP?` · 외 ${waiting.length-WAIT_CAP}`:''} — 내 재료 소비 기준</small>${waiting.slice(0,WAIT_CAP).map(rowHtml).join('')}</div>`:''}`;
+    // v26.5(사용자: "뜨는게 너무 많으니까 … 페이지를 넘길 수 있게"):
+    // 정렬 순서 그대로 8행씩 페이지.  필터를 바꾸면 1페이지로 리셋.
+    const PAGE=8;
+    const pages=Math.max(1,Math.ceil(rows.length/PAGE));
+    const page=Math.min(Math.max(0,C.num(this.state.v26Page)),pages-1);
+    const slice=rows.slice(page*PAGE,page*PAGE+PAGE);
+    const ready=slice.filter(row=>row.ready),waiting=slice.filter(row=>!row.ready);
+    const readyTotal=rows.filter(row=>row.ready).length,waitTotal=rows.length-readyTotal;
+    const pager=pages>1?`<div class="v26-pager"><button data-act="v26-page" data-value="prev" ${page<=0?'disabled':''}>◀ 이전</button><em>${page+1} / ${pages} 페이지 · 전체 ${rows.length}</em><button data-act="v26-page" data-value="next" ${page>=pages-1?'disabled':''}>다음 ▶</button></div>`:'';
+    return`<div class="v26-chips">${chips}</div>${ready.length?`<div class="v25-group v26-ready"><small>지금 가능 ${readyTotal}</small>${ready.map(rowHtml).join('')}</div>`:''}${waiting.length?`<div class="v25-group v26-wait"><small>선위만 부족 ${waitTotal} — 내 재료 소비 기준</small>${waiting.map(rowHtml).join('')}</div>`:''}${pager}`;
   }
   // v26.4(사용자: "패겹침이 최대한 안나도록 상위정하면 쓰면 안되는
   // 희귀함 알려주고"): 기준 상위(확정 잠금 우선, 없으면 실측 조합에서
@@ -1635,6 +1664,38 @@ class App{
     mats.sort((a,b)=>KEY_TIERS.indexOf(a.tier)-KEY_TIERS.indexOf(b.tier)||b.need-a.need);
     return{unit,locked:!!lock,mats,ids:new Set(mats.map(mat=>mat.id))};
   }
+  // v26.5(사용자: "상위 정하기 꽤나 어렵네 상위 추천도 하게 해줘봐
+  // 지금패에서 한 3개정도만"): 지금 패 기준 상위 TOP3 — 조합이 닫히는
+  // 상위(하드 결손 없음)를 도달 거리(선위 10 단위 버킷)로 묶고, 같은
+  // 버킷 안에서는 악몽 클리어 실측 판수로 세운다.  표시 전용 — 확정은
+  // 분석 화면에서 직접.
+  v26UpperPicks(state){
+    const db=state&&state.db;if(!db)return[];
+    if(this.upperLock())return[];
+    const counts=state.counts||{},mode=this.state.mode||'';
+    const roundNow=this.actualRound();
+    const ownedCanon=new Set(db.uppers.filter(unit=>C.num(counts[unit.id])>0).map(unit=>String(C.canonicalUpperId(unit.id))));
+    if(ownedCanon.size>=2)return[];
+    const transcendClosed=this.state.superKumaOwned===false||['rayleigh','chest'].includes(String(this.state.story10Reward||''));
+    const usedTranscend=C.num(this.state.transcendUsed)>0;
+    const bestByCanon=new Map();
+    for(const unit of db.uppers||[]){
+      const canon=String(C.canonicalUpperId(unit.id));
+      if(ownedCanon.has(canon))continue;
+      const fam=C.familyOf(unit);if(fam!=='neutral'&&mode&&fam!==mode)continue;
+      if(C.isTranscend(unit)&&(usedTranscend||transcendClosed))continue;
+      if(C.isChanged(unit)&&roundNow<50)continue;
+      let solve=null;try{solve=C.recipeSolve(db,unit.id,counts);}catch(_){continue;}
+      if(!solve||(solve.hardMissing||[]).length)continue;
+      const cost=C.num(solve.wispCost);
+      const games=C.num((C.clearStatsFor&&C.clearStatsFor(unit.id)||{}).games);
+      const prev=bestByCanon.get(canon);
+      if(!prev||cost<prev.cost)bestByCanon.set(canon,{unit,cost,games});
+    }
+    return[...bestByCanon.values()]
+      .sort((a,b)=>Math.floor(a.cost/10)-Math.floor(b.cost/10)||b.games-a.games||a.cost-b.cost||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko'))
+      .slice(0,3);
+  }
   // ② 상위 실측 조합 — 상위를 고르면 클리어 코퍼스에서 함께 쓰인 동반
   // 전설(top8 등장률)과 2상위 파트너(페어 판수)를 보여준다.
   renderV26Combos(state){
@@ -1645,7 +1706,9 @@ class App{
       const canon=String(C.canonicalUpperId(unit.id));
       if(!byCanon.has(canon))byCanon.set(canon,unit);
     }
-    const opts=[...byCanon.values()].map(unit=>({unit,games:C.num((statsOf(unit.id)||{}).games)}))
+    // v26.5: 계통을 고르면 상위 목록·검색·추천도 그 계통 + 공용만.
+    const comboMode=this.state.mode||'';
+    const opts=[...byCanon.values()].filter(unit=>{const fam=C.familyOf(unit);return fam==='neutral'||!comboMode||fam===comboMode;}).map(unit=>({unit,games:C.num((statsOf(unit.id)||{}).games)}))
       .sort((a,b)=>b.games-a.games||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko'));
     const lock=this.upperLock();
     const ownedUpper=(db.uppers||[]).find(unit=>C.num(state.counts&&state.counts[unit.id])>0);
@@ -1684,7 +1747,15 @@ class App{
       const pairsHtml=pairRows.slice(0,6).map(p=>`<button class="v26-pair-row" data-act="detail" data-id="${C.esc(p.unit.id)}"><b>${C.esc(displayNameOf(p.unit))}</b><i class="v241-pair" title="이 상위와 함께 악몽을 깬 판수">동반 실측 ${p.games}판</i></button>`).join('');
       body=`${reserveHtml}${st?`<small class="v26-combo-head">${C.esc(displayNameOf(sel))} — 클리어 실측 ${C.num(st.games)}판${C.num(st.dualGames)?` (2상위 판 ${C.num(st.dualGames)})`:''} · 함께 쓰인 전설·히든 중 내 패로 갈 수 있는 것</small>`:`<small class="v26-combo-head">${C.esc(displayNameOf(sel))} — 클리어 실측 30판 미만이라 조합 데이터가 없습니다.</small>`}${partners?`<div class="v26-partners">${partners}</div>`:''}${pairsHtml?`<small class="v26-combo-head">함께 간 2상위 · 동반 클리어 판수순</small><div class="v26-pairs">${pairsHtml}</div>`:''}`;
     }
-    return`<div class="v26-combos"><label class="v26-combo-pick"><span>상위 선택</span><select data-opt="v26ComboUpperId"><option value="">— 상위를 고르세요 —</option>${options}</select></label>${body}</div>`;
+    // v26.5(사용자: "상위 찾기가 쉽지 않아 검색이 가능하게"): 이름 검색 —
+    // 입력 후 엔터.  일치 상위를 눌러 바로 지정한다.
+    const query=String(this.state.v26ComboSearch||'').trim();
+    const found=query?opts.filter(({unit})=>displayNameOf(unit).toLowerCase().includes(query.toLowerCase())).slice(0,8):[];
+    const searchHtml=`<div class="v26-combo-search"><input data-live-opt="v26ComboSearch" value="${C.esc(String(this.state.v26ComboSearch||''))}" placeholder="상위 이름 검색 후 엔터" aria-label="상위 검색">${query?found.length?`<div class="v26-combo-found">${found.map(({unit,games})=>`<button data-act="v26-combo-set" data-id="${C.esc(unit.id)}">${C.esc(displayNameOf(unit))}${games?` · ${games}판`:''}</button>`).join('')}</div>`:'<small class="v26-combo-hidden">일치하는 상위가 없습니다.</small>':''}</div>`;
+    // v26.5: 지금 패 추천 TOP3.
+    const picks=this.v26UpperPicks(state);
+    const picksHtml=picks.length?`<div class="v26-top3"><small>지금 패 추천 TOP3 — 조합이 닫히는 상위를 도달 거리 → 실측 순으로</small>${picks.map((pick,index)=>{const face=pick.unit.image?`<img class="v25-face" src="${C.esc(pick.unit.image)}" alt="" loading="lazy">`:'';return`<button class="v26-partner" data-act="v26-combo-set" data-id="${C.esc(pick.unit.id)}"><i class="v26-top3-rank">${index+1}</i>${face}<b>${C.esc(displayNameOf(pick.unit))}</b><em>선위 ${pick.cost}</em><i class="v26-can">${pick.games?`실측 ${pick.games}판`:'실측 부족'}</i></button>`;}).join('')}</div>`:'';
+    return`<div class="v26-combos">${picksHtml}${searchHtml}<label class="v26-combo-pick"><span>상위 선택</span><select data-opt="v26ComboUpperId"><option value="">— 상위를 고르세요 —</option>${options}</select></label>${body}</div>`;
   }
   // ④ 현재 파티 스펙 — 실보유 완성 유닛 기준(observedDeficits) 게이지.
   renderV26Spec(state,plan){

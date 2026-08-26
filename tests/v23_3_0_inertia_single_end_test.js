@@ -12,6 +12,9 @@
 //   실측 핀: 0817 패배 로그 재생 28~52라 타깃 교체 12회 → 5회 이하.
 // ② 단끝 중단: 자동 판정·차선·플래너 기본에서 singleEnd 제외.
 //   명시 선택과 패왕의길·계엄령(2상위 불가) 강제는 그대로.
+// v26.5(사용자 0826: "단일 끝딜 1상위 마딜 제한 풀어줘 2상위도 되고
+//   이제 모두 다 되게"): ② 중단 해제 — 이 파일의 ② 절은 해제 계약으로
+//   재핀됐다(auto 재비교·차선 부활·플래너 비교·단끝 상위 2 슬롯).
 
 const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
 const ROOT=path.join(__dirname,'..','ord_tmo_auto_extension_v15_0_0_rebuild');
@@ -28,18 +31,21 @@ const units=context.ORD_TMO_UNITS;
 const tests=[];
 function test(name,fn){tests.push([name,fn]);}
 
-test('② 단끝 중단 — 자동 판정: 단끝이 거리상 이기는 스펙에서도 auto 는 dual + 중단 사유',()=>{
-  assert.strictEqual(C.MAGIC_SINGLE_END_SUSPENDED,true,'중단 플래그가 꺼져 있다');
+test('② 단끝 해제(v26.5) — 자동 판정: 단끝이 거리상 이기는 스펙이면 auto 가 singleEnd 를 고른다',()=>{
+  assert.strictEqual(C.MAGIC_SINGLE_END_SUSPENDED,false,'중단 플래그가 다시 켜졌다(사용자 해제 지시 회귀)');
+  // v26.5: 단끝 상위 슬롯도 2 로 열린다(항법 상한만 남음).
+  assert.strictEqual(C.upperSlotLimit('singleEnd',{}),2,'단끝 상위 2 슬롯이 닫혀 있다');
+  assert.strictEqual(C.upperSlotLimit('singleEnd',{navFamily:'conqueror',navPerk:''}),1,'패왕의길 상한이 풀렸다');
   const st=C.normalizeState(units,{counts:{},currentAbilities:{}},{manualCounts:{}});
-  // 단끝 요구는 거의 다 닫히고 dual(상위 2)만 먼 스펙 — 중단이 없으면
-  // auto 는 확실히 singleEnd 를 고르는 상황을 손으로 만든다.
+  // 단끝 요구는 거의 다 닫히고 dual(상위 2)만 먼 스펙 — auto 는 이제
+  // 두 경로를 실제 비교해 singleEnd 를 고른다.
   const spec=Object.assign({},C.currentSpec(st,'magic',{}),{main:1,stun:1.6,slow:130,boss:1,frenzy:1,bossFrenzy:1,toki:0,single:2,end:1,singleEnd:3,singleEndExpected:3,singleEndStable:3,singleEndMax:3});
   const auto=C.deficits(spec,'magic',{gorosei:'none',magicRoute:'auto'});
-  assert.strictEqual(auto.profile.key,'dual',`auto 가 ${auto.profile.key}를 골랐다`);
-  assert(String(auto.profile.note||'').includes('단끝 경로 일시 중단'),'중단 사유 미표기');
+  assert.strictEqual(auto.profile.key,'singleEnd',`auto 가 ${auto.profile.key}를 골랐다(단끝 우세 스펙)`);
+  assert(!String(auto.profile.note||'').includes('단끝 경로 일시 중단'),'해제됐는데 중단 사유가 남아 있다');
 });
 
-test('② 단끝 중단 — 명시 singleEnd 와 패왕의길 강제는 그대로 존중된다',()=>{
+test('② 명시 singleEnd 와 패왕의길 강제는 해제 후에도 그대로 존중된다',()=>{
   const st=C.normalizeState(units,{counts:{},currentAbilities:{}},{manualCounts:{}});
   const spec=C.currentSpec(st,'magic',{});
   const explicit=C.deficits(spec,'magic',{gorosei:'none',magicRoute:'singleEnd'});
@@ -48,18 +54,21 @@ test('② 단끝 중단 — 명시 singleEnd 와 패왕의길 강제는 그대�
   assert.strictEqual(conqueror.profile.key,'singleEnd','패왕의길에서 dual 을 골랐다(불가능 경로)');
 });
 
-test('② 단끝 중단 — 엔진 차선: 자동 모드 lanes 에서 singleEnd 가 빠진다',()=>{
+test('② 단끝 해제(v26.5) — 엔진 차선: 자동 모드 lanes 에 singleEnd 가 돌아온다',()=>{
   const model=M.build({catalog:units,snapshot:{source:'t',counts:{},currentAbilities:{},wispCountFound:true,wispCount:0},settings:{mode:'magic',magicRoute:'auto',currentRound:20,manualCounts:{}},locks:[]});
-  // intent.damageMode 는 명시 mode 만 반영 — magic 명시 + route 미확정 상태.
   const lanes=E._test.routeOptions(model).map(route=>route.key);
-  assert(!lanes.includes('singleEnd'),`singleEnd 차선이 살아 있다: ${lanes.join(',')}`);
+  assert(lanes.includes('singleEnd'),`singleEnd 차선이 죽어 있다: ${lanes.join(',')}`);
   assert(lanes.includes('dual'));
 });
 
-test('② 단끝 중단 — 플래너: magic auto 계획은 dual 만 세운다',()=>{
+test('② 단끝 해제(v26.5) — 플래너: magic auto 가 두 경로를 실제 비교한다',()=>{
   const plan=P.planFinalSquad({units,counts:{V80H:1},wisp:20,settings:{mode:'magic',magicRoute:'auto',upperPreviewId:'V80H',targetSquadCount:9},locks:[]});
-  assert.strictEqual(plan.magicRoute,'dual',`플래너 auto 가 ${plan.magicRoute}를 골랐다`);
-  assert(String(plan.routeComparison&&plan.routeComparison.reason||'').includes('단끝 경로 일시 중단'),'플래너 중단 사유 미표기');
+  // vm 렐름 배열은 호스트 deepStrictEqual 과 프로토타입이 달라 스프레드로
+  // 호스트 배열로 옮겨 비교한다.
+  const routes=[...(plan.routeComparison&&plan.routeComparison.routes||[])].map(row=>row.route).sort();
+  assert.deepStrictEqual(routes,['dual','singleEnd'],`플래너 auto 비교 경로: ${routes.join(',')}`);
+  assert(['dual','singleEnd'].includes(plan.magicRoute),'auto 선택이 비교 경로 밖이다');
+  assert(!String(plan.routeComparison&&plan.routeComparison.reason||'').includes('단끝 경로 일시 중단'),'해제됐는데 중단 사유가 남아 있다');
   const explicit=P.planFinalSquad({units,counts:{V80H:1},wisp:20,settings:{mode:'magic',magicRoute:'singleEnd',upperPreviewId:'V80H',targetSquadCount:9},locks:[]});
   assert.strictEqual(explicit.magicRoute,'singleEnd','플래너가 명시 singleEnd 를 무시했다');
 });
