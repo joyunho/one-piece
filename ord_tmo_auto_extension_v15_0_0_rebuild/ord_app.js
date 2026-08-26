@@ -1595,17 +1595,45 @@ class App{
     const rows=active?data.rows.filter(row=>active[2](row.role)):data.rows;
     const pickId=String(this.state.v26PickId||'');
     const impact=pickId?this.v26PickImpact(state,data):null;
+    // v26.4: 기준 상위 몫(v26UpperReserve)과 겹치는 행에 ⚠ — "상위를
+    // 정하면 쓰면 안 되는 희귀함"을 목록 쪽에서도 바로 보여준다.
+    const reserve=this.v26UpperReserve(state);
     const rowHtml=row=>{
       const name=displayNameOf(row.unit);
       const face=row.unit.image?`<img class="v25-face" src="${C.esc(row.unit.image)}" alt="" loading="lazy">`:`<i class="v25-face v25-ph">${C.esc(name.charAt(0))}</i>`;
       const picked=pickId===String(row.unit.id);
       const famLabel=row.family==='magic'?'마딜':row.family==='physical'?'물딜':'공용';
-      return`<button class="v25-row v26-row${row.ready?' ok':''}${picked?' picked':''}" data-act="v26-pick" data-id="${C.esc(row.unit.id)}">${face}<span class="v25-name"><b>${C.esc(name)}</b><i class="v26-fam ${C.esc(row.family)}">${famLabel}</i>${this.v151StoryTag(row.unit)}${this.v216BargesTag(row.unit)}</span><small class="${row.ready?'ok':'gap'}">${row.ready?`지금 가능 · 선위 ${row.cost}`:`선위 ${row.gap} 부족 (필요 ${row.cost})`}</small><span class="v25-warns v26-roles">${C.esc(row.roles||'')}</span>${row.locks&&row.locks.length?`<span class="v25-warns v26-locks">이걸 가면 못 감: ${C.esc(row.locks.slice(0,3).join(' · '))}${row.locks.length>3?` 외 ${row.locks.length-3}`:''}</span>`:''}</button>${picked&&impact?this.renderV26Impact(impact):''}`;
+      return`<button class="v25-row v26-row${row.ready?' ok':''}${picked?' picked':''}" data-act="v26-pick" data-id="${C.esc(row.unit.id)}">${face}<span class="v25-name"><b>${C.esc(name)}</b><i class="v26-fam ${C.esc(row.family)}">${famLabel}</i>${this.v151StoryTag(row.unit)}${this.v216BargesTag(row.unit)}</span><small class="${row.ready?'ok':'gap'}">${row.ready?`지금 가능 · 선위 ${row.cost}`:`선위 ${row.gap} 부족 (필요 ${row.cost})`}</small><span class="v25-warns v26-roles">${C.esc(row.roles||'')}</span>${row.locks&&row.locks.length?`<span class="v25-warns v26-locks">이걸 가면 못 감: ${C.esc(row.locks.slice(0,3).join(' · '))}${row.locks.length>3?` 외 ${row.locks.length-3}`:''}</span>`:''}${(()=>{const overlap=reserve?[...new Set(row.eats.filter(eat=>reserve.ids.has(eat.id)).map(eat=>eat.name))]:[];return overlap.length?`<span class="v25-warns v26-reserve-warn">⚠ ${reserve.locked?'확정':'선택'} 상위 몫 겹침 · ${C.esc(overlap.slice(0,2).join('·'))}</span>`:'';})()}</button>${picked&&impact?this.renderV26Impact(impact):''}`;
     };
     const ready=rows.filter(row=>row.ready),waiting=rows.filter(row=>!row.ready);
     const WAIT_CAP=12;
     if(!rows.length)return`<div class="v26-chips">${chips}</div><p class="v22-note">${active?`${C.esc(active[1])} 역할로 지금 만들 수 있는 전설급이 없습니다 — 다른 필터를 보세요.`:'지금 가진 희귀·재료로 닿는 전설급이 없습니다 — 게임에서 희귀가 잡히면 여기부터 채워집니다.'}</p>`;
     return`<div class="v26-chips">${chips}</div>${ready.length?`<div class="v25-group v26-ready"><small>지금 가능 ${ready.length}</small>${ready.map(rowHtml).join('')}</div>`:''}${waiting.length?`<div class="v25-group v26-wait"><small>선위만 부족 ${waiting.length}${waiting.length>WAIT_CAP?` · 외 ${waiting.length-WAIT_CAP}`:''} — 내 재료 소비 기준</small>${waiting.slice(0,WAIT_CAP).map(rowHtml).join('')}</div>`:''}`;
+  }
+  // v26.4(사용자: "패겹침이 최대한 안나도록 상위정하면 쓰면 안되는
+  // 희귀함 알려주고"): 기준 상위(확정 잠금 우선, 없으면 실측 조합에서
+  // 고른 상위)의 트리가 현재 패에서 소비할 희귀·특별·안흔 — 이 몫을
+  // 다른 데 쓰면 패가 겹친다.  보유 완성 상위는 몫이 이미 소비돼 없음.
+  v26UpperReserve(state){
+    const db=state&&state.db;if(!db)return null;
+    const lock=this.upperLock();
+    const selId=String(lock&&lock.id||this.state.v26ComboUpperId||'');
+    if(!selId)return null;
+    const canon=String(C.canonicalUpperId(selId));
+    const unit=db.byId.get(selId)||db.uppers.find(u=>String(C.canonicalUpperId(u.id))===canon)||null;
+    if(!unit||C.num(state.counts&&state.counts[unit.id])>0)return null;
+    let solve=null;try{solve=C.recipeSolve(db,unit.id,state.counts||{});}catch(_){return null;}
+    if(!solve)return null;
+    const KEY_TIERS=['rare','special','uncommon'];
+    const mats=[];
+    for(const [id,need] of Object.entries(solve.consumed||{})){
+      const mat=db.byId.get(String(id));if(!mat)continue;
+      const tier=C.tierKey(mat);if(!KEY_TIERS.includes(tier))continue;
+      mats.push({id:String(id),name:displayNameOf(mat),tier,need:C.num(need)});
+    }
+    if(!mats.length)return null;
+    mats.sort((a,b)=>KEY_TIERS.indexOf(a.tier)-KEY_TIERS.indexOf(b.tier)||b.need-a.need);
+    return{unit,locked:!!lock,mats,ids:new Set(mats.map(mat=>mat.id))};
   }
   // ② 상위 실측 조합 — 상위를 고르면 클리어 코퍼스에서 함께 쓰인 동반
   // 전설(top8 등장률)과 2상위 파트너(페어 판수)를 보여준다.
@@ -1629,13 +1657,23 @@ class App{
     if(sel){
       const st=statsOf(sel.id);
       const craft=this.v26CraftData(state);
-      const readyIds=new Set((craft&&craft.rows||[]).filter(row=>row.ready).map(row=>String(row.unit.id)));
-      const partners=(st&&st.partners||[]).map(p=>{
+      // v26.4(사용자: "내 패로 갈 수 있는 조합만 보이게"): 동반 전설
+      // top8 중 보유했거나 보드 규칙으로 갈 수 있는 것만 남긴다 —
+      // 못 가는 것은 숨기고 개수만 정직하게 표기.
+      const rowById=new Map((craft&&craft.rows||[]).map(row=>[String(row.unit.id),row]));
+      const allPartners=(st&&st.partners||[]);
+      const reachable=allPartners.filter(p=>C.num(state.counts&&state.counts[String(p.id)])>0||rowById.has(String(p.id)));
+      const hiddenCount=allPartners.length-reachable.length;
+      const partners=reachable.map(p=>{
         const unit=db.byId.get(String(p.id));
         const face=unit&&unit.image?`<img class="v25-face" src="${C.esc(unit.image)}" alt="" loading="lazy">`:'';
-        const flag=C.num(state.counts&&state.counts[String(p.id)])>0?'<i class="v26-have">보유</i>':readyIds.has(String(p.id))?'<i class="v26-can">지금 제작 가능</i>':'';
+        const row=rowById.get(String(p.id));
+        const flag=C.num(state.counts&&state.counts[String(p.id)])>0?'<i class="v26-have">보유</i>':row&&row.ready?'<i class="v26-can">지금 제작 가능</i>':row?`<i class="v26-can dim">선위 ${row.gap} 부족</i>`:'';
         return`<button class="v26-partner" data-act="detail" data-id="${C.esc(p.id)}">${face}<b>${C.esc(p.name||'')}</b><em>${C.num(p.share)}%</em>${flag}</button>`;
-      }).join('');
+      }).join('')+(hiddenCount>0?`<small class="v26-combo-hidden">실측 top8 중 ${hiddenCount}개는 지금 내 패로 못 가 숨김</small>`:'');
+      // v26.4: 이 상위 몫 재료 — 다른 데 쓰면 패가 겹친다.
+      const reserve=this.v26UpperReserve(state);
+      const reserveHtml=reserve&&String(C.canonicalUpperId(reserve.unit.id))===selCanon?`<div class="v26-reserve"><b>${reserve.locked?'확정':'선택'} 상위 몫 — 다른 데 쓰면 패가 겹칩니다</b>${reserve.mats.map(mat=>`<em class="${C.esc(mat.tier)}">${C.esc(mat.name)}${mat.need>1?`×${mat.need}`:''}</em>`).join('')}</div>`:'';
       const pairRows=[];
       for(const {unit} of opts){
         if(String(C.canonicalUpperId(unit.id))===selCanon)continue;
@@ -1644,7 +1682,7 @@ class App{
       }
       pairRows.sort((a,b)=>b.games-a.games||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko'));
       const pairsHtml=pairRows.slice(0,6).map(p=>`<button class="v26-pair-row" data-act="detail" data-id="${C.esc(p.unit.id)}"><b>${C.esc(displayNameOf(p.unit))}</b><i class="v241-pair" title="이 상위와 함께 악몽을 깬 판수">동반 실측 ${p.games}판</i></button>`).join('');
-      body=`${st?`<small class="v26-combo-head">${C.esc(displayNameOf(sel))} — 클리어 실측 ${C.num(st.games)}판${C.num(st.dualGames)?` (2상위 판 ${C.num(st.dualGames)})`:''} · 함께 쓰인 전설·히든 등장률</small>`:`<small class="v26-combo-head">${C.esc(displayNameOf(sel))} — 클리어 실측 30판 미만이라 조합 데이터가 없습니다.</small>`}${partners?`<div class="v26-partners">${partners}</div>`:''}${pairsHtml?`<small class="v26-combo-head">함께 간 2상위 · 동반 클리어 판수순</small><div class="v26-pairs">${pairsHtml}</div>`:''}`;
+      body=`${reserveHtml}${st?`<small class="v26-combo-head">${C.esc(displayNameOf(sel))} — 클리어 실측 ${C.num(st.games)}판${C.num(st.dualGames)?` (2상위 판 ${C.num(st.dualGames)})`:''} · 함께 쓰인 전설·히든 중 내 패로 갈 수 있는 것</small>`:`<small class="v26-combo-head">${C.esc(displayNameOf(sel))} — 클리어 실측 30판 미만이라 조합 데이터가 없습니다.</small>`}${partners?`<div class="v26-partners">${partners}</div>`:''}${pairsHtml?`<small class="v26-combo-head">함께 간 2상위 · 동반 클리어 판수순</small><div class="v26-pairs">${pairsHtml}</div>`:''}`;
     }
     return`<div class="v26-combos"><label class="v26-combo-pick"><span>상위 선택</span><select data-opt="v26ComboUpperId"><option value="">— 상위를 고르세요 —</option>${options}</select></label>${body}</div>`;
   }

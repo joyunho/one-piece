@@ -170,12 +170,62 @@ test('④ 상위 실측 조합 — 동반 전설 top8 + 2상위 파트너 페어
   const html=app.renderV26Combos(richState);
   const st=C.clearStatsFor('090H');
   assert(st&&st.partners&&st.partners.length,'090H 실측 데이터 전제 실패');
-  for(const partner of st.partners.slice(0,3))assert(html.includes(C.esc?C.esc(partner.name):partner.name),`동반 전설 누락: ${partner.name}`);
+  // v26.4 재핀: top8 은 "갈 수 있으면 표시, 못 가면 숨김" — 조건부 검사.
+  // 세라핌 등은 '함께 간 2상위' 목록에도 나오므로 동반 전설 블록만 본다.
+  {
+    const craftPre=app.v26CraftData(richState);
+    const preIds=new Set(craftPre.rows.map(row=>String(row.unit.id)));
+    const pStart=html.indexOf('v26-partners');
+    const pEnd=html.indexOf('함께 간 2상위')>=0?html.indexOf('함께 간 2상위'):html.length;
+    const pBlock=pStart>=0?html.slice(pStart,pEnd):'';
+    for(const partner of st.partners.slice(0,3)){
+      const reach=C.num(richState.counts[String(partner.id)])>0||preIds.has(String(partner.id));
+      assert.strictEqual(pBlock.includes(`data-id="${partner.id}"`),reach,`동반 전설 표시/숨김 불일치: ${partner.name} (갈 수 있음=${reach})`);
+    }
+  }
   assert(html.includes(`클리어 실측 ${st.games}판`),'실측 판수 표기 부재');
   assert(html.includes('동반 실측')&&html.includes('data-opt="v26ComboUpperId"'),'2상위 파트너·상위 선택 배선 부재');
   // 페어 판수 내림차순.
   const pairGames=[...html.matchAll(/동반 실측 (\d+)판/g)].map(m=>Number(m[1]));
   for(let i=1;i<pairGames.length;i++)assert(pairGames[i-1]>=pairGames[i],'페어 판수 정렬 위반');
+  // v26.4(사용자: "내 패로 갈 수 있는 조합만 보이게"): 렌더된 동반
+  // 전설은 전부 보유 또는 보드 후보다.
+  const craft=app.v26CraftData(richState);
+  const rowIds=new Set(craft.rows.map(row=>String(row.unit.id)));
+  const partnersBlock=html.slice(html.indexOf('v26-partners'),html.indexOf('함께 간 2상위')>=0?html.indexOf('함께 간 2상위'):html.length);
+  for(const m of partnersBlock.matchAll(/data-act="detail" data-id="([^"]+)"/g)){
+    const pid=m[1];
+    assert(C.num(richState.counts[pid])>0||rowIds.has(pid),`못 가는 동반 전설이 표시됨: ${pid}`);
+  }
+  // v26.4(사용자: "상위정하면 쓰면 안되는 희귀함 알려주고"): 상위 몫
+  // 재료 목록 — recipeSolve consumed 의 희귀·특별·안흔과 전수 일치.
+  const reserve=app.v26UpperReserve(richState);
+  assert(reserve&&reserve.mats.length,'상위 몫 계산 부재');
+  const us=C.recipeSolve(richState.db,reserve.unit.id,richState.counts);
+  const expectMats=Object.entries(us.consumed||{}).filter(([mid])=>{
+    const mu=richState.db.byId.get(String(mid));
+    return mu&&['rare','special','uncommon'].includes(C.tierKey(mu));
+  }).length;
+  assert.strictEqual(reserve.mats.length,expectMats,`상위 몫 재료 수 불일치: 표시 ${reserve.mats.length} vs 재검산 ${expectMats}`);
+  assert(html.includes('상위 몫 — 다른 데 쓰면 패가 겹칩니다'),'상위 몫 목록 렌더 부재');
+  // 목록 쪽 겹침 경고 파리티: 표시 행 중 상위 몫과 재료가 겹치는 수.
+  const filterNone=app.state.v26Filter;app.state.v26Filter='';
+  const craftHtml=app.renderV26Craft(richState);
+  app.state.v26Filter=filterNone;
+  const shownRows=[...craft.rows.filter(r=>r.ready),...craft.rows.filter(r=>!r.ready).slice(0,12)];
+  const expectWarn=shownRows.filter(row=>row.eats.some(eat=>reserve.ids.has(eat.id))).length;
+  assert.strictEqual((craftHtml.match(/v26-reserve-warn/g)||[]).length,expectWarn,'상위 몫 겹침 경고 수 불일치');
+  // 숨김 정직성: 희소 패에서 못 가는 top8 파트너는 개수로 표기된다.
+  const scarce2={};
+  const rares2=units.filter(u=>C.tierKey(u)==='rare').slice(0,6);
+  for(const u of rares2)scarce2[u.id]=1;
+  let uc2=0;for(const u of units){if(C.tierKey(u)==='uncommon'&&uc2<8){scarce2[u.id]=1;uc2++;}}
+  let cm2=0;for(const u of units){if(C.tierKey(u)==='common'&&cm2<6){scarce2[u.id]=1;cm2++;}}
+  scarce2[C.WISP_ID]=6;
+  const scarceState2=C.normalizeState(units,{counts:scarce2,currentAbilities:{}},{manualCounts:{}});
+  const s2App=mkApp();s2App.state.v26ComboUpperId='090H';
+  const s2Html=s2App.renderV26Combos(scarceState2);
+  assert(s2Html.includes('못 가 숨김'),'숨긴 동반 전설 개수 표기 부재');
 });
 
 test('⑤ 현재 파티 스펙 — 실보유 게이지 + 전체 스펙 표 상시(v26.2)',()=>{

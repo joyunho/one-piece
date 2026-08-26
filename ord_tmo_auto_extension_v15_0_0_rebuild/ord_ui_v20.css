@@ -276,6 +276,14 @@ button.v26-chip.on{border-color:var(--gold);color:var(--gold)}
 /* v26.3(사용자: "이 패를 가면 이 패는 못가고 이런걸 한눈에"): 클릭 전
    상시 상호배타 줄 — 역할 줄(2행) 아래 3행. */
 .v26-locks{grid-row:3;color:#FFAD93;font-size:11.5px;font-weight:700}
+/* v26.4: 기준 상위 몫 겹침 경고(4행) + 상위 몫 재료 목록(실측 조합 블록) */
+.v26-reserve-warn{grid-row:4;color:#FFC58A;font-size:11.5px;font-weight:700}
+.v26-reserve{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;border:1px solid rgba(255,159,67,.4);border-radius:var(--radius-sm);padding:6px 10px;background:var(--panel-2);font-size:12px}
+.v26-reserve b{flex:1 1 100%;color:#FFC58A;font-size:12.5px}
+.v26-reserve em{font-style:normal;border:1px solid var(--line-strong);border-radius:999px;padding:1px 8px;color:var(--fg)}
+.v26-reserve em.rare{border-color:rgba(224,92,126,.6);color:#F2A9BC;font-weight:800}
+.v26-combo-hidden{flex:1 1 100%;color:var(--muted);font-size:11.5px}
+.v26-can.dim{color:var(--sub)}
 .v25-row.picked{border-color:var(--gold);box-shadow:0 0 10px rgba(217,164,65,.15)}
 .v26-impact{border:1px solid var(--gold);border-radius:var(--radius-sm);padding:8px 12px;margin:-2px 0 8px;background:var(--panel-2)}
 .v26-impact>small{display:block;color:var(--sub);margin-bottom:5px}
