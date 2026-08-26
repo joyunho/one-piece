@@ -121,12 +121,41 @@ test('③ 겹침 영향 — 사라짐은 stockAfter 재검산과 일치, 소비 
   assert(appSrc.includes('after[id]=C.num(after[id])+1'),'제작 결과물 +1 관례 소실(왜곡 2단계 거짓 사라짐 회귀)');
   const afterStock=Object.assign({},solve.stockAfter||{});
   afterStock[String(pick.unit.id)]=(afterStock[String(pick.unit.id)]||0)+1;
-  // 전수 재검산: 사라짐 수 == (+1 반영) 재고로 하드 결손이 생기는 후보 수.
+  // 전수 재검산: 사라짐 == (+1 반영) 재고로 선행조건 끊김(hard) 또는
+  // 선위 소요가 보드 상한 10 을 넘는 후보(v26.3 — 보드 규칙과 통일).
   const expectGone=data.rows.filter(row=>String(row.unit.id)!==String(pick.unit.id)).filter(row=>{
     const re=C.recipeSolve(richState.db,row.unit.id,afterStock);
-    return (re.hardMissing||[]).length>0;
+    return (re.hardMissing||[]).length>0||C.num(re.wispCost)>10;
   }).length;
   assert.strictEqual(impact.gone.length,expectGone,`사라짐 수 불일치: 표시 ${impact.gone.length} vs 재검산 ${expectGone}`);
+  // v26.3(사용자: "이 패를 가면 이 패는 못가고 이런걸 한눈에"): 클릭 전
+  // 상시 배타 줄 — 실전형 희소 패에서 존재·파리티·렌더를 계약한다.
+  {
+    const scarce={};
+    const rares=units.filter(u=>C.tierKey(u)==='rare').slice(0,6);
+    for(const u of rares)scarce[u.id]=1;
+    let uc=0;for(const u of units){if(C.tierKey(u)==='uncommon'&&uc<8){scarce[u.id]=1;uc++;}}
+    let cm=0;for(const u of units){if(C.tierKey(u)==='common'&&cm<6){scarce[u.id]=1;cm++;}}
+    scarce[C.WISP_ID]=6;
+    const scarceState=C.normalizeState(units,{counts:scarce,currentAbilities:{}},{manualCounts:{}});
+    const sApp=mkApp();
+    const sData=sApp.v26CraftData(scarceState);
+    assert(sData.rows.length>=2,'희소 패 픽스처가 후보 2 미만');
+    assert(sData.rows.some(row=>row.locks&&row.locks.length),'희소 패에서 상호배타 표기가 하나도 없다');
+    // 파리티: 표기된 배타 == 같은 규칙 재검산.
+    const scope=sData.rows.slice(0,20);
+    for(const row of scope){
+      const after=Object.assign({},row.solve.stockAfter||{});
+      after[String(row.unit.id)]=(after[String(row.unit.id)]||0)+1;
+      const expect=scope.filter(other=>other!==row).filter(other=>{
+        const re=C.recipeSolve(scarceState.db,other.unit.id,after);
+        return (re.hardMissing||[]).length>0||C.num(re.wispCost)>10;
+      }).length;
+      assert.strictEqual((row.locks||[]).length,expect,`배타 파리티 불일치: ${row.unit.name}`);
+    }
+    const sHtml=sApp.renderV26Craft(scarceState);
+    assert(sHtml.includes('v26-locks')&&sHtml.includes('이걸 가면 못 감'),'상시 배타 줄 렌더 부재');
+  }
   // 아무것도 소비하지 않는다.
   assert.strictEqual(JSON.stringify(richState.counts),before,'표시 시뮬이 실제 counts 를 바꿨다');
   // 렌더 배선: 선택 행 뒤에 영향 패널.

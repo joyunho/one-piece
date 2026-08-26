@@ -6,7 +6,7 @@ if(root)root.ORDSquadPlanner=api;
 })(typeof window!=='undefined'?window:globalThis,function(C){
 'use strict';
 
-const VERSION='26.2.0';
+const VERSION='26.3.0';
 const DEFAULTS={beamWidth:8,branchWidth:5,branchScan:8,candidateCap:44,maxDepth:14};
 // v19.9.8: 스턴풀 구제 탐색 모드 — searchRoute 가 1차 미완성일 때만 켠다.
 // 켜진 동안 requirementPriorityVector 가 스턴풀을 생존 그룹에 합쳐 본다.
@@ -340,7 +340,7 @@ function squadDecisionSummary(state,result){
 //   blueprint    = the full route, including future rewards and drops
 // Only `actual` is allowed to pass a round checkpoint.
 function finalStageSnapshot(state,counts,mode,route,settings,fixed){
-  // v26.2.0: 여기는 '실제 보드' 스냅샷이다 — 반대 계통 유닛도 보드 위에서
+  // v26.3.0: 여기는 '실제 보드' 스냅샷이다 — 반대 계통 유닛도 보드 위에서
   // 스턴·이감을 실제로 제공하므로 계통 필터 없이 전량 집계한다.
   const units=finalEntries(state,counts),spec=specFromEntries(units,mode),main=mainUpperFor(state,counts,fixed),requirements=requirementRows(spec,units,mode,route,settings,main),routeEvaluation=routeEvaluationFor(units,requirements,mode,route);
   return{source:'tmo-owned-final-only',unitIds:units.map(stableId),boardCount:units.length,legendEquivalent:legendEquivalentCount(units),upperCount:new Set(units.filter(C.isUpper).map(canonicalUpper)).size,nonUpperFinalCount:units.filter(unit=>!C.isUpper(unit)).length,spec,requirements,routeEvaluation,mainUpperId:main&&main.id||''};
@@ -538,7 +538,7 @@ function makePlanningState(base,policy){
   const state=Object.assign({},base,{counts:clone(policy.stock)});state.wisp=num(state.counts[C.WISP_ID]);return state;
 }
 
-// v26.2.0(사용자 리포트): 나미(마딜) 참고 파티에 보유 사보(히든 [물딜])가
+// v26.3.0(사용자 리포트): 나미(마딜) 참고 파티에 보유 사보(히든 [물딜])가
 // 그대로 실렸다.  미래 후보는 allowedCandidate 가 unitFamily 로 걸렀지만,
 // 보유 최종 유닛 시드는 계통 무관이었다.  mode 를 주면 반대 계통 유닛을
 // 계획 라인업에서 제외한다(neutral·같은 계통만 통과 — allowedCandidate 와
@@ -589,7 +589,7 @@ function routeEvaluationFor(units,requirements,mode,route){
 
 function mainUpperFor(state,counts,fixed,mode){
   for(const id of fixed||[]){const u=state.db.byId.get(id);if(u&&num(counts[u.id])>0)return u;}
-  // v26.2.0: 계획 경로에서는 mode 를 넘겨 반대 계통 보유 상위가 메인으로
+  // v26.3.0: 계획 경로에서는 mode 를 넘겨 반대 계통 보유 상위가 메인으로
   // 잡히지 않게 한다(메인의 upperStrategy 필수가 요구표에 섞이는 것 방지).
   return finalEntries(state,counts,mode).find(u=>C.isUpper(u))||null;
 }
@@ -1669,7 +1669,7 @@ function rankDeckDirections(input,options){
 function planFinalSquad(input){
   input=input||{};const started=Date.now(),baseSettings=normalizeSettings(input),base=makeState(input,baseSettings),policy=normalizeCommonPolicy(input,base),state=makePlanningState(base,policy),blueprint=normalizeBlueprint(input,baseSettings,state),blueprintSettings=settingsWithBlueprint(baseSettings,state,blueprint),fixed=fixedUpperIds(state,input.locks||[],blueprintSettings,blueprint),settings=withUpperCommitments(blueprintSettings,state,fixed),supportMemo=resolveSupportMemo(input);setAffinityContext([settings.upperPreviewId&&state.db.byId.get(settings.upperPreviewId)].concat((fixed||[]).map(id=>state.db.byId.get(id))).filter(Boolean),supportMemo);const result=choosePreparedPlan(input,state,settings,policy,fixed,blueprint);
   result.blueprint=blueprintMetadata(state,blueprint,result);delete result._search;delete result._blueprintAttempt;result.reservedCommons=Object.entries(policy.reserved).map(([id,count])=>({id,name:displayNameOf(state.db.byId.get(id)),count}));
-  // v26.2.0: 계통 게이트가 계획에서 뺀 보유 최종 유닛을 근거로 노출한다 —
+  // v26.3.0: 계통 게이트가 계획에서 뺀 보유 최종 유닛을 근거로 노출한다 —
   // "사보(물딜)를 왜 마딜 파티에 넣냐"의 역질문("왜 빠졌냐")에 UI가 답할 것.
   result.familyExcluded=finalEntries(state,state.counts).filter(u=>{const family=unitFamily(u);return family!==settings.mode&&family!=='neutral';}).map(u=>({id:u.id,name:displayNameOf(u),family:unitFamily(u)}));
   result.elapsedMs=Date.now()-started;setAffinityContext([],supportMemo);return result;

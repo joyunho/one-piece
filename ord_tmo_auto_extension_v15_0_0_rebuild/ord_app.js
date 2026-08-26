@@ -1499,11 +1499,32 @@ class App{
       // v26.2(사용자: "선위가 10개 이하 드는 것만 나오게해줘"): 선위 소요
       // 상한 — 10 넘게 드는 조합은 목록에서 뺀다.
       if(cost>10)continue;
-      rows.push({unit,cost,gap,ready:gap<=0,eats,role:C.roleProfile(unit),family,
+      rows.push({unit,cost,gap,ready:gap<=0,eats,solve,role:C.roleProfile(unit),family,
         league:C.storyLeagueGrade(unit,C.storyGrade(unit)),
         roles:C.summarizeRoles({role:C.roleProfile(unit)},family==='magic'?'magic':'physical')});
     }
     rows.sort((a,b)=>Number(b.ready)-Number(a.ready)||a.gap-b.gap||a.cost-b.cost||displayNameOf(a.unit).localeCompare(displayNameOf(b.unit),'ko'));
+    // v26.3(사용자: "이 패를 가면 이 패는 못가고 이런걸 한눈에"): 클릭
+    // 전에 보이는 상호배타 표기 — 행마다 "이걸 만들면 못 가게 되는" 다른
+    // 후보를 미리 계산해 둔다.  제작 결과물 +1 은 정본 관례(원형→왜곡
+    // 2단계 거짓 배타 방지).  '못 감' 판정은 보드 자신의 규칙과 같다:
+    // 재계산에서 선행조건이 끊기거나(hard) 선위 소요가 상한 10 을 넘어
+    // 보드에서 탈락하면 못 가는 것이다 — 희귀도 흔함 재조합으로 되살 수
+    // 있는 이 게임에서 실전 배타는 대부분 '선위가 상한을 넘는' 쪽이다.
+    const CONFLICT_CAP=20;
+    const scope=rows.slice(0,CONFLICT_CAP);
+    for(const row of scope){
+      const after=Object.assign({},row.solve&&row.solve.stockAfter||{});
+      after[String(row.unit.id)]=C.num(after[String(row.unit.id)])+1;
+      const locks=[];
+      for(const other of scope){
+        if(other===row)continue;
+        let re=null;try{re=C.recipeSolve(db,other.unit.id,after);}catch(_){continue;}
+        if(re&&((re.hardMissing||[]).length||C.num(re.wispCost)>10))locks.push(displayNameOf(other.unit));
+      }
+      row.locks=locks;
+    }
+    for(const row of rows)if(!row.locks)row.locks=[];
     const data={rows,wisp};
     this._v26CraftKey=key;this._v26CraftData=data;
     return data;
@@ -1530,7 +1551,9 @@ class App{
       if(String(other.unit.id)===id)continue;
       let re=null;try{re=C.recipeSolve(db,other.unit.id,after);}catch(_){continue;}
       if(!re)continue;
-      if((re.hardMissing||[]).length){
+      // v26.3: '사라짐' 판정을 보드 규칙과 통일 — 선행조건 끊김(hard)
+      // 또는 재계산 선위가 상한 10 초과(보드 탈락)면 못 가는 것이다.
+      if((re.hardMissing||[]).length||C.num(re.wispCost)>10){
         const shared=[...new Set(other.eats.filter(eat=>mine.has(eat.id)).map(eat=>eat.name))];
         gone.push({name:displayNameOf(other.unit),shared:shared.slice(0,3)});
       }else if(other.ready&&C.num(re.wispCost)>Math.max(0,wispAfter)){
@@ -1577,7 +1600,7 @@ class App{
       const face=row.unit.image?`<img class="v25-face" src="${C.esc(row.unit.image)}" alt="" loading="lazy">`:`<i class="v25-face v25-ph">${C.esc(name.charAt(0))}</i>`;
       const picked=pickId===String(row.unit.id);
       const famLabel=row.family==='magic'?'마딜':row.family==='physical'?'물딜':'공용';
-      return`<button class="v25-row v26-row${row.ready?' ok':''}${picked?' picked':''}" data-act="v26-pick" data-id="${C.esc(row.unit.id)}">${face}<span class="v25-name"><b>${C.esc(name)}</b><i class="v26-fam ${C.esc(row.family)}">${famLabel}</i>${this.v151StoryTag(row.unit)}${this.v216BargesTag(row.unit)}</span><small class="${row.ready?'ok':'gap'}">${row.ready?`지금 가능 · 선위 ${row.cost}`:`선위 ${row.gap} 부족 (필요 ${row.cost})`}</small><span class="v25-warns v26-roles">${C.esc(row.roles||'')}</span></button>${picked&&impact?this.renderV26Impact(impact):''}`;
+      return`<button class="v25-row v26-row${row.ready?' ok':''}${picked?' picked':''}" data-act="v26-pick" data-id="${C.esc(row.unit.id)}">${face}<span class="v25-name"><b>${C.esc(name)}</b><i class="v26-fam ${C.esc(row.family)}">${famLabel}</i>${this.v151StoryTag(row.unit)}${this.v216BargesTag(row.unit)}</span><small class="${row.ready?'ok':'gap'}">${row.ready?`지금 가능 · 선위 ${row.cost}`:`선위 ${row.gap} 부족 (필요 ${row.cost})`}</small><span class="v25-warns v26-roles">${C.esc(row.roles||'')}</span>${row.locks&&row.locks.length?`<span class="v25-warns v26-locks">이걸 가면 못 감: ${C.esc(row.locks.slice(0,3).join(' · '))}${row.locks.length>3?` 외 ${row.locks.length-3}`:''}</span>`:''}</button>${picked&&impact?this.renderV26Impact(impact):''}`;
     };
     const ready=rows.filter(row=>row.ready),waiting=rows.filter(row=>!row.ready);
     const WAIT_CAP=12;

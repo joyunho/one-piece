@@ -1,4 +1,4 @@
-<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="ord-helper" content="v26.2.0-desktop-hud"><title>ORD HUD</title><link rel="stylesheet" href="ord_app.css"><link rel="stylesheet" href="ord_ui_v20.css"><style>
+<!doctype html><html lang="ko"><head><meta charset="utf-8"><meta name="ord-helper" content="v26.3.0-desktop-hud"><title>ORD HUD</title><link rel="stylesheet" href="ord_app.css"><link rel="stylesheet" href="ord_ui_v20.css"><style>
 /* 인게임 HUD — 창이 아니라 게임 위에 뜬 글자·칩처럼 보여야 한다.
    배경은 완전 투명, 콘텐츠 블록만 반투명 판.  클릭은 전부 게임으로
    통과하므로(메인 프로세스 setIgnoreMouseEvents) 상호작용 없음.
@@ -92,6 +92,8 @@ html,body{background:transparent !important;margin:0;padding:0;overflow:hidden;}
    블록 통째(v26-b2).  스펙 게이지는 상한이 없으면 560px 고정창을 86~
    167px 넘친다 — 충족(done) 숨김 + 열린 결손 4개까지. */
 #ord-hud-root .v26-chips,#ord-hud-root .v26-b2,#ord-hud-root .v26-impact,#ord-hud-root .v26-wait,#ord-hud-root .v26-roles,#ord-hud-root .v26-spec-full{display:none !important;}
+/* v26.3: 상호배타 줄은 게임 위에서도 핵심 정보 — 역할 줄과 달리 남긴다. */
+#ord-hud-root .v26-locks{grid-row:2;font-size:11px;color:#FFAD93;font-weight:700;}
 #ord-hud-root .v26-stale{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;font-size:12.5px;}
 #ord-hud-root .v26-stale b{color:#FFC58A;}
 #ord-hud-root .v26-spec-head{font-size:11px;opacity:.85;}
@@ -112,7 +114,7 @@ html,body{background:transparent !important;margin:0;padding:0;overflow:hidden;}
 #ord-hud-root .v25-pressure small{flex:1 1 100%;color:#FFC58A;font-weight:800;}
 #ord-hud-root .v25-pressure em{font-style:normal;}
 body.hud-hot #ord-hud-root .v151-action button.primary[data-act],body.hud-hot #ord-hud-root .v26-stale button.primary[data-act]{outline:2px solid rgba(255,214,120,.75);}
-/* v26.2.0(사용자: "오버레이 창이 반투명해도 ㄱㅊ을듯?"): 콘텐츠 판을
+/* v26.3.0(사용자: "오버레이 창이 반투명해도 ㄱㅊ을듯?"): 콘텐츠 판을
    반투명(.62)으로 낮춰 뒤의 게임이 비쳐 보이게 한다.  가독은 글자
    그림자로 지키고, 승인 버튼 호버(클릭 가능 순간)에는 판이 다시
    진해져(.92) 조작 대비를 확보한다. */
