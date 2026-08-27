@@ -251,9 +251,20 @@ button.v25-row{display:grid;grid-template-columns:46px minmax(0,1fr) auto;align-
 .v26-b2{grid-column:2;grid-row:1}
 .v26-b3{grid-column:2;grid-row:2}
 @media (max-width:1040px){.v26-board{display:flex;flex-direction:column}}
-.v26-block>header{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:7px}
+/* v27.1(사용자: "UI 진짜 이게 최선이야? 더 업그레이드 시켜봐"): 블록
+   머리 위계 강화(금색 마커) + 숫자 고정폭 + 행 호버 반응. */
+.v26-board{font-variant-numeric:tabular-nums}
+.v26-block>header{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 10px;margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--line)}
 .v26-block>header b{font-size:17px}
+.v26-block>header b::before{content:'◆';color:var(--gold);font-size:10px;margin-right:7px;vertical-align:2px}
 .v26-block>header small{color:var(--sub)}
+button.v26-row{transition:border-color .15s,transform .15s}
+button.v26-row:hover{border-color:var(--gold);transform:translateY(-1px)}
+.v25-row.v26-dead:hover{border-color:var(--line);transform:none}
+.v26-empty{display:flex;flex-direction:column;align-items:center;gap:4px;border:1px dashed var(--line-strong);border-radius:var(--radius-sm);padding:22px 16px;background:var(--panel-2);text-align:center}
+.v26-empty i{font-style:normal;color:var(--gold);font-size:18px;opacity:.8}
+.v26-empty b{font-size:13.5px}
+.v26-empty small{color:var(--sub);font-size:12px}
 /* 카드 그리드 — 행을 가로로 채워 한눈에.  임팩트 패널은 전폭. */
 .v26-block .v25-group{display:grid;grid-template-columns:repeat(auto-fill,minmax(305px,1fr));gap:6px;margin-bottom:8px}
 .v26-block .v25-group>small{grid-column:1/-1;margin-bottom:0}
@@ -298,10 +309,25 @@ button.v26-chip.on{border-color:var(--gold);color:var(--gold)}
 .v26-combo-search input{width:100%}
 .v26-combo-found{display:flex;flex-wrap:wrap;gap:5px}
 .v26-combo-found button{width:auto;padding:4px 11px;font-size:12.5px}
-.v26-top3{display:flex;flex-direction:column;gap:5px}
+.v26-top3{display:flex;flex-direction:column;gap:6px}
 .v26-top3>small{color:var(--sub)}
-.v26-top3 .v26-partner{grid-template-columns:20px 34px minmax(0,1fr) auto}
-.v26-top3-rank{font-style:normal;font-weight:900;color:var(--gold);font-size:15px;text-align:center}
+/* v27.1(스크린샷: .v26-partner 4열 그리드 재활용이 5자식 TOP3 에서 이름을
+   20px 열로 밀어 한 글자씩 세로 붕괴): 전용 행 — 메달 | 초상 | 본문 3열.
+   본문은 본명(말줄임 1줄) / 선위·실측 / 괄호 스펙 3줄 스택. */
+.v26-top3-grid{display:flex;flex-direction:column;gap:6px}
+button.v26-top3-row{display:grid;grid-template-columns:26px 42px minmax(0,1fr);align-items:center;gap:10px;width:100%;text-align:left;border:1px solid var(--line);border-radius:var(--radius-sm);padding:7px 11px 7px 8px;background:var(--panel-2);color:var(--fg);cursor:pointer;font:inherit;transition:border-color .15s,transform .15s}
+button.v26-top3-row:hover{border-color:var(--gold);transform:translateY(-1px)}
+button.v26-top3-row.top{border-color:rgba(217,164,65,.65);background:linear-gradient(100deg,rgba(217,164,65,.10),var(--panel-2) 55%)}
+button.v26-top3-row .v25-face{width:42px;height:42px;border-radius:9px;object-fit:cover;border:1px solid var(--line-strong)}
+button.v26-top3-row.top .v25-face{border-color:var(--gold)}
+.v26-top3-rank{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border:1px solid var(--line-strong);border-radius:50%;font-style:normal;font-weight:900;color:var(--sub);font-size:13px}
+.v26-top3-row.top .v26-top3-rank{border-color:var(--gold);color:var(--gold)}
+.v26-top3-main{display:flex;flex-direction:column;min-width:0;gap:1px}
+.v26-top3-main b{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+/* 적대 검증(v27.1): 공용 프리미티브 .v153-screen small (0,1,1)이 클래스
+   단독 (0,1,0)의 색·크기를 이긴다 — small.클래스 (0,1,1, 후순위)로 승격. */
+small.v26-top3-meta{color:var(--gold);font-weight:800;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+small.v26-top3-note{color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .v25-row.picked{border-color:var(--gold);box-shadow:0 0 10px rgba(217,164,65,.15)}
 .v26-impact{border:1px solid var(--gold);border-radius:var(--radius-sm);padding:8px 12px;margin:-2px 0 8px;background:var(--panel-2)}
 .v26-impact>small{display:block;color:var(--sub);margin-bottom:5px}
@@ -316,8 +342,10 @@ button.v26-chip.on{border-color:var(--gold);color:var(--gold)}
 .v26-combo-pick select{flex:1 1 auto;min-width:0}
 .v26-combo-head{display:block;color:var(--sub)}
 .v26-partners{display:grid;grid-template-columns:repeat(auto-fill,minmax(215px,1fr));gap:5px}
-button.v26-partner{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:2px 8px;text-align:left;padding:5px 8px 5px 5px}
+button.v26-partner{display:grid;grid-template-columns:34px minmax(0,1fr) auto;align-items:center;gap:2px 8px;text-align:left;padding:5px 8px 5px 5px;transition:border-color .15s}
+button.v26-partner:hover{border-color:var(--gold)}
 button.v26-partner .v25-face{width:34px;height:34px;border-radius:7px;object-fit:cover;border:1px solid var(--line-strong)}
+button.v26-partner b{min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:13px}
 button.v26-partner em{font-style:normal;font-weight:800;color:var(--gold)}
 button.v26-partner i{grid-column:2/span 2;font-style:normal;font-size:10.5px;font-weight:800}
 .v26-have{color:#8FE0BC}

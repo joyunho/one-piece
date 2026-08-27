@@ -2654,6 +2654,12 @@ button.v26-chip.on{border-color:#d9a441;color:#d9a441}
 .v26-locks{grid-row:3;color:#FFAD93;font-size:11.5px;font-weight:700}
 .v26-reserve-warn{grid-row:4;color:#FFC58A;font-size:11.5px;font-weight:700}
 .v26-pager{display:flex;align-items:center;justify-content:center;gap:10px;margin:4px 0 8px}
+/* v27.1: TOP3 전용 행 + 빈 상태 패널 (정본 미러) */
+.v26-top3-grid{display:flex;flex-direction:column;gap:6px}
+button.v26-top3-row{display:grid;grid-template-columns:26px 42px minmax(0,1fr);align-items:center;gap:10px;text-align:left}
+.v26-top3-main{display:flex;flex-direction:column;min-width:0;gap:1px}
+.v26-top3-main b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.v26-empty{display:flex;flex-direction:column;align-items:center;gap:4px;border:1px dashed #35507A;border-radius:9px;padding:22px 16px;text-align:center}
 .v25-row.v26-dead{opacity:.38;border-style:dashed}
 .v26-dead-tag,.v26-delay-tag{font-style:normal;font-size:10.5px;font-weight:800;border-radius:999px;padding:1px 7px}
 .v26-reserve{display:flex;flex-wrap:wrap;gap:4px 8px;border:1px solid rgba(255,159,67,.4);border-radius:9px;padding:6px 10px;font-size:12px}
