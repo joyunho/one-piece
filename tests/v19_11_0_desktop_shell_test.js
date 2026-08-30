@@ -94,16 +94,20 @@ check('④ exe 패키징 — 자산 복사 계약 + win32 빌드 스크립트',(
   new vm.Script(buildUi,{filename:'build_ui.js'});
   new vm.Script(packWin,{filename:'package_win.js'});
   // 복사 목록은 페이지 파싱으로 만들고, 로컬 파일명이 아닌 참조는 거부한다.
-  assert(buildUi.includes('ord_helper_desktop.html')&&buildUi.includes('matchAll'),'페이지 파싱 복사가 아님');
+  // v28.0(전면 신작): 패키징 원천이 ord_board/index.html 로 바뀌었다 —
+  // 파싱 복사·거부 가드 계약은 유지, 대상만 이전.  런타임 추가 파일은
+  // 방향 워커 대신 인게임 HUD 페이지(hud.html/hud.js)다.
+  assert(buildUi.includes("'index.html'")&&buildUi.includes("'ord_board'")&&buildUi.includes('matchAll'),'페이지 파싱 복사가 아님');
   assert(buildUi.includes('^[\\w.-]+$'),'외부 참조 거부 가드 없음');
-  assert(buildUi.includes('ord_direction_worker.js'),'런타임 워커가 복사 목록에 없음');
+  assert(buildUi.includes('hud.html')&&buildUi.includes('hud.js'),'런타임 HUD 파일이 복사 목록에 없음');
   // 패키지에는 앱 파일만 싣는다 — node_modules·빌드 도구는 제외.
   for(const pin of ['node_modules','build_ui','package_win','win32','ORDCoach'])assert(packWin.includes(pin),`패키징 계약 누락: ${pin}`);
   const pkg=JSON.parse(fs.readFileSync(path.join(ROOT,'desktop/package.json'),'utf8'));
   assert(pkg.scripts&&/build_ui\.js.*package_win\.js/.test(String(pkg.scripts['dist:win'])),'dist:win 스크립트 없음');
   assert(pkg.devDependencies&&pkg.devDependencies['@electron/packager'],'@electron/packager 의존성 없음');
   // 배포본은 앱 내 ui/ 페이지를 우선 로드한다(저장소 상대 경로는 개발 전용).
-  assert(main.includes("'ui', 'ord_helper_desktop.html'")&&main.includes('existsSync'),'번들 ui 우선 로드 없음');
+  // v28.0(전면 신작): 로드 대상이 ord_board/index.html 로 이전.
+  assert(main.includes("'ui', 'index.html'")&&main.includes("'ord_board', 'index.html'")&&main.includes('existsSync'),'번들 ui 우선 로드 없음');
   // v19.14.1: dist:win 은 어떤 경로로 실행돼도 결과물을 바탕화면에 복사
   // 한다 — win32 전용 가드(리눅스 CI 빌드는 건너뜀) + OneDrive 대응.
   assert(packWin.includes("process.platform === 'win32'"),'바탕화면 복사 win32 가드 없음');
@@ -118,16 +122,16 @@ check('⑥ 오버레이 미니 패널 — 우상단 축소·게임 클릭 보존
   assert(main.includes("send('ord-overlay-mode'"),'오버레이 모드 이벤트 없음');
   assert(main.includes('savedBounds')&&main.includes('win.setBounds(savedBounds)'),'원래 창 복원 없음');
   assert(preload.includes('onOverlayMode')&&preload.includes("on('ord-overlay-mode'"),'preload 오버레이 구독 없음');
-  assert(bootDesktop.includes("classList.toggle('ord-overlay-mode'"),'부트 컴팩트 클래스 배선 없음');
-  // v20.1: 오버레이 계약은 실제 로드되는 신작 시트(ord_ui_v20.css)가
-  // 진실이다 — 구 cockpit 시트는 페이지에서 은퇴(레거시 보존).
-  const css=read('ord_ui_v20.css');
-  assert(css.includes('body.ord-overlay-mode .v153-spec')&&css.includes('body.ord-overlay-mode .v155-rare-strip'),'컴팩트 CSS 없음');
+  // v28.0(전면 신작): 실제 로드되는 렌더러는 ord_board/ — 컴팩트 클래스
+  // 배선·오버레이 CSS 계약을 신작으로 이전한다(구 파일은 아카이브).
+  const boardApp=fs.readFileSync(path.join(ROOT,'ord_board/app.js'),'utf8');
+  const boardCss=fs.readFileSync(path.join(ROOT,'ord_board/board.css'),'utf8');
+  assert(boardApp.includes("classList.toggle('ord-overlay-mode'"),'신작 컴팩트 클래스 배선 없음');
+  assert(boardCss.includes('body.ord-overlay-mode'),'신작 컴팩트 CSS 없음');
   // v19.14.2: 오버레이 위치·크기 기억(사용자가 끌면 그대로 유지) + 기본
-  // 크기 축소.  조합 명령어 줄(command-line)은 게임 중 필수라 숨기지 않는다.
+  // 크기 축소.
   assert(main.includes('ord-overlay-bounds.json')&&main.includes('loadOverlayBounds')&&main.includes('saveOverlayBounds'),'오버레이 위치 기억 없음');
   assert(main.includes('const width = 400'),'축소 기본 크기 아님');
-  assert(css.includes('body.ord-overlay-mode .command-line{display:flex}'),'조합 명령어 줄은 오버레이에서도 보여야 함');
   // v19.15.0: 인게임 HUD — 투명·클릭 통과·포커스 불가 창.  미니 패널은
   // HUD 위치 잡기용.  앱 이중 구동 금지: HUD 는 메인 창이 그린 조각을
   // 받아 표시만 한다.  v24.3.1 재핀(사용자: "f8 9 기능 f56으로 바꿔"):
@@ -141,18 +145,21 @@ check('⑥ 오버레이 미니 패널 — 우상단 축소·게임 클릭 보존
   assert(main.includes("register('F10', moveOverlayToNextDisplay)"),'F10 모니터 이동 소실');
   assert(main.includes("ipcMain.on('ord-hud-state'"),'HUD 상태 중계 없음');
   assert(preload.includes('sendHudState')&&preload.includes('onHudState'),'preload HUD API 없음');
-  // v23.8 재핀(사용자: "너무 느려 갱신이"): 1.5초 고정 주기 → 스냅샷
-  // 직후 즉시 push + 400ms 변경 감지 주기.
-  assert(bootDesktop.includes('sendHudState')&&bootDesktop.includes('setInterval(pushHud, 400)')&&bootDesktop.includes('__ORD_HUD_PUSH'),'부트 HUD 급전 없음(즉시 push + 400ms 주기)');
-  const hudHtml=read('ord_hud_desktop.html');
-  assert(hudHtml.includes('background:transparent')&&hudHtml.includes('ord_hud_desktop.js'),'HUD 페이지 투명 배경·스크립트 없음');
+  // v23.8 재핀(사용자: "너무 느려 갱신이") → v28.0 이전: 신작 앱이 렌더
+  // 직후 즉시 push + 400ms 변경 감지 주기로 급전한다(전문 비교).
+  const boardApp2=fs.readFileSync(path.join(ROOT,'ord_board/app.js'),'utf8');
+  assert(boardApp2.includes('sendHudState')&&boardApp2.includes('setInterval(push,400)'),'신작 HUD 급전 없음(즉시 push + 400ms 주기)');
+  const hudHtml=fs.readFileSync(path.join(ROOT,'ord_board/hud.html'),'utf8');
+  assert(hudHtml.includes('background:transparent')&&hudHtml.includes('hud.js'),'HUD 페이지 투명 배경·스크립트 없음');
   assert(!/\son\w+\s*=/.test(hudHtml),'HUD 페이지에 인라인 핸들러 금지');
   const buildUi=fs.readFileSync(path.join(ROOT,'desktop/build_ui.js'),'utf8');
-  assert(buildUi.includes('ord_hud_desktop.html')&&buildUi.includes('ord_hud_desktop.js'),'패키징에 HUD 파일 누락');
-  // 편의: HUD 켬 상태 기억(재실행 자동 복원) + 기능 없는 버튼 숨김
-  // (회복 목표 줄만 유지).
+  assert(buildUi.includes("'hud.html'")&&buildUi.includes("'hud.js'"),'패키징에 HUD 파일 누락');
+  // 편의: HUD 켬 상태 기억(재실행 자동 복원).  v28.0: 신작 HUD 는 전용
+  // 조각 표시 전용이라 버튼 자체가 없다 — 다이어트 규칙 대신 조각에
+  // 버튼이 없음을 계약한다(표시 전용 계약은 ord_board_ui_test ③).
   assert(main.includes('ord-hud-state.json')&&main.includes('saveHudState'),'HUD 상태 기억 없음');
-  assert(hudHtml.includes('button:not(.v151-recovery-row)'),'HUD 버튼 정리 없음');
+  const boardHudJs=fs.readFileSync(path.join(ROOT,'ord_board/hud.js'),'utf8');
+  assert(boardHudJs.includes('onHudState')&&!boardHudJs.includes('addEventListener'),'HUD 표시 전용 계약 위반');
 });
 
 check('⑤ 설치·업데이트 스크립트 — 바탕화면 설치 계약',()=>{

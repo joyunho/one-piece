@@ -1,5 +1,5 @@
 'use strict';
-// v27.1.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
+// v28.0.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
 //
 // 확장(크롬) 없이 코치를 독립 프로그램으로 돌린다.  브라우저 제약
 // (타이머 조임·MV3 정책·CORS)이 사라지므로 보험 장치 없이 단순하다:
@@ -135,9 +135,11 @@ function moveOverlayToNextDisplay() {
 // (setIgnoreMouseEvents)하고 포커스도 못 가져가(focusable:false) 게임
 // 입력을 전혀 뺏지 않는다.  위치·크기는 미니 패널(F6)에서 잡은 자리를
 // 그대로 쓴다 — HUD 자신은 클릭 통과라 끌 수 없기 때문.
+// v28.0(전면 신작): 렌더러는 ord_board/ 의 신작 보드다 — 옛 프로그램
+// (ord_tmo_auto_extension_v15_0_0_rebuild)은 더 이상 로드하지 않는다.
 function resolveUiFile(name) {
   const bundled = path.join(__dirname, 'ui', name);
-  return fs.existsSync(bundled) ? bundled : path.join(__dirname, '..', 'ord_tmo_auto_extension_v15_0_0_rebuild', name);
+  return fs.existsSync(bundled) ? bundled : path.join(__dirname, '..', 'ord_board', name);
 }
 function ensureHudWindow() {
   if (hudWin && !hudWin.isDestroyed()) return hudWin;
@@ -168,7 +170,7 @@ function ensureHudWindow() {
   // 클릭은 통과시키되 마우스 이동은 렌더러가 계속 받아, 승인 버튼 위에
   // 커서가 있는 동안만 클릭을 켠다(ord-hud-interactive).
   hudWin.setIgnoreMouseEvents(true, {forward: true});
-  hudWin.loadFile(resolveUiFile('ord_hud_desktop.html'));
+  hudWin.loadFile(resolveUiFile('hud.html'));
   hudWin.on('closed', () => { hudWin = null; hudOn = false; });
   return hudWin;
 }
@@ -204,8 +206,8 @@ function createWindow() {
   });
   win.removeMenu();
   // 배포본은 자산이 앱 안(ui/)에 실려 있고, 개발 실행은 저장소 원본을 읽는다.
-  const bundledPage = path.join(__dirname, 'ui', 'ord_helper_desktop.html');
-  const repoPage = path.join(__dirname, '..', 'ord_tmo_auto_extension_v15_0_0_rebuild', 'ord_helper_desktop.html');
+  const bundledPage = path.join(__dirname, 'ui', 'index.html');
+  const repoPage = path.join(__dirname, '..', 'ord_board', 'index.html');
   win.loadFile(fs.existsSync(bundledPage) ? bundledPage : repoPage);
   win.on('closed', () => { win = null; });
 }
