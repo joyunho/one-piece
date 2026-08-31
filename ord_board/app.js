@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v29.1.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v30.0.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -31,6 +31,9 @@ function App(root){
   this.index=B.buildIndex(DATA);
   this.counts={};
   this.wisp=0;
+  this.gold=0;
+  this.lumber=0;
+  this.scan=null;      // 로컬 서버 엔드포인트 조사 결과(데스크톱 셸이 1회 보냄)
   this.playable=0;
   this.lastGoodAt=0;
   this.auto=null;
@@ -43,6 +46,7 @@ function App(root){
     clockStartedAt:0,   // 라운드 시계 기점(0=수동) — 수신에서 자동 시작
     upperPick:'',
     pairPick:'',
+    auxPick:'',         // 첫 희귀·짤 희귀 알약 선택(조합식 패널)
     drillRoot:'',       // 조합식 드릴다운이 붙은 패널의 유닛 id
     drill:[],           // 드릴다운 체인(재료 id 순서)
     filter:'',
@@ -77,6 +81,7 @@ App.prototype.roundNow=function(){
 App.prototype.clockLabel=function(clk){
   if(!clk.running)return`${Math.max(1,num(this.state.round)||1)}라 <i>수동</i>`;
   if(clk.prep)return`준비 <i>${clk.remaining}초</i>`;
+  if(clk.shift)return`신세계 전환 <i>${clk.remaining}초</i>`;
   return`${clk.round}라 <i>${clk.boss?'보스 · ':''}${clk.remaining}초</i>`;
 };
 App.prototype.tickClock=function(){
@@ -114,12 +119,14 @@ App.prototype.onFeed=function(payload){
   this.fingerprint=fp;
   this.counts=feed.counts;
   this.wisp=feed.wisp;
+  this.gold=feed.gold;
+  this.lumber=feed.lumber;
   this.playable=feed.playable;
   if(newGame){
     // 새 판: 라운드·선택 초기화(모드·오로성은 유지 — 세션 설정).
     // 첫 유닛 감지 = 1라 시작 — 시계를 자동으로 앵커한다(사용자 0831c).
     this.state.round=1;this.state.clockStartedAt=B.clockAnchor(1,auto.startedAt||now);
-    this.state.upperPick='';this.state.pairPick='';this.state.drillRoot='';this.state.drill=[];
+    this.state.upperPick='';this.state.pairPick='';this.state.auxPick='';this.state.drillRoot='';this.state.drill=[];
     this.state.pick='';this.state.page=0;this.save();
   }else if(auto.active&&!this.state.clockStartedAt){
     // 판 중간 합류: 현재 수동 라운드에서 시계를 이어 시작 — ±로 맞추면
@@ -163,6 +170,8 @@ App.prototype.renderStrip=function(mode){
     `</div>`+
     `<select class="gorosei" data-opt="gorosei" aria-label="오로성">${Object.keys(g).map(key=>`<option value="${key}" ${this.state.gorosei===key?'selected':''}>오로성 · ${esc(g[key].label)}</option>`).join('')}</select>`+
     `<span class="chip">선위 <b>${this.wisp}</b></span>`+
+    `<span class="chip">목재 <b>${this.lumber}</b></span>`+
+    `<span class="chip">골드 <b>${this.gold}</b></span>`+
     `<span class="chip">실전 유닛 <b>${this.playable}</b></span>`+
     `<span class="feed ${this.stale()?'':'on'}"><i></i><small>${this.stale()?'TMO 미연결':'로컬 직결 수신 중'}</small></span>`+
   `</header>`;
@@ -178,7 +187,7 @@ App.prototype.renderCraft=function(board){
   const active=V26_FILTERS.find(([key])=>key&&key===this.state.filter);
   const view=active?rows.filter(r=>active[2](r.unit.roles)):rows;
   if(!view.length){
-    return`<div class="filters">${chips}</div><div class="empty-panel"><i>✦</i><b>${active?`${esc(active[1])} 역할로 지금 만들 수 있는 전설급이 없습니다`:'지금 가진 희귀·재료로 닿는 전설급이 없습니다'}</b><small>${active?'다른 필터를 보거나 전체로 돌아가세요.':'게임에서 희귀가 잡히면 여기부터 채워집니다 — 결정은 티모지지를 보며 직접.'}</small></div>`;
+    return`<div class="filters">${chips}</div>${this.renderAux(board)}<div class="empty-panel"><i>✦</i><b>${active?`${esc(active[1])} 역할로 지금 만들 수 있는 전설급이 없습니다`:'지금 가진 희귀·재료로 닿는 전설급이 없습니다'}</b><small>${active?'다른 필터를 보거나 전체로 돌아가세요.':'게임에서 희귀가 잡히면 여기부터 채워집니다 — 결정은 티모지지를 보며 직접.'}</small></div>`;
   }
   const pages=Math.max(1,Math.ceil(view.length/PAGE));
   const page=Math.min(Math.max(0,num(this.state.page)),pages-1);
@@ -199,7 +208,29 @@ App.prototype.renderCraft=function(board){
   }).join('');
   const pager=pages>1?`<div class="pager"><button data-act="page" data-value="-1" ${page<=0?'disabled':''}>◀ 이전</button><em>${page+1} / ${pages} 페이지 · 전체 ${view.length}</em><button data-act="page" data-value="1" ${page>=pages-1?'disabled':''}>다음 ▶</button></div>`:'';
   const readyCount=view.filter(r=>r.ready).length;
-  return`<div class="filters">${chips}</div>${this.renderImpact(impact)}<div class="cards"><small>지금 가능 ${readyCount} · 선위만 부족 ${view.length-readyCount}</small>${cards}</div>${pager}`;
+  return`<div class="filters">${chips}</div>${this.renderAux(board)}${this.renderImpact(impact)}<div class="cards"><small>지금 가능 ${readyCount} · 선위만 부족 ${view.length-readyCount}</small>${cards}</div>${pager}`;
+};
+// 보조 알약(사용자 0831d): 첫 희귀 최속(초반 전용 — 152킬 특별함이
+// 잡히면 내림) + 짤 희귀(50라+ 전설 불가 시 방깎·이감·공증 슬롯 채우기).
+App.prototype.renderAux=function(board){
+  let html='';
+  // 초반 한정: 152킬 특별함이 잡히면 내리고, 수신이 특별함을 놓쳐도
+  // 25라부터는 초반이 아니므로 내린다(이중 안전).
+  const fr=this.roundNow()<25?B.firstRares(this.index,this.counts):{picks:[],specialOwned:1};
+  if(fr.specialOwned===0&&fr.picks.length){
+    html+=`<div class="aux first-rares"><small>첫 희귀 최속 — 지금 패에서 가장 싸게 닿는 희귀 · 눌러서 조합식 · 152킬 특별함이 잡히면 이 안내는 사라집니다</small><div class="aux-pills">${fr.picks.map(p=>`<button class="pair${this.state.auxPick===p.unit.id?' on':''}" data-act="aux-pick" data-id="${esc(p.unit.id)}" title="${esc(p.unit.name)}"><b>${esc(p.unit.short)}</b><i>${p.ready?`지금 가능 · 선위 ${p.cost}`:`선위 ${p.cost}`}</i></button>`).join('')}</div></div>`;
+  }
+  if(this.roundNow()>=50&&!board.rows.some(r=>r.ready)){
+    const fill=B.fillerRares(this.index,this.counts);
+    if(fill.picks.length){
+      html+=`<div class="aux filler-rares"><small>짤 희귀 — 전설이 더 안 나오는 마감 구간, 지금 선위로 슬롯 채우기(방깎·이감·공증)</small><div class="aux-pills">${fill.picks.map(p=>`<button class="pair${this.state.auxPick===p.unit.id?' on':''}" data-act="aux-pick" data-id="${esc(p.unit.id)}" title="${esc(p.unit.name)}"><b>${esc(p.unit.short)}</b><i>${esc(p.tags.join('·'))} · 선위 ${p.cost}</i></button>`).join('')}</div></div>`;
+    }
+  }
+  if(html&&this.state.auxPick){
+    const plan=B.recipePlan(this.index,this.state.auxPick,this.counts);
+    if(plan)html+=`<div class="upper-recipe"><small class="combo-head">${esc(plan.unit.short)} 조합식 — 지금 패 기준</small>${this.renderRecipe(plan,plan.unit.id)}</div>`;
+  }
+  return html;
 };
 // 조합식 패널(사용자 0831: "조합식도 · 선위를 어떻게 써야하는지도 ·
 // 상위도 포함해서") — 전설급 선택 패널과 선택 상위 아래에서 공용.
@@ -227,7 +258,8 @@ App.prototype.recipeBody=function(plan,rootId,depth){
     ?`<div class="recipe-line"><i>선위 ${plan.wispCost} 사용처</i>${plan.wispPlan.map(w=>`<span class="mat common">${w.color?`<em style="background:${esc(w.color)}"></em>`:''}${esc(w.name)}×${w.count}</span>`).join('')}<small>흔함 1기 = 선위 1 — 부족한 흔함을 선위로 삽니다</small></div>`
     :(plan.wispCost>0?`<div class="recipe-line"><i>선위 ${plan.wispCost} 사용처</i><small>하위 재료 조합에 선위 ${plan.wispCost}가 듭니다</small></div>`:`<div class="recipe-line"><i>선위</i><small>추가 선위 없이 지금 재료로 완성됩니다</small></div>`);
   const hard=plan.hardMissing.length?`<div class="recipe-line hard"><i>선행 결손</i>${plan.hardMissing.map(h=>`<span class="mat hard">${esc(h.name)}</span>`).join('')}<small>조합으로 못 만드는 선행 유닛 — 게임에서 확보해야 열립니다</small></div>`:'';
-  return`<div class="recipe-line"><i>조합식</i>${direct||'<small>직접 재료 없음</small>'}</div>${eats}${wisp}${hard}`;
+  const item=plan.itemMissing&&plan.itemMissing.length?`<div class="recipe-line hard"><i>특수 재료</i>${plan.itemMissing.map(h=>`<span class="mat hard">${esc(h.name)}${h.count>1?`×${h.count}`:''}</span>`).join('')}<small>유니크 아이템 — 게임에서 얻기 전에는 추천에서 제외합니다</small></div>`:'';
+  return`<div class="recipe-line"><i>조합식</i>${direct||'<small>직접 재료 없음</small>'}</div>${eats}${wisp}${hard}${item}`;
 };
 App.prototype.renderRecipe=function(plan,rootId){
   if(!plan)return'';
@@ -318,7 +350,15 @@ App.prototype.renderSpec=function(spec,mode){
     const miss=row.gap>0;
     return`<div class="gauge"><label><span>${esc(row.label)}</span><b class="${miss?'miss':''}">${row.current} / ${row.target}${row.full?` <small>(풀 ${row.full})</small>`:''}</b></label><div class="bar"><i class="${miss?(pct>=70?'warn':'bad'):'ok'}" style="width:${pct}%"></i></div>${row.extra?`<small class="extra">${esc(row.extra)}</small>`:''}</div>`;
   }).join('');
-  return`${head}<div class="gauges">${gauges}</div>${spec.goroseiNote?`<small class="gorosei-note">⚠ ${esc(spec.goroseiNote)}</small>`:''}`;
+  // 능력치 출처 조사(사용자 0831d "티모지지 프로그램에서 불러올 수 있을
+  // 것 같은데 알아봐줘"): 데스크톱 셸이 로컬 서버(127.0.0.1:25625)의
+  // 후보 경로를 1회 조사해 보내준다 — 능력치 전용 API 존재 여부의 실측.
+  let scanHtml='';
+  if(this.scan){
+    const extra=(this.scan.found||[]).filter(f=>f.path!=='/datas');
+    scanHtml=`<small class="scan-note">로컬 서버 조사: /datas ${(this.scan.found||[]).some(f=>f.path==='/datas')?'응답':'무응답'}${extra.length?` · 추가 경로 ${extra.map(f=>`${esc(f.path)}(${f.status})`).join(' ')}`:' · 능력치 전용 경로 없음 — 위 게이지는 보드가 직접 합산(희귀 직접 역할 포함)'}</small>`;
+  }
+  return`${head}<div class="gauges">${gauges}</div>${spec.goroseiNote?`<small class="gorosei-note">⚠ ${esc(spec.goroseiNote)}</small>`:''}${scanHtml}`;
 };
 
 // ── 인게임 HUD: 전용 조각(메인 앱을 복제하지 않는다 — 표시 전용) ────────
@@ -363,6 +403,7 @@ App.prototype.bind=function(){
     else if(act==='pick'){this.state.pick=this.state.pick===id?'':id;this.state.drillRoot='';this.state.drill=[];}
     else if(act==='upper'){this.state.upperPick=id;this.state.pairPick='';this.state.search='';this.state.drillRoot='';this.state.drill=[];}
     else if(act==='pair-pick'){this.state.pairPick=this.state.pairPick===id?'':id;this.state.drillRoot='';this.state.drill=[];}
+    else if(act==='aux-pick'){this.state.auxPick=this.state.auxPick===id?'':id;this.state.drillRoot='';this.state.drill=[];}
     else if(act==='drill'){
       const root=btn.getAttribute('data-root'),depth=num(btn.getAttribute('data-depth'));
       if(this.state.drillRoot!==root){this.state.drillRoot=root;this.state.drill=[id];}
@@ -406,6 +447,7 @@ function boot(){
   const bridge=global.ORD_DESKTOP;
   if(bridge&&typeof bridge.onDatas==='function')bridge.onDatas(payload=>{try{app.onFeed(payload);}catch(e){console.error(e);}});
   if(bridge&&typeof bridge.onOverlayMode==='function')bridge.onOverlayMode(on=>{try{document.body.classList.toggle('ord-overlay-mode',on===true);}catch(_){}});
+  if(bridge&&typeof bridge.onEndpointScan==='function')bridge.onEndpointScan(scan=>{try{app.scan=scan;app.render();}catch(_){}});
   // 수신이 끊겨도 배너가 스스로 갱신되게 가벼운 감시(8초 문턱).
   setInterval(()=>{const stale=app.stale();if(stale!==app._staleShown){app._staleShown=stale;app.render();}},2000);
 }

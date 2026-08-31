@@ -26,8 +26,12 @@ check('① 보안 — 단일 로컬 호스트·loadFile·격리·파일명 살�
   assert(main.includes('loadFile')&&!main.includes('loadURL'),'원격 로드 경로 존재');
   assert(main.includes('contextIsolation: true')&&main.includes('nodeIntegration: false'),'렌더러 격리 계약 없음');
   assert(main.includes("replace(/[^\\w.-]/g, '')")&&main.includes('.ordlog.json'),'저장 파일명 살균 없음');
-  for(const api of ['onDatas','probe','toggleOverlay','onOverlayMode','sendHudState','onHudState'])assert(preload.includes(api),`preload API 누락: ${api}`);
+  for(const api of ['onDatas','probe','toggleOverlay','onOverlayMode','sendHudState','onHudState','onEndpointScan'])assert(preload.includes(api),`preload API 누락: ${api}`);
   assert(!preload.includes('require(')||preload.split('require(').length===2,'preload 가 electron 외 모듈을 당김');
+  // v30 엔드포인트 조사: 같은 로컬 호스트만, 세션당 1회, GET 만.
+  assert(main.includes('runEndpointScanOnce')&&main.includes('ord-endpoint-scan'),'엔드포인트 조사 부재');
+  assert(main.includes('host: DATAS_HOST, port: DATAS_PORT, path: scanPath'),'조사가 로컬 호스트 밖으로 나감');
+  assert(main.includes('if (scanDone) return;'),'조사 1회 제한 없음');
 });
 
 check('② 로드 대상 — 신작 보드만, 번들 ui/ 우선',()=>{
@@ -93,4 +97,4 @@ check('⑤ 오버레이·HUD — 미니 패널·단축키·투명 클릭 통과�
   assert(hudJs.includes('onHudState')&&!hudJs.includes('addEventListener'),'HUD 표시 전용 계약 위반');
 });
 
-console.log(`\n${checks} checks passed (데스크톱 셸 계약 v29)`);
+console.log(`\n${checks} checks passed (데스크톱 셸 계약)`);

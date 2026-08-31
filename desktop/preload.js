@@ -1,13 +1,20 @@
 'use strict';
-// v29.1.0 — 데스크톱 셸 preload.  렌더러에는 이 화이트리스트 API 만 보인다.
+// v30.0.0 — 데스크톱 셸 preload.  렌더러에는 이 화이트리스트 API 만 보인다.
 const {contextBridge, ipcRenderer} = require('electron');
 
 contextBridge.exposeInMainWorld('ORD_DESKTOP', {
-  version: '29.1.0',
+  version: '30.0.0',
   onDatas(callback) {
     if (typeof callback !== 'function') return;
     ipcRenderer.on('ord-local-datas', (_event, payload) => {
       try { callback(payload); } catch (_) {}
+    });
+  },
+  // v30: 로컬 서버 엔드포인트 조사 결과(세션당 1회) — 능력치 API 실측.
+  onEndpointScan(callback) {
+    if (typeof callback !== 'function') return;
+    ipcRenderer.on('ord-endpoint-scan', (_event, scan) => {
+      try { callback(scan); } catch (_) {}
     });
   },
   onOverlayMode(callback) {

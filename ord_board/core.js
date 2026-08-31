@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 코어 (v29.1.0 전면 신작)
+// ORD 악몽 보드 — 코어 (v30.0.0 전면 신작)
 //
 // 철학(사용자 확정, v26→신작 승계): 결정은 사용자가 티모지지를 보며
 // 직접 내린다.  프로그램은 세 가지 사실만 보여준다 —
@@ -38,8 +38,11 @@ function translateFeed(index,liveUnits){
   const counts={},unknown={};
   let matched=0,wisp=0,playable=0;
   const live=liveUnits&&typeof liveUnits==='object'?liveUnits:{};
+  // /datas 는 유닛 코드 사이에 자원 키(GOLD·LUMBER·FOOD)도 싣는다 —
+  // 목재는 리롤(2)·변화(10) 비용이라 표시 가치가 있다(로드맵 0812 ⑥c).
+  const RESOURCE=new Set(['GOLD','LUMBER','FOOD']);
   for(const code of Object.keys(live)){
-    if(index.ignoreSet.has(code))continue;
+    if(RESOURCE.has(code)||index.ignoreSet.has(code))continue;
     const count=Math.max(0,num(live[code]));
     const id=index.data.codeMap[code]||(index.byId.has(code)?code:'');
     if(!id){if(!/0e$/i.test(code)&&count>0)unknown[code]=count;continue;}
@@ -48,7 +51,8 @@ function translateFeed(index,liveUnits){
     if(id===index.wispId)wisp+=count;
     else if(!index.specialSet.has(id))playable+=count;
   }
-  return{counts,matched,wisp,playable,unknown,ok:matched>0};
+  return{counts,matched,wisp,playable,unknown,ok:matched>0,
+    gold:Math.max(0,num(live.GOLD)),lumber:Math.max(0,num(live.LUMBER))};
 }
 
 // 미해석 코드 안정화: 같은 수량으로 연속 3회 관측된 것만 인정(전투 임시
@@ -80,29 +84,41 @@ function nextAutoRound(previous,playable,now){
   return{generation,active,startedAt,playable:Math.max(0,num(playable))};
 }
 
-// ── 라운드 시계(구 정본 다섯 달 검증치 이식) ────────────────────────────
-// 라운드는 경과 시간으로 굴러간다: 준비 10초 뒤 1라부터, 일반 35초 ·
-// 보스 60초(고정표), 65라 상한.  ± 보정은 시계를 다시 앵커한다.
-const BOSS_ROUNDS=new Set([10,20,30,40,50,55,60,65,70,75]);
-const ROUND_PREP=10,ROUND_NORMAL=35,ROUND_BOSS=60,MAX_ROUND=65;
-const roundDuration=r=>BOSS_ROUNDS.has(r)?ROUND_BOSS:ROUND_NORMAL;
+// ── 라운드 시계(맵 JASS 정본 — 01_round_waves 확정, 사용자 0831d 교정) ──
+// 전반 1~50라: 일반 35초 · 보스(10/20/30/40/50) 60초.
+// 50라 뒤 신세계 전환 70초.  신세계 51~65라: 전부 32초 —
+// 55/60/65라 보스(도플라밍고·빅맘·카이도)는 일반 웨이브와 동시 스폰이라
+// 추가 시간이 없다.  ± 보정은 시계를 다시 앵커한다.
+const BOSS_ROUNDS=new Set([10,20,30,40,50]);
+const COSPAWN_BOSS=new Set([55,60,65]);
+const ROUND_PREP=10,ROUND_NORMAL=35,ROUND_BOSS=60,SHIFT_SECONDS=70,ROUND_NEWWORLD=32,MAX_ROUND=65;
+const roundDuration=r=>r>50?ROUND_NEWWORLD:(BOSS_ROUNDS.has(r)?ROUND_BOSS:ROUND_NORMAL);
 function roundClock(startedAt,now){
   const started=num(startedAt);
-  if(started<=0)return{running:false,round:0,prep:false,boss:false,remaining:0};
+  if(started<=0)return{running:false,round:0,prep:false,shift:false,boss:false,remaining:0};
   let elapsed=Math.max(0,Math.floor(((num(now)||Date.now())-started)/1000));
-  if(elapsed<ROUND_PREP)return{running:true,round:0,prep:true,boss:false,remaining:ROUND_PREP-elapsed};
+  if(elapsed<ROUND_PREP)return{running:true,round:0,prep:true,shift:false,boss:false,remaining:ROUND_PREP-elapsed};
   elapsed-=ROUND_PREP;
   let r=1;
-  while(elapsed>=roundDuration(r)&&r<MAX_ROUND){elapsed-=roundDuration(r);r++;}
+  while(r<MAX_ROUND){
+    const d=roundDuration(r);
+    if(elapsed<d)break;
+    elapsed-=d;
+    if(r===50){
+      if(elapsed<SHIFT_SECONDS)return{running:true,round:50,prep:false,shift:true,boss:false,remaining:SHIFT_SECONDS-elapsed};
+      elapsed-=SHIFT_SECONDS;
+    }
+    r++;
+  }
   const capped=r>=MAX_ROUND&&elapsed>=roundDuration(r);
-  return{running:true,round:r,prep:false,boss:BOSS_ROUNDS.has(r),remaining:capped?0:Math.max(0,roundDuration(r)-elapsed)};
+  return{running:true,round:r,prep:false,shift:false,boss:BOSS_ROUNDS.has(r)||COSPAWN_BOSS.has(r),remaining:capped?0:Math.max(0,roundDuration(r)-elapsed)};
 }
 // 재앵커: '지금'이 round 의 시작이 되는 startedAt 을 돌려준다.
 // 불변식: roundClock(clockAnchor(r,now),now).round === r  (1..65)
 function clockAnchor(round,now){
   const target=Math.min(MAX_ROUND,Math.max(1,num(round)||1));
   let s=ROUND_PREP;
-  for(let r=1;r<target;r++)s+=roundDuration(r);
+  for(let r=1;r<target;r++){s+=roundDuration(r);if(r===50)s+=SHIFT_SECONDS;}
   return(num(now)||Date.now())-s*1000;
 }
 
@@ -144,10 +160,18 @@ function solve(index,targetId,initialCounts){
   // hard = 선행 유닛(초월 쿠마 등 'hard' 티어)만.  아이템·랜덤·신비함
   // 결손은 게임 내 별도 획득 경로가 있어 조합 차단으로 세지 않는다
   // (구 정본과 동일 의미론 — 파리티 검증으로 고정).
+  // itemMissing(v30, 사용자 0831d "유니크 아이템 없으면 추천 금지"):
+  // hard 가 아닌 비조합 결손 — 흑도 슈스이·태양신의 흔적·불사조의 깃털·
+  // 우타의 헤드셋 같은 유니크 아이템.  추천 게이트가 이걸로 막는다.
+  const tierOf=id=>{const u=index.byId.get(id);return u?u.tier:(index.data.specialIds[id]?'hard':'other');};
+  const nameOfShort=id=>(index.byId.get(id)||{}).short||index.data.specialIds[id]||id;
   const hardMissing=Object.entries(hardShort)
-    .filter(([id])=>{const u=index.byId.get(id);const tier=u?u.tier:(index.data.specialIds[id]?'hard':'other');return tier==='hard';})
+    .filter(([id])=>tierOf(id)==='hard')
     .map(([id,count])=>({id,count,name:index.data.specialIds[id]||(index.byId.get(id)||{}).short||id}));
-  return{targetId:String(targetId),wispCost,consumed,stockAfter:stock,hardMissing,missingCommons};
+  const itemMissing=Object.entries(hardShort)
+    .filter(([id])=>tierOf(id)!=='hard')
+    .map(([id,count])=>({id,count,name:nameOfShort(id)}));
+  return{targetId:String(targetId),wispCost,consumed,stockAfter:stock,hardMissing,itemMissing,missingCommons};
 }
 
 // ── 조합식 계획(사용자 0831: "조합식도 나왔으면 · 선위를 어떻게 써야
@@ -170,20 +194,64 @@ function recipePlan(index,targetId,counts){
   const wispPlan=Object.entries(result.missingCommons||{})
     .map(([id,count])=>{const mat=index.byId.get(id);return{id,name:nameOf(id),count:num(count),color:mat&&mat.color||''};})
     .sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'ko'));
-  return{unit,direct,eats:eatsOf(index,result),wispPlan,wispCost:num(result.wispCost),hardMissing:result.hardMissing,owned:num((counts||{})[unit.id])>0};
+  return{unit,direct,eats:eatsOf(index,result),wispPlan,wispCost:num(result.wispCost),hardMissing:result.hardMissing,itemMissing:result.itemMissing,owned:num((counts||{})[unit.id])>0};
+}
+
+// ── 첫 희귀 최속(사용자 0831d: "제일 빨리 만들 수 있는 첫 희귀함은
+// 초반에만 표시") — 지금 패에서 가장 싸게 닫히는 희귀 TOP3.
+// 152킬 진화체(특별함)가 패에 잡히면 초반이 끝난 것 — 호출측이
+// handFacts.specialOwned 로 패널을 내린다.
+function firstRares(index,counts){
+  const facts=handFacts(index,counts);
+  const picks=[];
+  for(const unit of index.data.units){
+    if(unit.tier!=='rare')continue;
+    if(num((counts||{})[unit.id])>0)continue;
+    const result=solve(index,unit.id,counts);
+    if(result.hardMissing.length||result.itemMissing.length)continue;
+    const cost=num(result.wispCost);
+    picks.push({unit,cost,ready:cost<=facts.wisp});
+  }
+  picks.sort((a,b)=>a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'));
+  return{picks:picks.slice(0,3),specialOwned:facts.specialOwned};
+}
+
+// ── 짤 희귀(사용자 0831d: "맨 마지막에 전설이 안나오면 짤 희귀함
+// (깎·이감·공증) 추천") — 마감 구간에 전설급이 더 안 나올 때, 지금
+// 선위로 바로 만들 수 있는 역할 희귀(방깎·이감·공증)로 슬롯을 채운다.
+function fillerRares(index,counts){
+  const facts=handFacts(index,counts);
+  const picks=[];
+  for(const unit of index.data.units){
+    if(unit.tier!=='rare')continue;
+    const r=unit.roles;
+    const tags=[];
+    if(r.armor>0||r.triggerArmor>0||r.stackArmor>0)tags.push('방깎');
+    if(r.slow>0||r.triggerSlow>0)tags.push('이감');
+    if(r.attack>0||r.triggerAttack>0)tags.push('공증');
+    if(!tags.length)continue;
+    const result=solve(index,unit.id,counts);
+    if(result.hardMissing.length||result.itemMissing.length)continue;
+    const cost=num(result.wispCost);
+    if(cost>facts.wisp)continue;                       // 지금 바로 가능한 것만
+    picks.push({unit,cost,tags});
+  }
+  picks.sort((a,b)=>a.cost-b.cost||b.tags.length-a.tags.length||a.unit.short.localeCompare(b.unit.short,'ko'));
+  return{picks:picks.slice(0,6)};
 }
 
 // ── 패 파생 사실(게이트 입력) ───────────────────────────────────────────
 function handFacts(index,counts){
-  let seraphOwned=0,changedOwned=0,upperCanons=new Set();
+  let seraphOwned=0,changedOwned=0,specialOwned=0,upperCanons=new Set();
   for(const[id,count]of Object.entries(counts||{})){
     if(num(count)<=0)continue;
     const u=index.byId.get(id);if(!u)continue;
     if(u.seraph)seraphOwned+=num(count);
     if(u.changed)changedOwned+=num(count);
+    if(u.tier==='special')specialOwned+=num(count);  // 152킬 진화체(특별함)
     if(u.upper)upperCanons.add(u.canon);
   }
-  return{seraphOwned,changedOwned,upperCanons,wisp:num((counts||{})[index.wispId])};
+  return{seraphOwned,changedOwned,specialOwned,upperCanons,wisp:num((counts||{})[index.wispId])};
 }
 
 // ── ① 만들 수 있는 전설급 보드 ─────────────────────────────────────────
@@ -211,7 +279,7 @@ function craftRows(index,counts,opts){
     if(unit.seraph&&facts.seraphOwned>=1)continue;
     if(unit.family!=='neutral'&&mode&&unit.family!==mode)continue;
     const result=solve(index,unit.id,counts);
-    if(result.hardMissing.length)continue;
+    if(result.hardMissing.length||result.itemMissing.length)continue;
     const eats=eatsOf(index,result);
     const cost=num(result.wispCost),gap=Math.max(0,cost-facts.wisp);
     if(!eats.length&&gap>0)continue;
@@ -302,7 +370,7 @@ function upperPicks(index,counts,opts){
     if(unit.family!=='neutral'&&mode&&unit.family!==mode)continue;
     if(unit.changed&&round<50)continue;
     const result=solve(index,unit.id,counts);
-    if(result.hardMissing.length)continue;
+    if(result.hardMissing.length||result.itemMissing.length)continue;
     const cost=num(result.wispCost);
     const eatsMine=Object.keys(result.consumed||{}).some(id=>{
       const mat=index.byId.get(id);if(!mat)return false;
@@ -338,7 +406,7 @@ function pairPicks(index,counts,upperId,opts){
     if(unit.family!=='neutral'&&mode&&unit.family!==mode){hidden+=1;continue;}
     if(unit.changed&&round<50){hidden+=1;continue;}
     const result=solve(index,unit.id,counts);
-    if(result.hardMissing.length){hidden+=1;continue;}
+    if(result.hardMissing.length||result.itemMissing.length){hidden+=1;continue;}
     const cost=num(result.wispCost);
     const eatsMine=Object.keys(result.consumed||{}).some(id=>{
       const mat=index.byId.get(id);if(!mat)return false;
@@ -383,7 +451,10 @@ function upperCombos(index,counts,board,upperId){
 }
 
 // ── ③ 현재 파티 스펙 ────────────────────────────────────────────────────
-// 실보유 완성 유닛(전설급·상위)의 굳힌 역할 합산 — 판정이 아니라 사실.
+// live 기준(구 정본 승계, 사용자 0831d "제대로 능력치를 표시 못하는 것
+// 같아"): 완성 유닛(전설급·상위)만이 아니라 보유 희귀·특별·안흔의 직접
+// 전투 역할까지 합산한다 — 게임 화면 능력치와 같은 셈법.  판정이 아니라
+// 사실.  sum.units 는 완성 유닛(전설급·상위) 수만 센다.
 function partySpec(index,counts,opts){
   const mode=opts&&opts.mode||'';
   const gorosei=opts&&opts.gorosei||'none';
@@ -393,9 +464,9 @@ function partySpec(index,counts,opts){
   for(const[id,count]of Object.entries(counts||{})){
     const n=num(count);if(n<=0)continue;
     const u=index.byId.get(id);if(!u)continue;
-    if(!u.legendish&&!u.upper)continue;
+    if(!u.legendish&&!u.upper&&!['uncommon','special','rare'].includes(u.tier))continue;
     const r=u.roles;
-    sum.units+=n;
+    if(u.legendish||u.upper)sum.units+=n;
     sum.slow+=r.slow*n;sum.triggerSlow+=r.triggerSlow*n;
     sum.armor+=r.armor*n;sum.triggerArmor+=r.triggerArmor*n;sum.singleArmor+=r.singleArmor*n;sum.stackArmor+=r.stackArmor*n;
     sum.stun+=r.stun*n;
@@ -441,11 +512,11 @@ function inferMode(index,counts){
 }
 
 global.ORD_BOARD_CORE={
-  VERSION:'29.1.0',
+  VERSION:'30.0.0',
   num,esc,round2,MAX_ROUND,
   buildIndex,translateFeed,stabilizeUnknown,nextAutoRound,countsFingerprint,
   roundClock,clockAnchor,
-  solve,handFacts,craftRows,pickImpact,recipePlan,
+  solve,handFacts,craftRows,pickImpact,recipePlan,firstRares,fillerRares,
   upperOptions,upperPicks,pairPicks,upperReserve,upperCombos,
   partySpec,inferMode
 };

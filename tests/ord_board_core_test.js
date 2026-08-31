@@ -119,9 +119,13 @@ test('④ 파티 스펙 — 역할 합산 파리티 + 오로성 목표',()=>{
   assert.strictEqual(B.partySpec(index,owned,{mode:'physical',gorosei:'none'}).rows.find(r=>r.key==='bossFrenzy').target,1.5);
   assert.strictEqual(B.partySpec(index,owned,{mode:'magic',gorosei:'none'}).rows.find(r=>r.key==='bossFrenzy').target,1);
   assert(B.partySpec(index,owned,{mode:'magic',gorosei:'none'}).rows.some(r=>r.key==='finish'),'마딜 단끝 줄 부재');
-  // 재료 티어는 스펙에 안 섞인다.
+  // v30 live 기준(사용자 0831d): 완성 유닛 수는 전설·상위만 세지만,
+  // 보유 희귀·특별·안흔의 직접 역할은 능력치에 합산된다.
   const matsOnly=B.partySpec(index,rich,{mode:'physical',gorosei:'none'});
-  assert.strictEqual(matsOnly.sum.units,0,'재료가 완성 스펙으로 합산됨');
+  assert.strictEqual(matsOnly.sum.units,0,'재료가 완성 유닛 수로 합산됨');
+  const expectMatSlow=DATA.units.filter(u=>['uncommon','special'].includes(u.tier)&&rich[u.id]).reduce((s,u)=>s+u.roles.slow*rich[u.id],0);
+  assert(Math.abs(matsOnly.sum.slow-expectMatSlow)<1e-6,`희귀·특별 직접 역할 미합산: ${matsOnly.sum.slow} vs ${expectMatSlow}`);
+  assert(matsOnly.sum.slow>0||matsOnly.sum.armor>0||matsOnly.sum.attack>0,'live 스펙이 전부 0');
 });
 
 test('⑤ 수신 번역·판 감지 — 코드맵·무시·위습·콜드 스타트',()=>{
@@ -211,7 +215,7 @@ test('⑦ 2상위 추천 — 실측 페어 × 지금 패 도달 (사용자 0831b
   assert(pp.hidden>=0&&(pp.picks.length+pp.hidden)>=Math.min(3,(stats.pairs||[]).length?1:0),'숨김 집계 이상');
 });
 
-test('⑧ 라운드 시계 — 준비 10 · 일반 35 · 보스 60 · 65 상한 · 재앵커 불변식 (사용자 0831c)',()=>{
+test('⑧ 라운드 시계 — 맵 JASS 정본(35/60 · 전환70 · 신세계32) + 재앵커 불변식 (사용자 0831c·0831d 교정)',()=>{
   const now=1700000000000;
   // 수동(시계 없음)
   const manual=B.roundClock(0,now);
@@ -222,17 +226,76 @@ test('⑧ 라운드 시계 — 준비 10 · 일반 35 · 보스 60 · 65 상한 
   // 1라 진행: 준비 뒤 34초까지 1라, 35초에 2라
   assert.strictEqual(B.roundClock(now-(10+34)*1000,now).round,1,'35초 전 1라 유지 실패');
   assert.strictEqual(B.roundClock(now-(10+35)*1000,now).round,2,'35초에 2라 전환 실패');
-  // 보스 라운드: 10라는 60초
+  // 전반 보스(10/20/30/40/50)는 60초
   const boss=B.roundClock(B.clockAnchor(10,now),now);
   assert(boss.round===10&&boss.boss===true&&boss.remaining===60,`10라 보스 오류: ${JSON.stringify(boss)}`);
   assert.strictEqual(B.roundClock(B.clockAnchor(10,now)-59000,now).round,10,'보스 59초 유지 실패');
   assert.strictEqual(B.roundClock(B.clockAnchor(10,now)-60000,now).round,11,'보스 60초 전환 실패');
+  // 신세계 전환: 50라 60초 뒤 70초 전환 구간(라운드 50 유지·shift 표기)
+  const shift=B.roundClock(B.clockAnchor(50,now)-60000,now);
+  assert(shift.shift===true&&shift.round===50&&shift.remaining===70,`신세계 전환 오류: ${JSON.stringify(shift)}`);
+  assert.strictEqual(B.clockAnchor(51,now)-B.clockAnchor(50,now),-(60+70)*1000,'50→51 간격이 60+70초가 아님');
+  // 신세계 51~65라는 전부 32초 — 55/60/65 보스는 동시 스폰(추가 시간 없음)
+  assert.strictEqual(B.roundClock(B.clockAnchor(51,now)-31000,now).round,51,'51라 32초 유지 실패');
+  assert.strictEqual(B.roundClock(B.clockAnchor(51,now)-32000,now).round,52,'51라 32초 전환 실패');
+  const co=B.roundClock(B.clockAnchor(55,now),now);
+  assert(co.round===55&&co.boss===true&&co.remaining===32,`55라 동시 스폰 오류: ${JSON.stringify(co)}`);
+  assert.strictEqual(B.roundClock(B.clockAnchor(55,now)-32000,now).round,56,'55라가 60초로 계산됨(구 오류)');
   // 재앵커 불변식: 1..65 전 라운드
   for(let r=1;r<=B.MAX_ROUND;r++)assert.strictEqual(B.roundClock(B.clockAnchor(r,now),now).round,r,`재앵커 불변식 붕괴 r=${r}`);
   assert.strictEqual(B.MAX_ROUND,65,'최대 라운드는 65');
   // 상한: 아주 오래 지나도 65에서 멈추고 남은 초 0
   const capped=B.roundClock(now-9e7,now);
   assert(capped.round===65&&capped.remaining===0,`65 상한 오류: ${JSON.stringify(capped)}`);
+});
+
+test('⑨ 유니크 아이템 게이트 — 없으면 추천 금지 (사용자 0831d)',()=>{
+  const itemIds=new Set(DATA.units.filter(u=>u.group==='아이템').map(u=>u.id));
+  const needy=DATA.units.filter(u=>(u.stuffs||[]).some(s=>itemIds.has(s.id)));
+  assert(needy.length>=4,`아이템 필요 유닛 표본 부족: ${needy.length}`);
+  for(const u of needy){
+    const r=B.solve(index,u.id,rich);
+    assert(r.itemMissing.length>0,`아이템 결손 미탐지: ${u.name}`);
+    assert.strictEqual(r.hardMissing.length+0,r.hardMissing.length,'hardMissing 의미 불변');
+  }
+  // 아이템을 손에 쥐면 결손이 사라진다(추천 재개)
+  const withItem=Object.assign({},rich);
+  for(const id of itemIds)withItem[id]=1;
+  for(const u of needy)
+    assert.strictEqual(B.solve(index,u.id,withItem).itemMissing.length,0,`아이템 보유에도 결손: ${u.name}`);
+  // 게이트 전수: 보드·상위 TOP3·2상위 추천 어디에도 아이템 결손 유닛 없음
+  const board=B.craftRows(index,rich,{mode:'',round:60});
+  for(const row of board.rows)assert.strictEqual(row.result.itemMissing.length,0,`보드에 아이템 결손: ${row.unit.name}`);
+  for(const p of B.upperPicks(index,rich,{mode:'',round:60,lockedId:''}))
+    assert.strictEqual(B.solve(index,p.unit.id,rich).itemMissing.length,0,`TOP3 에 아이템 결손: ${p.unit.name}`);
+  const withPairs=index.uppers.find(u=>DATA.clear[u.canon]&&(DATA.clear[u.canon].pairs||[]).length>10);
+  for(const p of B.pairPicks(index,rich,withPairs.id,{mode:'',round:60}).picks)
+    assert.strictEqual(B.solve(index,p.unit.id,rich).itemMissing.length,0,`2상위에 아이템 결손: ${p.unit.name}`);
+  // 조합식 계획은 결손을 정직하게 표시
+  assert(B.recipePlan(index,needy[0].id,rich).itemMissing.length>0,'조합식 계획에 특수 재료 결손 없음');
+});
+
+test('⑩ 첫 희귀 최속 + 짤 희귀 (사용자 0831d)',()=>{
+  const fr=B.firstRares(index,scarce);
+  assert.strictEqual(fr.picks.length,3,'첫 희귀 TOP3 아님');
+  for(const p of fr.picks)assert.strictEqual(p.unit.tier,'rare',`희귀 아님: ${p.unit.name}`);
+  for(let i=1;i<fr.picks.length;i++)assert(fr.picks[i-1].cost<=fr.picks[i].cost,'첫 희귀 비용 정렬 붕괴');
+  assert.strictEqual(fr.specialOwned,0,'희소 픽스처에 특별함이 없어야 한다');
+  // 152킬 진화체(특별함)가 잡히면 초반 종료 신호
+  const withEvo=Object.assign({},scarce);
+  const evo=DATA.units.find(u=>u.tier==='special');
+  withEvo[evo.id]=1;
+  assert(B.firstRares(index,withEvo).specialOwned>0,'152 진화체 감지 실패');
+  // 짤 희귀: 희귀만 · 역할 태그(방깎/이감/공증) · 지금 선위 내 · 비용 정렬
+  const fill=B.fillerRares(index,rich);
+  assert(fill.picks.length>0,'풍족 패에서 짤 희귀 0');
+  const wisp=B.num(rich[DATA.wispId]);
+  for(const p of fill.picks){
+    assert.strictEqual(p.unit.tier,'rare',`희귀 아님: ${p.unit.name}`);
+    assert(p.cost<=wisp,`선위 초과 짤 희귀: ${p.unit.name} ${p.cost}`);
+    assert(p.tags.length&&p.tags.every(t=>['방깎','이감','공증'].includes(t)),`역할 태그 오류: ${p.tags}`);
+  }
+  for(let i=1;i<fill.picks.length;i++)assert(fill.picks[i-1].cost<=fill.picks[i].cost,'짤 희귀 비용 정렬 붕괴');
 });
 
 let passed=0;

@@ -1,5 +1,5 @@
 'use strict';
-// v29.1.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
+// v30.0.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
 //
 // 확장(크롬) 없이 코치를 독립 프로그램으로 돌린다.  브라우저 제약
 // (타이머 조임·MV3 정책·CORS)이 사라지므로 보험 장치 없이 단순하다:
@@ -55,10 +55,42 @@ function startPolling() {
     const result = await fetchDatas();
     if (win && !win.isDestroyed() && result.ok && result.payload) {
       win.webContents.send('ord-local-datas', result.payload);
+      runEndpointScanOnce();
     }
   }, POLL_MS);
 }
 function stopPolling() { if (pollTimer) { clearInterval(pollTimer); pollTimer = null; } }
+
+// v30(사용자 0831d "능력치를 티모지지 프로그램에서 불러올 수 있을 것
+// 같은데 알아봐줘"): TMO 로컬 서버의 후보 경로를 세션당 1회 조사한다.
+// 같은 호스트(127.0.0.1:25625)만, GET 만 — 결과는 렌더러 표시 +
+// userData/ord-endpoint-scan.json 기록.  /datas 첫 성공 뒤에 돈다.
+const SCAN_PATHS = ['/datas', '/status', '/state', '/info', '/stats', '/abilities',
+  '/ability', '/player', '/players', '/upgrades', '/game', '/round', '/build', '/version'];
+let scanDone = false;
+function fetchPath(scanPath) {
+  return new Promise(resolve => {
+    const request = http.get({host: DATAS_HOST, port: DATAS_PORT, path: scanPath, timeout: 2500}, response => {
+      let body = '';
+      response.on('data', chunk => { body += chunk; if (body.length > 200000) request.destroy(); });
+      response.on('end', () => resolve({path: scanPath, status: response.statusCode, size: body.length, head: body.slice(0, 400)}));
+    });
+    request.on('timeout', () => { request.destroy(); resolve(null); });
+    request.on('error', () => resolve(null));
+  });
+}
+async function runEndpointScanOnce() {
+  if (scanDone) return;
+  scanDone = true;
+  const found = [];
+  for (const scanPath of SCAN_PATHS) {
+    const hit = await fetchPath(scanPath);
+    if (hit && hit.status && hit.status < 500 && hit.status !== 404) found.push(hit);
+  }
+  const scan = {at: Date.now(), tried: SCAN_PATHS.length, found};
+  try { fs.writeFileSync(path.join(app.getPath('userData'), 'ord-endpoint-scan.json'), JSON.stringify(scan, null, 1)); } catch (_) {}
+  if (win && !win.isDestroyed()) win.webContents.send('ord-endpoint-scan', scan);
+}
 
 // v19.14.1(실사용 낙제 교정): 전체 창 항상-위는 게임을 가리고 클릭까지
 // 먹었다.  오버레이 = 우상단 미니 패널 — 코치가 작은 창으로 줄어 항상

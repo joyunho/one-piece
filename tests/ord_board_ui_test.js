@@ -156,6 +156,54 @@ test('⑤ 라운드 시계 + 조합식 드릴다운 (사용자 0831c)',()=>{
   assert(src.includes("['common','hard','other'].includes(u.tier)"),'드릴 허용 티어 가드 부재');
 });
 
+test('⑥ v30 — 자원 칩·첫 희귀·짤 희귀·특수 재료·로컬 조사 (사용자 0831d)',()=>{
+  const{app,root}=mkApp();
+  // 자원 칩: /datas 의 GOLD·LUMBER 를 버리지 않는다.
+  const feedOut=B.translateFeed(app.index,{GOLD:1234,LUMBER:7});
+  assert(feedOut.gold===1234&&feedOut.lumber===7,'자원 번역 누락');
+  app.gold=1234;app.lumber=7;
+  feed(app,rich,{round:20,mode:'magic',clockStartedAt:0});
+  assert(root.innerHTML.includes('목재')&&root.innerHTML.includes('골드'),'자원 칩 부재');
+  // 첫 희귀 최속: 특별함(152 진화체)이 없을 때만 보인다.
+  const scarce={};let r=0,un=0,co=0;
+  for(const u of DATA.units){if(u.tier==='uncommon'&&un<8){scarce[u.id]=1;un++;}if(u.tier==='common'&&u.id!==DATA.wispId&&co<6){scarce[u.id]=1;co++;}}
+  scarce[DATA.wispId]=6;
+  feed(app,scarce,{round:5});
+  assert(root.innerHTML.includes('첫 희귀 최속'),'첫 희귀 패널 부재(초반)');
+  feed(app,rich,{});  // rich 엔 특별함이 있다 → 패널이 사라진다
+  assert(!root.innerHTML.includes('첫 희귀 최속'),'152 특별함 이후에도 첫 희귀 패널 잔존');
+  // 짤 희귀: 50라+ 전설이 안 나올 때만 — 안흔 잔량 + 선위 10 픽스처
+  // (전설급은 선위 부족으로 전부 닫힘, 역할 희귀는 지금 가능).
+  const lateHand={};let un2=0;
+  for(const u of DATA.units){if(u.tier==='uncommon'&&un2<4){lateHand[u.id]=1;un2++;}}
+  lateHand[DATA.wispId]=10;
+  feed(app,lateHand,{round:55,clockStartedAt:0,auxPick:''});
+  const lateBoard=B.craftRows(app.index,lateHand,{mode:app.mode(),round:55});
+  assert(!lateBoard.rows.some(x=>x.ready),'픽스처 붕괴: 전설이 이미 열림');
+  assert(B.fillerRares(app.index,lateHand).picks.length>0,'픽스처 붕괴: 짤 희귀 없음');
+  assert(root.innerHTML.includes('짤 희귀'),'짤 희귀 블록 부재(마감 구간)');
+  const pill=root.innerHTML.match(/class="aux filler-rares"[\s\S]*?data-act="aux-pick" data-id="([^"]+)"/);
+  assert(pill,'짤 희귀 알약 부재');
+  feed(app,lateHand,{auxPick:pill[1]});
+  assert(root.innerHTML.includes('조합식 — 지금 패 기준'),'짤 희귀 조합식 패널 부재');
+  feed(app,lateHand,{round:20,auxPick:''});
+  assert(!root.innerHTML.includes('짤 희귀'),'마감 전인데 짤 희귀 표시');
+  // 첫 희귀 이중 안전: 특별함을 못 잡아도 25라부터는 내린다.
+  feed(app,scarce,{round:30});
+  assert(!root.innerHTML.includes('첫 희귀 최속'),'25라+ 인데 첫 희귀 패널 잔존');
+  feed(app,scarce,{round:5});
+  // 특수 재료(유니크 아이템): 아이템 필요 상위를 고르면 결손 줄이 뜬다.
+  const itemIds=new Set(DATA.units.filter(u=>u.group==='아이템').map(u=>u.id));
+  const needy=DATA.units.find(u=>u.upper&&u.canon===u.id&&(u.stuffs||[]).some(s=>itemIds.has(s.id)));
+  feed(app,rich,{upperPick:needy.id,pairPick:'',auxPick:''});
+  assert(root.innerHTML.includes('특수 재료')&&root.innerHTML.includes('추천에서 제외'),'특수 재료 결손 줄 부재');
+  // 로컬 서버 조사 결과 표시(능력치 API 실측 — 데스크톱 셸이 보냄).
+  app.scan={at:Date.now(),tried:14,found:[{path:'/datas',status:200,size:1000}]};
+  app.render();
+  assert(root.innerHTML.includes('로컬 서버 조사'),'조사 결과 줄 부재');
+  assert(readNew('app.js').includes('onEndpointScan'),'조사 수신 배선 부재');
+});
+
 let passed=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);passed+=1;}
