@@ -195,9 +195,15 @@ test('⑥ v30 — 자원 칩·첫 희귀·짤 희귀·특수 재료·로컬 조�
   for(const u of DATA.units){if(u.tier==='uncommon'&&un<8){scarce[u.id]=1;un++;}if(u.tier==='common'&&u.id!==DATA.wispId&&co<6){scarce[u.id]=1;co++;}}
   scarce[DATA.wispId]=6;
   feed(app,scarce,{round:5});
-  assert(root.innerHTML.includes('첫 희귀 최속'),'첫 희귀 패널 부재(초반)');
-  feed(app,rich,{});  // rich 엔 특별함이 있다 → 패널이 사라진다
-  assert(!root.innerHTML.includes('첫 희귀 최속'),'152 특별함 이후에도 첫 희귀 패널 잔존');
+  assert(root.innerHTML.includes('첫 희귀'),'첫 희귀 패널 부재(초반)');
+  // 특별함이 있어도 첫 희귀를 안 쥐었으면 유지(0831g 교정), 첫 희귀를
+  // 쥐면 내려간다.
+  feed(app,rich,{});  // rich = 특별함 보유·희귀 0 → 유지
+  assert(root.innerHTML.includes('첫 희귀'),'특별함 때문에 첫 희귀 패널이 조기 소멸(0831g 재발)');
+  const withRareHand=Object.assign({},scarce);
+  withRareHand[DATA.units.find(u=>u.tier==='rare').id]=1;
+  feed(app,withRareHand,{});
+  assert(!root.innerHTML.includes('첫 희귀 —'),'첫 희귀 보유 후에도 패널 잔존');
   // 짤 희귀: 50라+ 전설이 안 나올 때만 — 안흔 잔량 + 선위 10 픽스처
   // (전설급은 선위 부족으로 전부 닫힘, 역할 희귀는 지금 가능).
   const lateHand={};let un2=0;
@@ -216,7 +222,7 @@ test('⑥ v30 — 자원 칩·첫 희귀·짤 희귀·특수 재료·로컬 조�
   assert(!root.innerHTML.includes('짤 희귀'),'마감 전인데 짤 희귀 표시');
   // 첫 희귀 이중 안전: 특별함을 못 잡아도 25라부터는 내린다.
   feed(app,scarce,{round:30});
-  assert(!root.innerHTML.includes('첫 희귀 최속'),'25라+ 인데 첫 희귀 패널 잔존');
+  assert(!root.innerHTML.includes('첫 희귀 —'),'25라+ 인데 첫 희귀 패널 잔존');
   feed(app,scarce,{round:5});
   // 특수 재료(유니크 아이템): 아이템 필요 상위를 고르면 결손 줄이 뜬다.
   const itemIds=new Set(DATA.units.filter(u=>u.group==='아이템').map(u=>u.id));

@@ -130,6 +130,8 @@ button.mat.open .drill-ind{color:var(--gold)}
 .recipe.drill{margin:0 0 7px 14px;border-left:2px solid var(--line-strong)}
 .aux{display:grid;gap:5px;border:1px dashed var(--line-strong);border-radius:var(--radius-sm);padding:7px 10px;margin:0 0 8px}
 .aux>small{color:var(--sub);font-size:11px}
+.aux.first-rares{border:1px solid rgba(217,164,65,.55);background:rgba(217,164,65,.06);box-shadow:0 0 12px rgba(217,164,65,.08)}
+.aux.first-rares>small b{color:var(--gold);font-size:12px}
 .aux-pills{display:flex;flex-wrap:wrap;gap:5px}
 .aux .pair.on{border-color:var(--gold);box-shadow:0 0 8px rgba(217,164,65,.15)}
 .scan-note{display:block;margin-top:8px;color:var(--muted);font-size:10.5px;line-height:1.5}

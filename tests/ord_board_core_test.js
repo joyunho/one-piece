@@ -281,12 +281,21 @@ test('⑩ 첫 희귀 최속 + 짤 희귀 (사용자 0831d)',()=>{
   assert.strictEqual(fr.picks.length,3,'첫 희귀 TOP3 아님');
   for(const p of fr.picks)assert.strictEqual(p.unit.tier,'rare',`희귀 아님: ${p.unit.name}`);
   for(let i=1;i<fr.picks.length;i++)assert(fr.picks[i-1].cost<=fr.picks[i].cost,'첫 희귀 비용 정렬 붕괴');
-  assert.strictEqual(fr.specialOwned,0,'희소 픽스처에 특별함이 없어야 한다');
-  // 152킬 진화체(특별함)가 잡히면 초반 종료 신호
-  const withEvo=Object.assign({},scarce);
+  // 첫 희귀 국면(0831g 교정): 희귀·전설급·상위를 하나도 안 쥔 동안만.
+  // 152 진화체는 첫 희귀보다 먼저 잡히므로 기준이 아니다.
+  assert.strictEqual(fr.firstPhase,false,'희귀 보유 픽스처인데 첫 희귀 국면');
+  const preRare={};let unA=0;for(const u of DATA.units){if(u.tier==='uncommon'&&unA<6){preRare[u.id]=1;unA++;}}
+  preRare[DATA.wispId]=5;
+  assert.strictEqual(B.firstRares(index,preRare).firstPhase,true,'안흔만 쥔 초반이 첫 희귀 국면이 아님');
+  const withEvo=Object.assign({},preRare);
   const evo=DATA.units.find(u=>u.tier==='special');
   withEvo[evo.id]=1;
-  assert(B.firstRares(index,withEvo).specialOwned>0,'152 진화체 감지 실패');
+  const frEvo=B.firstRares(index,withEvo);
+  assert(frEvo.specialOwned>0&&frEvo.firstPhase===true,'152 진화체가 첫 희귀 국면을 끝내면 안 된다(희귀 전 획득)');
+  const withRare=Object.assign({},preRare);
+  const anyRare=DATA.units.find(u=>u.tier==='rare');
+  withRare[anyRare.id]=1;
+  assert.strictEqual(B.firstRares(index,withRare).firstPhase,false,'첫 희귀를 쥐어도 국면이 안 끝남');
   // 짤 희귀: 희귀만 · 역할 태그(방깎/이감/공증) · 지금 선위 내 · 비용 정렬
   const fill=B.fillerRares(index,rich);
   assert(fill.picks.length>0,'풍족 패에서 짤 희귀 0');

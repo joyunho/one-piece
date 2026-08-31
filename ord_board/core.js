@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 코어 (v30.2.0 전면 신작)
+// ORD 악몽 보드 — 코어 (v30.3.0 전면 신작)
 //
 // 철학(사용자 확정, v26→신작 승계): 결정은 사용자가 티모지지를 보며
 // 직접 내린다.  프로그램은 세 가지 사실만 보여준다 —
@@ -216,7 +216,11 @@ function firstRares(index,counts){
     picks.push({unit,cost,ready:cost<=facts.wisp});
   }
   picks.sort((a,b)=>a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'));
-  return{picks:picks.slice(0,3),specialOwned:facts.specialOwned};
+  // firstPhase(0831g "메인 화면에도 없던데" 교정): 152 진화체는 첫 희귀
+  // 제작보다 먼저(6~8라) 잡혀 안내가 정작 필요한 구간에서 사라졌다.
+  // '첫 희귀 국면' = 희귀·전설급·상위를 아직 하나도 안 쥔 상태.
+  const firstPhase=facts.rareOwned===0&&facts.legendishOwned===0&&facts.upperCanons.size===0;
+  return{picks:picks.slice(0,3),specialOwned:facts.specialOwned,rareOwned:facts.rareOwned,legendishOwned:facts.legendishOwned,firstPhase};
 }
 
 // ── 짤 희귀(사용자 0831d: "맨 마지막에 전설이 안나오면 짤 희귀함
@@ -245,16 +249,18 @@ function fillerRares(index,counts){
 
 // ── 패 파생 사실(게이트 입력) ───────────────────────────────────────────
 function handFacts(index,counts){
-  let seraphOwned=0,changedOwned=0,specialOwned=0,upperCanons=new Set();
+  let seraphOwned=0,changedOwned=0,specialOwned=0,rareOwned=0,legendishOwned=0,upperCanons=new Set();
   for(const[id,count]of Object.entries(counts||{})){
     if(num(count)<=0)continue;
     const u=index.byId.get(id);if(!u)continue;
     if(u.seraph)seraphOwned+=num(count);
     if(u.changed)changedOwned+=num(count);
     if(u.tier==='special')specialOwned+=num(count);  // 152킬 진화체(특별함)
+    if(u.tier==='rare')rareOwned+=num(count);
+    if(u.legendish)legendishOwned+=num(count);
     if(u.upper)upperCanons.add(u.canon);
   }
-  return{seraphOwned,changedOwned,specialOwned,upperCanons,wisp:num((counts||{})[index.wispId])};
+  return{seraphOwned,changedOwned,specialOwned,rareOwned,legendishOwned,upperCanons,wisp:num((counts||{})[index.wispId])};
 }
 
 // ── ① 만들 수 있는 전설급 보드 ─────────────────────────────────────────
@@ -515,7 +521,7 @@ function inferMode(index,counts){
 }
 
 global.ORD_BOARD_CORE={
-  VERSION:'30.2.0',
+  VERSION:'30.3.0',
   num,esc,round2,MAX_ROUND,
   buildIndex,translateFeed,stabilizeUnknown,nextAutoRound,countsFingerprint,
   roundClock,clockAnchor,

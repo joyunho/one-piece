@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v30.2.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v30.3.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -191,7 +191,7 @@ App.prototype.renderCraft=function(board){
   const active=V26_FILTERS.find(([key])=>key&&key===this.state.filter);
   const view=active?rows.filter(r=>active[2](r.unit.roles)):rows;
   if(!view.length){
-    return`<div class="filters">${chips}</div>${this.renderAux(board)}<div class="empty-panel"><i>✦</i><b>${active?`${esc(active[1])} 역할로 지금 만들 수 있는 전설급이 없습니다`:'지금 가진 희귀·재료로 닿는 전설급이 없습니다'}</b><small>${active?'다른 필터를 보거나 전체로 돌아가세요.':'게임에서 희귀가 잡히면 여기부터 채워집니다 — 결정은 티모지지를 보며 직접.'}</small></div>`;
+    return`${this.renderAux(board)}<div class="filters">${chips}</div><div class="empty-panel"><i>✦</i><b>${active?`${esc(active[1])} 역할로 지금 만들 수 있는 전설급이 없습니다`:'지금 가진 희귀·재료로 닿는 전설급이 없습니다'}</b><small>${active?'다른 필터를 보거나 전체로 돌아가세요.':'게임에서 희귀가 잡히면 여기부터 채워집니다 — 결정은 티모지지를 보며 직접.'}</small></div>`;
   }
   const pages=Math.max(1,Math.ceil(view.length/PAGE));
   const page=Math.min(Math.max(0,num(this.state.page)),pages-1);
@@ -212,17 +212,18 @@ App.prototype.renderCraft=function(board){
   }).join('');
   const pager=pages>1?`<div class="pager"><button data-act="page" data-value="-1" ${page<=0?'disabled':''}>◀ 이전</button><em>${page+1} / ${pages} 페이지 · 전체 ${view.length}</em><button data-act="page" data-value="1" ${page>=pages-1?'disabled':''}>다음 ▶</button></div>`:'';
   const readyCount=view.filter(r=>r.ready).length;
-  return`<div class="filters">${chips}</div>${this.renderAux(board)}${this.renderImpact(impact)}<div class="cards"><small>지금 가능 ${readyCount} · 선위만 부족 ${view.length-readyCount}</small>${cards}</div>${pager}`;
+  return`${this.renderAux(board)}<div class="filters">${chips}</div>${this.renderImpact(impact)}<div class="cards"><small>지금 가능 ${readyCount} · 선위만 부족 ${view.length-readyCount}</small>${cards}</div>${pager}`;
 };
 // 보조 알약(사용자 0831d): 첫 희귀 최속(초반 전용 — 152킬 특별함이
 // 잡히면 내림) + 짤 희귀(50라+ 전설 불가 시 방깎·이감·공증 슬롯 채우기).
 App.prototype.renderAux=function(board){
   let html='';
-  // 초반 한정: 152킬 특별함이 잡히면 내리고, 수신이 특별함을 놓쳐도
-  // 25라부터는 초반이 아니므로 내린다(이중 안전).
-  const fr=this.roundNow()<25?B.firstRares(this.index,this.counts):{picks:[],specialOwned:1};
-  if(fr.specialOwned===0&&fr.picks.length){
-    html+=`<div class="aux first-rares"><small>첫 희귀 최속 — 지금 패에서 가장 싸게 닿는 희귀 · 눌러서 조합식 · 152킬 특별함이 잡히면 이 안내는 사라집니다</small><div class="aux-pills">${fr.picks.map(p=>`<button class="pair${this.state.auxPick===p.unit.id?' on':''}" data-act="aux-pick" data-id="${esc(p.unit.id)}" title="${esc(p.unit.name)}"><b>${esc(p.unit.short)}</b><i>${p.ready?`지금 가능 · 선위 ${p.cost}`:`선위 ${p.cost}`}</i></button>`).join('')}</div></div>`;
+  // 첫 희귀 국면(0831g 교정): 희귀·전설급·상위를 하나도 안 쥔 동안
+  // 계속 보인다 — 152 진화체는 첫 희귀보다 먼저 잡혀 기준으로 못 쓴다.
+  // 첫 희귀를 쥐는 순간(또는 25라) 내려간다.
+  const fr=this.roundNow()<25?B.firstRares(this.index,this.counts):null;
+  if(fr&&fr.firstPhase&&fr.picks.length){
+    html+=`<div class="aux first-rares"><small><b>첫 희귀 — 이 중에서 먼저</b> · 지금 패에서 가장 싸게 닿는 희귀 · 눌러서 조합식 · 첫 희귀를 쥐면 내려갑니다</small><div class="aux-pills">${fr.picks.map(p=>`<button class="pair${this.state.auxPick===p.unit.id?' on':''}" data-act="aux-pick" data-id="${esc(p.unit.id)}" title="${esc(p.unit.name)}"><b>${esc(p.unit.short)}</b><i>${p.ready?`지금 가능 · 선위 ${p.cost}`:`선위 ${p.cost}`}</i></button>`).join('')}</div></div>`;
   }
   if(this.roundNow()>=50&&!board.rows.some(r=>r.ready)){
     const fill=B.fillerRares(this.index,this.counts);
@@ -381,7 +382,7 @@ App.prototype.renderHud=function(board,spec,mode){
   const roundNow=this.roundNow();
   if(roundNow<25){
     const fr=B.firstRares(this.index,this.counts);
-    if(fr.specialOwned===0&&fr.picks.length)aux=`<div class="hud-aux"><i>첫 희귀 최속</i>${fr.picks.map(p=>`<span><b>${esc(p.unit.short)}</b> 선위 ${p.cost}</span>`).join('')}</div>`;
+    if(fr.firstPhase&&fr.picks.length)aux=`<div class="hud-aux"><i>첫 희귀 최속</i>${fr.picks.map(p=>`<span><b>${esc(p.unit.short)}</b> 선위 ${p.cost}</span>`).join('')}</div>`;
   }else if(roundNow>=50&&!board.rows.some(r=>r.ready)){
     const fill=B.fillerRares(this.index,this.counts);
     if(fill.picks.length)aux=`<div class="hud-aux"><i>짤 희귀</i>${fill.picks.slice(0,3).map(p=>`<span><b>${esc(p.unit.short)}</b> ${esc(p.tags[0])} · 선위 ${p.cost}</span>`).join('')}</div>`;
