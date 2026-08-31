@@ -119,6 +119,43 @@ test('④ 셸 배선 — 데스크톱이 신작만 로드, 패키징 추종',()=
     assert(!readNew(f).includes('ord_tmo_auto_extension'),`신작이 옛 폴더를 참조: ${f}`);
 });
 
+test('⑤ 라운드 시계 + 조합식 드릴다운 (사용자 0831c)',()=>{
+  const{app,root}=mkApp();
+  // 시계 없음 → 수동 표기, 시계 앵커 → 라운드·남은 초 표기.
+  feed(app,rich,{round:20,mode:'magic',clockStartedAt:0});
+  assert(root.innerHTML.includes('data-clock')&&root.innerHTML.includes('수동'),'수동 표기 부재');
+  feed(app,rich,{clockStartedAt:B.clockAnchor(12,Date.now())});
+  assert(/data-clock[^>]*>12라/.test(root.innerHTML),'시계 라운드 표기 부재');
+  assert(app.roundNow()===12,'유효 라운드가 시계를 따르지 않는다');
+  // ± 재앵커: 시계가 돌 때 +1 은 유효 라운드 기준으로 앵커를 옮긴다.
+  const src=readNew('app.js');
+  assert(src.includes('clockAnchor')&&src.includes("act==='drill'"),'재앵커·드릴 배선 부재');
+  // 판 종료(실전 유닛 0 관측) → 시계 정지 + 마지막 라운드 보존.
+  app.auto={generation:1,active:true,startedAt:Date.now(),playable:30};
+  app.onFeed({units:{}});
+  assert(app.state.clockStartedAt===0&&app.state.round===12,'판 종료 시 시계 정지·라운드 보존 실패');
+  // 드릴다운: 상위 조합식의 제작 가능 재료는 버튼, 누른 체인은 패널로.
+  const opt=B.upperOptions(app.index,'magic')[0];
+  feed(app,rich,{upperPick:opt.unit.id,pairPick:'',drillRoot:'',drill:[]});
+  const html=root.innerHTML;
+  const drills=[...html.matchAll(/data-act="drill" data-root="([^"]+)" data-depth="0" data-id="([^"]+)"/g)];
+  if(drills.length){
+    for(const m of drills){
+      const u=app.index.byId.get(m[2]);
+      assert(u&&(u.stuffs||[]).length&&!['common','hard','other'].includes(u.tier),`드릴 불가 재료가 버튼: ${m[2]}`);
+    }
+    feed(app,rich,{drillRoot:drills[0][1],drill:[drills[0][2]]});
+    const html2=root.innerHTML;
+    assert(html2.includes('class="recipe drill"')&&html2.includes('만드는 공식'),'드릴 체인 패널 부재');
+    for(const m of html2.matchAll(/data-act="drill" data-root="[^"]+" data-depth="\d+" data-id="([^"]+)"/g)){
+      const u=app.index.byId.get(m[1]);
+      assert(u&&!['common','hard','other'].includes(u.tier)&&m[1]!==DATA.wispId,`드릴 불가 재료가 버튼(체인): ${m[1]}`);
+    }
+  }
+  // 흔함·선행(하드)은 어떤 조합식에서도 드릴 버튼이 아니다(소스 계약).
+  assert(src.includes("['common','hard','other'].includes(u.tier)"),'드릴 허용 티어 가드 부재');
+});
+
 let passed=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);passed+=1;}

@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v29.0.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v29.1.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -39,19 +39,26 @@ function App(root){
   this.state=Object.assign({
     mode:'',            // ''=자동 추정, physical, magic
     gorosei:'none',
-    round:1,
+    round:1,            // 수동 앵커 — 시계가 돌면 시계가 우선
+    clockStartedAt:0,   // 라운드 시계 기점(0=수동) — 수신에서 자동 시작
     upperPick:'',
     pairPick:'',
+    drillRoot:'',       // 조합식 드릴다운이 붙은 패널의 유닛 id
+    drill:[],           // 드릴다운 체인(재료 id 순서)
     filter:'',
     page:0,
     search:'',
     pick:''
   },this.load());
+  if(!Array.isArray(this.state.drill))this.state.drill=[];
   this.hudSig='';
   this.render();
   this.bind();
   const push=()=>this.pushHud();
   setInterval(push,400);
+  // 라운드 시계: 초마다 남은 초만 갱신, 라운드가 넘어가면 전체 렌더.
+  this._clockShown=-1;
+  setInterval(()=>this.tickClock(),1000);
 }
 App.prototype.load=function(){
   try{return JSON.parse(localStorage.getItem(STORE_KEY)||'{}')||{};}catch(_){return{};}
@@ -62,6 +69,28 @@ App.prototype.save=function(){
 App.prototype.mode=function(){
   return this.state.mode||B.inferMode(this.index,this.counts);
 };
+// 유효 라운드: 시계가 돌면 시계, 아니면 수동 앵커.
+App.prototype.roundNow=function(){
+  const clk=B.roundClock(this.state.clockStartedAt,Date.now());
+  return clk.running&&clk.round>0?clk.round:Math.max(1,num(this.state.round)||1);
+};
+App.prototype.clockLabel=function(clk){
+  if(!clk.running)return`${Math.max(1,num(this.state.round)||1)}라 <i>수동</i>`;
+  if(clk.prep)return`준비 <i>${clk.remaining}초</i>`;
+  return`${clk.round}라 <i>${clk.boss?'보스 · ':''}${clk.remaining}초</i>`;
+};
+App.prototype.tickClock=function(){
+  const clk=B.roundClock(this.state.clockStartedAt,Date.now());
+  if(!clk.running){this._clockShown=-1;return;}
+  const shown=clk.prep?0:clk.round;
+  if(shown!==this._clockShown){
+    this._clockShown=shown;
+    if(clk.round>0){this.state.round=clk.round;this.save();}
+    this.render();return;
+  }
+  const el=this.root&&typeof this.root.querySelector==='function'?this.root.querySelector('[data-clock]'):null;
+  if(el)el.innerHTML=this.clockLabel(clk);
+};
 
 // ── 수신 ────────────────────────────────────────────────────────────────
 App.prototype.onFeed=function(payload){
@@ -70,9 +99,14 @@ App.prototype.onFeed=function(payload){
   const now=Date.now();
   const feed=B.translateFeed(this.index,units);
   this.unknownStab=B.stabilizeUnknown(this.unknownStab,feed.unknown,now);
+  const wasActive=!!(this.auto&&this.auto.active);
   const auto=B.nextAutoRound(this.auto,feed.playable,now);
   const newGame=this.auto&&auto.generation!==this.auto.generation;
   this.auto=auto;
+  if(wasActive&&!auto.active&&this.state.clockStartedAt){
+    // 판 종료(실전 유닛 0): 시계를 멈추고 마지막 라운드를 앵커로 보존.
+    this.state.round=this.roundNow();this.state.clockStartedAt=0;this.save();
+  }
   if(!feed.ok&&feed.playable<=0&&!Object.keys(feed.counts).length)return;
   this.lastGoodAt=now;
   const fp=B.countsFingerprint(feed.counts,this.unknownStab.stable);
@@ -83,7 +117,14 @@ App.prototype.onFeed=function(payload){
   this.playable=feed.playable;
   if(newGame){
     // 새 판: 라운드·선택 초기화(모드·오로성은 유지 — 세션 설정).
-    this.state.round=1;this.state.upperPick='';this.state.pairPick='';this.state.pick='';this.state.page=0;this.save();
+    // 첫 유닛 감지 = 1라 시작 — 시계를 자동으로 앵커한다(사용자 0831c).
+    this.state.round=1;this.state.clockStartedAt=B.clockAnchor(1,auto.startedAt||now);
+    this.state.upperPick='';this.state.pairPick='';this.state.drillRoot='';this.state.drill=[];
+    this.state.pick='';this.state.page=0;this.save();
+  }else if(auto.active&&!this.state.clockStartedAt){
+    // 판 중간 합류: 현재 수동 라운드에서 시계를 이어 시작 — ±로 맞추면
+    // 그대로 이어진다(구 정본 UX 승계).
+    this.state.clockStartedAt=B.clockAnchor(Math.max(1,num(this.state.round)||1),now);this.save();
   }
   this.render();
 };
@@ -94,7 +135,7 @@ App.prototype.stale=function(){
 // ── 렌더 ────────────────────────────────────────────────────────────────
 App.prototype.render=function(){
   const mode=this.mode();
-  const board=B.craftRows(this.index,this.counts,{mode,round:this.state.round});
+  const board=B.craftRows(this.index,this.counts,{mode,round:this.roundNow()});
   const spec=B.partySpec(this.index,this.counts,{mode,gorosei:this.state.gorosei});
   this.root.innerHTML=
     this.renderStrip(mode)+
@@ -114,7 +155,7 @@ App.prototype.renderStrip=function(mode){
   const g=this.index.data.targets.gorosei;
   return`<header class="strip">`+
     `<div class="logo"><b>ORD 악몽 보드</b><small>2.314 · v${DATA.version}</small></div>`+
-    `<div class="round-ctl"><button data-act="round" data-value="-1">−</button><b>${this.state.round}라</b><button data-act="round" data-value="1">＋</button></div>`+
+    `<div class="round-ctl"><button data-act="round" data-value="-1">−</button><b data-clock title="라운드 시계 — 수신에서 자동 시작, ±로 실제 라운드에 맞추면 그대로 이어집니다">${this.clockLabel(B.roundClock(this.state.clockStartedAt,Date.now()))}</b><button data-act="round" data-value="1">＋</button></div>`+
     `<div class="seg">`+
       `<button data-act="mode" data-value="" class="${this.state.mode===''?'on':''}">자동${inferred?` · ${mode==='magic'?'마딜':'물딜'}`:''}</button>`+
       `<button data-act="mode" data-value="physical" class="${this.state.mode==='physical'?'on':''}">물딜</button>`+
@@ -162,19 +203,43 @@ App.prototype.renderCraft=function(board){
 };
 // 조합식 패널(사용자 0831: "조합식도 · 선위를 어떻게 써야하는지도 ·
 // 상위도 포함해서") — 전설급 선택 패널과 선택 상위 아래에서 공용.
-App.prototype.renderRecipe=function(plan){
-  if(!plan)return'';
+// v29.1(사용자 0831c): 제작 가능한 재료는 눌러서 그 재료의 조합식을
+// 체인으로 펼친다("에이스 왜곡 → 에이스 전설 → 마르코 희귀 …").
+App.prototype.drillable=function(id){
+  if(String(id)===this.index.wispId)return false;
+  const u=this.index.byId.get(String(id));
+  return!!(u&&(u.stuffs||[]).length&&!['common','hard','other'].includes(u.tier)&&!/아이템|기타|랜덤유닛|신비함/.test(u.group||''));
+};
+App.prototype.recipeBody=function(plan,rootId,depth){
   const tierName={rare:'희귀',special:'특별',uncommon:'안흔',common:'흔함',legend:'전설급',upper:'상위',hard:'선행'};
   const direct=plan.direct.map(m=>{
     const enough=m.owned>=m.need;
-    return`<span class="mat ${m.tier}${enough?' ok':''}" title="${esc(tierName[m.tier]||m.tier)}">${esc(m.name)} <b>${m.owned}/${m.need}</b></span>`;
+    const cls=`mat ${m.tier}${enough?' ok':''}`;
+    const inner=`${esc(m.name)} <b>${m.owned}/${m.need}</b>`;
+    if(rootId&&this.drillable(m.id)){
+      const open=this.state.drillRoot===rootId&&this.state.drill[depth]===m.id;
+      return`<button class="${cls}${open?' open':''}" data-act="drill" data-root="${esc(rootId)}" data-depth="${depth}" data-id="${esc(m.id)}" title="누르면 ${esc(m.name)} 만드는 공식이 아래로 열립니다">${inner}<i class="drill-ind">${open?'▾':'▸'}</i></button>`;
+    }
+    return`<span class="${cls}" title="${esc(tierName[m.tier]||m.tier)}">${inner}</span>`;
   }).join('');
   const eats=plan.eats.length?`<div class="recipe-line"><i>내 패 소비</i>${plan.eats.map(e=>`<span class="mat ${e.tier}">${esc(e.name)}${e.need>1?`×${e.need}`:''}</span>`).join('')}</div>`:'';
   const wisp=plan.wispPlan.length
     ?`<div class="recipe-line"><i>선위 ${plan.wispCost} 사용처</i>${plan.wispPlan.map(w=>`<span class="mat common">${w.color?`<em style="background:${esc(w.color)}"></em>`:''}${esc(w.name)}×${w.count}</span>`).join('')}<small>흔함 1기 = 선위 1 — 부족한 흔함을 선위로 삽니다</small></div>`
     :(plan.wispCost>0?`<div class="recipe-line"><i>선위 ${plan.wispCost} 사용처</i><small>하위 재료 조합에 선위 ${plan.wispCost}가 듭니다</small></div>`:`<div class="recipe-line"><i>선위</i><small>추가 선위 없이 지금 재료로 완성됩니다</small></div>`);
   const hard=plan.hardMissing.length?`<div class="recipe-line hard"><i>선행 결손</i>${plan.hardMissing.map(h=>`<span class="mat hard">${esc(h.name)}</span>`).join('')}<small>조합으로 못 만드는 선행 유닛 — 게임에서 확보해야 열립니다</small></div>`:'';
-  return`<div class="recipe"><div class="recipe-line"><i>조합식</i>${direct||'<small>직접 재료 없음</small>'}</div>${eats}${wisp}${hard}</div>`;
+  return`<div class="recipe-line"><i>조합식</i>${direct||'<small>직접 재료 없음</small>'}</div>${eats}${wisp}${hard}`;
+};
+App.prototype.renderRecipe=function(plan,rootId){
+  if(!plan)return'';
+  let html=`<div class="recipe">${this.recipeBody(plan,rootId,0)}</div>`;
+  if(rootId&&this.state.drillRoot===rootId){
+    for(let i=0;i<this.state.drill.length;i++){
+      const sub=B.recipePlan(this.index,this.state.drill[i],this.counts);
+      if(!sub)break;
+      html+=`<div class="recipe drill"><small class="drill-head">↳ <b>${esc(sub.unit.short)}</b>${sub.unit.note?` (${esc(sub.unit.note)})`:''} 만드는 공식${sub.owned?' · 이미 보유':''}</small>${this.recipeBody(sub,rootId,i+1)}</div>`;
+    }
+  }
+  return html;
 };
 App.prototype.renderImpact=function(impact){
   if(!impact)return'';
@@ -182,14 +247,14 @@ App.prototype.renderImpact=function(impact){
   const delayed=impact.delayed.map(x=>`<div class="impact-row delayed">⏳ ${esc(x.name)} — 선위 ${x.extra} 더 필요</div>`).join('');
   const cmd=impact.row.unit.command;
   const cmdLine=cmd?`<div class="command-line">조합 명령어 <b>${esc(cmd.korean||cmd.english)}</b>${cmd.korean&&cmd.english?` <i>/ ${esc(cmd.english)}</i>`:''}${cmd.inherited?' <i>(원형 최초 제작 명령)</i>':''}</div>`:'';
-  const recipe=this.renderRecipe(B.recipePlan(this.index,impact.row.unit.id,this.counts));
+  const recipe=this.renderRecipe(B.recipePlan(this.index,impact.row.unit.id,this.counts),impact.row.unit.id);
   return`<div class="impact"><small><b>${esc(impact.row.unit.short)}</b> 를 만들면 — 계산일 뿐 패는 소비되지 않습니다</small>${recipe}${gone||delayed?gone+delayed:'<div class="impact-none">사라지는 선택지 없음 — 겹치는 패가 없습니다.</div>'}${cmdLine}<small class="impact-note">행을 다시 누르면 해제됩니다.</small></div>`;
 };
 
 // ── ② 상위 ──────────────────────────────────────────────────────────────
 App.prototype.renderUppers=function(board,mode){
   const options=B.upperOptions(this.index,mode);
-  const picks=B.upperPicks(this.index,this.counts,{mode,round:this.state.round,lockedId:''});
+  const picks=B.upperPicks(this.index,this.counts,{mode,round:this.roundNow(),lockedId:''});
   const shorts=picks.map(p=>p.unit.short);
   const dupes=new Set(shorts.filter((s,i)=>shorts.indexOf(s)!==i));
   const top3=picks.length?`<div class="top3"><small>지금 패 추천 TOP3 — 조합이 닫히는 상위를 도달 거리 → 실측 순으로</small>${picks.map((pick,i)=>{
@@ -212,7 +277,7 @@ App.prototype.renderUppers=function(board,mode){
       const reserveHtml=reserve?`<div class="reserve"><b>선택 상위 몫 — 다른 데 쓰면 패가 겹칩니다</b>${reserve.mats.map(m=>`<em class="${m.tier}">${esc(m.name)}${m.need>1?`×${m.need}`:''}</em>`).join('')}</div>`:'';
       // 사용자 0831("상위도 포함해서"): 선택 상위의 조합식·선위 사용처.
       const upperPlan=B.recipePlan(this.index,combos.sel.id,this.counts);
-      const upperRecipe=upperPlan&&!upperPlan.owned?`<div class="upper-recipe"><small class="combo-head">${esc(combos.sel.short)} 조합식 — 지금 패 기준</small>${this.renderRecipe(upperPlan)}</div>`:'';
+      const upperRecipe=upperPlan&&!upperPlan.owned?`<div class="upper-recipe"><small class="combo-head">${esc(combos.sel.short)} 조합식 — 지금 패 기준</small>${this.renderRecipe(upperPlan,combos.sel.id)}</div>`:'';
       const pShorts=combos.partners.map(p=>{const u=this.index.byId.get(p.id);return u?u.short:p.name;});
       const pDupes=new Set(pShorts.filter((s,i)=>pShorts.indexOf(s)!==i));
       const partners=combos.partners.map((p,i)=>{
@@ -223,7 +288,7 @@ App.prototype.renderUppers=function(board,mode){
         return`<button class="partner" data-act="pick" data-id="${esc(p.id)}" title="${esc(u?u.name:p.name)}">${face}<b>${esc(label)}</b><em>${num(p.share)}%</em>${flag}</button>`;
       }).join('')+(combos.hiddenCount>0?`<small class="hidden-note">실측 top8 중 ${combos.hiddenCount}개는 지금 내 패로 못 가 숨김</small>`:'');
       // 2상위 추천(사용자 0831: "이 상위랑 어울리는 다른 상위도 추천").
-      const pp=B.pairPicks(this.index,this.counts,combos.sel.id,{mode,round:this.state.round});
+      const pp=B.pairPicks(this.index,this.counts,combos.sel.id,{mode,round:this.roundNow()});
       const ppShorts=pp.picks.map(p=>p.unit.short);
       const ppDupes=new Set(ppShorts.filter((s,i)=>ppShorts.indexOf(s)!==i));
       const pairRec=pp.picks.length?`<div class="top3 pair-picks"><small>2상위 추천 — ${esc(combos.sel.short)}와 함께 간 상위를 지금 패 도달 → 동반 실측 순으로 · 눌러서 조합식 확인</small>${pp.picks.map((p,i)=>{
@@ -234,7 +299,7 @@ App.prototype.renderUppers=function(board,mode){
       }).join('')}${pp.hidden>0?`<small class="hidden-note">실측 페어 중 ${pp.hidden}개는 지금 내 패로 못 가거나 계통이 달라 숨김</small>`:''}</div>`
       :(combos.pairs.length?`<small class="hidden-note">함께 간 2상위 실측은 있지만 지금 내 패로 갈 수 있는 상위가 없습니다.</small>`:'');
       const pairPlan=this.state.pairPick?B.recipePlan(this.index,this.state.pairPick,this.counts):null;
-      const pairRecipe=pairPlan&&!pairPlan.owned?`<div class="upper-recipe"><small class="combo-head">${esc(pairPlan.unit.short)} 조합식 — 지금 패 기준</small>${this.renderRecipe(pairPlan)}</div>`:'';
+      const pairRecipe=pairPlan&&!pairPlan.owned?`<div class="upper-recipe"><small class="combo-head">${esc(pairPlan.unit.short)} 조합식 — 지금 패 기준</small>${this.renderRecipe(pairPlan,pairPlan.unit.id)}</div>`:'';
       const restPairs=combos.pairs.filter(p=>!pp.picks.some(x=>x.unit.canon===p.unit.canon)).slice(0,4)
         .map(p=>`<button class="pair" data-act="pair-pick" data-id="${esc(p.unit.id)}" title="${esc(p.unit.name)}"><b>${esc(p.unit.short)}</b><i>동반 실측 ${p.games}판</i></button>`).join('');
       body=`${upperRecipe}${reserveHtml}<small class="combo-head">${esc(combos.sel.short)} — 클리어 실측 ${combos.games}판${combos.dualGames?` (2상위 판 ${combos.dualGames})`:''} · 함께 쓰인 전설·히든 중 내 패로 갈 수 있는 것</small>${combos.partners.length?`<div class="partners">${partners}</div>`:''}${pairRec}${pairRecipe}${restPairs?`<small class="combo-head">그 외 실측 페어 · 눌러서 조합식 확인</small><div class="pairs">${restPairs}</div>`:''}`;
@@ -266,13 +331,13 @@ App.prototype.renderHud=function(board,spec,mode){
     const miss=row.gap>0;
     return`<div class="gauge"><label><span>${esc(row.label)}</span><b class="${miss?'miss':''}">${row.current}/${row.target}</b></label><div class="bar"><i class="${miss?(pct>=70?'warn':'bad'):'ok'}" style="width:${pct}%"></i></div></div>`;
   }).join('');
-  return`<div class="hud-panel"><div class="hud-head"><b>${this.state.round}라</b><span>${mode?(mode==='magic'?'마딜':'물딜'):'계통 미판정'}</span><span>선위 ${this.wisp}</span>${this.stale()?'<span>· 수신 대기</span>':''}</div>${rows||'<div class="hud-empty">지금 만들 수 있는 전설급 없음</div>'}<div class="hud-gauges">${gauges}</div></div>`;
+  return`<div class="hud-panel"><div class="hud-head"><b>${this.roundNow()}라</b><span>${mode?(mode==='magic'?'마딜':'물딜'):'계통 미판정'}</span><span>선위 ${this.wisp}</span>${this.stale()?'<span>· 수신 대기</span>':''}</div>${rows||'<div class="hud-empty">지금 만들 수 있는 전설급 없음</div>'}<div class="hud-gauges">${gauges}</div></div>`;
 };
 App.prototype.pushHud=function(board,spec,mode){
   const bridge=global.ORD_DESKTOP;
   if(!bridge||typeof bridge.sendHudState!=='function')return;
   mode=mode||this.mode();
-  board=board||B.craftRows(this.index,this.counts,{mode,round:this.state.round});
+  board=board||B.craftRows(this.index,this.counts,{mode,round:this.roundNow()});
   spec=spec||B.partySpec(this.index,this.counts,{mode,gorosei:this.state.gorosei});
   const hudHtml=this.renderHud(board,spec,mode);
   if(hudHtml===this.hudSig)return;
@@ -286,13 +351,24 @@ App.prototype.bind=function(){
     const btn=event.target.closest('[data-act]');
     if(!btn)return;
     const act=btn.getAttribute('data-act'),value=btn.getAttribute('data-value'),id=btn.getAttribute('data-id');
-    if(act==='round'){this.state.round=Math.max(1,Math.min(80,this.state.round+num(value)));}
+    if(act==='round'){
+      // ± 보정: 시계가 돌면 유효 라운드 기준으로 재앵커 — 그대로 이어진다.
+      const next=Math.max(1,Math.min(B.MAX_ROUND,this.roundNow()+num(value)));
+      this.state.round=next;
+      if(this.state.clockStartedAt)this.state.clockStartedAt=B.clockAnchor(next,Date.now());
+    }
     else if(act==='mode'){this.state.mode=value||'';this.state.page=0;}
     else if(act==='filter'){this.state.filter=value===this.state.filter?value:value;this.state.filter=value;this.state.page=0;}
     else if(act==='page'){this.state.page=Math.max(0,this.state.page+num(value));}
-    else if(act==='pick'){this.state.pick=this.state.pick===id?'':id;}
-    else if(act==='upper'){this.state.upperPick=id;this.state.pairPick='';this.state.search='';}
-    else if(act==='pair-pick'){this.state.pairPick=this.state.pairPick===id?'':id;}
+    else if(act==='pick'){this.state.pick=this.state.pick===id?'':id;this.state.drillRoot='';this.state.drill=[];}
+    else if(act==='upper'){this.state.upperPick=id;this.state.pairPick='';this.state.search='';this.state.drillRoot='';this.state.drill=[];}
+    else if(act==='pair-pick'){this.state.pairPick=this.state.pairPick===id?'':id;this.state.drillRoot='';this.state.drill=[];}
+    else if(act==='drill'){
+      const root=btn.getAttribute('data-root'),depth=num(btn.getAttribute('data-depth'));
+      if(this.state.drillRoot!==root){this.state.drillRoot=root;this.state.drill=[id];}
+      else if(this.state.drill[depth]===id){this.state.drill=this.state.drill.slice(0,depth);if(!this.state.drill.length)this.state.drillRoot='';}
+      else{this.state.drill=this.state.drill.slice(0,depth).concat([id]);}
+    }
     else if(act==='probe'){this.probe();return;}
     else return;
     this.save();this.render();
@@ -301,7 +377,7 @@ App.prototype.bind=function(){
     const sel=event.target.closest('[data-opt]');
     if(!sel)return;
     const opt=sel.getAttribute('data-opt');
-    if(opt==='upperPick'){this.state.upperPick=sel.value;this.state.pairPick='';}
+    if(opt==='upperPick'){this.state.upperPick=sel.value;this.state.pairPick='';this.state.drillRoot='';this.state.drill=[];}
     if(opt==='gorosei')this.state.gorosei=sel.value;
     this.save();this.render();
   });

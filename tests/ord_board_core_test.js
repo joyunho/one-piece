@@ -211,6 +211,30 @@ test('⑦ 2상위 추천 — 실측 페어 × 지금 패 도달 (사용자 0831b
   assert(pp.hidden>=0&&(pp.picks.length+pp.hidden)>=Math.min(3,(stats.pairs||[]).length?1:0),'숨김 집계 이상');
 });
 
+test('⑧ 라운드 시계 — 준비 10 · 일반 35 · 보스 60 · 65 상한 · 재앵커 불변식 (사용자 0831c)',()=>{
+  const now=1700000000000;
+  // 수동(시계 없음)
+  const manual=B.roundClock(0,now);
+  assert(!manual.running&&manual.round===0,'기점 0인데 시계가 돈다');
+  // 준비 구간: 기점 직후 10초는 라운드 0
+  const prep=B.roundClock(now-3000,now);
+  assert(prep.running&&prep.prep&&prep.round===0&&prep.remaining===7,`준비 구간 오류: ${JSON.stringify(prep)}`);
+  // 1라 진행: 준비 뒤 34초까지 1라, 35초에 2라
+  assert.strictEqual(B.roundClock(now-(10+34)*1000,now).round,1,'35초 전 1라 유지 실패');
+  assert.strictEqual(B.roundClock(now-(10+35)*1000,now).round,2,'35초에 2라 전환 실패');
+  // 보스 라운드: 10라는 60초
+  const boss=B.roundClock(B.clockAnchor(10,now),now);
+  assert(boss.round===10&&boss.boss===true&&boss.remaining===60,`10라 보스 오류: ${JSON.stringify(boss)}`);
+  assert.strictEqual(B.roundClock(B.clockAnchor(10,now)-59000,now).round,10,'보스 59초 유지 실패');
+  assert.strictEqual(B.roundClock(B.clockAnchor(10,now)-60000,now).round,11,'보스 60초 전환 실패');
+  // 재앵커 불변식: 1..65 전 라운드
+  for(let r=1;r<=B.MAX_ROUND;r++)assert.strictEqual(B.roundClock(B.clockAnchor(r,now),now).round,r,`재앵커 불변식 붕괴 r=${r}`);
+  assert.strictEqual(B.MAX_ROUND,65,'최대 라운드는 65');
+  // 상한: 아주 오래 지나도 65에서 멈추고 남은 초 0
+  const capped=B.roundClock(now-9e7,now);
+  assert(capped.round===65&&capped.remaining===0,`65 상한 오류: ${JSON.stringify(capped)}`);
+});
+
 let passed=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);passed+=1;}

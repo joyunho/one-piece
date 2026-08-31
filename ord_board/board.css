@@ -26,7 +26,8 @@ header.strip .logo b{font-size:17px;letter-spacing:.03em}
 header.strip .logo small{color:var(--sub)}
 .round-ctl{display:inline-flex;align-items:center;gap:2px;border:1px solid var(--line);border-radius:999px;padding:2px}
 .round-ctl button{width:30px;padding:3px 0;border:none;background:transparent;font-weight:800}
-.round-ctl b{min-width:52px;text-align:center;font-size:15px}
+.round-ctl b{min-width:92px;text-align:center;font-size:15px}
+.round-ctl b i{font-style:normal;display:block;font-size:9.5px;font-weight:700;color:var(--muted);line-height:1.1}
 .seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;overflow:hidden}
 .seg button{border:none;border-radius:0;background:transparent;padding:5px 14px;color:var(--sub);font-weight:700}
 .seg button.on{background:var(--rose);color:#fff}
@@ -121,6 +122,14 @@ button.card.ready{border-left:3px solid var(--gold)}
 .mat.special{border-color:rgba(217,164,65,.5);color:var(--gold)}
 .mat.hard{border-color:rgba(255,120,80,.6);color:var(--bad)}
 .mat em{width:9px;height:9px;border-radius:50%;border:1px solid rgba(0,0,0,.4)}
+button.mat{background:transparent;font-size:inherit;padding:1px 9px;cursor:pointer}
+button.mat:hover{border-color:var(--gold)}
+button.mat .drill-ind{font-style:normal;color:var(--muted);font-size:10px;margin-left:1px}
+button.mat.open{background:rgba(217,164,65,.1);border-color:var(--gold)}
+button.mat.open .drill-ind{color:var(--gold)}
+.recipe.drill{margin:0 0 7px 14px;border-left:2px solid var(--line-strong)}
+.drill-head{color:var(--sub);font-size:11px}
+.drill-head b{color:var(--fg)}
 .upper-recipe .recipe{margin-bottom:0}
 
 /* ── ② 상위 실측 ── */

@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 코어 (v29.0.0 전면 신작)
+// ORD 악몽 보드 — 코어 (v29.1.0 전면 신작)
 //
 // 철학(사용자 확정, v26→신작 승계): 결정은 사용자가 티모지지를 보며
 // 직접 내린다.  프로그램은 세 가지 사실만 보여준다 —
@@ -78,6 +78,32 @@ function nextAutoRound(previous,playable,now){
   if(playable<=0){active=false;startedAt=0;}
   else if(!active){if(prior)generation+=1;active=true;startedAt=Math.max(1,num(now)||Date.now());}
   return{generation,active,startedAt,playable:Math.max(0,num(playable))};
+}
+
+// ── 라운드 시계(구 정본 다섯 달 검증치 이식) ────────────────────────────
+// 라운드는 경과 시간으로 굴러간다: 준비 10초 뒤 1라부터, 일반 35초 ·
+// 보스 60초(고정표), 65라 상한.  ± 보정은 시계를 다시 앵커한다.
+const BOSS_ROUNDS=new Set([10,20,30,40,50,55,60,65,70,75]);
+const ROUND_PREP=10,ROUND_NORMAL=35,ROUND_BOSS=60,MAX_ROUND=65;
+const roundDuration=r=>BOSS_ROUNDS.has(r)?ROUND_BOSS:ROUND_NORMAL;
+function roundClock(startedAt,now){
+  const started=num(startedAt);
+  if(started<=0)return{running:false,round:0,prep:false,boss:false,remaining:0};
+  let elapsed=Math.max(0,Math.floor(((num(now)||Date.now())-started)/1000));
+  if(elapsed<ROUND_PREP)return{running:true,round:0,prep:true,boss:false,remaining:ROUND_PREP-elapsed};
+  elapsed-=ROUND_PREP;
+  let r=1;
+  while(elapsed>=roundDuration(r)&&r<MAX_ROUND){elapsed-=roundDuration(r);r++;}
+  const capped=r>=MAX_ROUND&&elapsed>=roundDuration(r);
+  return{running:true,round:r,prep:false,boss:BOSS_ROUNDS.has(r),remaining:capped?0:Math.max(0,roundDuration(r)-elapsed)};
+}
+// 재앵커: '지금'이 round 의 시작이 되는 startedAt 을 돌려준다.
+// 불변식: roundClock(clockAnchor(r,now),now).round === r  (1..65)
+function clockAnchor(round,now){
+  const target=Math.min(MAX_ROUND,Math.max(1,num(round)||1));
+  let s=ROUND_PREP;
+  for(let r=1;r<target;r++)s+=roundDuration(r);
+  return(num(now)||Date.now())-s*1000;
 }
 
 function countsFingerprint(counts,stableUnknown){
@@ -415,9 +441,10 @@ function inferMode(index,counts){
 }
 
 global.ORD_BOARD_CORE={
-  VERSION:'29.0.0',
-  num,esc,round2,
+  VERSION:'29.1.0',
+  num,esc,round2,MAX_ROUND,
   buildIndex,translateFeed,stabilizeUnknown,nextAutoRound,countsFingerprint,
+  roundClock,clockAnchor,
   solve,handFacts,craftRows,pickImpact,recipePlan,
   upperOptions,upperPicks,pairPicks,upperReserve,upperCombos,
   partySpec,inferMode
