@@ -130,10 +130,18 @@ test('⑤ 라운드 시계 + 조합식 드릴다운 (사용자 0831c)',()=>{
   // ± 재앵커: 시계가 돌 때 +1 은 유효 라운드 기준으로 앵커를 옮긴다.
   const src=readNew('app.js');
   assert(src.includes('clockAnchor')&&src.includes("act==='drill'"),'재앵커·드릴 배선 부재');
-  // 판 종료(실전 유닛 0 관측) → 시계 정지 + 마지막 라운드 보존.
+  // 판 종료(실전 유닛 0 관측, 사용자 0831e) → 시계 정지 + 라운드 1 초기화.
   app.auto={generation:1,active:true,startedAt:Date.now(),playable:30};
   app.onFeed({units:{}});
-  assert(app.state.clockStartedAt===0&&app.state.round===12,'판 종료 시 시계 정지·라운드 보존 실패');
+  assert(app.state.clockStartedAt===0&&app.state.round===1,'판 종료 시 시계 정지·라운드 초기화 실패');
+  // 재실행 초기화(사용자 0831e): 저장된 라운드·시계는 새 세션에 안 넘어온다.
+  const savedGet=ctx.localStorage.getItem;
+  ctx.localStorage.getItem=()=>JSON.stringify({round:44,clockStartedAt:Date.now()-9e6,mode:'magic'});
+  try{
+    const fresh=new UI.App({innerHTML:'',addEventListener:()=>{}});
+    assert(fresh.state.round===1&&fresh.state.clockStartedAt===0,'재실행에 라운드·시계가 살아남음');
+    assert.strictEqual(fresh.state.mode,'magic','설정(모드)까지 초기화됨 — 세션 설정은 유지해야');
+  }finally{ctx.localStorage.getItem=savedGet;}
   // 드릴다운: 상위 조합식의 제작 가능 재료는 버튼, 누른 체인은 패널로.
   const opt=B.upperOptions(app.index,'magic')[0];
   feed(app,rich,{upperPick:opt.unit.id,pairPick:'',drillRoot:'',drill:[]});

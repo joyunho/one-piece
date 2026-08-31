@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v30.0.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v30.1.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -55,6 +55,11 @@ function App(root){
     pick:''
   },this.load());
   if(!Array.isArray(this.state.drill))this.state.drill=[];
+  // 재실행 = 새 시작(사용자 0831e): 라운드·시계는 세션을 넘겨 저장하지
+  // 않는다.  판 중간에 다시 열면 수신 합류가 1라에서 시계를 이어 걸고,
+  // ±로 실제 라운드에 맞추면 된다.  모드·오로성 등 설정은 유지.
+  this.state.round=1;
+  this.state.clockStartedAt=0;
   this.hudSig='';
   this.render();
   this.bind();
@@ -108,9 +113,10 @@ App.prototype.onFeed=function(payload){
   const auto=B.nextAutoRound(this.auto,feed.playable,now);
   const newGame=this.auto&&auto.generation!==this.auto.generation;
   this.auto=auto;
-  if(wasActive&&!auto.active&&this.state.clockStartedAt){
-    // 판 종료(실전 유닛 0): 시계를 멈추고 마지막 라운드를 앵커로 보존.
-    this.state.round=this.roundNow();this.state.clockStartedAt=0;this.save();
+  if(wasActive&&!auto.active&&(this.state.clockStartedAt||this.state.round>1)){
+    // 판 종료(실전 유닛 0, 사용자 0831e): 시계를 멈추고 라운드를 1로
+    // 초기화한다 — 다음 판은 첫 유닛 감지가 다시 1라를 앵커한다.
+    this.state.round=1;this.state.clockStartedAt=0;this.save();
   }
   if(!feed.ok&&feed.playable<=0&&!Object.keys(feed.counts).length)return;
   this.lastGoodAt=now;
