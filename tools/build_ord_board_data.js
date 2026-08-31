@@ -1,6 +1,6 @@
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 데이터 증류기 (v30.3.0 전면 신작의 1단계)
+// ORD 악몽 보드 — 데이터 증류기 (v31.0.0 전면 신작의 1단계)
 //
 // 사용자 지시(0830): "지금까지 만든거 프로그램 아예 사용하지 말고 다시
 // 제대로 정리해서 만들어봐 처음 만드는 것 처럼"
@@ -134,6 +134,31 @@ for(const u of units){
 const codeIndex=LM.buildCodeIndex(units,C.canonicalUpperId);
 const codeMap=Object.assign({},codeIndex.map,LM.CODE_MAP);
 
+// ── TMO 페이지 능력치 정합(v31, 사용자 0831h) ───────────────────────────
+// 사용자가 직접 붙여넣은 티모지지 조합도우미 페이지(2026-08-31)의 유닛 DB
+// 수치를 표시 정본으로 채택 — 구 증류치와의 드리프트(밸런스 변경, 유효치
+// 표기)를 현행 사이트 표기로 맞춘다.  파일에 적힌 키만 덮어쓴다: TMO 가
+// 툴팁 필드로 안 싣는 부가 지식(발동 확률 환산 스턴, 코비의 폭뎀 패널티
+// 등)은 기존 증류 값이 그대로 산다.
+const TMO_PAGE=JSON.parse(fs.readFileSync(path.join(REPO,'tools','tmo_page_abilities_20260831.json'),'utf8'));
+{
+  const bakedById=new Map(baked.map(r=>[r.id,r]));
+  let touched=0,changed=0;
+  for(const[key,entry]of Object.entries(TMO_PAGE)){
+    if(key.startsWith('_'))continue;
+    const id=bakedById.has(key)?key:String(codeMap[key]||'');
+    const row=id?bakedById.get(id):null;
+    if(!row){console.warn('TMO 오버레이 미해결 키:',key,entry.name);continue;}
+    touched+=1;
+    for(const[k,v]of Object.entries(entry.roles||{})){
+      const value=num(v);
+      if(!(k in row.roles)||typeof row.roles[k]==='boolean')continue;
+      if(num(row.roles[k])!==value){row.roles[k]=value;changed+=1;}
+    }
+  }
+  console.log(`TMO 페이지 정합: ${touched}유닛 대조 · ${changed}필드 교정`);
+}
+
 // ── 스펙 목표(정본: 2.312R 맵 원문 + 오로성 문서 — 원랜디_2314_재검증) ──
 const targets={
   slow:{base:102,nasjuro:117},
@@ -150,7 +175,7 @@ const targets={
 };
 
 const data={
-  version:'30.3.0',
+  version:'31.0.0',
   gameVersion:'2.314',
   builtAt:new Date().toISOString(),
   wispId:String(C.WISP_ID),

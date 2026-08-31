@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 코어 (v30.3.0 전면 신작)
+// ORD 악몽 보드 — 코어 (v31.0.0 전면 신작)
 //
 // 철학(사용자 확정, v26→신작 승계): 결정은 사용자가 티모지지를 보며
 // 직접 내린다.  프로그램은 세 가지 사실만 보여준다 —
@@ -460,20 +460,21 @@ function upperCombos(index,counts,board,upperId){
 }
 
 // ── ③ 현재 파티 스펙 ────────────────────────────────────────────────────
-// live 기준(구 정본 승계, 사용자 0831d "제대로 능력치를 표시 못하는 것
-// 같아"): 완성 유닛(전설급·상위)만이 아니라 보유 희귀·특별·안흔의 직접
-// 전투 역할까지 합산한다 — 게임 화면 능력치와 같은 셈법.  판정이 아니라
-// 사실.  sum.units 는 완성 유닛(전설급·상위) 수만 센다.
+// 티모지지 '현재 능력치'와 같은 셈법(사용자 0831h 페이지 분석으로 확정):
+// 사이트도 별도 API 없이 보유 수량 × 유닛별 능력치를 브라우저에서 합산
+// 한다.  그래서 여기도 보유 '전' 유닛을 합산한다 — 전설급·상위·희귀·
+// 특별·안흔은 물론 아이템(둔화의지팡이 등)·특수함(블고리 등)·랜덤·
+// 신비함까지.  능력치 없는 유닛(흔함·위습·토큰)은 전부 0이라 무해.
+// 판정이 아니라 사실.  sum.units 는 완성 유닛(전설급·상위) 수만 센다.
 function partySpec(index,counts,opts){
   const mode=opts&&opts.mode||'';
   const gorosei=opts&&opts.gorosei||'none';
   const t=index.data.targets;
   const sum={slow:0,triggerSlow:0,armor:0,triggerArmor:0,singleArmor:0,stackArmor:0,stun:0,boss:0,frenzy:0,
-    magicDef:0,magicAmp:0,explosionAmp:0,finish:0,armorBreak:0,attack:0,speed:0,units:0};
+    magicDef:0,magicAmp:0,explosionAmp:0,finish:0,armorBreak:0,attack:0,triggerAttack:0,speed:0,regen:0,mana:0,units:0};
   for(const[id,count]of Object.entries(counts||{})){
     const n=num(count);if(n<=0)continue;
     const u=index.byId.get(id);if(!u)continue;
-    if(!u.legendish&&!u.upper&&!['uncommon','special','rare'].includes(u.tier))continue;
     const r=u.roles;
     if(u.legendish||u.upper)sum.units+=n;
     sum.slow+=r.slow*n;sum.triggerSlow+=r.triggerSlow*n;
@@ -483,7 +484,8 @@ function partySpec(index,counts,opts){
     sum.magicDef+=r.magicDef*n;sum.magicAmp+=r.magicAmp*n;sum.explosionAmp+=r.explosionAmp*n;
     if(!u.upper)sum.finish+=r.finishCredit*n;
     if(r.armorBreak)sum.armorBreak+=n;
-    sum.attack+=r.attack*n;sum.speed+=r.speed*n;
+    sum.attack+=r.attack*n;sum.triggerAttack+=r.triggerAttack*n;sum.speed+=r.speed*n;
+    sum.regen+=r.regen*n;sum.mana+=r.mana*n;
   }
   const bossFrenzy=Math.min(sum.boss,sum.frenzy);
   const slowTarget=gorosei==='nasjuro'?t.slow.nasjuro:t.slow.base;
@@ -503,6 +505,13 @@ function partySpec(index,counts,opts){
   }else{
     rows.push({key:'armorBreak',label:'암브',current:sum.armorBreak,target:0,info:true});
   }
+  // 티모지지 '현재 능력치'가 보여주는 버프·재생 계열(0831h): 목표 없는
+  // 사실 줄 — 값이 있을 때만 싣는다.
+  if(sum.attack||sum.triggerAttack)rows.push({key:'attack',label:'공증',current:round2(sum.attack),target:0,info:true,
+    extra:sum.triggerAttack>0?`발동 +${round2(sum.triggerAttack)}`:''});
+  if(sum.speed)rows.push({key:'speed',label:'공속',current:round2(sum.speed),target:0,info:true});
+  if(sum.regen)rows.push({key:'regen',label:'체젠',current:round2(sum.regen),target:0,info:true});
+  if(sum.mana)rows.push({key:'mana',label:'마젠',current:round2(sum.mana),target:0,info:true});
   for(const row of rows)row.gap=row.info?0:Math.max(0,round2(num(row.target)-num(row.current)));
   return{rows,sum,gorosei,goroseiNote:(t.gorosei[gorosei]||t.gorosei.none).note};
 }
@@ -521,7 +530,7 @@ function inferMode(index,counts){
 }
 
 global.ORD_BOARD_CORE={
-  VERSION:'30.3.0',
+  VERSION:'31.0.0',
   num,esc,round2,MAX_ROUND,
   buildIndex,translateFeed,stabilizeUnknown,nextAutoRound,countsFingerprint,
   roundClock,clockAnchor,

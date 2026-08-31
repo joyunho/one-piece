@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v30.3.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v31.0.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -158,7 +158,7 @@ App.prototype.render=function(){
       `<div class="board">`+
         `<section class="block b1"><header><b>만들 수 있는 전설급</b><small>지금 보유 재료 기준 · 선위 ${this.index.data.maxWispCost} 이하 · 행을 누르면 겹치는 패 영향</small></header>${this.renderCraft(board)}</section>`+
         `<section class="block b2"><header><b>상위 실측 조합</b><small>악몽 클리어 코퍼스 — 표시 전용, 결정은 직접</small></header>${this.renderUppers(board,mode)}</section>`+
-        `<section class="block b3"><header><b>현재 파티 스펙</b><small>실보유 완성 유닛 기준</small></header>${this.renderSpec(spec,mode)}</section>`+
+        `<section class="block b3"><header><b>현재 파티 스펙</b><small>티모지지 '현재 능력치' 셈법 — 보유 수량 × 유닛 능력치, 아이템·특수함 포함</small></header>${this.renderSpec(spec,mode)}</section>`+
       `</div>`+
     `</main>`;
   this.pushHud(board,spec,mode);
@@ -355,13 +355,16 @@ App.prototype.renderSpec=function(spec,mode){
     const miss=row.gap>0;
     return`<div class="gauge"><label><span>${esc(row.label)}</span><b class="${miss?'miss':''}">${row.current} / ${row.target}${row.full?` <small>(풀 ${row.full})</small>`:''}</b></label><div class="bar"><i class="${miss?(pct>=70?'warn':'bad'):'ok'}" style="width:${pct}%"></i></div>${row.extra?`<small class="extra">${esc(row.extra)}</small>`:''}</div>`;
   }).join('');
-  // 능력치 출처 조사(사용자 0831d "티모지지 프로그램에서 불러올 수 있을
-  // 것 같은데 알아봐줘"): 데스크톱 셸이 로컬 서버(127.0.0.1:25625)의
-  // 후보 경로를 1회 조사해 보내준다 — 능력치 전용 API 존재 여부의 실측.
+  // 능력치 출처(사용자 0831d 조사 → 0831h 페이지 분석으로 종결):
+  // 티모지지 사이트의 '현재 능력치'도 별도 API 가 아니라, 프로그램이 주는
+  // 보유 수량(/datas)에 사이트 내장 유닛 DB 를 곱해 브라우저에서 합산한
+  // 것 — 위 게이지가 정확히 같은 셈법이고 수치도 그 페이지 기준으로
+  // 정합해 두었다(tools/tmo_page_abilities_20260831.json).  스캐너는
+  // 실측 교차 확인용으로 유지.
   let scanHtml='';
   if(this.scan){
     const extra=(this.scan.found||[]).filter(f=>f.path!=='/datas');
-    scanHtml=`<small class="scan-note">로컬 서버 조사: /datas ${(this.scan.found||[]).some(f=>f.path==='/datas')?'응답':'무응답'}${extra.length?` · 추가 경로 ${extra.map(f=>`${esc(f.path)}(${f.status})`).join(' ')}`:' · 능력치 전용 경로 없음 — 위 게이지는 보드가 직접 합산(희귀 직접 역할 포함)'}</small>`;
+    scanHtml=`<small class="scan-note">로컬 서버 조사: /datas ${(this.scan.found||[]).some(f=>f.path==='/datas')?'응답':'무응답'}${extra.length?` · 추가 경로 ${extra.map(f=>`${esc(f.path)}(${f.status})`).join(' ')}`:' · 능력치 전용 경로 없음(정상 — 티모지지 사이트도 보유 수량×유닛 DB 를 브라우저에서 합산, 이 게이지와 같은 셈법)'}</small>`;
   }
   return`${head}<div class="gauges">${gauges}</div>${spec.goroseiNote?`<small class="gorosei-note">⚠ ${esc(spec.goroseiNote)}</small>`:''}${scanHtml}`;
 };

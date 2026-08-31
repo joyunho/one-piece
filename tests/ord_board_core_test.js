@@ -308,6 +308,40 @@ test('⑩ 첫 희귀 최속 + 짤 희귀 (사용자 0831d)',()=>{
   for(let i=1;i<fill.picks.length;i++)assert(fill.picks[i-1].cost<=fill.picks[i].cost,'짤 희귀 비용 정렬 붕괴');
 });
 
+test('⑪ TMO 페이지 정합 + 현재 능력치 전 유닛 합산 (사용자 0831h)',()=>{
+  // 사용자가 붙여넣은 티모지지 조합도우미 페이지(2026-08-31)의 유닛 DB
+  // 수치가 증류 정본이다 — 드리프트 파수꾼(밸런스 변경 반영 확인).
+  const r=id=>index.byId.get(id).roles;
+  assert.strictEqual(r('unit_1779016653060_4000').explosionAmp,30,'S-스네이크 폭뎀증 30 아님');
+  assert.strictEqual(r('A50h').attack,78,'버기 영원 공증 78 아님');
+  assert.strictEqual(r('C50h').armor,55,'핸콕 영원 방깍 55 아님');
+  assert.strictEqual(r('KB0H').stun,1,'니카 스턴 1 아님');
+  assert.strictEqual(r('E90H').triggerSlow,45,'도플라밍고 초월 발동이감 45 아님');
+  assert.strictEqual(r('790H').slow,70,'아오키지 초월 이감 70 아님');
+  assert(r('XB0H').triggerArmor===40&&r('XB0H').stackArmor===0,'보니 발동깍40/중첩깍0 정리 안 됨');
+  assert.strictEqual(r(DATA.codeMap['AI04']).slow,12,'둔화의지팡이 이감 12 아님');
+  assert(r(DATA.codeMap['AI08']).speed===4&&r(DATA.codeMap['AI08']).attack===0,'가죽장갑은 공속증 유지(TMO 자기모순 필드 미채택)');
+  // 현재 능력치 셈법: 사이트처럼 보유 '전' 유닛 합산 — 아이템·특수함도
+  // 게이지에 들어간다(별도 능력치 API 없음이 페이지 분석으로 확정).
+  const counts={};
+  counts[DATA.codeMap['AI04']]=1;            // 둔화의지팡이 이감12
+  counts['unit_1767884516176_6218']=1;        // 특수함 블고리 방깍25
+  counts['unit_1767884539590_2352']=1;        // 특수함 베티 공속11 체젠1.25 마젠1.25
+  const spec=B.partySpec(index,counts,{mode:'physical',gorosei:'none'});
+  assert.strictEqual(spec.rows.find(x=>x.key==='slow').current,12,'아이템 이감 미합산');
+  assert.strictEqual(spec.rows.find(x=>x.key==='armor').current,25,'특수함 방깍 미합산');
+  assert.strictEqual(spec.rows.find(x=>x.key==='speed').current,11,'공속 정보 줄 부재');
+  assert.strictEqual(spec.rows.find(x=>x.key==='regen').current,1.25,'체젠 정보 줄 부재');
+  assert.strictEqual(spec.rows.find(x=>x.key==='mana').current,1.25,'마젠 정보 줄 부재');
+  assert.strictEqual(spec.sum.units,0,'아이템·특수함이 완성 유닛 수로 합산됨');
+  for(const k of ['attack','speed','regen','mana'])
+    assert(!B.partySpec(index,{},{mode:'physical'}).rows.some(x=>x.key===k),'빈 패에 버프 정보 줄이 떠 있음: '+k);
+  // 악몽 목표 교차 검증: 페이지의 가짜 필터 유닛(풀이감 102 · 풀방깍 211)
+  // = 이 저장소 targets 와 동일해야 한다.
+  assert.strictEqual(DATA.targets.slow.base,102,'풀이감 102 불일치');
+  assert.strictEqual(DATA.targets.armor.full,211,'풀방깍(악몽) 211 불일치');
+});
+
 let passed=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);passed+=1;}

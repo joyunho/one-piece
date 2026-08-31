@@ -236,6 +236,29 @@ test('⑥ v30 — 자원 칩·첫 희귀·짤 희귀·특수 재료·로컬 조�
   assert(readNew('app.js').includes('onEndpointScan'),'조사 수신 배선 부재');
 });
 
+test('⑦ v31 — 현재 능력치 셈법: 아이템·특수함 합산 + 출처 지식 (사용자 0831h)',()=>{
+  const{app,root}=mkApp();
+  // 티모지지 '현재 능력치'와 같은 셈법: 보유 수량 × 유닛 능력치 — 별도
+  // API 없음(사용자가 붙여넣은 페이지 분석으로 확정).  아이템·특수함도
+  // 게이지에 들어간다.
+  const hand={};
+  hand[DATA.codeMap['AI04']]=1;              // 둔화의지팡이 이감12
+  hand['unit_1767884516176_6218']=1;          // 특수함 블고리 방깍25
+  hand['unit_1767884539590_2352']=1;          // 특수함 베티(공속·체젠·마젠)
+  feed(app,hand,{round:20,mode:'physical'});
+  const html=root.innerHTML;
+  assert(html.includes("현재 능력치"),'③블록에 현재 능력치 셈법 문구 부재');
+  assert(/이감<\/span><b[^>]*>12/.test(html),'아이템 이감 12 게이지 미반영');
+  assert(/방깎<\/span><b[^>]*>25/.test(html),'특수함 방깍 25 게이지 미반영');
+  assert(html.includes('공속')&&html.includes('체젠')&&html.includes('마젠'),'버프·재생 정보 줄 부재');
+  // 조사 결과가 '경로 없음'일 때 정상임을 설명한다(0831d 조사 종결).
+  app.scan={at:Date.now(),tried:14,found:[{path:'/datas',status:200,size:1000}]};
+  app.render();
+  assert(root.innerHTML.includes('브라우저에서 합산'),'능력치 출처 지식 문구 부재');
+  // 오버레이 파일은 생성물 아닌 손 채록 정본 — 증류기가 반드시 읽는다.
+  assert(readNew('../tools/build_ord_board_data.js').includes('tmo_page_abilities_20260831.json'),'증류기 오버레이 배선 부재');
+});
+
 let passed=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);passed+=1;}
