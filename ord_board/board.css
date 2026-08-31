@@ -133,6 +133,11 @@ button.mat.open .drill-ind{color:var(--gold)}
 .aux-pills{display:flex;flex-wrap:wrap;gap:5px}
 .aux .pair.on{border-color:var(--gold);box-shadow:0 0 8px rgba(217,164,65,.15)}
 .scan-note{display:block;margin-top:8px;color:var(--muted);font-size:10.5px;line-height:1.5}
+.round-ctl b[data-act="sync"]{cursor:pointer}
+.round-ctl b[data-act="sync"]:hover{color:var(--gold)}
+.hud-aux{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 8px;padding:5px 8px;border:1px dashed var(--line-strong);border-radius:8px;font-size:11.5px}
+.hud-aux>i{font-style:normal;color:var(--sub);font-weight:800;font-size:10.5px}
+.hud-aux b{color:var(--gold)}
 .drill-head{color:var(--sub);font-size:11px}
 .drill-head b{color:var(--fg)}
 .upper-recipe .recipe{margin-bottom:0}

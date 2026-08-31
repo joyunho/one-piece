@@ -101,6 +101,21 @@ test('③ HUD — 전용 조각 표시 전용(앱 이중 구동·버튼 없음)'
   assert((hud.match(/hud-row/g)||[]).length<=4,'HUD 행 상한 초과');
   const hudJs=readNew('hud.js');
   assert(hudJs.includes('onHudState')&&!hudJs.includes('ORD_BOARD_CORE'),'HUD 가 앱을 이중 구동한다');
+  // v30.2(사용자 0831f "프로그램으로 모든게 해결"): 초반 HUD 에 첫 희귀
+  // 최속, 마감 HUD 에 짤 희귀 — 표시 전용(버튼 금지 불변).
+  const early={};let un3=0;for(const u of DATA.units){if(u.tier==='uncommon'&&un3<5){early[u.id]=1;un3++;}}
+  early[DATA.wispId]=4;
+  feed(app,early,{round:5,clockStartedAt:0});
+  const earlyBoard=B.craftRows(app.index,early,{mode:app.mode(),round:5});
+  const earlySpec=B.partySpec(app.index,early,{mode:app.mode(),gorosei:'none'});
+  const hudEarly=app.renderHud(earlyBoard,earlySpec,app.mode());
+  assert(hudEarly.includes('첫 희귀 최속')&&!hudEarly.includes('<button'),'초반 HUD 첫 희귀 안내 부재/버튼 위반');
+  const late={};let un4=0;for(const u of DATA.units){if(u.tier==='uncommon'&&un4<4){late[u.id]=1;un4++;}}
+  late[DATA.wispId]=10;
+  feed(app,late,{round:55,clockStartedAt:0});
+  const lateBoard2=B.craftRows(app.index,late,{mode:app.mode(),round:55});
+  const hudLate=app.renderHud(lateBoard2,B.partySpec(app.index,late,{mode:app.mode(),gorosei:'none'}),app.mode());
+  assert(hudLate.includes('짤 희귀')&&!hudLate.includes('<button'),'마감 HUD 짤 희귀 안내 부재/버튼 위반');
   assert(readNew('hud.html').includes('hud.js')&&readNew('hud.html').includes('board.css'),'HUD 페이지 구성 이상');
 });
 
@@ -166,12 +181,15 @@ test('⑤ 라운드 시계 + 조합식 드릴다운 (사용자 0831c)',()=>{
 
 test('⑥ v30 — 자원 칩·첫 희귀·짤 희귀·특수 재료·로컬 조사 (사용자 0831d)',()=>{
   const{app,root}=mkApp();
-  // 자원 칩: /datas 의 GOLD·LUMBER 를 버리지 않는다.
+  // 자원: 번역은 유지(진단용)하되 화면에는 안 싣는다 — 인게임과 안
+  // 맞는 값 표시 금지(사용자 0831f "골드랑 목재랑 잘 안맞는것 같아").
   const feedOut=B.translateFeed(app.index,{GOLD:1234,LUMBER:7});
   assert(feedOut.gold===1234&&feedOut.lumber===7,'자원 번역 누락');
   app.gold=1234;app.lumber=7;
   feed(app,rich,{round:20,mode:'magic',clockStartedAt:0});
-  assert(root.innerHTML.includes('목재')&&root.innerHTML.includes('골드'),'자원 칩 부재');
+  assert(!root.innerHTML.includes('목재')&&!root.innerHTML.includes('골드'),'검증 안 된 자원 칩이 화면에 있음');
+  // 시계 탭 동기화(사용자 0831f): 숫자 탭 = 지금이 이 라운드 시작.
+  assert(readNew('app.js').includes("act==='sync'")&&root.innerHTML.includes('data-act="sync"'),'시계 탭 동기화 부재');
   // 첫 희귀 최속: 특별함(152 진화체)이 없을 때만 보인다.
   const scarce={};let r=0,un=0,co=0;
   for(const u of DATA.units){if(u.tier==='uncommon'&&un<8){scarce[u.id]=1;un++;}if(u.tier==='common'&&u.id!==DATA.wispId&&co<6){scarce[u.id]=1;co++;}}

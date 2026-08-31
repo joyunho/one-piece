@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 코어 (v30.1.0 전면 신작)
+// ORD 악몽 보드 — 코어 (v30.2.0 전면 신작)
 //
 // 철학(사용자 확정, v26→신작 승계): 결정은 사용자가 티모지지를 보며
 // 직접 내린다.  프로그램은 세 가지 사실만 보여준다 —
@@ -91,7 +91,10 @@ function nextAutoRound(previous,playable,now){
 // 추가 시간이 없다.  ± 보정은 시계를 다시 앵커한다.
 const BOSS_ROUNDS=new Set([10,20,30,40,50]);
 const COSPAWN_BOSS=new Set([55,60,65]);
-const ROUND_PREP=10,ROUND_NORMAL=35,ROUND_BOSS=60,SHIFT_SECONDS=70,ROUND_NEWWORLD=32,MAX_ROUND=65;
+// 준비 30초(사용자 0831f 실측 보정): 시작 유닛은 1라운드보다 ~30초
+// 먼저 잡힌다(게임 인트로·난이도 연출) — 10초 가정이 시계를 ~20초
+// 앞서가게 했다.  잔여 오차는 시계 탭 동기화(지금 = 이 라운드 시작)로.
+const ROUND_PREP=30,ROUND_NORMAL=35,ROUND_BOSS=60,SHIFT_SECONDS=70,ROUND_NEWWORLD=32,MAX_ROUND=65;
 const roundDuration=r=>r>50?ROUND_NEWWORLD:(BOSS_ROUNDS.has(r)?ROUND_BOSS:ROUND_NORMAL);
 function roundClock(startedAt,now){
   const started=num(startedAt);
@@ -512,7 +515,7 @@ function inferMode(index,counts){
 }
 
 global.ORD_BOARD_CORE={
-  VERSION:'30.1.0',
+  VERSION:'30.2.0',
   num,esc,round2,MAX_ROUND,
   buildIndex,translateFeed,stabilizeUnknown,nextAutoRound,countsFingerprint,
   roundClock,clockAnchor,

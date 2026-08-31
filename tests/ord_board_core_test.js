@@ -220,12 +220,13 @@ test('⑧ 라운드 시계 — 맵 JASS 정본(35/60 · 전환70 · 신세계32)
   // 수동(시계 없음)
   const manual=B.roundClock(0,now);
   assert(!manual.running&&manual.round===0,'기점 0인데 시계가 돈다');
-  // 준비 구간: 기점 직후 10초는 라운드 0
+  // 준비 구간: 기점 직후 30초는 라운드 0 (0831f 실측 보정 — 시작 유닛은
+  // 1라보다 ~30초 먼저 잡힌다)
   const prep=B.roundClock(now-3000,now);
-  assert(prep.running&&prep.prep&&prep.round===0&&prep.remaining===7,`준비 구간 오류: ${JSON.stringify(prep)}`);
+  assert(prep.running&&prep.prep&&prep.round===0&&prep.remaining===27,`준비 구간 오류: ${JSON.stringify(prep)}`);
   // 1라 진행: 준비 뒤 34초까지 1라, 35초에 2라
-  assert.strictEqual(B.roundClock(now-(10+34)*1000,now).round,1,'35초 전 1라 유지 실패');
-  assert.strictEqual(B.roundClock(now-(10+35)*1000,now).round,2,'35초에 2라 전환 실패');
+  assert.strictEqual(B.roundClock(now-(30+34)*1000,now).round,1,'35초 전 1라 유지 실패');
+  assert.strictEqual(B.roundClock(now-(30+35)*1000,now).round,2,'35초에 2라 전환 실패');
   // 전반 보스(10/20/30/40/50)는 60초
   const boss=B.roundClock(B.clockAnchor(10,now),now);
   assert(boss.round===10&&boss.boss===true&&boss.remaining===60,`10라 보스 오류: ${JSON.stringify(boss)}`);

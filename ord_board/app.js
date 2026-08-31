@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v30.1.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v30.2.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -168,7 +168,7 @@ App.prototype.renderStrip=function(mode){
   const g=this.index.data.targets.gorosei;
   return`<header class="strip">`+
     `<div class="logo"><b>ORD 악몽 보드</b><small>2.314 · v${DATA.version}</small></div>`+
-    `<div class="round-ctl"><button data-act="round" data-value="-1">−</button><b data-clock title="라운드 시계 — 수신에서 자동 시작, ±로 실제 라운드에 맞추면 그대로 이어집니다">${this.clockLabel(B.roundClock(this.state.clockStartedAt,Date.now()))}</b><button data-act="round" data-value="1">＋</button></div>`+
+    `<div class="round-ctl"><button data-act="round" data-value="-1">−</button><b data-clock data-act="sync" title="라운드 시계 — 수신에서 자동 시작.  ± = 라운드 보정, 숫자 탭 = 인게임 라운드가 막 바뀐 순간 눌러 초 단위 동기화">${this.clockLabel(B.roundClock(this.state.clockStartedAt,Date.now()))}</b><button data-act="round" data-value="1">＋</button></div>`+
     `<div class="seg">`+
       `<button data-act="mode" data-value="" class="${this.state.mode===''?'on':''}">자동${inferred?` · ${mode==='magic'?'마딜':'물딜'}`:''}</button>`+
       `<button data-act="mode" data-value="physical" class="${this.state.mode==='physical'?'on':''}">물딜</button>`+
@@ -176,8 +176,6 @@ App.prototype.renderStrip=function(mode){
     `</div>`+
     `<select class="gorosei" data-opt="gorosei" aria-label="오로성">${Object.keys(g).map(key=>`<option value="${key}" ${this.state.gorosei===key?'selected':''}>오로성 · ${esc(g[key].label)}</option>`).join('')}</select>`+
     `<span class="chip">선위 <b>${this.wisp}</b></span>`+
-    `<span class="chip">목재 <b>${this.lumber}</b></span>`+
-    `<span class="chip">골드 <b>${this.gold}</b></span>`+
     `<span class="chip">실전 유닛 <b>${this.playable}</b></span>`+
     `<span class="feed ${this.stale()?'':'on'}"><i></i><small>${this.stale()?'TMO 미연결':'로컬 직결 수신 중'}</small></span>`+
   `</header>`;
@@ -377,7 +375,18 @@ App.prototype.renderHud=function(board,spec,mode){
     const miss=row.gap>0;
     return`<div class="gauge"><label><span>${esc(row.label)}</span><b class="${miss?'miss':''}">${row.current}/${row.target}</b></label><div class="bar"><i class="${miss?(pct>=70?'warn':'bad'):'ok'}" style="width:${pct}%"></i></div></div>`;
   }).join('');
-  return`<div class="hud-panel"><div class="hud-head"><b>${this.roundNow()}라</b><span>${mode?(mode==='magic'?'마딜':'물딜'):'계통 미판정'}</span><span>선위 ${this.wisp}</span>${this.stale()?'<span>· 수신 대기</span>':''}</div>${rows||'<div class="hud-empty">지금 만들 수 있는 전설급 없음</div>'}<div class="hud-gauges">${gauges}</div></div>`;
+  // 사이트 없이 게임 위에서 답이 나오게(사용자 0831f): 초반엔 첫 희귀
+  // 최속, 마감(50라+ 전설 불가)엔 짤 희귀를 표시 전용 줄로 싣는다.
+  let aux='';
+  const roundNow=this.roundNow();
+  if(roundNow<25){
+    const fr=B.firstRares(this.index,this.counts);
+    if(fr.specialOwned===0&&fr.picks.length)aux=`<div class="hud-aux"><i>첫 희귀 최속</i>${fr.picks.map(p=>`<span><b>${esc(p.unit.short)}</b> 선위 ${p.cost}</span>`).join('')}</div>`;
+  }else if(roundNow>=50&&!board.rows.some(r=>r.ready)){
+    const fill=B.fillerRares(this.index,this.counts);
+    if(fill.picks.length)aux=`<div class="hud-aux"><i>짤 희귀</i>${fill.picks.slice(0,3).map(p=>`<span><b>${esc(p.unit.short)}</b> ${esc(p.tags[0])} · 선위 ${p.cost}</span>`).join('')}</div>`;
+  }
+  return`<div class="hud-panel"><div class="hud-head"><b>${roundNow}라</b><span>${mode?(mode==='magic'?'마딜':'물딜'):'계통 미판정'}</span><span>선위 ${this.wisp}</span>${this.stale()?'<span>· 수신 대기</span>':''}</div>${aux}${rows||'<div class="hud-empty">지금 만들 수 있는 전설급 없음</div>'}<div class="hud-gauges">${gauges}</div></div>`;
 };
 App.prototype.pushHud=function(board,spec,mode){
   const bridge=global.ORD_DESKTOP;
@@ -410,6 +419,13 @@ App.prototype.bind=function(){
     else if(act==='upper'){this.state.upperPick=id;this.state.pairPick='';this.state.search='';this.state.drillRoot='';this.state.drill=[];}
     else if(act==='pair-pick'){this.state.pairPick=this.state.pairPick===id?'':id;this.state.drillRoot='';this.state.drill=[];}
     else if(act==='aux-pick'){this.state.auxPick=this.state.auxPick===id?'':id;this.state.drillRoot='';this.state.drill=[];}
+    else if(act==='sync'){
+      // 시계 탭 동기화(사용자 0831f "20초 차이"): 인게임 라운드가 막
+      // 바뀐 순간 탭하면 '지금 = 이 라운드 시작'으로 초 단위가 맞는다.
+      const r=this.roundNow();
+      this.state.round=r;
+      this.state.clockStartedAt=B.clockAnchor(r,Date.now());
+    }
     else if(act==='drill'){
       const root=btn.getAttribute('data-root'),depth=num(btn.getAttribute('data-depth'));
       if(this.state.drillRoot!==root){this.state.drillRoot=root;this.state.drill=[id];}
