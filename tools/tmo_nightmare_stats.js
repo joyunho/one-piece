@@ -23,7 +23,7 @@ function readJson(file) {
   const buf = fs.readFileSync(file);
   return JSON.parse(/\.gz$/.test(file) ? zlib.gunzipSync(buf) : buf);
 }
-const EXT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild');
+const EXT = path.join(ROOT, 'archive','legacy_program');
 
 function arg(name, fallback) {
   const i = process.argv.indexOf(name);

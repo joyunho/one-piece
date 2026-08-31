@@ -12,7 +12,7 @@ Write-Host '=== ORD 악몽 코치 — 바탕화면 설치 ==='
 # 이 스크립트를 돌리면 옛 코드가 그대로 다시 빌드돼 바탕화면 앱이 계속
 # 옛 버전으로 남는다.  스크립트는 성공했다고 말하므로 사용자는 원인을
 # 알 수 없었다("계속 20.4 인데? 병합이 안된건가?").
-$manifestPath = Join-Path $repo 'ord_tmo_auto_extension_v15_0_0_rebuild\manifest.json'
+$manifestPath = Join-Path $repo 'desktop\package.json'
 $srcVersion = (Get-Content $manifestPath -Raw | ConvertFrom-Json).version
 Write-Host ('설치할 폴더 : ' + $repo)
 Write-Host ('설치할 버전 : v' + $srcVersion)

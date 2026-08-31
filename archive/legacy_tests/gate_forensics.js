@@ -25,7 +25,7 @@
 const fs=require('fs');
 const path=require('path');
 const REPLAY=require('/home/user/one-piece/tests/lib/ordlog_replay.js');
-const EXT='/home/user/one-piece/ord_tmo_auto_extension_v15_0_0_rebuild';
+const EXT='/home/user/one-piece/archive/legacy_program';
 REPLAY.loadEngine();
 const C=global.ORDCore,M=global.ORDV15Model,L=global.ORDV15Ledger,P=global.ORDV15Policy;
 const Compactor=require(path.join(EXT,'ord_run_log_compactor.js'));

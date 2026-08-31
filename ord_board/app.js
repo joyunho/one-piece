@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v28.1.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v29.0.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -41,6 +41,7 @@ function App(root){
     gorosei:'none',
     round:1,
     upperPick:'',
+    pairPick:'',
     filter:'',
     page:0,
     search:'',
@@ -82,7 +83,7 @@ App.prototype.onFeed=function(payload){
   this.playable=feed.playable;
   if(newGame){
     // 새 판: 라운드·선택 초기화(모드·오로성은 유지 — 세션 설정).
-    this.state.round=1;this.state.upperPick='';this.state.pick='';this.state.page=0;this.save();
+    this.state.round=1;this.state.upperPick='';this.state.pairPick='';this.state.pick='';this.state.page=0;this.save();
   }
   this.render();
 };
@@ -221,8 +222,22 @@ App.prototype.renderUppers=function(board,mode){
         const label=pDupes.has(pShorts[i])?(u?u.name:p.name):pShorts[i];
         return`<button class="partner" data-act="pick" data-id="${esc(p.id)}" title="${esc(u?u.name:p.name)}">${face}<b>${esc(label)}</b><em>${num(p.share)}%</em>${flag}</button>`;
       }).join('')+(combos.hiddenCount>0?`<small class="hidden-note">실측 top8 중 ${combos.hiddenCount}개는 지금 내 패로 못 가 숨김</small>`:'');
-      const pairs=combos.pairs.slice(0,6).map(p=>`<button class="pair" data-act="upper" data-id="${esc(p.unit.id)}" title="${esc(p.unit.name)}"><b>${esc(p.unit.short)}</b><i>동반 실측 ${p.games}판</i></button>`).join('');
-      body=`${upperRecipe}${reserveHtml}<small class="combo-head">${esc(combos.sel.short)} — 클리어 실측 ${combos.games}판${combos.dualGames?` (2상위 판 ${combos.dualGames})`:''} · 함께 쓰인 전설·히든 중 내 패로 갈 수 있는 것</small>${combos.partners.length?`<div class="partners">${partners}</div>`:''}${pairs?`<small class="combo-head">함께 간 2상위 · 동반 클리어 판수순</small><div class="pairs">${pairs}</div>`:''}`;
+      // 2상위 추천(사용자 0831: "이 상위랑 어울리는 다른 상위도 추천").
+      const pp=B.pairPicks(this.index,this.counts,combos.sel.id,{mode,round:this.state.round});
+      const ppShorts=pp.picks.map(p=>p.unit.short);
+      const ppDupes=new Set(ppShorts.filter((s,i)=>ppShorts.indexOf(s)!==i));
+      const pairRec=pp.picks.length?`<div class="top3 pair-picks"><small>2상위 추천 — ${esc(combos.sel.short)}와 함께 간 상위를 지금 패 도달 → 동반 실측 순으로 · 눌러서 조합식 확인</small>${pp.picks.map((p,i)=>{
+        const u=p.unit;
+        const face=u.image?`<img class="face" src="${esc(u.image)}" alt="" loading="lazy">`:'';
+        const label=ppDupes.has(u.short)?u.name:u.short;
+        return`<button class="top3-row${i===0?' top':''}${this.state.pairPick===u.id?' picked':''}" data-act="pair-pick" data-id="${esc(u.id)}" title="${esc(u.name)}"><i class="top3-rank">${i+1}</i>${face}<span class="top3-main"><b>${esc(label)}</b><small class="top3-meta">선위 ${p.cost} · 동반 실측 ${p.games}판</small>${u.note?`<small class="top3-note">${esc(u.note)}</small>`:''}</span></button>`;
+      }).join('')}${pp.hidden>0?`<small class="hidden-note">실측 페어 중 ${pp.hidden}개는 지금 내 패로 못 가거나 계통이 달라 숨김</small>`:''}</div>`
+      :(combos.pairs.length?`<small class="hidden-note">함께 간 2상위 실측은 있지만 지금 내 패로 갈 수 있는 상위가 없습니다.</small>`:'');
+      const pairPlan=this.state.pairPick?B.recipePlan(this.index,this.state.pairPick,this.counts):null;
+      const pairRecipe=pairPlan&&!pairPlan.owned?`<div class="upper-recipe"><small class="combo-head">${esc(pairPlan.unit.short)} 조합식 — 지금 패 기준</small>${this.renderRecipe(pairPlan)}</div>`:'';
+      const restPairs=combos.pairs.filter(p=>!pp.picks.some(x=>x.unit.canon===p.unit.canon)).slice(0,4)
+        .map(p=>`<button class="pair" data-act="pair-pick" data-id="${esc(p.unit.id)}" title="${esc(p.unit.name)}"><b>${esc(p.unit.short)}</b><i>동반 실측 ${p.games}판</i></button>`).join('');
+      body=`${upperRecipe}${reserveHtml}<small class="combo-head">${esc(combos.sel.short)} — 클리어 실측 ${combos.games}판${combos.dualGames?` (2상위 판 ${combos.dualGames})`:''} · 함께 쓰인 전설·히든 중 내 패로 갈 수 있는 것</small>${combos.partners.length?`<div class="partners">${partners}</div>`:''}${pairRec}${pairRecipe}${restPairs?`<small class="combo-head">그 외 실측 페어 · 눌러서 조합식 확인</small><div class="pairs">${restPairs}</div>`:''}`;
     }
   }
   return`<div class="uppers">${top3}${search}${select}${body}</div>`;
@@ -276,7 +291,8 @@ App.prototype.bind=function(){
     else if(act==='filter'){this.state.filter=value===this.state.filter?value:value;this.state.filter=value;this.state.page=0;}
     else if(act==='page'){this.state.page=Math.max(0,this.state.page+num(value));}
     else if(act==='pick'){this.state.pick=this.state.pick===id?'':id;}
-    else if(act==='upper'){this.state.upperPick=id;this.state.search='';}
+    else if(act==='upper'){this.state.upperPick=id;this.state.pairPick='';this.state.search='';}
+    else if(act==='pair-pick'){this.state.pairPick=this.state.pairPick===id?'':id;}
     else if(act==='probe'){this.probe();return;}
     else return;
     this.save();this.render();
@@ -285,7 +301,7 @@ App.prototype.bind=function(){
     const sel=event.target.closest('[data-opt]');
     if(!sel)return;
     const opt=sel.getAttribute('data-opt');
-    if(opt==='upperPick')this.state.upperPick=sel.value;
+    if(opt==='upperPick'){this.state.upperPick=sel.value;this.state.pairPick='';}
     if(opt==='gorosei')this.state.gorosei=sel.value;
     this.save();this.render();
   });

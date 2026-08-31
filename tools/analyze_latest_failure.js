@@ -4,7 +4,7 @@ const fs = require('fs');
 const path = require('path');
 
 const ROOT = path.resolve(__dirname, '..');
-const EXT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild');
+const EXT = path.join(ROOT, 'archive','legacy_program');
 // v19.5(점검 결함): 기본값이 저장소 밖 특정 업로드 파일에 박혀 있어 새
 // 환경에서는 인자 없이 항상 죽었다 — data/ 의 최신 ordlog 를 고른다
 // (파일명에 타임스탬프가 있어 이름 내림차순 = 최신).

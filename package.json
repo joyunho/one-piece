@@ -1,16 +1,15 @@
 {
   "name": "ord-2305-nightmare-coach",
-  "version": "28.1.0",
+  "version": "29.0.0",
   "private": true,
-  "description": "원랜디 2.305 악몽 실전 판단 코치 — TMO 조합도우미 연동 확장 + 단일 HTML 수동판",
+  "description": "원랜디 2.314 악몽 보드 — 전면 신작(ord_board/) + 데스크톱 셸. 옛 프로그램은 archive/ 동결",
   "engines": {
     "node": ">=22"
   },
   "scripts": {
-    "build": "node tools/build_icon_pack.js && node tools/build_meta_stats.js && node tools/build_clear_stats.js && node ord_tmo_auto_extension_v15_0_0_rebuild/tools/build_manual.js && node ord_tmo_auto_extension_v15_0_0_rebuild/tools/build_story_grade_table.js",
+    "build": "node tools/build_clear_stats.js && node tools/build_meta_stats.js && node tools/build_ord_board_data.js",
     "test": "node tests/run_all.js",
-    "test:strict": "ORD_REQUIRE_ALL=1 node tests/run_all.js",
-    "verify:package": "node tests/package_validation.js"
+    "test:strict": "ORD_REQUIRE_ALL=1 node tests/run_all.js"
   },
   "devDependencies": {
     "playwright": "1.61.1"

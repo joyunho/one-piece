@@ -19,7 +19,7 @@ const path = require('path');
 
 const ROOT = path.join(__dirname, '..');
 const SRC = path.join(ROOT, 'assets', 'icon-pack', 'colored-64');
-const OUT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild', 'ord_icons.js');
+const OUT = path.join(ROOT, 'archive','legacy_program', 'ord_icons.js');
 
 if (!fs.existsSync(SRC)) throw new Error(`아이콘 원본이 없습니다: ${SRC}`);
 

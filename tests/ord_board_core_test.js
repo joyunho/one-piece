@@ -180,6 +180,37 @@ test('⑥ 조합식 계획 — 직접 재료·선위 사용처 검산 (전설급
   assert(colored.length>=8,`흔함 색상 소실: ${colored.length}`);
 });
 
+test('⑦ 2상위 추천 — 실측 페어 × 지금 패 도달 (사용자 0831b)',()=>{
+  const sel=B.upperOptions(index,'')[0];
+  const pp=B.pairPicks(index,scarce,sel.unit.id,{mode:'',round:20});
+  assert(pp.picks.length>=1&&pp.picks.length<=3,'추천 수 이상');
+  const stats=DATA.clear[sel.unit.canon];
+  for(const p of pp.picks){
+    assert(p.unit.upper&&!p.unit.seraph,'상위 아닌 2상위 추천');
+    assert(p.unit.canon!==sel.unit.canon,'선택 상위 자신을 추천');
+    assert(p.games>0&&(stats.pairs||[]).some(x=>x.id===p.unit.canon&&x.games===p.games),'실측 페어 아님');
+    const result=B.solve(index,p.unit.id,scarce);
+    assert(!result.hardMissing.length,'조합 안 닫히는 2상위 추천');
+    assert.strictEqual(p.cost,result.wispCost,'선위 표기 불일치');
+  }
+  // 정렬: 도달 버킷(선위 10) → 동반 판수.
+  for(let i=1;i<pp.picks.length;i++){
+    const a=pp.picks[i-1],b=pp.picks[i];
+    const ab=Math.floor(a.cost/10),bb=Math.floor(b.cost/10);
+    assert(ab<bb||(ab===bb&&a.games>=b.games),'추천 정렬 위반');
+  }
+  // 이미 보유한 상위 canon 은 추천하지 않는다.
+  if(pp.picks.length){
+    const withPair=Object.assign({},scarce);withPair[pp.picks[0].unit.id]=1;
+    const again=B.pairPicks(index,withPair,sel.unit.id,{mode:'',round:20});
+    assert(!again.picks.some(p=>p.unit.canon===pp.picks[0].unit.canon),'보유 상위를 또 추천');
+  }
+  // 계통 게이트 + 숨김 정직성.
+  const magic=B.pairPicks(index,scarce,sel.unit.id,{mode:'magic',round:20});
+  assert(!magic.picks.some(p=>p.unit.family==='physical'),'마딜인데 물딜 2상위 추천');
+  assert(pp.hidden>=0&&(pp.picks.length+pp.hidden)>=Math.min(3,(stats.pairs||[]).length?1:0),'숨김 집계 이상');
+});
+
 let passed=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);passed+=1;}

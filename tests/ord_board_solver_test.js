@@ -9,7 +9,7 @@
 // 쓰인다 — 런타임 신작은 옛 파일을 로드하지 않는다.
 
 const assert=require('assert'),fs=require('fs'),path=require('path'),vm=require('vm');
-const OLD=path.join(__dirname,'..','ord_tmo_auto_extension_v15_0_0_rebuild');
+const OLD=path.join(__dirname,'..','archive','legacy_program');
 const NEW=path.join(__dirname,'..','ord_board');
 
 const octx={console};octx.window=octx;vm.createContext(octx);

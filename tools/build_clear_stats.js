@@ -21,7 +21,7 @@ const path = require('path');
 const zlib = require('zlib');
 
 const ROOT = path.join(__dirname, '..');
-const EXT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild');
+const EXT = path.join(ROOT, 'archive','legacy_program');
 
 // v22.11(사용자: "시즌 2 버전 기록들을 모두 보고"): 최신 파일 하나가 아니라
 // 시즌 2 수집본 전부를 병합한다.  수집은 컷오프 구간별로 나뉘어 저장되므로

@@ -18,7 +18,7 @@ const path = require('path');
 const zlib = require('zlib');
 
 const ROOT = path.join(__dirname, '..');
-const EXT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild');
+const EXT = path.join(ROOT, 'archive','legacy_program');
 // v18.1: 기본 입력이 전수 표본(tmo_nightmare_all_*)이다. 상위권 표본만 쓰던
 // 시절에는 표본을 키우면 다이제스트 수치가 통째로 커져 엔진 가중치가 조용히
 // 바뀌었지만, 이제 엔진이 비율(조건부·픽률)만 읽으므로 표본 크기에 불변이다.

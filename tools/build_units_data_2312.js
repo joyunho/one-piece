@@ -17,7 +17,7 @@
 const fs=require('fs'),path=require('path');
 const REPO=path.join(__dirname,'..');
 const CATALOG=path.join(REPO,'data/ord_catalog_2312_20260810.json');
-const OUT=path.join(REPO,'ord_tmo_auto_extension_v15_0_0_rebuild/ord_units_data.js');
+const OUT=path.join(REPO,'archive/legacy_program/ord_units_data.js');
 
 // 2312 카탈로그가 목록에서 뺐지만 코치가 계속 알아야 하는 항목.
 // (A)카이도(용폼)은 M70h(불멸 카이도)의 조합 후 변신 폼이다 —

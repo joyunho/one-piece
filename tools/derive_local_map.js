@@ -13,7 +13,7 @@
 const fs = require('fs');
 const path = require('path');
 global.window = global;
-require(path.join(__dirname, '..', 'ord_tmo_auto_extension_v15_0_0_rebuild', 'ord_units_data.js'));
+require(path.join(__dirname, '..', 'archive','legacy_program', 'ord_units_data.js'));
 const units = global.ORD_TMO_UNITS;
 const nameOf = new Map(units.map(u => [u.id, u.name]));
 const knownIds = new Set();

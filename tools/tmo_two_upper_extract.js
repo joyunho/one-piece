@@ -10,7 +10,7 @@ const path = require('path');
 const zlib = require('zlib');
 
 const ROOT = path.resolve(__dirname, '..');
-const EXT = path.join(ROOT, 'ord_tmo_auto_extension_v15_0_0_rebuild');
+const EXT = path.join(ROOT, 'archive','legacy_program');
 global.window = global;
 const w = console.warn; console.warn = () => {};
 require(path.join(EXT, 'ord_units_data.js'));

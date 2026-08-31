@@ -73,6 +73,16 @@ test('② 실전 렌더 — 카드·배타·페이지·선택 여파·상위·�
     assert(html.includes('조합식 — 지금 패 기준'),'상위 조합식 헤드 부재');
     assert(html.includes('class="recipe"'),'상위 조합식 패널 부재');
   }
+  // 2상위 추천(사용자 0831b): 추천 행 + 누르면 그 상위의 조합식.
+  const pp=B.pairPicks(app.index,rich,opt.unit.id,{mode:'magic',round:20});
+  if(pp.picks.length){
+    assert(html.includes('2상위 추천'),'2상위 추천 블록 부재');
+    assert((html.match(/data-act="pair-pick"/g)||[]).length>=pp.picks.length,'2상위 추천 버튼 부족');
+    feed(app,rich,{pairPick:pp.picks[0].unit.id});
+    const html2=root.innerHTML;
+    assert((html2.match(/class="recipe"/g)||[]).length>=2,'2상위 조합식 패널 부재');
+    assert(html2.includes(`${B.esc(pp.picks[0].unit.short)} 조합식`)||html2.includes('조합식 — 지금 패 기준'),'2상위 조합식 헤드 부재');
+  }
   assert((html.match(/class="gauge/g)||[]).length>=4,'스펙 게이지 부재');
   // 검색: 엔터 배선 + 결과 버튼.
   feed(app,rich,{search:'센고쿠'});

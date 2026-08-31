@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 코어 (v28.1.0 전면 신작)
+// ORD 악몽 보드 — 코어 (v29.0.0 전면 신작)
 //
 // 철학(사용자 확정, v26→신작 승계): 결정은 사용자가 티모지지를 보며
 // 직접 내린다.  프로그램은 세 가지 사실만 보여준다 —
@@ -292,6 +292,39 @@ function upperPicks(index,counts,opts){
     .slice(0,3);
 }
 
+// 2상위 추천(사용자 0831: "상위를 선택했을 때 상위가 끝인게 아니라 이
+// 상위랑 어울리는 다른 상위도 추천가능하게"): 선택 상위와 함께 악몽을
+// 깬 실측 페어 중, 지금 패로 조합이 닫히고(하드 결손 없음) 내 패를
+// 실제 소비하거나 바로 가능한 상위를 도달 거리(선위 10 버킷) → 동반
+// 실측 판수 순으로 최대 3 추천한다.  TOP3 와 같은 등재 철학.
+function pairPicks(index,counts,upperId,opts){
+  const sel=index.byId.get(String(upperId));
+  if(!sel||!sel.upper)return{picks:[],hidden:0};
+  const mode=opts&&opts.mode||'';
+  const round=num(opts&&opts.round)||1;
+  const stats=index.data.clear[sel.canon]||{pairs:[]};
+  const facts=handFacts(index,counts);
+  const picks=[];let hidden=0;
+  for(const pair of stats.pairs||[]){
+    const unit=index.byCanon.get(pair.id);
+    if(!unit||unit.canon===sel.canon)continue;
+    if(facts.upperCanons.has(unit.canon))continue;          // 이미 보유
+    if(unit.family!=='neutral'&&mode&&unit.family!==mode){hidden+=1;continue;}
+    if(unit.changed&&round<50){hidden+=1;continue;}
+    const result=solve(index,unit.id,counts);
+    if(result.hardMissing.length){hidden+=1;continue;}
+    const cost=num(result.wispCost);
+    const eatsMine=Object.keys(result.consumed||{}).some(id=>{
+      const mat=index.byId.get(id);if(!mat)return false;
+      return['rare','special','uncommon'].includes(mat.tier)||(mat.legendish&&mat.tier!=='hard');
+    });
+    if(!eatsMine&&cost>facts.wisp){hidden+=1;continue;}
+    picks.push({unit,cost,games:num(pair.games)});
+  }
+  picks.sort((a,b)=>Math.floor(a.cost/10)-Math.floor(b.cost/10)||b.games-a.games||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'));
+  return{picks:picks.slice(0,3),hidden:hidden+Math.max(0,picks.length-3)};
+}
+
 // 상위 몫: 기준 상위 트리가 현재 패에서 소비할 희귀·특별·안흔 —
 // "다른 데 쓰면 패가 겹칩니다".
 function upperReserve(index,counts,upperId){
@@ -382,11 +415,11 @@ function inferMode(index,counts){
 }
 
 global.ORD_BOARD_CORE={
-  VERSION:'28.1.0',
+  VERSION:'29.0.0',
   num,esc,round2,
   buildIndex,translateFeed,stabilizeUnknown,nextAutoRound,countsFingerprint,
   solve,handFacts,craftRows,pickImpact,recipePlan,
-  upperOptions,upperPicks,upperReserve,upperCombos,
+  upperOptions,upperPicks,pairPicks,upperReserve,upperCombos,
   partySpec,inferMode
 };
 })(typeof window!=='undefined'?window:globalThis);

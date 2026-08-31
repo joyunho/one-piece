@@ -1,5 +1,5 @@
 'use strict';
-// v28.1.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
+// v29.0.0 — ORD 악몽 코치 데스크톱 셸 (Electron 메인 프로세스).
 //
 // 확장(크롬) 없이 코치를 독립 프로그램으로 돌린다.  브라우저 제약
 // (타이머 조임·MV3 정책·CORS)이 사라지므로 보험 장치 없이 단순하다:
@@ -136,7 +136,7 @@ function moveOverlayToNextDisplay() {
 // 입력을 전혀 뺏지 않는다.  위치·크기는 미니 패널(F6)에서 잡은 자리를
 // 그대로 쓴다 — HUD 자신은 클릭 통과라 끌 수 없기 때문.
 // v28.0(전면 신작): 렌더러는 ord_board/ 의 신작 보드다 — 옛 프로그램
-// (ord_tmo_auto_extension_v15_0_0_rebuild)은 더 이상 로드하지 않는다.
+// (archive/legacy_program 으로 이관)은 더 이상 로드하지 않는다.
 function resolveUiFile(name) {
   const bundled = path.join(__dirname, 'ui', name);
   return fs.existsSync(bundled) ? bundled : path.join(__dirname, '..', 'ord_board', name);

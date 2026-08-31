@@ -25,8 +25,8 @@ const path=require('path');
 
 const ROOT=path.resolve(__dirname,'..');
 const AST_PATH=process.argv[2]||path.join(ROOT,'data/ORD_2305C_all_upper_skill_profiles_action_ast.json');
-const DIGEST_PATH=path.join(ROOT,'ord_tmo_auto_extension_v15_0_0_rebuild/ord_upper_skill_digest.js');
-const OUT_PATH=path.join(ROOT,'ord_tmo_auto_extension_v15_0_0_rebuild/ord_upper_skill_dps.js');
+const DIGEST_PATH=path.join(ROOT,'archive/legacy_program/ord_upper_skill_digest.js');
+const OUT_PATH=path.join(ROOT,'archive/legacy_program/ord_upper_skill_dps.js');
 
 const doc=JSON.parse(fs.readFileSync(AST_PATH,'utf8'));
 const fns=doc.actionAst.functions;

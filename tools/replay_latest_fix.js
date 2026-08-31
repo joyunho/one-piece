@@ -4,7 +4,7 @@ const fs=require('fs');
 const path=require('path');
 
 const ROOT=path.resolve(__dirname,'..');
-const EXT=path.join(ROOT,'ord_tmo_auto_extension_v15_0_0_rebuild');
+const EXT=path.join(ROOT,'archive','legacy_program');
 // v19.5(점검 결함): 기본값이 저장소 밖 업로드 파일 + 그 파일 전용 seq 로
 // 박혀 있었다 — data/ 최신 ordlog 를 고르고, seq 는 명시 인자일 때만 쓴다.
 function latestOrdlog(){
