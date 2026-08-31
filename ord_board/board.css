@@ -108,6 +108,21 @@ button.card.ready{border-left:3px solid var(--gold)}
 .command-line b{color:var(--gold);font-size:13px}
 .command-line i{font-style:normal;color:var(--muted);font-size:11px}
 
+/* 조합식·선위 사용처 (전설급 선택 패널 + 선택 상위 공용) */
+.recipe{display:grid;gap:5px;border:1px solid var(--line);border-radius:var(--radius-sm);padding:8px 11px;margin:4px 0 7px;background:rgba(0,0,0,.18)}
+.recipe-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 6px;font-size:12px}
+.recipe-line>i{font-style:normal;flex:0 0 92px;color:var(--sub);font-weight:800;font-size:11.5px}
+.recipe-line>small{flex:1 1 100%;margin-left:98px;color:var(--muted);font-size:10.5px}
+.recipe-line.hard>i{color:var(--bad)}
+.mat{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--line-strong);border-radius:999px;padding:1px 9px;white-space:nowrap}
+.mat b{font-weight:800}
+.mat.ok{border-color:rgba(87,217,163,.5);color:var(--good)}
+.mat.rare{border-color:rgba(224,92,126,.6);color:#F2A9BC}
+.mat.special{border-color:rgba(217,164,65,.5);color:var(--gold)}
+.mat.hard{border-color:rgba(255,120,80,.6);color:var(--bad)}
+.mat em{width:9px;height:9px;border-radius:50%;border:1px solid rgba(0,0,0,.4)}
+.upper-recipe .recipe{margin-bottom:0}
+
 /* ── ② 상위 실측 ── */
 .uppers{display:flex;flex-direction:column;gap:8px}
 .top3{display:flex;flex-direction:column;gap:6px}

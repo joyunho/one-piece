@@ -1,6 +1,6 @@
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 데이터 증류기 (v28.0.0 전면 신작의 1단계)
+// ORD 악몽 보드 — 데이터 증류기 (v28.1.0 전면 신작의 1단계)
 //
 // 사용자 지시(0830): "지금까지 만든거 프로그램 아예 사용하지 말고 다시
 // 제대로 정리해서 만들어봐 처음 만드는 것 처럼"
@@ -56,6 +56,7 @@ for(const u of units){
     name:display,
     short:parts.short,
     note:parts.note,
+    color:C.tierKey(u)==='common'?(C.COMMON_COLORS[parts.short]||C.COMMON_COLORS[display]||''):'',
     image:String(u.image||''),
     group:String(u.groupName||''),
     tier:C.tierKey(u),                 // common|uncommon|special|rare|upper|legend|hard|other
@@ -149,7 +150,7 @@ const targets={
 };
 
 const data={
-  version:'28.0.0',
+  version:'28.1.0',
   gameVersion:'2.314',
   builtAt:new Date().toISOString(),
   wispId:String(C.WISP_ID),

@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 코어 (v28.0.0 전면 신작)
+// ORD 악몽 보드 — 코어 (v28.1.0 전면 신작)
 //
 // 철학(사용자 확정, v26→신작 승계): 결정은 사용자가 티모지지를 보며
 // 직접 내린다.  프로그램은 세 가지 사실만 보여준다 —
@@ -122,6 +122,29 @@ function solve(index,targetId,initialCounts){
     .filter(([id])=>{const u=index.byId.get(id);const tier=u?u.tier:(index.data.specialIds[id]?'hard':'other');return tier==='hard';})
     .map(([id,count])=>({id,count,name:index.data.specialIds[id]||(index.byId.get(id)||{}).short||id}));
   return{targetId:String(targetId),wispCost,consumed,stockAfter:stock,hardMissing,missingCommons};
+}
+
+// ── 조합식 계획(사용자 0831: "조합식도 나왔으면 · 선위를 어떻게 써야
+// 하는지도 · 상위도 포함해서") ──────────────────────────────────────────
+// 대상 하나의 제작 계획을 표시용으로 편다:
+//  · direct  — 직접 조합 재료(보유/필요)
+//  · eats    — 내 패에서 소비되는 희귀·특별·안흔
+//  · wispPlan — 선위 사용처: 선위로 사야 하는 흔함 목록(= 솔버의
+//               missingCommons.  흔함 1기 = 선위 1이라 합이 곧 선위다)
+//  · wispCost/hardMissing — 총 선위·선행 결손
+function recipePlan(index,targetId,counts){
+  const unit=index.byId.get(String(targetId));
+  if(!unit)return null;
+  const result=solve(index,unit.id,counts);
+  const nameOf=id=>{const m=index.byId.get(id);return m?m.short:(index.data.specialIds[id]||id);};
+  const direct=(unit.stuffs||[]).map(s=>{
+    const mat=index.byId.get(s.id);
+    return{id:s.id,name:s.id===index.wispId?'선택위습':nameOf(s.id),need:num(s.count),owned:Math.max(0,num((counts||{})[s.id])),tier:mat?mat.tier:(index.data.specialIds[s.id]?'hard':'other')};
+  });
+  const wispPlan=Object.entries(result.missingCommons||{})
+    .map(([id,count])=>{const mat=index.byId.get(id);return{id,name:nameOf(id),count:num(count),color:mat&&mat.color||''};})
+    .sort((a,b)=>b.count-a.count||a.name.localeCompare(b.name,'ko'));
+  return{unit,direct,eats:eatsOf(index,result),wispPlan,wispCost:num(result.wispCost),hardMissing:result.hardMissing,owned:num((counts||{})[unit.id])>0};
 }
 
 // ── 패 파생 사실(게이트 입력) ───────────────────────────────────────────
@@ -359,10 +382,10 @@ function inferMode(index,counts){
 }
 
 global.ORD_BOARD_CORE={
-  VERSION:'28.0.0',
+  VERSION:'28.1.0',
   num,esc,round2,
   buildIndex,translateFeed,stabilizeUnknown,nextAutoRound,countsFingerprint,
-  solve,handFacts,craftRows,pickImpact,
+  solve,handFacts,craftRows,pickImpact,recipePlan,
   upperOptions,upperPicks,upperReserve,upperCombos,
   partySpec,inferMode
 };

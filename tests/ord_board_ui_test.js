@@ -58,11 +58,21 @@ test('② 실전 렌더 — 카드·배타·페이지·선택 여파·상위·�
     assert(html.includes('dead-tag')||html.includes('impact-row gone'),'⛔ 소거 표기 부재');
     assert(html.includes('소비되지 않습니다'),'비소비 문구 부재');
   }
-  // 상위 선택 → 상위 몫·동반·페어.
+  // 선택 패널에 조합식·선위 사용처(사용자 0831).
+  if(impactRow){
+    assert(root.innerHTML.includes('class="recipe"'),'조합식 패널 부재');
+    assert(root.innerHTML.includes('사용처')||root.innerHTML.includes('추가 선위 없이'),'선위 사용처 부재');
+  }
+  // 상위 선택 → 상위 몫·동반·페어 + 상위 조합식(사용자 0831: "상위도 포함해서").
   const opt=B.upperOptions(app.index,'magic')[0];
   feed(app,rich,{pick:'',upperPick:opt.unit.id});
   html=root.innerHTML;
   assert(html.includes('클리어 실측'),'실측 헤드 부재');
+  const uPlan=B.recipePlan(app.index,opt.unit.id,rich);
+  if(!uPlan.owned){
+    assert(html.includes('조합식 — 지금 패 기준'),'상위 조합식 헤드 부재');
+    assert(html.includes('class="recipe"'),'상위 조합식 패널 부재');
+  }
   assert((html.match(/class="gauge/g)||[]).length>=4,'스펙 게이지 부재');
   // 검색: 엔터 배선 + 결과 버튼.
   feed(app,rich,{search:'센고쿠'});

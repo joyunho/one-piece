@@ -148,6 +148,38 @@ test('⑤ 수신 번역·판 감지 — 코드맵·무시·위습·콜드 스타
   assert.strictEqual(restart.generation,1,'새 판 세대 증가 실패');
 });
 
+test('⑥ 조합식 계획 — 직접 재료·선위 사용처 검산 (전설급·상위, 사용자 0831)',()=>{
+  const board=B.craftRows(index,scarce,{mode:'',round:20});
+  assert(board.rows.length>=2,'픽스처 목록 부족');
+  for(const row of board.rows){
+    const plan=B.recipePlan(index,row.unit.id,scarce);
+    // 조합식 = 카탈로그 직접 재료 그대로(보유 수 포함).
+    assert.strictEqual(plan.direct.length,row.unit.stuffs.length,`직접 재료 수 불일치: ${row.unit.name}`);
+    for(let i=0;i<plan.direct.length;i++){
+      assert.strictEqual(plan.direct[i].id,row.unit.stuffs[i].id,'직접 재료 순서 불일치');
+      assert.strictEqual(plan.direct[i].owned,Math.max(0,num(scarce[plan.direct[i].id])),'보유 수 불일치');
+    }
+    // 선위 사용처: 흔함 1기=선위 1 — 사용처 합이 곧 총선위다.
+    const sum=plan.wispPlan.reduce((s,w)=>s+w.count,0);
+    assert.strictEqual(sum,plan.wispCost,`선위 사용처 합 불일치: ${row.unit.name} ${sum}!==${plan.wispCost}`);
+    for(const w of plan.wispPlan)assert.strictEqual((index.byId.get(w.id)||{}).tier,'common',`선위 사용처에 흔함 아닌 재료: ${w.name}`);
+    assert.strictEqual(plan.wispCost,row.cost,'보드 선위와 플랜 선위 불일치');
+  }
+  // 상위도 포함해서: 상위 표본 8종 — 같은 검산 + 하드 결손 정직 표기.
+  const sample=index.uppers.filter(u=>u.canon===u.id).slice(0,8);
+  assert(sample.length>=4,'상위 표본 부족');
+  for(const u of sample){
+    const plan=B.recipePlan(index,u.id,scarce);
+    const sum=plan.wispPlan.reduce((s,w)=>s+w.count,0);
+    assert.strictEqual(sum,plan.wispCost,`상위 선위 사용처 합 불일치: ${u.name}`);
+    const re=B.solve(index,u.id,scarce);
+    assert.strictEqual(plan.hardMissing.length,re.hardMissing.length,'하드 결손 표기 불일치');
+  }
+  // 흔함 색상 증류: 정본 9색이 굳어 있다.
+  const colored=DATA.units.filter(u=>u.tier==='common'&&u.color);
+  assert(colored.length>=8,`흔함 색상 소실: ${colored.length}`);
+});
+
 let passed=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);passed+=1;}

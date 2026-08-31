@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v28.0.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v28.1.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -159,13 +159,30 @@ App.prototype.renderCraft=function(board){
   const readyCount=view.filter(r=>r.ready).length;
   return`<div class="filters">${chips}</div>${this.renderImpact(impact)}<div class="cards"><small>지금 가능 ${readyCount} · 선위만 부족 ${view.length-readyCount}</small>${cards}</div>${pager}`;
 };
+// 조합식 패널(사용자 0831: "조합식도 · 선위를 어떻게 써야하는지도 ·
+// 상위도 포함해서") — 전설급 선택 패널과 선택 상위 아래에서 공용.
+App.prototype.renderRecipe=function(plan){
+  if(!plan)return'';
+  const tierName={rare:'희귀',special:'특별',uncommon:'안흔',common:'흔함',legend:'전설급',upper:'상위',hard:'선행'};
+  const direct=plan.direct.map(m=>{
+    const enough=m.owned>=m.need;
+    return`<span class="mat ${m.tier}${enough?' ok':''}" title="${esc(tierName[m.tier]||m.tier)}">${esc(m.name)} <b>${m.owned}/${m.need}</b></span>`;
+  }).join('');
+  const eats=plan.eats.length?`<div class="recipe-line"><i>내 패 소비</i>${plan.eats.map(e=>`<span class="mat ${e.tier}">${esc(e.name)}${e.need>1?`×${e.need}`:''}</span>`).join('')}</div>`:'';
+  const wisp=plan.wispPlan.length
+    ?`<div class="recipe-line"><i>선위 ${plan.wispCost} 사용처</i>${plan.wispPlan.map(w=>`<span class="mat common">${w.color?`<em style="background:${esc(w.color)}"></em>`:''}${esc(w.name)}×${w.count}</span>`).join('')}<small>흔함 1기 = 선위 1 — 부족한 흔함을 선위로 삽니다</small></div>`
+    :(plan.wispCost>0?`<div class="recipe-line"><i>선위 ${plan.wispCost} 사용처</i><small>하위 재료 조합에 선위 ${plan.wispCost}가 듭니다</small></div>`:`<div class="recipe-line"><i>선위</i><small>추가 선위 없이 지금 재료로 완성됩니다</small></div>`);
+  const hard=plan.hardMissing.length?`<div class="recipe-line hard"><i>선행 결손</i>${plan.hardMissing.map(h=>`<span class="mat hard">${esc(h.name)}</span>`).join('')}<small>조합으로 못 만드는 선행 유닛 — 게임에서 확보해야 열립니다</small></div>`:'';
+  return`<div class="recipe"><div class="recipe-line"><i>조합식</i>${direct||'<small>직접 재료 없음</small>'}</div>${eats}${wisp}${hard}</div>`;
+};
 App.prototype.renderImpact=function(impact){
   if(!impact)return'';
   const gone=impact.gone.map(x=>`<div class="impact-row gone">⛔ ${esc(x.name)} <i>(${esc(x.cause)})</i></div>`).join('');
   const delayed=impact.delayed.map(x=>`<div class="impact-row delayed">⏳ ${esc(x.name)} — 선위 ${x.extra} 더 필요</div>`).join('');
   const cmd=impact.row.unit.command;
   const cmdLine=cmd?`<div class="command-line">조합 명령어 <b>${esc(cmd.korean||cmd.english)}</b>${cmd.korean&&cmd.english?` <i>/ ${esc(cmd.english)}</i>`:''}${cmd.inherited?' <i>(원형 최초 제작 명령)</i>':''}</div>`:'';
-  return`<div class="impact"><small><b>${esc(impact.row.unit.short)}</b> 를 만들면 — 계산일 뿐 패는 소비되지 않습니다</small>${gone||delayed?gone+delayed:'<div class="impact-none">사라지는 선택지 없음 — 겹치는 패가 없습니다.</div>'}${cmdLine}<small class="impact-note">행을 다시 누르면 해제됩니다.</small></div>`;
+  const recipe=this.renderRecipe(B.recipePlan(this.index,impact.row.unit.id,this.counts));
+  return`<div class="impact"><small><b>${esc(impact.row.unit.short)}</b> 를 만들면 — 계산일 뿐 패는 소비되지 않습니다</small>${recipe}${gone||delayed?gone+delayed:'<div class="impact-none">사라지는 선택지 없음 — 겹치는 패가 없습니다.</div>'}${cmdLine}<small class="impact-note">행을 다시 누르면 해제됩니다.</small></div>`;
 };
 
 // ── ② 상위 ──────────────────────────────────────────────────────────────
@@ -192,6 +209,9 @@ App.prototype.renderUppers=function(board,mode){
     if(combos){
       const reserve=B.upperReserve(this.index,this.counts,combos.sel.id);
       const reserveHtml=reserve?`<div class="reserve"><b>선택 상위 몫 — 다른 데 쓰면 패가 겹칩니다</b>${reserve.mats.map(m=>`<em class="${m.tier}">${esc(m.name)}${m.need>1?`×${m.need}`:''}</em>`).join('')}</div>`:'';
+      // 사용자 0831("상위도 포함해서"): 선택 상위의 조합식·선위 사용처.
+      const upperPlan=B.recipePlan(this.index,combos.sel.id,this.counts);
+      const upperRecipe=upperPlan&&!upperPlan.owned?`<div class="upper-recipe"><small class="combo-head">${esc(combos.sel.short)} 조합식 — 지금 패 기준</small>${this.renderRecipe(upperPlan)}</div>`:'';
       const pShorts=combos.partners.map(p=>{const u=this.index.byId.get(p.id);return u?u.short:p.name;});
       const pDupes=new Set(pShorts.filter((s,i)=>pShorts.indexOf(s)!==i));
       const partners=combos.partners.map((p,i)=>{
@@ -202,7 +222,7 @@ App.prototype.renderUppers=function(board,mode){
         return`<button class="partner" data-act="pick" data-id="${esc(p.id)}" title="${esc(u?u.name:p.name)}">${face}<b>${esc(label)}</b><em>${num(p.share)}%</em>${flag}</button>`;
       }).join('')+(combos.hiddenCount>0?`<small class="hidden-note">실측 top8 중 ${combos.hiddenCount}개는 지금 내 패로 못 가 숨김</small>`:'');
       const pairs=combos.pairs.slice(0,6).map(p=>`<button class="pair" data-act="upper" data-id="${esc(p.unit.id)}" title="${esc(p.unit.name)}"><b>${esc(p.unit.short)}</b><i>동반 실측 ${p.games}판</i></button>`).join('');
-      body=`${reserveHtml}<small class="combo-head">${esc(combos.sel.short)} — 클리어 실측 ${combos.games}판${combos.dualGames?` (2상위 판 ${combos.dualGames})`:''} · 함께 쓰인 전설·히든 중 내 패로 갈 수 있는 것</small>${combos.partners.length?`<div class="partners">${partners}</div>`:''}${pairs?`<small class="combo-head">함께 간 2상위 · 동반 클리어 판수순</small><div class="pairs">${pairs}</div>`:''}`;
+      body=`${upperRecipe}${reserveHtml}<small class="combo-head">${esc(combos.sel.short)} — 클리어 실측 ${combos.games}판${combos.dualGames?` (2상위 판 ${combos.dualGames})`:''} · 함께 쓰인 전설·히든 중 내 패로 갈 수 있는 것</small>${combos.partners.length?`<div class="partners">${partners}</div>`:''}${pairs?`<small class="combo-head">함께 간 2상위 · 동반 클리어 판수순</small><div class="pairs">${pairs}</div>`:''}`;
     }
   }
   return`<div class="uppers">${top3}${search}${select}${body}</div>`;
