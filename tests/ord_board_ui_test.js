@@ -20,6 +20,9 @@ const rich=(()=>{const c={};for(const u of DATA.units)if(['common','uncommon','s
 const feed=(app,counts,extra)=>{
   app.counts=counts;app.wisp=B.num(counts[DATA.wispId]);app.playable=30;app.lastGoodAt=Date.now();
   Object.assign(app.state,extra||{});
+  app.markEvents(false);   // 생산 경로(onFeed)와 같은 순서 — v32 사건 계층.
+                           // 주의: 매 호출 = 패 변화 가정(생산은 지문 게이트로
+                           // 같은 패면 마크를 유지하지만, 헬퍼는 항상 재계산).
   app.render();
 };
 
@@ -287,6 +290,58 @@ test('⑧ v31.2 — 제작 스펙 손익 배선: 카드 칩 + 여파 게이지 �
   assert(html.includes('<span class="spec-delta">'),'카드 스펙 손익 칩(span) 부재');
   assert(/가면 <i class="d-(up|down)">/.test(html),`추천 행 '가면 …' 손익 병기 부재`);
   assert(readNew('board.css').includes('.spec-delta')&&readNew('board.css').includes('impact-spec'),'손익 스타일 부재');
+});
+
+test('⑨ v32 — 사건 계층(방금 열림·펄스·목표)·겹침 경고·잠금·결손 정렬 (사용자 0901c)',()=>{
+  const{app,root}=mkApp();
+  // 첫 수신은 기준이 없어 조용하다.
+  const h1={};h1[DATA.wispId]=2;
+  feed(app,h1,{round:20,mode:''});
+  assert(!root.innerHTML.includes('방금 열림')&&!root.innerHTML.includes('class="pulse'),'기준 없는 첫 수신에 사건 표식');
+  // 패가 크게 열리면: 방금 열림 + 게이지 펄스.
+  feed(app,rich,{round:20,mode:''});
+  let html=root.innerHTML;
+  assert(html.includes('방금 열림'),'방금 열린 전설 표식 부재');
+  assert(html.includes('class="pulse d-up'),'게이지 이동(+) 펄스 부재');
+  // 결손 충당 정렬 라벨 + 수치(fill>0 인 추천이 있으면 화면에 병기).
+  assert(html.includes('결손 충당 → 실측'),'TOP5 정렬 원칙 라벨 부재');
+  const picks=B.upperPicks(app.index,rich,{mode:app.mode(),round:20,gorosei:'none'});
+  if(picks.some(p=>p.fill>0))assert(html.includes('결손 충당 '),'결손 충당 수치 병기 부재');
+  // 위습만 줄면 새로 열리는 게 없다 — 직전 '방금'은 청소된다.
+  const h3=Object.assign({},rich);h3[DATA.wispId]=7;
+  feed(app,h3,{round:20,mode:''});
+  assert(!root.innerHTML.includes('방금 열림'),'사건 표식이 다음 갱신에도 잔존');
+  // 목표 최초 달성: 이감 결손만큼 페로나를 부어 102 를 넘긴다.
+  const perona=DATA.units.find(u=>u.tier==='rare'&&u.short==='페로나');
+  const spec3=B.partySpec(app.index,h3,{mode:app.mode(),gorosei:'none'});
+  const slow3=spec3.rows.find(r=>r.key==='slow');
+  assert(slow3.gap>0,'목표 달성 픽스처 붕괴 — 이감이 이미 참');
+  const h4=Object.assign({},h3);h4[perona.id]=Math.ceil(slow3.gap/20)+1;
+  feed(app,h4,{round:20,mode:''});
+  html=root.innerHTML;
+  assert(html.includes('목표 달성'),'목표 최초 달성 표식 부재');
+  assert(html.includes('class="pulse d-up'),'목표 달성 갱신의 펄스 부재');
+  // 상위 몫 겹침(0826e 복원) + lockedId 배선(고르면 TOP5 는 내려간다).
+  let lockUpper=null;
+  for(const opt of B.upperOptions(app.index,'')){
+    const reserve=B.upperReserve(app.index,h4,opt.unit.id);
+    if(!reserve)continue;
+    const board=B.craftRows(app.index,h4,{mode:app.mode(),round:20,reserve:reserve.ids});
+    if(board.rows.some(r=>r.overlap.length)){lockUpper=opt.unit;break;}
+  }
+  assert(lockUpper,'겹침 픽스처 붕괴 — 몫 겹치는 상위 없음');
+  feed(app,h4,{upperPick:lockUpper.id});
+  html=root.innerHTML;
+  assert(html.includes('상위 몫 겹침'),'① 겹침 경고 태그 부재');
+  assert(!html.includes('지금 패 추천'),'상위 확정 후에도 TOP5 잔존(lockedId 죽은 배선)');
+  // 생산 배선 계약(리뷰 변이 M0): onFeed 가 markEvents 를 실제로 부른다 —
+  // 헬퍼가 대신 불러주는 것으로는 앱 경로가 증명되지 않는다.
+  assert(readNew('app.js').includes('this.markEvents(newGame)'),'onFeed→markEvents 생산 배선 부재');
+  // 색 규율(v20 정본 복원): 골드 예약 원칙이 시트에 명문화되어 있다.
+  const css=readNew('board.css');
+  assert(css.includes("골드는 오직 '지금 행동 가능'에만"),'색 규율 명문 부재');
+  assert(!css.includes('top3-meta{color:var(--gold)'),'메타줄 금색 잔존');
+  assert(css.includes('.new-tag')&&css.includes('.overlap-tag')&&css.includes('.goal-tag'),'v32 표식 스타일 부재');
 });
 
 let passed=0;

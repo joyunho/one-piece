@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 코어 (v31.2.0 전면 신작)
+// ORD 악몽 보드 — 코어 (v32.0.0 전면 신작)
 //
 // 철학(사용자 확정, v26→신작 승계): 결정은 사용자가 티모지지를 보며
 // 직접 내린다.  프로그램은 세 가지 사실만 보여준다 —
@@ -280,6 +280,11 @@ function eatsOf(index,result){
 function craftRows(index,counts,opts){
   const mode=opts&&opts.mode||'';
   const round=num(opts&&opts.round)||1;
+  // 상위 몫 겹침(사용자 0826e "패겹침이 최대한 안나도록 상위정하면 쓰면
+  // 안되는 희귀함 알려주고" — v26.4 구현이 v28 재작성에서 무언 탈락한
+  // 회귀를 v32 에서 복원): 확정/선택 상위가 소비할 재료 id Set 을 받아
+  // 그 재료를 먹는 행에 경고를 싣는다.
+  const reserve=opts&&opts.reserve||null;
   const facts=handFacts(index,counts);
   const rows=[];
   for(const unit of index.legendish){
@@ -293,7 +298,8 @@ function craftRows(index,counts,opts){
     const cost=num(result.wispCost),gap=Math.max(0,cost-facts.wisp);
     if(!eats.length&&gap>0)continue;
     if(cost>index.data.maxWispCost)continue;
-    rows.push({unit,cost,gap,ready:gap<=0,eats,result,locks:[],delta:specDelta(index,result,unit,counts)});
+    const overlap=reserve?eats.filter(e=>reserve.has(e.id)).map(e=>e.name):[];
+    rows.push({unit,cost,gap,ready:gap<=0,eats,result,locks:[],overlap,delta:specDelta(index,result,unit,counts)});
   }
   rows.sort((a,b)=>Number(b.ready)-Number(a.ready)||a.gap-b.gap||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'));
   // 상호배타(사용자: "이 패를 가면 이 패는 못가고 한눈에"): 이 행을 만든
@@ -386,6 +392,26 @@ function specDelta(index,result,unit,counts){
   return d;
 }
 
+// 결손 충당 지수(사용자 0901c "정렬도 스펙 채우는 상위 위로 올라오게"):
+// 목표 게이지 행마다, 이 제작이 목표 구간(0..target) 안에서 게이지를
+// 실제로 움직이는 양을 목표 대비 백분율로 합산한다 —
+//   (clamp(현재+손익) − clamp(현재)) / 목표 × 100.
+// 목표 위로 넘치는 이득은 안 세고, 손실은 그대로 음수로 센다(리뷰 실측:
+// 이득만 세면 달성된 광보잡을 도로 깨는 제작이 '충당' 상위로 승격됐다).
+// 목표로 나눠 이감(102)·스턴(0.7)의 단위 차이를 중화한다.
+// 판정이 아니라 게이지 산술의 요약 — 정렬 두 번째 축.
+function gapFill(spec,delta){
+  let s=0;
+  for(const row of spec.rows){
+    if(row.info)continue;
+    const target=Math.max(num(row.target),0.0001);
+    const cur=num(row.current);
+    const clamp=v=>Math.min(target,Math.max(0,v));
+    s+=(clamp(cur+num(delta[row.key]))-clamp(cur))/target*100;
+  }
+  return round2(s)||0;
+}
+
 // ── ② 상위 실측 조합 ────────────────────────────────────────────────────
 // 세라핌은 상위가 아니다(2.314 재검증 정본) — 기준 상위 후보는 정본
 // 상위(제한·초월·불멸·영원)만.  초월은 초월 쿠마가 hard 선행이라 미보유
@@ -404,7 +430,8 @@ function upperOptions(index,mode){
 
 // 지금 패 추천 TOP5(사용자 0901 "상위를 5개까지 추천하게"): 조합이
 // 닫히고(하드 결손 없음) 내 패를 실제로 소비하거나 지금 바로 갈 수 있는
-// 상위를, 도달 거리(선위 10 단위 버킷) → 클리어 실측 순으로 최대 5.
+// 상위를, 도달 거리(선위 10 단위 버킷) → 결손 충당(사용자 0901c "정렬도
+// 스펙 채우는 상위 위로") → 클리어 실측 순으로 최대 5.
 // 확정·완성 2기면 표시하지 않는다.
 function upperPicks(index,counts,opts){
   const mode=opts&&opts.mode||'';
@@ -412,6 +439,7 @@ function upperPicks(index,counts,opts){
   if(opts&&opts.lockedId)return[];
   const facts=handFacts(index,counts);
   if(facts.upperCanons.size>=2)return[];
+  const spec=partySpec(index,counts,{mode,gorosei:opts&&opts.gorosei||'none'});
   const best=new Map();
   for(const unit of index.uppers){
     if(facts.upperCanons.has(unit.canon))continue;
@@ -427,18 +455,22 @@ function upperPicks(index,counts,opts){
     if(!eatsMine&&cost>facts.wisp)continue;
     const games=num((index.data.clear[unit.canon]||{}).games);
     const prev=best.get(unit.canon);
-    if(!prev||cost<prev.cost)best.set(unit.canon,{unit,cost,games,delta:specDelta(index,result,unit,counts)});
+    if(!prev||cost<prev.cost){
+      const delta=specDelta(index,result,unit,counts);
+      best.set(unit.canon,{unit,cost,games,delta,fill:gapFill(spec,delta)});
+    }
   }
   return[...best.values()]
-    .sort((a,b)=>Math.floor(a.cost/10)-Math.floor(b.cost/10)||b.games-a.games||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'))
+    .sort((a,b)=>Math.floor(a.cost/10)-Math.floor(b.cost/10)||b.fill-a.fill||b.games-a.games||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'))
     .slice(0,5);
 }
 
 // 2상위 추천(사용자 0831: "상위를 선택했을 때 상위가 끝인게 아니라 이
 // 상위랑 어울리는 다른 상위도 추천가능하게"): 선택 상위와 함께 악몽을
 // 깬 실측 페어 중, 지금 패로 조합이 닫히고(하드 결손 없음) 내 패를
-// 실제 소비하거나 바로 가능한 상위를 도달 거리(선위 10 버킷) → 동반
-// 실측 판수 순으로 최대 5 추천한다(사용자 0901).  TOP5 와 같은 등재 철학.
+// 실제 소비하거나 바로 가능한 상위를 도달 거리(선위 10 버킷) → 결손
+// 충당(사용자 0901c) → 동반 실측 판수 순으로 최대 5 추천한다(사용자
+// 0901).  TOP5 와 같은 등재·정렬 철학.
 function pairPicks(index,counts,upperId,opts){
   const sel=index.byId.get(String(upperId));
   if(!sel||!sel.upper)return{picks:[],hidden:0};
@@ -446,6 +478,16 @@ function pairPicks(index,counts,upperId,opts){
   const round=num(opts&&opts.round)||1;
   const stats=index.data.clear[sel.canon]||{pairs:[]};
   const facts=handFacts(index,counts);
+  // 결손 기준 패 = 선택 상위를 만든 뒤(리뷰 실측: 현재 패 기준이면 선택
+  // 상위가 곧 닫을 결손을 2상위 후보에 이중 계상한다).  이미 보유한
+  // 상위면 현재 패 그대로.  등재·비용 게이트는 현재 패 기준(v26 계약).
+  let base=counts;
+  if(!(num((counts||{})[sel.id])>0)){
+    const selResult=solve(index,sel.id,counts);
+    base=Object.assign({},selResult.stockAfter);
+    base[sel.id]=num(base[sel.id])+1;
+  }
+  const spec=partySpec(index,base,{mode,gorosei:opts&&opts.gorosei||'none'});
   const picks=[];let hidden=0;
   for(const pair of stats.pairs||[]){
     const unit=index.byCanon.get(pair.id);
@@ -461,9 +503,10 @@ function pairPicks(index,counts,upperId,opts){
       return['rare','special','uncommon'].includes(mat.tier)||(mat.legendish&&mat.tier!=='hard');
     });
     if(!eatsMine&&cost>facts.wisp){hidden+=1;continue;}
-    picks.push({unit,cost,games:num(pair.games),delta:specDelta(index,result,unit,counts)});
+    const delta=specDelta(index,result,unit,counts);
+    picks.push({unit,cost,games:num(pair.games),delta,fill:gapFill(spec,delta)});
   }
-  picks.sort((a,b)=>Math.floor(a.cost/10)-Math.floor(b.cost/10)||b.games-a.games||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'));
+  picks.sort((a,b)=>Math.floor(a.cost/10)-Math.floor(b.cost/10)||b.fill-a.fill||b.games-a.games||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'));
   return{picks:picks.slice(0,5),hidden:hidden+Math.max(0,picks.length-5)};
 }
 
@@ -569,11 +612,11 @@ function inferMode(index,counts){
 }
 
 global.ORD_BOARD_CORE={
-  VERSION:'31.2.0',
+  VERSION:'32.0.0',
   num,esc,round2,MAX_ROUND,
   buildIndex,translateFeed,stabilizeUnknown,nextAutoRound,countsFingerprint,
   roundClock,clockAnchor,
-  solve,handFacts,craftRows,pickImpact,specDelta,recipePlan,firstRares,fillerRares,
+  solve,handFacts,craftRows,pickImpact,specDelta,gapFill,recipePlan,firstRares,fillerRares,
   upperOptions,upperPicks,pairPicks,upperReserve,upperCombos,
   partySpec,inferMode
 };

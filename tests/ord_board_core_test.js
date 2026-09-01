@@ -201,11 +201,12 @@ test('⑦ 2상위 추천 — 실측 페어 × 지금 패 도달 (사용자 0831b
     assert(!result.hardMissing.length,'조합 안 닫히는 2상위 추천');
     assert.strictEqual(p.cost,result.wispCost,'선위 표기 불일치');
   }
-  // 정렬: 도달 버킷(선위 10) → 동반 판수.
+  // 정렬(사용자 0901c "정렬도 스펙 채우는 상위 위로"): 도달 버킷(선위 10)
+  // → 결손 충당 → 동반 판수.
   for(let i=1;i<pp.picks.length;i++){
     const a=pp.picks[i-1],b=pp.picks[i];
     const ab=Math.floor(a.cost/10),bb=Math.floor(b.cost/10);
-    assert(ab<bb||(ab===bb&&a.games>=b.games),'추천 정렬 위반');
+    assert(ab<bb||(ab===bb&&(a.fill>b.fill||(a.fill===b.fill&&a.games>=b.games))),'추천 정렬 위반');
   }
   // 이미 보유한 상위 canon 은 추천하지 않는다.
   if(pp.picks.length){
@@ -398,6 +399,62 @@ test('⑫ 제작 스펙 손익 — 얻는 것 − 패에서 빠지는 것 (사�
   const pp=B.pairPicks(index,scarce,sel.unit.id,{mode:'',round:20});
   assert(pp.picks.length>=1,'손익 배선 검사용 2상위가 빔');
   for(const p of pp.picks)oracle(scarce,B.solve(index,p.unit.id,scarce),p.unit,p.delta);
+});
+
+test('⑬ 결손 충당 정렬 + 상위 몫 겹침 복원 (사용자 0901c · 0826e)',()=>{
+  // (1) gapFill 의미론(순이동): 목표 행마다 (clamp(현재+손익,0..목표) −
+  //     clamp(현재)) / 목표 ×100 합.  목표 위 넘침은 0, 손실은 음수 —
+  //     리뷰 실측(달성된 광보잡을 깨는 제작이 '충당' 승격)으로 확정.
+  const perona=DATA.units.find(u=>u.tier==='rare'&&u.short==='페로나');
+  const hand={};hand[perona.id]=1;
+  const spec=B.partySpec(index,hand,{mode:'',gorosei:'none'});
+  const slowRow=spec.rows.find(r=>r.key==='slow');
+  const mk=v=>({slow:v,trigSlow:0,armor:0,trigArmor:0,stackArmor:0,stun:0,finish:0,bossFrenzy:0});
+  const clampMove=(row,d)=>{const t=num(row.target);const c=v=>Math.min(t,Math.max(0,v));
+    return B.round2((c(num(row.current)+d)-c(num(row.current)))/t*100);};
+  assert.strictEqual(B.gapFill(spec,mk(50)),clampMove(slowRow,50),'결손 충당 산술 불일치');
+  assert.strictEqual(B.gapFill(spec,mk(500)),clampMove(slowRow,500),'넘치는 이득이 결손보다 크게 계상');
+  assert.strictEqual(B.gapFill(spec,mk(-40)),clampMove(slowRow,-40),'손실이 음수로 계상되지 않음');
+  assert(B.gapFill(spec,mk(-40))<0,'손실 맹목 회귀 — 순손실이 0 이상');
+  // 가득 찬 게이지: 더 붓는 건 0, 깨는 건 음수.
+  const full={};full[perona.id]=6;                       // 이감 120 > 목표 102
+  const fullSpec=B.partySpec(index,full,{mode:'',gorosei:'none'});
+  assert.strictEqual(B.gapFill(fullSpec,mk(50)),0,'찬 게이지 위 넘침이 계상');
+  assert(B.gapFill(fullSpec,mk(-30))<0,'달성 행 파손이 계상되지 않음');
+  // (2) 정렬 오라클: TOP5 각 pick 의 fill 은 같은 패로 독립 재계산한 값과
+  //     같고, 순서는 버킷 → fill → 실측 을 지킨다.
+  const picks=B.upperPicks(index,rich,{mode:'',round:20,gorosei:'none'});
+  assert(picks.length>=1,'정렬 검사용 TOP5 가 빔');
+  const richSpec=B.partySpec(index,rich,{mode:'',gorosei:'none'});
+  for(const p of picks)
+    assert.strictEqual(p.fill,B.gapFill(richSpec,p.delta),`fill 배선 불일치: ${p.unit.name}`);
+  // 오로성 전달(리뷰 변이 실증): 나스쥬로 목표(이감 117)로 재계산돼야 한다.
+  const nas=B.upperPicks(index,rich,{mode:'',round:20,gorosei:'nasjuro'});
+  const nasSpec=B.partySpec(index,rich,{mode:'',gorosei:'nasjuro'});
+  for(const p of nas)
+    assert.strictEqual(p.fill,B.gapFill(nasSpec,p.delta),`오로성 fill 미반영: ${p.unit.name}`);
+  for(let i=1;i<picks.length;i++){
+    const a=picks[i-1],b=picks[i];
+    const ab=Math.floor(a.cost/10),bb=Math.floor(b.cost/10);
+    assert(ab<bb||(ab===bb&&(a.fill>b.fill||(a.fill===b.fill&&a.games>=b.games))),'TOP5 결손 정렬 위반');
+  }
+  // (3) 상위 몫 겹침(0826e "상위정하면 쓰면 안되는 희귀함 알려주고" —
+  //     v26.4 구현의 v28 회귀 복원): reserve 재료를 먹는 행마다 경고,
+  //     행 경고 수 파리티(eats∩reserve)로 고정.
+  let proven=false;
+  for(const opt of B.upperOptions(index,'')){
+    const reserve=B.upperReserve(index,rich,opt.unit.id);
+    if(!reserve)continue;
+    const board=B.craftRows(index,rich,{mode:'',round:20,reserve:reserve.ids});
+    for(const row of board.rows){
+      const want=row.eats.filter(e=>reserve.ids.has(e.id)).map(e=>e.name);
+      assert.deepStrictEqual(row.overlap,want,`겹침 파리티 불일치: ${row.unit.name}`);
+    }
+    if(board.rows.some(r=>r.overlap.length)){proven=true;break;}
+  }
+  assert(proven,'겹침 경고가 한 번도 발화하지 않음 — 픽스처 붕괴');
+  // reserve 없이 부르면 조용하다.
+  assert(B.craftRows(index,rich,{mode:'',round:20}).rows.every(r=>Array.isArray(r.overlap)&&!r.overlap.length),'무기준 겹침 오발화');
 });
 
 let passed=0;

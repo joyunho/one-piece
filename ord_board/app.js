@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v31.2.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v32.0.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -58,6 +58,14 @@ function App(root){
   this.auto=null;
   this.unknownStab=null;
   this.fingerprint='';
+  // 사건 계층(v32, 진단 '사건이 상태로만 번역된다'): 직전 패 갱신 대비
+  // '방금' 사실 — 방금 열린 조합·게이지 이동·목표 최초 달성.  타이머
+  // 없이 '다음 패 갱신까지' 유지(결정적·표시 전용).
+  this.justReady=new Set();   // 이번 갱신에서 새로 '지금 가능'이 된 전설 id
+  this.readyIds=null;         // 직전 갱신의 '지금 가능' 집합(첫 수신 전 null)
+  this.prevSpecRows=null;     // 직전 갱신의 목표 게이지 스냅샷 {key:{current,gap}}
+  this.pulse=null;            // 이번 갱신의 게이지 이동 {key:±delta}
+  this.goalHit=new Set();     // 이번 갱신에서 목표를 처음 넘긴 게이지 key
   this.state=Object.assign({
     mode:'',            // ''=자동 추정, physical, magic
     gorosei:'none',
@@ -115,6 +123,12 @@ App.prototype.tickClock=function(){
   if(shown!==this._clockShown){
     this._clockShown=shown;
     if(clk.round>0){this.state.round=clk.round;this.save();}
+    // 라운드 기원 ready 변동(50라 변화됨 해금 등)은 '방금 열림'이 아니다
+    // (리뷰 실측: 다음 패 갱신 때 지각 태그로 샜다) — 기준선만 조용히 전진.
+    if(this.readyIds){
+      const b=B.craftRows(this.index,this.counts,{mode:this.mode(),round:this.roundNow()});
+      this.readyIds=new Set(b.rows.filter(r=>r.ready).map(r=>r.unit.id));
+    }
     this.render();return;
   }
   const el=this.root&&typeof this.root.querySelector==='function'?this.root.querySelector('[data-clock]'):null;
@@ -158,7 +172,41 @@ App.prototype.onFeed=function(payload){
     // 그대로 이어진다(구 정본 UX 승계).
     this.state.clockStartedAt=B.clockAnchor(Math.max(1,num(this.state.round)||1),now);this.save();
   }
+  this.markEvents(newGame);
   this.render();
+};
+// 사건 계층(v32): 이번 패 갱신에서 '방금' 일어난 사실을 스냅샷 대비로
+// 계산한다 — 방금 열린 전설(NEW), 게이지 이동(±), 목표 최초 달성.
+// 새 판·첫 수신은 기준이 없으므로 조용히 시작한다.
+App.prototype.markEvents=function(newGame){
+  const mode=this.mode();
+  const board=B.craftRows(this.index,this.counts,{mode,round:this.roundNow()});
+  const readyNow=new Set(board.rows.filter(r=>r.ready).map(r=>r.unit.id));
+  const spec=B.partySpec(this.index,this.counts,{mode,gorosei:this.state.gorosei});
+  const target=spec.rows.filter(r=>!r.info);
+  // 기준 축(리뷰 실측): 모드·오로성이 바뀌면 목표·계통이 달라져 직전
+  // 스냅샷과의 비교가 거짓 사건(방금 열림·목표 달성)을 만든다 —
+  // 새 판처럼 조용히 재기준.
+  const basis=mode+'|'+this.state.gorosei;
+  if(newGame||!this.readyIds||!this.prevSpecRows||this.eventBasis!==basis){
+    this.justReady=new Set();this.pulse=null;this.goalHit=new Set();
+  }else{
+    this.justReady=new Set([...readyNow].filter(id=>!this.readyIds.has(id)));
+    const pulse={};let moved=false;
+    this.goalHit=new Set();
+    for(const row of target){
+      const prev=this.prevSpecRows[row.key];
+      if(!prev)continue;
+      const d=B.round2(num(row.current)-num(prev.current))||0;
+      if(d){pulse[row.key]=d;moved=true;}
+      if(num(row.gap)<=0&&num(prev.gap)>0)this.goalHit.add(row.key);
+    }
+    this.pulse=moved?pulse:null;
+  }
+  this.readyIds=readyNow;
+  this.eventBasis=basis;
+  this.prevSpecRows={};
+  for(const row of target)this.prevSpecRows[row.key]={current:num(row.current),gap:num(row.gap)};
 };
 App.prototype.stale=function(){
   return!this.lastGoodAt||Date.now()-this.lastGoodAt>8000;
@@ -167,7 +215,10 @@ App.prototype.stale=function(){
 // ── 렌더 ────────────────────────────────────────────────────────────────
 App.prototype.render=function(){
   const mode=this.mode();
-  const board=B.craftRows(this.index,this.counts,{mode,round:this.roundNow()});
+  // 상위 몫 겹침(v32, 0826e 복원): 상위를 고르면 그 몫 재료를 먹는
+  // ①행에 경고가 붙는다 — 이미 보유한 상위면 몫이 없어 조용하다.
+  const reserve=this.state.upperPick?B.upperReserve(this.index,this.counts,this.state.upperPick):null;
+  const board=B.craftRows(this.index,this.counts,{mode,round:this.roundNow(),reserve:reserve&&reserve.ids||null});
   const spec=B.partySpec(this.index,this.counts,{mode,gorosei:this.state.gorosei});
   this.root.innerHTML=
     this.renderStrip(mode)+
@@ -225,13 +276,16 @@ App.prototype.renderCraft=function(board){
     const story=u.story?`<i class="story-badge">스토리 ${esc(u.story.tier)}${u.story.rank?` · ${u.story.rank}위`:''}</i>`:'';
     const gone=goneById.get(u.id),delayed=delayedById.get(u.id);
     const tag=gone?`<i class="dead-tag">⛔ ${esc((impact.row.unit.short))} 가면 못 감</i>`:delayed?`<i class="delay-tag">⏳ 선위 ${delayed.extra} 밀림</i>`:'';
+    // 방금 열림(v32 사건 계층) + 상위 몫 겹침(0826e 복원) — 둘 다 사실 태그.
+    const newTag=this.justReady.has(u.id)?'<i class="new-tag">방금 열림</i>':'';
+    const overTag=row.overlap&&row.overlap.length?`<i class="overlap-tag">⚠ 상위 몫 겹침 · ${esc(row.overlap.slice(0,2).join('·'))}</i>`:'';
     const lockLine=row.locks.length?`<span class="locks">이걸 가면 못 감: ${row.locks.slice(0,2).map(l=>`${esc(l.name)} <i>(${esc(l.cause)})</i>`).join(' · ')}${row.locks.length>2?` <i>외 ${row.locks.length-2}</i>`:''}</span>`:'';
     const cls=['card',row.ready?'ready':'',this.state.pick===u.id?'picked':'',gone?'dead':'',delayed?'delay':''].filter(Boolean).join(' ');
     // 스펙 손익 칩(사용자 0901b): 만들면 게이지가 어떻게 움직이나 —
     // 재료로 빠지는 능력치까지 계산한 순손익.  0이면 침묵.
     const dp=deltaParts(row.delta);
     const deltaLine=dp.length?`<span class="spec-delta">${dp.join('')}</span>`:'';
-    return`<button class="${cls}" data-act="pick" data-id="${esc(u.id)}" title="${esc(u.name)}">${face}<span class="main"><b>${esc(u.short)}</b>${fam}${story}${tag}${u.note?`<span class="name-note">${esc(u.note)}</span>`:''}</span><small class="state ${row.ready?'ok':'gap'}">${row.ready?`지금 가능 · 선위 ${row.cost}`:`선위 ${row.gap} 부족`}</small>${deltaLine}${lockLine}</button>`;
+    return`<button class="${cls}" data-act="pick" data-id="${esc(u.id)}" title="${esc(u.name)}">${face}<span class="main"><b>${esc(u.short)}</b>${newTag}${fam}${story}${tag}${overTag}${u.note?`<span class="name-note">${esc(u.note)}</span>`:''}</span><small class="state ${row.ready?'ok':'gap'}">${row.ready?`지금 가능 · 선위 ${row.cost}`:`선위 ${row.gap} 부족`}</small>${deltaLine}${lockLine}</button>`;
   }).join('');
   const pager=pages>1?`<div class="pager"><button data-act="page" data-value="-1" ${page<=0?'disabled':''}>◀ 이전</button><em>${page+1} / ${pages} 페이지 · 전체 ${view.length}</em><button data-act="page" data-value="1" ${page>=pages-1?'disabled':''}>다음 ▶</button></div>`:'';
   const readyCount=view.filter(r=>r.ready).length;
@@ -334,15 +388,19 @@ App.prototype.renderImpact=function(impact){
 // ── ② 상위 ──────────────────────────────────────────────────────────────
 App.prototype.renderUppers=function(board,mode){
   const options=B.upperOptions(this.index,mode);
-  const picks=B.upperPicks(this.index,this.counts,{mode,round:this.roundNow(),lockedId:''});
+  // lockedId 배선 수리(v32, 진단 '죽은 배선'): 상위를 고르면 TOP5 는
+  // 내려가고 2상위 추천이 그 역할을 잇는다 — v26 확정 의미론 복원.
+  // 고아 id(저장 상태에 남은 소멸 유닛) 는 잠그지 않는다(리뷰).
+  const locked=this.state.upperPick&&this.index.byId.has(this.state.upperPick)?this.state.upperPick:'';
+  const picks=B.upperPicks(this.index,this.counts,{mode,round:this.roundNow(),lockedId:locked,gorosei:this.state.gorosei});
   const shorts=picks.map(p=>p.unit.short);
   const dupes=new Set(shorts.filter((s,i)=>shorts.indexOf(s)!==i));
-  const top3=picks.length?`<div class="top3"><small>지금 패 추천 TOP5 — 조합이 닫히는 상위를 도달 거리 → 실측 순으로</small>${picks.map((pick,i)=>{
+  const top3=picks.length?`<div class="top3"><small>지금 패 추천 TOP5 — 조합이 닫히는 상위를 도달 거리 → 결손 충당 → 실측 순으로</small>${picks.map((pick,i)=>{
     const u=pick.unit;
     const face=u.image?`<img class="face" src="${esc(u.image)}" alt="" loading="lazy">`:'';
     const label=dupes.has(u.short)?u.name:u.short;
     const dp=deltaParts(pick.delta);
-    return`<button class="top3-row${i===0?' top':''}" data-act="upper" data-id="${esc(u.id)}" title="${esc(u.name)}"><i class="top3-rank">${i+1}</i>${face}<span class="top3-main"><b>${esc(label)}</b><small class="top3-meta">선위 ${pick.cost} · ${pick.games?`실측 ${pick.games}판`:'실측 부족'}</small>${dp.length?`<small class="top3-meta spec-delta">가면 ${dp.join('')}</small>`:''}${u.note?`<small class="top3-note">${esc(u.note)}</small>`:''}</span></button>`;
+    return`<button class="top3-row${i===0?' top':''}" data-act="upper" data-id="${esc(u.id)}" title="${esc(u.name)}"><i class="top3-rank">${i+1}</i>${face}<span class="top3-main"><b>${esc(label)}</b><small class="top3-meta">선위 ${pick.cost} · ${pick.games?`실측 ${pick.games}판`:'실측 부족'}${pick.fill>0?` · 결손 충당 ${pick.fill}`:''}</small>${dp.length?`<small class="top3-meta spec-delta">가면 ${dp.join('')}</small>`:''}${u.note?`<small class="top3-note">${esc(u.note)}</small>`:''}</span></button>`;
   }).join('')}</div>`:'';
   const query=String(this.state.search||'').trim();
   const found=query?options.filter(o=>o.unit.name.toLowerCase().includes(query.toLowerCase())).slice(0,8):[];
@@ -369,15 +427,15 @@ App.prototype.renderUppers=function(board,mode){
         return`<button class="partner" data-act="pick" data-id="${esc(p.id)}" title="${esc(u?u.name:p.name)}">${face}<b>${esc(label)}</b><em>${num(p.share)}%</em>${flag}</button>`;
       }).join('')+(combos.hiddenCount>0?`<small class="hidden-note">실측 top8 중 ${combos.hiddenCount}개는 지금 내 패로 못 가 숨김</small>`:'');
       // 2상위 추천(사용자 0831: "이 상위랑 어울리는 다른 상위도 추천").
-      const pp=B.pairPicks(this.index,this.counts,combos.sel.id,{mode,round:this.roundNow()});
+      const pp=B.pairPicks(this.index,this.counts,combos.sel.id,{mode,round:this.roundNow(),gorosei:this.state.gorosei});
       const ppShorts=pp.picks.map(p=>p.unit.short);
       const ppDupes=new Set(ppShorts.filter((s,i)=>ppShorts.indexOf(s)!==i));
-      const pairRec=pp.picks.length?`<div class="top3 pair-picks"><small>2상위 추천 — ${esc(combos.sel.short)}와 함께 간 상위를 지금 패 도달 → 동반 실측 순으로 · 눌러서 조합식 확인</small>${pp.picks.map((p,i)=>{
+      const pairRec=pp.picks.length?`<div class="top3 pair-picks"><small>2상위 추천 — ${esc(combos.sel.short)}와 함께 간 상위를 지금 패 도달 → 결손 충당 → 동반 실측 순으로 · 눌러서 조합식 확인</small>${pp.picks.map((p,i)=>{
         const u=p.unit;
         const face=u.image?`<img class="face" src="${esc(u.image)}" alt="" loading="lazy">`:'';
         const label=ppDupes.has(u.short)?u.name:u.short;
         const dp=deltaParts(p.delta);
-        return`<button class="top3-row${i===0?' top':''}${this.state.pairPick===u.id?' picked':''}" data-act="pair-pick" data-id="${esc(u.id)}" title="${esc(u.name)}"><i class="top3-rank">${i+1}</i>${face}<span class="top3-main"><b>${esc(label)}</b><small class="top3-meta">선위 ${p.cost} · 동반 실측 ${p.games}판</small>${dp.length?`<small class="top3-meta spec-delta">가면 ${dp.join('')}</small>`:''}${u.note?`<small class="top3-note">${esc(u.note)}</small>`:''}</span></button>`;
+        return`<button class="top3-row${i===0?' top':''}${this.state.pairPick===u.id?' picked':''}" data-act="pair-pick" data-id="${esc(u.id)}" title="${esc(u.name)}"><i class="top3-rank">${i+1}</i>${face}<span class="top3-main"><b>${esc(label)}</b><small class="top3-meta">선위 ${p.cost} · 동반 실측 ${p.games}판${p.fill>0?` · 결손 충당 ${p.fill}`:''}</small>${dp.length?`<small class="top3-meta spec-delta">가면 ${dp.join('')}</small>`:''}${u.note?`<small class="top3-note">${esc(u.note)}</small>`:''}</span></button>`;
       }).join('')}${pp.hidden>0?`<small class="hidden-note">실측 페어 중 ${pp.hidden}개는 지금 내 패로 못 가거나 계통이 달라 숨김</small>`:''}</div>`
       :(combos.pairs.length?`<small class="hidden-note">함께 간 2상위 실측은 있지만 지금 내 패로 갈 수 있는 상위가 없습니다.</small>`:'');
       const pairPlan=this.state.pairPick?B.recipePlan(this.index,this.state.pairPick,this.counts):null;
@@ -398,7 +456,14 @@ App.prototype.renderSpec=function(spec,mode){
     const target=Math.max(num(row.target),0.0001);
     const pct=Math.max(4,Math.min(100,Math.round(num(row.current)/target*100)));
     const miss=row.gap>0;
-    return`<div class="gauge"><label><span>${esc(row.label)}</span><b class="${miss?'miss':''}">${row.current} / ${row.target}${row.full?` <small>(풀 ${row.full})</small>`:''}</b></label><div class="bar"><i class="${miss?(pct>=70?'warn':'bad'):'ok'}" style="width:${pct}%"></i></div>${row.extra?`<small class="extra">${esc(row.extra)}</small>`:''}</div>`;
+    // 사건 계층(v32): 이번 패 갱신의 이동(±)과 목표 최초 달성 — 다음
+    // 갱신까지 유지되는 사실 표식.
+    const move=this.pulse&&this.pulse[row.key];
+    const pulse=move?`<i class="pulse ${move>0?'d-up':'d-down'}">${move>0?'+':''}${move}</i>`:'';
+    // gap>0 억제(리뷰): 달성 직후 목표가 올라가면(오로성 등) miss 수치와
+    // '목표 달성'이 동시에 뜨는 모순 잔존을 막는다.
+    const goal=this.goalHit.has(row.key)&&num(row.gap)<=0?'<i class="goal-tag">목표 달성</i>':'';
+    return`<div class="gauge"><label><span>${esc(row.label)}</span><b class="${miss?'miss':''}">${row.current} / ${row.target}${row.full?` <small>(풀 ${row.full})</small>`:''}${pulse}${goal}</b></label><div class="bar"><i class="${miss?(pct>=70?'warn':'bad'):'ok'}" style="width:${pct}%"></i></div>${row.extra?`<small class="extra">${esc(row.extra)}</small>`:''}</div>`;
   }).join('');
   // 능력치 출처(사용자 0831d 조사 → 0831h 페이지 분석으로 종결):
   // 티모지지 사이트의 '현재 능력치'도 별도 API 가 아니라, 프로그램이 주는
@@ -417,7 +482,8 @@ App.prototype.renderSpec=function(spec,mode){
 // ── 인게임 HUD: 전용 조각(메인 앱을 복제하지 않는다 — 표시 전용) ────────
 App.prototype.renderHud=function(board,spec,mode){
   const ready=board.rows.filter(r=>r.ready).slice(0,4);
-  const rows=ready.map(row=>`<div class="hud-row">${row.unit.image?`<img src="${esc(row.unit.image)}" alt="">`:'<span></span>'}<b>${esc(row.unit.short)}</b><small class="ok">선위 ${row.cost}</small></div>`).join('');
+  // v32: 겹침 경고(0826e "HUD에도 유지")와 방금 열림을 HUD 에도 싣는다.
+  const rows=ready.map(row=>`<div class="hud-row">${row.unit.image?`<img src="${esc(row.unit.image)}" alt="">`:'<span></span>'}<b>${esc(row.unit.short)}${this.justReady.has(row.unit.id)?'<i class="new-tag">방금</i>':''}${row.overlap&&row.overlap.length?'<i class="overlap-tag">⚠ 겹침</i>':''}</b><small class="ok">선위 ${row.cost}</small></div>`).join('');
   const gauges=spec.rows.filter(r=>!r.info).map(row=>{
     const target=Math.max(num(row.target),0.0001);
     const pct=Math.max(4,Math.min(100,Math.round(num(row.current)/target*100)));
@@ -441,7 +507,10 @@ App.prototype.pushHud=function(board,spec,mode){
   const bridge=global.ORD_DESKTOP;
   if(!bridge||typeof bridge.sendHudState!=='function')return;
   mode=mode||this.mode();
-  board=board||B.craftRows(this.index,this.counts,{mode,round:this.roundNow()});
+  if(!board){
+    const reserve=this.state.upperPick?B.upperReserve(this.index,this.counts,this.state.upperPick):null;
+    board=B.craftRows(this.index,this.counts,{mode,round:this.roundNow(),reserve:reserve&&reserve.ids||null});
+  }
   spec=spec||B.partySpec(this.index,this.counts,{mode,gorosei:this.state.gorosei});
   const hudHtml=this.renderHud(board,spec,mode);
   if(hudHtml===this.hudSig)return;
