@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v31.1.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v31.2.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -25,6 +25,25 @@ const V26_FILTERS=[
   ['util','유틸·보조',r=>r.utility||r.supportDamage||r.deletion]
 ];
 const PAGE=8;
+
+// 제작 스펙 손익 표기(사용자 0901b "만들면 은근히 클리어스펙이 부족"):
+// core.specDelta 를 게이지 어휘 그대로 편다 — 이감/방깎은 베이스,
+// 발동·중첩은 별도 표기(게이지의 extra 와 같은 셈법), 광보잡·단·끝딜
+// 손실도 침묵하지 않는다.  0이면 침묵.
+function deltaParts(d){
+  if(!d)return[];
+  const sign=v=>`${v>0?'+':''}${round2(v)}`;
+  const parts=[];
+  if(d.slow)parts.push(['이감',d.slow]);
+  if(d.trigSlow)parts.push(['발동이감',d.trigSlow]);
+  if(d.armor)parts.push(['방깎',d.armor]);
+  if(d.trigArmor)parts.push(['발동깎',d.trigArmor]);
+  if(d.stackArmor)parts.push(['중첩깎',d.stackArmor]);
+  if(d.stun)parts.push(['스턴',d.stun]);
+  if(d.bossFrenzy)parts.push(['광보잡',d.bossFrenzy]);
+  if(d.finish)parts.push(['단·끝딜',d.finish]);
+  return parts.map(([label,v])=>`<i class="${v>0?'d-up':'d-down'}">${label} ${sign(v)}</i>`);
+}
 
 function App(root){
   this.root=root;
@@ -208,7 +227,11 @@ App.prototype.renderCraft=function(board){
     const tag=gone?`<i class="dead-tag">⛔ ${esc((impact.row.unit.short))} 가면 못 감</i>`:delayed?`<i class="delay-tag">⏳ 선위 ${delayed.extra} 밀림</i>`:'';
     const lockLine=row.locks.length?`<span class="locks">이걸 가면 못 감: ${row.locks.slice(0,2).map(l=>`${esc(l.name)} <i>(${esc(l.cause)})</i>`).join(' · ')}${row.locks.length>2?` <i>외 ${row.locks.length-2}</i>`:''}</span>`:'';
     const cls=['card',row.ready?'ready':'',this.state.pick===u.id?'picked':'',gone?'dead':'',delayed?'delay':''].filter(Boolean).join(' ');
-    return`<button class="${cls}" data-act="pick" data-id="${esc(u.id)}" title="${esc(u.name)}">${face}<span class="main"><b>${esc(u.short)}</b>${fam}${story}${tag}${u.note?`<span class="name-note">${esc(u.note)}</span>`:''}</span><small class="state ${row.ready?'ok':'gap'}">${row.ready?`지금 가능 · 선위 ${row.cost}`:`선위 ${row.gap} 부족`}</small>${lockLine}</button>`;
+    // 스펙 손익 칩(사용자 0901b): 만들면 게이지가 어떻게 움직이나 —
+    // 재료로 빠지는 능력치까지 계산한 순손익.  0이면 침묵.
+    const dp=deltaParts(row.delta);
+    const deltaLine=dp.length?`<span class="spec-delta">${dp.join('')}</span>`:'';
+    return`<button class="${cls}" data-act="pick" data-id="${esc(u.id)}" title="${esc(u.name)}">${face}<span class="main"><b>${esc(u.short)}</b>${fam}${story}${tag}${u.note?`<span class="name-note">${esc(u.note)}</span>`:''}</span><small class="state ${row.ready?'ok':'gap'}">${row.ready?`지금 가능 · 선위 ${row.cost}`:`선위 ${row.gap} 부족`}</small>${deltaLine}${lockLine}</button>`;
   }).join('');
   const pager=pages>1?`<div class="pager"><button data-act="page" data-value="-1" ${page<=0?'disabled':''}>◀ 이전</button><em>${page+1} / ${pages} 페이지 · 전체 ${view.length}</em><button data-act="page" data-value="1" ${page>=pages-1?'disabled':''}>다음 ▶</button></div>`:'';
   const readyCount=view.filter(r=>r.ready).length;
@@ -284,8 +307,28 @@ App.prototype.renderImpact=function(impact){
   const delayed=impact.delayed.map(x=>`<div class="impact-row delayed">⏳ ${esc(x.name)} — 선위 ${x.extra} 더 필요</div>`).join('');
   const cmd=impact.row.unit.command;
   const cmdLine=cmd?`<div class="command-line">조합 명령어 <b>${esc(cmd.korean||cmd.english)}</b>${cmd.korean&&cmd.english?` <i>/ ${esc(cmd.english)}</i>`:''}${cmd.inherited?' <i>(원형 최초 제작 명령)</i>':''}</div>`:'';
+  // 게이지 문맥(사용자 0901b): 만들면 ③현재 능력치가 어디서 어디로
+  // 가는지 — 재료 소비까지 계산한 순손익을 목표 대비로 붙인다.
+  // 목표 행(이감·방깎·스턴·광보잡·마딜 단·끝딜)은 이동으로, 발동·중첩
+  // 계열은 괄호로.  0이면 침묵.
+  let specLine='';
+  const d=impact.row.delta;
+  if(d&&Object.values(d).some(v=>v)){
+    const spec=B.partySpec(this.index,this.counts,{mode:this.mode(),gorosei:this.state.gorosei});
+    const rowOf=k=>spec.rows.find(r=>r.key===k);
+    const move=(k,base)=>{const r=rowOf(k);if(!r||!base)return'';
+      return`${r.label} ${r.current}→${round2(r.current+base)} / ${r.target}${k==='armor'&&r.full?`(풀 ${r.full})`:''}`;};
+    const bits=[move('slow',d.slow),move('armor',d.armor),
+      d.stun?`스턴 ${rowOf('stun')?rowOf('stun').current:0}→${round2((rowOf('stun')?rowOf('stun').current:0)+d.stun)}`:'',
+      move('bossFrenzy',d.bossFrenzy),move('finish',d.finish)].filter(Boolean);
+    const pm=v=>`${v>0?'+':''}${v}`;
+    const extra=[d.trigSlow?`발동이감 ${pm(d.trigSlow)}`:'',d.trigArmor?`발동깎 ${pm(d.trigArmor)}`:'',
+      d.stackArmor?`중첩깎 ${pm(d.stackArmor)}`:'',
+      d.finish&&!rowOf('finish')?`단·끝딜 ${pm(d.finish)}`:''].filter(Boolean);
+    specLine=`<div class="impact-spec">만들면 스펙 — ${bits.length?bits.join(' · '):'목표 게이지 변화 없음'}${extra.length?` <i>(${extra.join(' · ')})</i>`:''}</div>`;
+  }
   const recipe=this.renderRecipe(B.recipePlan(this.index,impact.row.unit.id,this.counts),impact.row.unit.id);
-  return`<div class="impact"><small><b>${esc(impact.row.unit.short)}</b> 를 만들면 — 계산일 뿐 패는 소비되지 않습니다</small>${recipe}${gone||delayed?gone+delayed:'<div class="impact-none">사라지는 선택지 없음 — 겹치는 패가 없습니다.</div>'}${cmdLine}<small class="impact-note">행을 다시 누르면 해제됩니다.</small></div>`;
+  return`<div class="impact"><small><b>${esc(impact.row.unit.short)}</b> 를 만들면 — 계산일 뿐 패는 소비되지 않습니다</small>${specLine}${recipe}${gone||delayed?gone+delayed:'<div class="impact-none">사라지는 선택지 없음 — 겹치는 패가 없습니다.</div>'}${cmdLine}<small class="impact-note">행을 다시 누르면 해제됩니다.</small></div>`;
 };
 
 // ── ② 상위 ──────────────────────────────────────────────────────────────
@@ -298,7 +341,8 @@ App.prototype.renderUppers=function(board,mode){
     const u=pick.unit;
     const face=u.image?`<img class="face" src="${esc(u.image)}" alt="" loading="lazy">`:'';
     const label=dupes.has(u.short)?u.name:u.short;
-    return`<button class="top3-row${i===0?' top':''}" data-act="upper" data-id="${esc(u.id)}" title="${esc(u.name)}"><i class="top3-rank">${i+1}</i>${face}<span class="top3-main"><b>${esc(label)}</b><small class="top3-meta">선위 ${pick.cost} · ${pick.games?`실측 ${pick.games}판`:'실측 부족'}</small>${u.note?`<small class="top3-note">${esc(u.note)}</small>`:''}</span></button>`;
+    const dp=deltaParts(pick.delta);
+    return`<button class="top3-row${i===0?' top':''}" data-act="upper" data-id="${esc(u.id)}" title="${esc(u.name)}"><i class="top3-rank">${i+1}</i>${face}<span class="top3-main"><b>${esc(label)}</b><small class="top3-meta">선위 ${pick.cost} · ${pick.games?`실측 ${pick.games}판`:'실측 부족'}</small>${dp.length?`<small class="top3-meta spec-delta">가면 ${dp.join('')}</small>`:''}${u.note?`<small class="top3-note">${esc(u.note)}</small>`:''}</span></button>`;
   }).join('')}</div>`:'';
   const query=String(this.state.search||'').trim();
   const found=query?options.filter(o=>o.unit.name.toLowerCase().includes(query.toLowerCase())).slice(0,8):[];
@@ -332,7 +376,8 @@ App.prototype.renderUppers=function(board,mode){
         const u=p.unit;
         const face=u.image?`<img class="face" src="${esc(u.image)}" alt="" loading="lazy">`:'';
         const label=ppDupes.has(u.short)?u.name:u.short;
-        return`<button class="top3-row${i===0?' top':''}${this.state.pairPick===u.id?' picked':''}" data-act="pair-pick" data-id="${esc(u.id)}" title="${esc(u.name)}"><i class="top3-rank">${i+1}</i>${face}<span class="top3-main"><b>${esc(label)}</b><small class="top3-meta">선위 ${p.cost} · 동반 실측 ${p.games}판</small>${u.note?`<small class="top3-note">${esc(u.note)}</small>`:''}</span></button>`;
+        const dp=deltaParts(p.delta);
+        return`<button class="top3-row${i===0?' top':''}${this.state.pairPick===u.id?' picked':''}" data-act="pair-pick" data-id="${esc(u.id)}" title="${esc(u.name)}"><i class="top3-rank">${i+1}</i>${face}<span class="top3-main"><b>${esc(label)}</b><small class="top3-meta">선위 ${p.cost} · 동반 실측 ${p.games}판</small>${dp.length?`<small class="top3-meta spec-delta">가면 ${dp.join('')}</small>`:''}${u.note?`<small class="top3-note">${esc(u.note)}</small>`:''}</span></button>`;
       }).join('')}${pp.hidden>0?`<small class="hidden-note">실측 페어 중 ${pp.hidden}개는 지금 내 패로 못 가거나 계통이 달라 숨김</small>`:''}</div>`
       :(combos.pairs.length?`<small class="hidden-note">함께 간 2상위 실측은 있지만 지금 내 패로 갈 수 있는 상위가 없습니다.</small>`:'');
       const pairPlan=this.state.pairPick?B.recipePlan(this.index,this.state.pairPick,this.counts):null;

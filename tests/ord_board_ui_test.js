@@ -259,6 +259,36 @@ test('⑦ v31 — 현재 능력치 셈법: 아이템·특수함 합산 + 출처 
   assert(readNew('../tools/build_ord_board_data.js').includes('tmo_page_abilities_20260831.json'),'증류기 오버레이 배선 부재');
 });
 
+test('⑧ v31.2 — 제작 스펙 손익 배선: 카드 칩 + 여파 게이지 문맥 (사용자 0901b)',()=>{
+  const{app,root}=mkApp();
+  // "겹치지 않는 패를 사용해서 패를 만들면 은근히 클리어스펙이 부족" —
+  // 페로나(이감 20)를 쥔 채 페로나를 먹는 전설을 찍으면, 여파 패널이
+  // 게이지 이동(20→0 / 102)을 사실로 보여줘야 한다.
+  const perona=DATA.units.find(u=>u.tier==='rare'&&u.short==='페로나');
+  assert(perona,'페로나(이감 희귀) 부재');
+  const hand=Object.assign({},rich);hand[perona.id]=1;
+  const board=B.craftRows(app.index,hand,{mode:'',round:20});
+  const rowP=board.rows.find(r=>r.eats.some(e=>e.id===perona.id)&&r.delta.slow);
+  assert(rowP,'페로나를 먹는 손익 행 부재');
+  // 골든(나미, 현 데이터 실측): 이감 -25 로 새고 발동이감 +31 로 돌아온다 —
+  // 소비 차감을 빼는 변이가 조용히 통과하지 못하게 값으로 박는다.
+  assert.deepStrictEqual(Object.assign({},rowP.delta),   // vm 교차 프로토타입 회피
+    {slow:-25,trigSlow:31,armor:0,trigArmor:0,stackArmor:0,stun:0,finish:0,bossFrenzy:0},
+    `나미 손익 골든 불일치: ${JSON.stringify(rowP.delta)}`);
+  const spec=B.partySpec(app.index,hand,{mode:'',gorosei:'none'});
+  const slow=spec.rows.find(r=>r.key==='slow');
+  feed(app,hand,{round:20,mode:'',pick:rowP.unit.id});
+  const html=root.innerHTML;
+  assert(html.includes('impact-spec')&&html.includes('만들면 스펙'),'여파 게이지 문맥 줄 부재');
+  const move=`이감 ${slow.current}→${B.round2(slow.current+rowP.delta.slow)} / ${slow.target}`;
+  assert(html.includes(move),`게이지 이동 표기 부재: ${move}`);
+  // 표면별 분리 검사(리뷰 변이 실험): 카드 칩(span)과 추천 행 '가면'(small)
+  // 은 서로를 가려줄 수 없어야 한다.
+  assert(html.includes('<span class="spec-delta">'),'카드 스펙 손익 칩(span) 부재');
+  assert(/가면 <i class="d-(up|down)">/.test(html),`추천 행 '가면 …' 손익 병기 부재`);
+  assert(readNew('board.css').includes('.spec-delta')&&readNew('board.css').includes('impact-spec'),'손익 스타일 부재');
+});
+
 let passed=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);passed+=1;}

@@ -346,6 +346,60 @@ test('⑪ TMO 페이지 정합 + 현재 능력치 전 유닛 합산 (사용자 0
   assert.strictEqual(DATA.targets.armor.full,211,'풀방깍(악몽) 211 불일치');
 });
 
+test('⑫ 제작 스펙 손익 — 얻는 것 − 패에서 빠지는 것 (사용자 0901b)',()=>{
+  // "겹치지 않는 패를 사용해서 패를 만들면 은근히 클리어스펙이 부족한데
+  //  이게 왜이러는지 모르겠네" — 조합은 스펙 교환이라는 사실의 계약.
+  // 오라클: 손익은 '제작 시뮬(패 − consumed + 결과 1기)' 전후의
+  // partySpec 합계 차이와 채널별로 정확히 같아야 한다.  값 없는 존재
+  // 검사만 하면 소비 차감을 통째로 빼도 통과한다(리뷰 변이 실험).
+  const oracle=(hand,result,unit,delta)=>{
+    const before=B.partySpec(index,hand,{mode:'',gorosei:'none'}).sum;
+    const after=Object.assign({},result.stockAfter);
+    after[unit.id]=num(after[unit.id])+1;
+    const a=B.partySpec(index,after,{mode:'',gorosei:'none'}).sum;
+    const want={slow:a.slow-before.slow,trigSlow:a.triggerSlow-before.triggerSlow,
+      armor:a.armor-before.armor,trigArmor:a.triggerArmor-before.triggerArmor,
+      stackArmor:a.stackArmor-before.stackArmor,stun:a.stun-before.stun,
+      finish:a.finish-before.finish,
+      bossFrenzy:Math.min(a.boss,a.frenzy)-Math.min(before.boss,before.frenzy)};
+    for(const k of Object.keys(want))
+      assert.strictEqual(delta[k],B.round2(want[k]),`${unit.short} 손익 ${k} 불일치: ${delta[k]} !== ${B.round2(want[k])}`);
+  };
+  // (1) 빈손 제작: 아무것도 소비 안 하므로 손익 = 결과 유닛 능력치 그대로.
+  const gainer=DATA.units.find(u=>u.legendish&&num(u.roles.slow)>0&&(u.stuffs||[]).length);
+  assert(gainer,'이감 캐리어 전설급 부재');
+  const d0=B.specDelta(index,B.solve(index,gainer.id,{}),gainer,{});
+  assert.strictEqual(d0.slow,B.round2(num(gainer.roles.slow)),'빈손 손익이 결과 능력치와 다름');
+  // (2) 재료 소비: 페로나(희귀 이감 20)를 쥔 채 페로나를 먹는 전설을 만들면
+  //     그만큼 손익에서 빠진다 — '만들면 은근히 부족'의 기전.  기대값은
+  //     roles 원시값에서 독립 산출(부호 뒤집기 변이도 잡는다).
+  const perona=DATA.units.find(u=>u.tier==='rare'&&u.short==='페로나');
+  assert(perona&&num(perona.roles.slow)>0,'페로나(이감 희귀) 부재');
+  const eater=DATA.units.find(u=>u.legendish&&(u.stuffs||[]).some(s=>s.id===perona.id));
+  assert(eater,'페로나를 먹는 전설급 부재');
+  const counts={};counts[perona.id]=1;
+  const result=B.solve(index,eater.id,counts);
+  assert.strictEqual(num(result.consumed[perona.id]),1,'페로나가 소비되지 않음');
+  const d1=B.specDelta(index,result,eater,counts);
+  for(const[key,mine,theirs]of[['slow','slow','slow'],['trigSlow','triggerSlow','triggerSlow'],
+    ['armor','armor','armor'],['trigArmor','triggerArmor','triggerArmor'],
+    ['stackArmor','stackArmor','stackArmor'],['stun','stun','stun']])
+    assert.strictEqual(d1[key],B.round2(num(eater.roles[mine])-num(perona.roles[theirs])),`재료 ${key} 손실 미반영`);
+  oracle(counts,result,eater,d1);
+  // (3) 배선 + 오라클 대조: ①카드·TOP5·2상위 추천 전부 — 목록이 비면
+  //     소리 나게(vacuous pass 방지), 값은 partySpec 오라클과 일치해야.
+  const board=B.craftRows(index,rich,{mode:'',round:20});
+  assert(board.rows.length>=5,'손익 배선 검사용 카드 목록이 빈약');
+  for(const row of board.rows)oracle(rich,row.result,row.unit,row.delta);
+  const picks=B.upperPicks(index,rich,{mode:'',round:20});
+  assert(picks.length>=1,'손익 배선 검사용 TOP5 가 빔');
+  for(const p of picks)oracle(rich,B.solve(index,p.unit.id,rich),p.unit,p.delta);
+  const sel=B.upperOptions(index,'')[0];
+  const pp=B.pairPicks(index,scarce,sel.unit.id,{mode:'',round:20});
+  assert(pp.picks.length>=1,'손익 배선 검사용 2상위가 빔');
+  for(const p of pp.picks)oracle(scarce,B.solve(index,p.unit.id,scarce),p.unit,p.delta);
+});
+
 let passed=0;
 for(const [name,fn] of tests){
   try{fn();console.log(`PASS ${name}`);passed+=1;}

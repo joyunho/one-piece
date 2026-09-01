@@ -79,8 +79,14 @@ button.card.ready{border-left:3px solid var(--gold)}
 .fam.magic{border-color:rgba(140,160,255,.55);color:var(--magic)}
 .fam.physical{border-color:rgba(255,150,120,.55);color:var(--physical)}
 .story-badge{display:inline-block;margin-left:5px;border:1px solid var(--line-strong);border-radius:999px;padding:1px 7px;font-size:10.5px;font-weight:800;color:var(--sub);white-space:nowrap}
-.card .locks{grid-column:2/span 2;grid-row:2;color:var(--bad);font-size:11.5px;font-weight:700}
+.card .locks{grid-column:2/span 2;color:var(--bad);font-size:11.5px;font-weight:700}
 .card .locks i{font-style:normal;font-weight:400;color:var(--sub)}
+/* 제작 스펙 손익(v31.2, 사용자 0901b "만들면 은근히 클리어스펙이 부족"):
+   만들면 게이지가 어떻게 움직이나 — 얻는 건 good, 재료로 새는 건 bad. */
+.card .spec-delta{grid-column:2/span 2;font-size:11.5px;color:var(--sub)}
+.spec-delta i{font-style:normal;font-weight:700;margin-right:7px;white-space:nowrap}
+.spec-delta i.d-up{color:var(--good)}
+.spec-delta i.d-down{color:var(--bad)}
 .card.dead{opacity:.38;border-style:dashed}
 .card.dead:hover{border-color:var(--line);transform:none}
 .card.delay{opacity:.7}
@@ -105,6 +111,8 @@ button.card.ready{border-left:3px solid var(--gold)}
 .impact-row.delayed{color:var(--warn)}
 .impact-none{color:var(--good);font-size:12px}
 .impact-note{display:block;color:var(--muted);font-size:11px;margin-top:4px}
+.impact-spec{margin:2px 0 6px;font-size:12.5px;font-weight:700}
+.impact-spec i{font-style:normal;color:var(--sub);font-weight:400}
 .command-line{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;margin-top:5px;font-size:12px;color:var(--sub)}
 .command-line b{color:var(--gold);font-size:13px}
 .command-line i{font-style:normal;color:var(--muted);font-size:11px}
@@ -157,6 +165,7 @@ button.top3-row.top{border-color:rgba(217,164,65,.65);background:linear-gradient
 .top3-main{display:flex;flex-direction:column;min-width:0;gap:1px}
 .top3-main b{font-size:14.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 small.top3-meta{color:var(--gold);font-weight:800;font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+small.top3-meta.spec-delta{display:block;color:var(--sub);font-weight:400;white-space:normal;overflow:visible;text-overflow:clip}
 small.top3-note{color:var(--muted);font-size:10.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 button.top3-row.picked{border-color:var(--gold);box-shadow:0 0 10px rgba(217,164,65,.18)}
 .upper-search{display:flex;flex-direction:column;gap:5px}

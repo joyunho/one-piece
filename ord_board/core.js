@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 코어 (v31.1.0 전면 신작)
+// ORD 악몽 보드 — 코어 (v31.2.0 전면 신작)
 //
 // 철학(사용자 확정, v26→신작 승계): 결정은 사용자가 티모지지를 보며
 // 직접 내린다.  프로그램은 세 가지 사실만 보여준다 —
@@ -293,7 +293,7 @@ function craftRows(index,counts,opts){
     const cost=num(result.wispCost),gap=Math.max(0,cost-facts.wisp);
     if(!eats.length&&gap>0)continue;
     if(cost>index.data.maxWispCost)continue;
-    rows.push({unit,cost,gap,ready:gap<=0,eats,result,locks:[]});
+    rows.push({unit,cost,gap,ready:gap<=0,eats,result,locks:[],delta:specDelta(index,result,unit,counts)});
   }
   rows.sort((a,b)=>Number(b.ready)-Number(a.ready)||a.gap-b.gap||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'));
   // 상호배타(사용자: "이 패를 가면 이 패는 못가고 한눈에"): 이 행을 만든
@@ -348,6 +348,44 @@ function pickImpact(index,board,pickId){
   return{row,gone,delayed};
 }
 
+// ── 제작 스펙 손익(사용자 0901b: "겹치지 않는 패를 사용해서 패를 만들면
+// 은근히 클리어스펙이 부족한데 이게 왜이러는지 모르겠네") ────────────────
+// 조합은 스펙 '교환'이다: 결과 유닛의 능력치를 얻는 대신, 패에서 실제로
+// 소비되는 재료의 능력치를 잃는다.  상위 67종의 과반이 이감·방깎 순손실
+// 교환(비비 -60/-36 · 거프 -60/-25 · 테조로 -20/-60 …)이라, 손익이 안
+// 보이면 겹침 없는 깨끗한 패로도 게이지가 목표(102/211)에 못 닿는다.
+// solve() 의 consumed(내 패에서 빠지는 것)만 계산 — 미보유 재료는 흔함
+// (능력치 0)으로 사 오므로 손실이 아니다.  게이지의 목표 행 전부를
+// 다룬다(이감·방깎·스턴·광보잡 + 마딜 단·끝딜) — 광보잡·끝딜 손실이
+// 침묵하면 핸콕처럼 순이득으로 보이는 제작이 광보잡 -1 을 숨긴다(리뷰
+// 실측 56/718픽).  판정이 아니라 사실, 표시 전용.
+function specDelta(index,result,unit,counts){
+  const d={slow:0,trigSlow:0,armor:0,trigArmor:0,stackArmor:0,stun:0,finish:0,bossFrenzy:0};
+  const add=(u,mult)=>{
+    const r=u.roles;
+    d.slow+=r.slow*mult;d.trigSlow+=r.triggerSlow*mult;
+    d.armor+=r.armor*mult;d.trigArmor+=r.triggerArmor*mult;d.stackArmor+=r.stackArmor*mult;
+    d.stun+=r.stun*mult;
+    if(!u.upper)d.finish+=r.finishCredit*mult;   // partySpec 과 같은 셈법
+  };
+  add(unit,1);
+  for(const[id,n]of Object.entries(result&&result.consumed||{})){
+    const mat=index.byId.get(id);if(!mat)continue;
+    add(mat,-num(n));
+  }
+  // 광보잡 = min(광, 보잡)이라 비선형 — 만들기 전/후 패를 직접 센다.
+  if(counts){
+    const bf=c=>{let b=0,f=0;for(const[id,n]of Object.entries(c||{})){
+      const q=num(n);if(q<=0)continue;const u=index.byId.get(id);if(!u)continue;
+      if(u.roles.boss)b+=q;if(u.roles.frenzy)f+=q;}return Math.min(b,f);};
+    const after=Object.assign({},result&&result.stockAfter||{});
+    after[unit.id]=num(after[unit.id])+1;
+    d.bossFrenzy=bf(after)-bf(counts);
+  }
+  for(const k of Object.keys(d))d[k]=round2(d[k])||0;   // -0 정규화
+  return d;
+}
+
 // ── ② 상위 실측 조합 ────────────────────────────────────────────────────
 // 세라핌은 상위가 아니다(2.314 재검증 정본) — 기준 상위 후보는 정본
 // 상위(제한·초월·불멸·영원)만.  초월은 초월 쿠마가 hard 선행이라 미보유
@@ -389,7 +427,7 @@ function upperPicks(index,counts,opts){
     if(!eatsMine&&cost>facts.wisp)continue;
     const games=num((index.data.clear[unit.canon]||{}).games);
     const prev=best.get(unit.canon);
-    if(!prev||cost<prev.cost)best.set(unit.canon,{unit,cost,games});
+    if(!prev||cost<prev.cost)best.set(unit.canon,{unit,cost,games,delta:specDelta(index,result,unit,counts)});
   }
   return[...best.values()]
     .sort((a,b)=>Math.floor(a.cost/10)-Math.floor(b.cost/10)||b.games-a.games||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'))
@@ -423,7 +461,7 @@ function pairPicks(index,counts,upperId,opts){
       return['rare','special','uncommon'].includes(mat.tier)||(mat.legendish&&mat.tier!=='hard');
     });
     if(!eatsMine&&cost>facts.wisp){hidden+=1;continue;}
-    picks.push({unit,cost,games:num(pair.games)});
+    picks.push({unit,cost,games:num(pair.games),delta:specDelta(index,result,unit,counts)});
   }
   picks.sort((a,b)=>Math.floor(a.cost/10)-Math.floor(b.cost/10)||b.games-a.games||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'));
   return{picks:picks.slice(0,5),hidden:hidden+Math.max(0,picks.length-5)};
@@ -531,11 +569,11 @@ function inferMode(index,counts){
 }
 
 global.ORD_BOARD_CORE={
-  VERSION:'31.1.0',
+  VERSION:'31.2.0',
   num,esc,round2,MAX_ROUND,
   buildIndex,translateFeed,stabilizeUnknown,nextAutoRound,countsFingerprint,
   roundClock,clockAnchor,
-  solve,handFacts,craftRows,pickImpact,recipePlan,firstRares,fillerRares,
+  solve,handFacts,craftRows,pickImpact,specDelta,recipePlan,firstRares,fillerRares,
   upperOptions,upperPicks,pairPicks,upperReserve,upperCombos,
   partySpec,inferMode
 };
