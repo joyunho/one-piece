@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 코어 (v31.0.0 전면 신작)
+// ORD 악몽 보드 — 코어 (v31.1.0 전면 신작)
 //
 // 철학(사용자 확정, v26→신작 승계): 결정은 사용자가 티모지지를 보며
 // 직접 내린다.  프로그램은 세 가지 사실만 보여준다 —
@@ -364,9 +364,10 @@ function upperOptions(index,mode){
   return options;
 }
 
-// 지금 패 추천 TOP3: 조합이 닫히고(하드 결손 없음) 내 패를 실제로
-// 소비하거나 지금 바로 갈 수 있는 상위를, 도달 거리(선위 10 단위 버킷)
-// → 클리어 실측 순으로 최대 3.  확정·완성 2기면 표시하지 않는다.
+// 지금 패 추천 TOP5(사용자 0901 "상위를 5개까지 추천하게"): 조합이
+// 닫히고(하드 결손 없음) 내 패를 실제로 소비하거나 지금 바로 갈 수 있는
+// 상위를, 도달 거리(선위 10 단위 버킷) → 클리어 실측 순으로 최대 5.
+// 확정·완성 2기면 표시하지 않는다.
 function upperPicks(index,counts,opts){
   const mode=opts&&opts.mode||'';
   const round=num(opts&&opts.round)||1;
@@ -392,14 +393,14 @@ function upperPicks(index,counts,opts){
   }
   return[...best.values()]
     .sort((a,b)=>Math.floor(a.cost/10)-Math.floor(b.cost/10)||b.games-a.games||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'))
-    .slice(0,3);
+    .slice(0,5);
 }
 
 // 2상위 추천(사용자 0831: "상위를 선택했을 때 상위가 끝인게 아니라 이
 // 상위랑 어울리는 다른 상위도 추천가능하게"): 선택 상위와 함께 악몽을
 // 깬 실측 페어 중, 지금 패로 조합이 닫히고(하드 결손 없음) 내 패를
 // 실제 소비하거나 바로 가능한 상위를 도달 거리(선위 10 버킷) → 동반
-// 실측 판수 순으로 최대 3 추천한다.  TOP3 와 같은 등재 철학.
+// 실측 판수 순으로 최대 5 추천한다(사용자 0901).  TOP5 와 같은 등재 철학.
 function pairPicks(index,counts,upperId,opts){
   const sel=index.byId.get(String(upperId));
   if(!sel||!sel.upper)return{picks:[],hidden:0};
@@ -425,7 +426,7 @@ function pairPicks(index,counts,upperId,opts){
     picks.push({unit,cost,games:num(pair.games)});
   }
   picks.sort((a,b)=>Math.floor(a.cost/10)-Math.floor(b.cost/10)||b.games-a.games||a.cost-b.cost||a.unit.short.localeCompare(b.unit.short,'ko'));
-  return{picks:picks.slice(0,3),hidden:hidden+Math.max(0,picks.length-3)};
+  return{picks:picks.slice(0,5),hidden:hidden+Math.max(0,picks.length-5)};
 }
 
 // 상위 몫: 기준 상위 트리가 현재 패에서 소비할 희귀·특별·안흔 —
@@ -530,7 +531,7 @@ function inferMode(index,counts){
 }
 
 global.ORD_BOARD_CORE={
-  VERSION:'31.0.0',
+  VERSION:'31.1.0',
   num,esc,round2,MAX_ROUND,
   buildIndex,translateFeed,stabilizeUnknown,nextAutoRound,countsFingerprint,
   roundClock,clockAnchor,

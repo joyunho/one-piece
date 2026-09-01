@@ -1,6 +1,6 @@
 {
   "name": "ord-2305-nightmare-coach",
-  "version": "31.0.0",
+  "version": "31.1.0",
   "private": true,
   "description": "원랜디 2.314 악몽 보드 — 전면 신작(ord_board/) + 데스크톱 셸. 옛 프로그램은 archive/ 동결",
   "engines": {

@@ -1,7 +1,7 @@
 (function(global){
 'use strict';
 // ═══════════════════════════════════════════════════════════════════════
-// ORD 악몽 보드 — 앱 (v31.0.0 전면 신작)
+// ORD 악몽 보드 — 앱 (v31.1.0 전면 신작)
 //
 // 상태·수신·렌더·이벤트만 담는다.  계산은 전부 core.js(순수 함수),
 // 데이터는 data.js(빌드 타임 증류물).  옛 프로그램 파일은 로드하지
@@ -294,7 +294,7 @@ App.prototype.renderUppers=function(board,mode){
   const picks=B.upperPicks(this.index,this.counts,{mode,round:this.roundNow(),lockedId:''});
   const shorts=picks.map(p=>p.unit.short);
   const dupes=new Set(shorts.filter((s,i)=>shorts.indexOf(s)!==i));
-  const top3=picks.length?`<div class="top3"><small>지금 패 추천 TOP3 — 조합이 닫히는 상위를 도달 거리 → 실측 순으로</small>${picks.map((pick,i)=>{
+  const top3=picks.length?`<div class="top3"><small>지금 패 추천 TOP5 — 조합이 닫히는 상위를 도달 거리 → 실측 순으로</small>${picks.map((pick,i)=>{
     const u=pick.unit;
     const face=u.image?`<img class="face" src="${esc(u.image)}" alt="" loading="lazy">`:'';
     const label=dupes.has(u.short)?u.name:u.short;

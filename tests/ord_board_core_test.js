@@ -75,17 +75,21 @@ test('② 배타·선택 여파 — 재계산 규칙 파리티 + 소비 없음',
   }
 });
 
-test('③ 상위 — 후보에 세라핌 없음 · TOP3 규칙 · 상위 몫',()=>{
+test('③ 상위 — 후보에 세라핌 없음 · TOP5 규칙 · 상위 몫',()=>{
   const options=B.upperOptions(index,'');
   assert(options.length>=60,'상위 후보 수 이상');
   assert(!options.some(o=>o.unit.seraph||!o.unit.upper),'상위 후보 오염');
   const magicOptions=B.upperOptions(index,'magic');
   assert(!magicOptions.some(o=>o.unit.family==='physical'),'마딜 선택인데 물딜 상위');
-  // TOP3: 빈손 0 · 확정 시 0 · 조합 닫힘 · 최대 3.
+  // TOP5(사용자 0901 "상위를 5개까지"): 빈손 0 · 확정 시 0 · 조합 닫힘 ·
+  // 최대 5 — 후보가 5 이상인 패에서는 정확히 5가 나와야 한다.
   assert.strictEqual(B.upperPicks(index,{},{mode:'',round:1}).length,0,'빈손 추천');
   assert.strictEqual(B.upperPicks(index,rich,{mode:'',round:20,lockedId:'V80H'}).length,0,'확정 후 추천');
   const picks=B.upperPicks(index,rich,{mode:'magic',round:20});
-  assert(picks.length>=1&&picks.length<=3,'추천 수 이상');
+  assert(picks.length>=1&&picks.length<=5,'추천 수 이상');
+  const wide=Object.assign({},rich);wide[DATA.wispId]=60;
+  const widePicks=B.upperPicks(index,wide,{mode:'',round:20});
+  assert.strictEqual(widePicks.length,5,`선위 풍족 패 추천이 5가 아님: ${widePicks.length}`);
   for(const p of picks){
     assert(p.unit.upper&&!p.unit.seraph,'상위 아닌 추천');
     assert(!B.solve(index,p.unit.id,rich).hardMissing.length,'조합 안 닫히는 추천');
@@ -187,7 +191,7 @@ test('⑥ 조합식 계획 — 직접 재료·선위 사용처 검산 (전설급
 test('⑦ 2상위 추천 — 실측 페어 × 지금 패 도달 (사용자 0831b)',()=>{
   const sel=B.upperOptions(index,'')[0];
   const pp=B.pairPicks(index,scarce,sel.unit.id,{mode:'',round:20});
-  assert(pp.picks.length>=1&&pp.picks.length<=3,'추천 수 이상');
+  assert(pp.picks.length>=1&&pp.picks.length<=5,'추천 수 이상');
   const stats=DATA.clear[sel.unit.canon];
   for(const p of pp.picks){
     assert(p.unit.upper&&!p.unit.seraph,'상위 아닌 2상위 추천');
